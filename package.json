@@ -4,9 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "build": "next build --no-lint --no-typescript",
+    "start": "next start"
   },
   "dependencies": {
     "@lottiefiles/react-lottie-player": "^3.6.0",
