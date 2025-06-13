@@ -18,24 +18,23 @@ const banners = [
 
 export default function HeroSlider() {
   return (
-    <div className="left-4 right-4 h-80 md:h-80 overflow-hidden py-11">
+    <div className="w-full max-w-[100vw] overflow-hidden">
       <Swiper
         modules={[Autoplay]}
         autoplay={{ delay: 3000, disableOnInteraction: false }}
         loop
         slidesPerView={1}
         spaceBetween={0}
-        allowTouchMove={true} // Enables swipe and horizontal scroll
+        allowTouchMove={true}
       >
         {banners.map((banner) => (
           <SwiperSlide key={banner.id}>
-            <div className="relative w-full h-60 md:h-80">
+            <div className="relative w-full h-[180px] sm:h-[220px] md:h-[280px] lg:h-[320px] xl:h-[360px]">
               <Image
                 src={banner.src}
                 alt={banner.alt}
-                layout="fill"
-                objectFit="cover"
-                className="rounded"
+                fill
+                className="object-contain" // or 'object-cover' if you want full bleed
                 priority
               />
             </div>
