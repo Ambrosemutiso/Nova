@@ -1,4 +1,3 @@
-// components/HeroSlider.js
 'use client';
 
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -8,12 +7,27 @@ import 'swiper/css';
 import 'swiper/css/autoplay';
 
 const banners = [
-  { id: 1, src: '/banner1.jpg', alt: 'Banner 1' },
-  { id: 2, src: '/banner2.jpg', alt: 'Banner 2' },
-  { id: 3, src: '/banner3.jpg', alt: 'Banner 3' },
-  { id: 4, src: '/banner4.jpg', alt: 'Banner 4' },
-  { id: 5, src: '/banner5.jpg', alt: 'Banner 5' },
-  { id: 6, src: '/banner6.jpg', alt: 'Banner 6' },
+  {
+    id: 1,
+    src: '/banner1.jpg',
+    alt: 'Banner 1',
+    heading: 'Big Deals!',
+    cta: 'Shop Now',
+  },
+  {
+    id: 2,
+    src: '/banner2.jpg',
+    alt: 'Banner 2',
+    heading: 'New Arrivals',
+    cta: 'Explore',
+  },
+  {
+    id: 3,
+    src: '/banner3.jpg',
+    alt: 'Banner 3',
+    heading: 'Hot Offers',
+    cta: 'Buy Now',
+  },
 ];
 
 export default function HeroSlider() {
@@ -34,9 +48,18 @@ export default function HeroSlider() {
                 src={banner.src}
                 alt={banner.alt}
                 fill
-                className="object-contain" // or 'object-cover' if you want full bleed
+                className="object-cover"
                 priority
               />
+              {/* Overlay */}
+              <div className="absolute inset-0 bg-black/30 flex flex-col items-start justify-center px-6">
+                <h2 className="text-white text-xl sm:text-2xl md:text-3xl font-bold mb-2 drop-shadow">
+                  {banner.heading}
+                </h2>
+                <button className="bg-orange-500 text-white text-sm sm:text-base px-4 py-2 rounded-md shadow hover:bg-orange-600 transition">
+                  {banner.cta}
+                </button>
+              </div>
             </div>
           </SwiperSlide>
         ))}
