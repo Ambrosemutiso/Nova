@@ -1,7 +1,5 @@
 {
-  "build": {
-    "env": {
-      "NEXT_DISABLE_ESLINT": "true"
-    }
-  }
+  "buildCommand": "npm run build",
+  "ignoreCommand": "echo 'Skipping lint'",
+  "outputDirectory": ".next"
 }
