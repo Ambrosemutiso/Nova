@@ -32,7 +32,7 @@ const banners = [
 
 export default function HeroSlider() {
   return (
-    <div className="w-full max-w-[100vw] overflow-hidden">
+    <div className="w-full max-w-[100vw] overflow-hidden px-6 pt-28 pb-10">
       <Swiper
         modules={[Autoplay]}
         autoplay={{ delay: 3000, disableOnInteraction: false }}

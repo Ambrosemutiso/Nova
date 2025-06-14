@@ -58,3 +58,19 @@ button {
   font-size: var(--app-font-size);
 }
 
+/* globals.css */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thumb-gray-400::-webkit-scrollbar-thumb {
+  background-color: #9ca3af; /* Tailwind gray-400 */
+}
+
+.scrollbar-track-gray-100::-webkit-scrollbar-track {
+  background-color: #f3f4f6; /* Tailwind gray-100 */
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  height: 6px;
+}

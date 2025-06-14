@@ -28,9 +28,9 @@ export default function WishlistPage() {
   };
 
   return (
-    <div className="px-6 py-10">
+    <div className="px-6 pt-28 pb-10">
       {wishlistItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-screen">
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-112px)] pt-20">
                 <Player
                   autoplay
                   loop

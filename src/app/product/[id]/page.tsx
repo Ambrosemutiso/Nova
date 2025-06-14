@@ -18,6 +18,7 @@ import RelatedProducts from '@/components/RelatedProducts'
 import CustomersAlsoViewed from "@/components/CustomersAlsoViewed";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import SaveToRecentlyViewed from '@/components/SaveToRecentlyViewed';
+import BehaviorTracker from '@/components/BehaviourTracker';
 
 type Review = {
   _id: string;
@@ -159,8 +160,8 @@ export default function ProductDetails() {
             <span className="text-red-600 font-bold">Ksh.{product.calculatedPrice}</span>
           </div>
 {product.description && (
-  <div className="mt-6">
-    <h2 className="text-lg font-semibold mb-2">Product Description</h2>
+  <div className="mt-6 bg-white shadow rounded-lg p-6">
+    <h2 className="text-xl font-semibold mb-4 border-b pb-2">Product Description</h2>
     <div
       className="prose max-w-none text-gray-800"
       dangerouslySetInnerHTML={{ __html: product.description }}
@@ -168,9 +169,10 @@ export default function ProductDetails() {
   </div>
 )}
 
+
 {product.keyFeatures && product.keyFeatures.length > 0 && (
-  <div className="mt-6">
-    <h2 className="text-lg font-semibold mb-2">Key Features</h2>
+  <div className="mt-6 bg-white shadow rounded-lg p-6">
+    <h2 className="text-xl font-semibold mb-4 border-b pb-2">Key Features</h2>
     <ul className="list-disc list-inside text-gray-700 space-y-1">
       {product.keyFeatures.map((feature, index) => (
         <li key={index}>{feature}</li>
@@ -179,15 +181,17 @@ export default function ProductDetails() {
   </div>
 )}
 
+
 {product.whatsInTheBox && (
-  <div className="mt-6">
-    <h2 className="text-lg font-semibold mb-2">What`&apos;`s in the Box</h2>
+  <div className="mt-6 bg-white shadow rounded-lg p-6">
+<h2 className="text-xl font-semibold mb-4 border-b pb-2">What&apos;s in the Box</h2>
     <p className="text-gray-700">{product.whatsInTheBox}</p>
   </div>
 )}
 
-<div className="mt-6">
-  <h2 className="text-lg font-semibold mb-2">Specifications</h2>
+
+<div className="mt-6 bg-white shadow rounded-lg p-6">
+  <h2 className="text-xl font-semibold mb-4 border-b pb-2">Specifications</h2>
   <div className="grid grid-cols-2 gap-4 text-gray-700">
     {product.brand && <div><span className="font-medium">Brand:</span> {product.brand}</div>}
     {product.model && <div><span className="font-medium">Model:</span> {product.model}</div>}
@@ -198,8 +202,7 @@ export default function ProductDetails() {
     {product.warranty && <div><span className="font-medium">Warranty:</span> {product.warranty}</div>}
   </div>
 </div>
-        </div>
-      </div>
+
 
       {zoomedImage && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
@@ -338,6 +341,7 @@ export default function ProductDetails() {
       <RecentlyViewed />
       <RelatedProducts name={product.name} currentId={product._id.toString()} />
       <CustomersAlsoViewed productId={product._id.toString()} />
+      <BehaviorTracker product={product} />
 
 
       {/* 🛒 Add to Cart Section */}
@@ -371,6 +375,8 @@ export default function ProductDetails() {
           );
         })()}
       </div>
+    </div>
+    </div>
     </div>
   );
 }

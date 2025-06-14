@@ -13,11 +13,11 @@ export default function Phone() {
   }, []);
 
   return (
-<div className="flex overflow-x-auto gap-2 px-2 py-6 snap-x snap-mandatory scrollbar-hide bg-red-100">
+<div className="flex overflow-x-auto gap-2 px-2 py-6 snap-x snap-mandatory bg-red-100">
   {products.slice(0, 10).map((product) => (
     <div
       key={product._id}
-      className="w-64 min-w-[16rem] flex-shrink-0 snap-start"
+      className="flex gap-4 overflow-x-auto pb-2"
     >
       <ProductCard product={product} />
     </div>
@@ -26,3 +26,4 @@ export default function Phone() {
 
   );
 }
+

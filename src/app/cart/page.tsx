@@ -79,7 +79,7 @@ const getPublicId = (url?: string) => {
 
   if (cartItems.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen">
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-112px)] pt-20">
         <Player
           autoplay
           loop
@@ -92,7 +92,7 @@ const getPublicId = (url?: string) => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 top-11 relative">
+    <div className="max-w-6xl mx-auto px-4 pt-28 pb-10 relative">
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

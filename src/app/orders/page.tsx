@@ -98,7 +98,7 @@ export default function OrdersPage() {
   doc.setFontSize(10);
   doc.setTextColor(120);
   doc.text('Thank you for your purchase!', 105, 190, { align: 'center' });
-  doc.text('Contact support@example.com for assistance.', 105, 195, { align: 'center' });
+  doc.text('Contact support@gmail.com for assistance.', 105, 195, { align: 'center' });
 
   doc.save(`receipt-${order._id}.pdf`);
 };
@@ -136,7 +136,7 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="px-6 pt-28 pb-10">
       <h1 className="text-2xl font-bold mb-4">My Orders</h1>
 
       <div className="flex justify-between items-center mb-4">
@@ -164,7 +164,7 @@ export default function OrdersPage() {
       </div>
 
       {!Array.isArray(orders) || orders.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-screen">
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-112px)] pt-20">
           <Player
             autoplay
             loop
