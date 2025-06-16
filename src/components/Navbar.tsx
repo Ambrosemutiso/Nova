@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { FiMenu, FiShoppingCart, FiPackage, FiSearch } from 'react-icons/fi';
+import { FiMenu, FiShoppingCart, FiPackage, FiSearch, FiBell } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/app/context/CartContext';
 import { useAuth } from '@/app/context/AuthContext';
@@ -15,6 +15,13 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { LogOut, ZoomIn, ZoomOut } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
+type Notification = {
+  id: string;
+  message: string;
+  timestamp?: any; 
+};
+
+
 export default function Navbar() {
   const [showLogin, setShowLogin] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
@@ -26,14 +33,50 @@ export default function Navbar() {
   const [language, setLanguage] = useState('English');
   const [fontScale, setFontScale] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const { cartItems } = useCart();
   const { user, setUser } = useAuth();
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+  const [showNotifications, setShowNotifications] = useState(false);
+const [notifications, setNotifications] = useState<{ _id: string; message: string; createdAt: string }[]>([]);
+const [showNotifModal, setShowNotifModal] = useState(false);
 
-  // Load theme/language/font scale
+useEffect(() => {
+  const fetchNotifications = async () => {
+    try {
+      const res = await fetch('/api/notification/buyer');
+      const json = await res.json();
+      if (json.success) {
+        setNotifications(json.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch notifications', error);
+    }
+  };
+
+  fetchNotifications();
+}, []);
+
+
+useEffect(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+    const notifModal = document.getElementById('notification-modal');
+    if (notifModal && !notifModal.contains(event.target as Node)) {
+      setShowNotifications(false);
+    }
+  };
+
+  if (showNotifications) {
+    document.addEventListener('mousedown', handleClickOutside);
+  }
+
+  return () => {
+    document.removeEventListener('mousedown', handleClickOutside);
+  };
+}, [showNotifications]);
+
+
 useEffect(() => {
   const sellerData = localStorage.getItem('sellerUser');
   if (sellerData) {
@@ -133,6 +176,37 @@ useEffect(() => {
               )}
             </button>
           )}
+
+  {/* Notification Bell */}
+<button onClick={() => setShowNotifModal(!showNotifModal)} className="relative text-2xl text-orange-500">
+  <FiBell/>
+  {notifications.length > 0 && (
+    <span className="absolute -top-2 -right-2 bg-green-600 text-white text-xs rounded-full px-1.5 py-0.5">
+      {notifications.length}
+    </span>
+  )}
+</button>
+
+
+    {/* Notifications Modal */}
+{showNotifModal && (
+  <div className="absolute right-4 top-16 w-80 bg-white shadow-lg rounded-lg z-50 border">
+    <div className="p-4 border-b text-lg font-semibold text-gray-700">Notifications</div>
+    <ul className="max-h-64 overflow-y-auto divide-y">
+      {notifications.length === 0 ? (
+        <li className="p-4 text-sm text-gray-500">No notifications</li>
+      ) : (
+        notifications.map((notif) => (
+          <li key={notif._id} className="p-4 text-sm text-gray-700">
+            {notif.message}
+          </li>
+        ))
+      )}
+    </ul>
+  </div>
+)}
+
+
 
           {user ? (
             <Image
