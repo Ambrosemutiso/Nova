@@ -283,36 +283,39 @@ return (
     </div>
 
 {/* Product Info Section */}
-<div className="text-gray-800 space-y-5">
-  <h1 className="text-3xl font-bold leading-snug tracking-tight text-gray-900">
-    {product.name}
-  </h1>
+<div className="px-4 py-5 space-y-4 bg-white rounded-md shadow-sm text-gray-800">
+  <h1 className="text-2xl font-bold text-gray-900">{product.name}</h1>
 
-  <p className="text-sm text-blue-600 font-medium">
+  <p className="text-sm font-medium text-blue-600">
     Brand: <span className="capitalize">{product.brand}</span>
   </p>
 
-  <div className="flex items-baseline space-x-3">
-    <span className="text-3xl font-extrabold text-orange-600">
+  <div className="flex items-center gap-3">
+    <span className="text-2xl font-extrabold text-orange-600">
       Ksh {product.calculatedPrice.toLocaleString()}
     </span>
     <span className="text-base text-gray-400 line-through">
       Ksh {product.oldPrice.toLocaleString()}
     </span>
+    <span className="ml-auto text-sm px-2 py-1 bg-red-100 text-red-600 rounded-md">
+      {Math.round(((product.oldPrice - product.calculatedPrice) / product.oldPrice) * 100)}% OFF
+    </span>
   </div>
 
-  <p className="text-sm font-medium text-red-500">
-    {product.quantity} unit{product.quantity > 1 ? 's' : ''} left in stock
+  <p className={`text-sm font-semibold ${product.quantity > 0 ? 'text-green-600' : 'text-red-500'}`}>
+    {product.quantity > 0 ? `${product.quantity} unit${product.quantity > 1 ? 's' : ''} left` : 'Out of stock'}
   </p>
 
   <p className="text-sm text-gray-600">
-    + Shipping from <span className="font-semibold">{product.county}</span>: <span className="text-gray-800 font-bold">Ksh 200</span>
+    + Shipping from <strong>{product.county}</strong>: <span className="text-gray-800 font-semibold">Ksh 200</span>
   </p>
 
-  <div className="flex items-center space-x-2 text-yellow-500">
-    {renderStars(averageRating)}
-    <span className="text-sm text-gray-700">
-      ({averageRating.toFixed(1)} out of 5 from {reviews.length} review{reviews.length !== 1 && 's'})
+  <div className="flex items-center space-x-2">
+    <div className="flex text-yellow-500">
+      {renderStars(averageRating)}
+    </div>
+    <span className="text-sm text-gray-600">
+      ({averageRating.toFixed(1)} out of 5 from {reviews.length} review{reviews.length !== 1 ? 's' : ''})
     </span>
   </div>
 </div>
