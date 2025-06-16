@@ -1,5 +1,0 @@
-{
-  "buildCommand": "npm run build",
-  "ignoreCommand": "echo 'Skipping lint'",
-  "outputDirectory": ".next"
-}
