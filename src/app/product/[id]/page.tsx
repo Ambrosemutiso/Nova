@@ -197,7 +197,7 @@ const [showReportModal, setShowReportModal] = useState(false);
 
     useEffect(() => {
     const userReviewed = reviews.some(
-      (r) => r.userId.trim().toLowerCase() === reviewUser.trim().toLowerCase()
+      (r) => r.userName.trim().toLowerCase() === reviewUser.trim().toLowerCase()
     );
     setHasReviewed(userReviewed);
   }, [reviewUser, reviews]);
@@ -279,6 +279,7 @@ return (
             </SwiperSlide>
           ))}
         </Swiper>
+      </div>
 
       {/* Product Info Section */}
       <div className="text-gray-800 space-y-4">
@@ -303,6 +304,7 @@ return (
           </span>
         </div>
       </div>
+    </div>
 
     {/* Product Description */}
     {product.description && (
@@ -314,6 +316,7 @@ return (
         />
       </div>
     )}
+
 
 {product.keyFeatures && product.keyFeatures.length > 0 && (
   <div className="mt-6 bg-white shadow rounded-lg p-6">
@@ -388,7 +391,7 @@ return (
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                      userId: reviewUser,
+                      userName: reviewUser,
                       comment: reviewComment,
                       rating: reviewRating,
                     }),
@@ -622,8 +625,6 @@ return (
           );
         })()}
       </div>
-    </div>
-    </div>
     </div>
   );
 }
