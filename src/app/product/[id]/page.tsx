@@ -240,7 +240,7 @@ const [showReportModal, setShowReportModal] = useState(false);
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-10">
-      <h1 className="text-2xl font-semibold mb-4">{product.name}</h1>
+    <div className="overflow-x-auto whitespace-nowrap text-sm text-gray-600 px-4 py-2">Home/Shop/{product.category}/{product.name}</div>
 
       <div className="relative bg-white p-4 shadow-lg rounded-lg hover:shadow-xl transition duration-300">
         <div className="absolute top-0 right-0 bg-red-500 text-white px-2 py-0.5 rounded-bl-lg text-sm">
@@ -268,12 +268,24 @@ const [showReportModal, setShowReportModal] = useState(false);
     </SwiperSlide>
   ))}
 </Swiper>
-        <div className="mt-4">
-          <h3 className="text-lg font-semibold">{product.name}</h3>
-          <div className="flex items-center gap-2">
-            <span className="text-gray-500 line-through">Ksh.{product.oldPrice}</span>
-            <span className="text-red-600 font-bold">Ksh.{product.calculatedPrice}</span>
-          </div>
+    <div className="p-4 bg-white text-gray-800">
+      <h1 className="text-lg font-semibold">
+        {product.name}
+      </h1>
+      <p className="text-sm text-blue-600 mb-2">Brand: {product.brand}</p>
+      <p className="text-xl font-bold text-orange-600">Ksh.{product.calculatedPrice}</p>
+      <span className="text-gray-500 line-through">Ksh.{product.oldPrice}</span>
+      <p className="text-sm text-red-500 mb-2">{product.quantity}units left</p>
+      <p className="text-sm text-gray-600 mb-1">
+        + shipping from {product.county} is <strong>KSh 200</strong> to your location
+      </p>
+      <div className="flex items-center space-x-1 text-yellow-500 text-sm">
+          {renderStars(averageRating)}
+          <span className="ml-2 text-sm text-gray-600">
+            ({averageRating.toFixed(1)} out of 5 from {reviews.length} reviews)
+          </span>
+      </div>
+
 {product.description && (
   <div className="mt-6 bg-white shadow rounded-lg p-6">
     <h2 className="text-xl font-semibold mb-4 border-b pb-2">Product Description</h2>
