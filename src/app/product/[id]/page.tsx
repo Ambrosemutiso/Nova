@@ -280,31 +280,43 @@ return (
           ))}
         </Swiper>
       </div>
-
-      {/* Product Info Section */}
-      <div className="text-gray-800 space-y-4">
-        <h1 className="text-2xl font-semibold">{product.name}</h1>
-        <p className="text-sm text-blue-600">Brand: {product.brand}</p>
-        
-        <div className="flex items-center space-x-4">
-          <span className="text-2xl font-bold text-orange-600">Ksh.{product.calculatedPrice}</span>
-          <span className="text-gray-500 line-through">Ksh.{product.oldPrice}</span>
-        </div>
-
-        <p className="text-sm text-red-500">{product.quantity} units left</p>
-
-        <p className="text-sm text-gray-600">
-          + Shipping from {product.county}: <strong>KSh 200</strong>
-        </p>
-
-        <div className="flex items-center space-x-1 text-yellow-500 text-sm">
-          {renderStars(averageRating)}
-          <span className="ml-2 text-sm text-gray-600">
-            ({averageRating.toFixed(1)} out of 5 from {reviews.length} reviews)
-          </span>
-        </div>
-      </div>
     </div>
+
+{/* Product Info Section */}
+<div className="text-gray-800 space-y-5">
+  <h1 className="text-3xl font-bold leading-snug tracking-tight text-gray-900">
+    {product.name}
+  </h1>
+
+  <p className="text-sm text-blue-600 font-medium">
+    Brand: <span className="capitalize">{product.brand}</span>
+  </p>
+
+  <div className="flex items-baseline space-x-3">
+    <span className="text-3xl font-extrabold text-orange-600">
+      Ksh {product.calculatedPrice.toLocaleString()}
+    </span>
+    <span className="text-base text-gray-400 line-through">
+      Ksh {product.oldPrice.toLocaleString()}
+    </span>
+  </div>
+
+  <p className="text-sm font-medium text-red-500">
+    {product.quantity} unit{product.quantity > 1 ? 's' : ''} left in stock
+  </p>
+
+  <p className="text-sm text-gray-600">
+    + Shipping from <span className="font-semibold">{product.county}</span>: <span className="text-gray-800 font-bold">Ksh 200</span>
+  </p>
+
+  <div className="flex items-center space-x-2 text-yellow-500">
+    {renderStars(averageRating)}
+    <span className="text-sm text-gray-700">
+      ({averageRating.toFixed(1)} out of 5 from {reviews.length} review{reviews.length !== 1 && 's'})
+    </span>
+  </div>
+</div>
+
 
     {/* Product Description */}
     {product.description && (
