@@ -13,7 +13,7 @@ export default function Phone() {
   }, []);
 
   return (
-<div className="flex overflow-x-auto gap-2 px-2 py-6 snap-x snap-mandatory bg-red-100">
+<div className="flex overflow-x-auto gap-2 py-6 snap-x snap-mandatory bg-red-100 px-1 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
   {products.slice(0, 10).map((product) => (
     <div
       key={product._id}

@@ -27,6 +27,12 @@ type Review = {
   rating: number;
   createdAt: string;
 };
+type Seller = {
+  name: string;
+  score: number;
+  isVerified: boolean;
+  followers: string[]; 
+};
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -39,6 +45,115 @@ export default function ProductDetails() {
   const { addToCart, cartItems, increaseQuantity, decreaseQuantity } = useCart();
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [hasReviewed, setHasReviewed] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [seller, setSeller] = useState<Seller | null>(null);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [userId, setUserId] = useState<string | null>(null);
+const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportMessage, setReportMessage] = useState('');
+  const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [reportSuccess, setReportSuccess] = useState(false);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) setScreenshot(file);
+  };
+
+  const handleReportSubmit = async () => {
+    const formData = new FormData();
+   formData.append('productId', Array.isArray(id) ? id[0] : id || '');
+    formData.append('userId', userId || '');
+    formData.append('reason', reportReason);
+    formData.append('message', reportMessage);
+    if (screenshot) formData.append('screenshot', screenshot);
+
+    try {
+      const res = await fetch('/api/report-product', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (res.ok) {
+        setReportSuccess(true);
+        setReportReason('');
+        setReportMessage('');
+        setScreenshot(null);
+      } else {
+        console.error('Report submission failed');
+      }
+    } catch (err) {
+      console.error('Error submitting report:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (reportSuccess) {
+      const timeout = setTimeout(() => setReportSuccess(false), 4000);
+      return () => clearTimeout(timeout);
+    }
+  }, [reportSuccess]);
+
+
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const uid = localStorage.getItem('userId');
+      if (uid) setUserId(uid);
+    }
+  }, []);
+
+  const sellerId = product?.sellerId;
+
+  useEffect(() => {
+    const fetchSeller = async () => {
+      if (!sellerId) return;
+      try {
+        const res = await fetch(`/api/user/${sellerId}`);
+        if (!res.ok) {
+          console.warn('Seller not found or fetch failed');
+          return;
+        }
+
+        const data = await res.json();
+        setSeller(data);
+        setFollowersCount(data.followers?.length || 0);
+
+        if (userId && data.followers?.includes(userId)) {
+          setIsFollowing(true);
+        }
+      } catch (error) {
+        console.error('Error fetching seller:', error);
+      }
+    };
+
+    fetchSeller();
+  }, [sellerId, userId]);
+
+  const handleFollowToggle = async () => {
+    if (!userId || !sellerId) return;
+
+    try {
+      const res = await fetch(`/api/user/${sellerId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!res.ok) {
+        console.warn('Follow/unfollow request failed');
+        return;
+      }
+
+      const data = await res.json();
+      setIsFollowing(data.isFollowing);
+      setFollowersCount(data.followers);
+    } catch (err) {
+      console.error('Follow/unfollow failed:', err);
+    }
+  };
 
 
 
@@ -343,6 +458,106 @@ export default function ProductDetails() {
       <CustomersAlsoViewed productId={product._id.toString()} />
       <BehaviorTracker product={product} />
 
+    <>
+      {/* 🏪 Seller Info UI */}
+      {seller && (
+        <div className="bg-white p-4 rounded-lg shadow mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-semibold text-gray-800">
+                  {seller.name || 'Seller Name'}
+                </span>
+                {seller.isVerified && (
+                  <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-medium">
+                    ✅ Verified Seller
+                  </span>
+                )}
+              </div>
+              <div className="text-sm text-gray-600">
+                Seller Score: <span className="font-semibold">{seller.score ?? 'N/A'}</span> • Followers:{' '}
+                <span className="font-semibold">{followersCount}</span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={handleFollowToggle}
+            className={`text-sm px-4 py-2 rounded-full border transition duration-200 ${
+              isFollowing
+                ? 'text-gray-700 border-gray-400 hover:bg-gray-100'
+                : 'text-orange-600 border-orange-600 hover:bg-orange-600 hover:text-white'
+            }`}
+          >
+            {isFollowing ? 'Unfollow Seller' : 'Follow Seller'}
+          </button>
+        </div>
+      )}
+    </>
+
+<button
+  className="text-sm text-red-600 underline mt-4"
+  onClick={() => setShowReportModal(true)}
+>
+  Report Incorrect Product Details
+</button>
+
+{showReportModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="bg-white p-5 rounded shadow-md w-11/12 max-w-md space-y-3">
+      <h2 className="text-lg font-semibold">Report Product</h2>
+
+      <label className="block text-sm font-medium">Reason</label>
+      <select
+        value={reportReason}
+        onChange={(e) => setReportReason(e.target.value)}
+        className="w-full border border-gray-300 rounded p-2"
+      >
+        <option value="">Select a reason</option>
+        <option value="Wrong price">Wrong price</option>
+        <option value="Incorrect description">Incorrect description</option>
+        <option value="Misleading images">Misleading images</option>
+        <option value="Inappropriate content">Inappropriate content</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <label className="block text-sm font-medium">Description (optional)</label>
+      <textarea
+        className="w-full border border-gray-300 rounded p-2"
+        rows={3}
+        value={reportMessage}
+        onChange={(e) => setReportMessage(e.target.value)}
+        placeholder="Explain the issue (optional)"
+      />
+
+      <label className="block text-sm font-medium">Screenshot (optional)</label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          className="block w-full"
+        />
+      <div className="flex justify-end space-x-2 pt-2">
+        <button
+          onClick={() => setShowReportModal(false)}
+          className="px-3 py-1 bg-gray-300 rounded"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleReportSubmit}
+          className="px-3 py-1 bg-red-600 text-white rounded"
+        >
+          Submit
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+      {reportSuccess && (
+        <p className="text-green-600 mt-2">Report submitted successfully!</p>
+      )}
+
 
       {/* 🛒 Add to Cart Section */}
       <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-40">
@@ -380,3 +595,4 @@ export default function ProductDetails() {
     </div>
   );
 }
+

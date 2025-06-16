@@ -9,6 +9,7 @@ export const signInWithGoogle = async (role: 'buyer' | 'seller') => {
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
 
+    // Save to Firestore
     const userDocRef = doc(db, 'users', user.uid);
     const userDocSnap = await getDoc(userDocRef);
 
@@ -18,10 +19,23 @@ export const signInWithGoogle = async (role: 'buyer' | 'seller') => {
         email: user.email,
         name: user.displayName,
         photo: user.photoURL,
-        role: role,
+        role,
         createdAt: new Date(),
       });
     }
+
+    // 🔁 Sync to MongoDB via API
+    await fetch('/api/sync-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        uid: user.uid,
+        email: user.email,
+        name: user.displayName,
+        photo: user.photoURL,
+        role,
+      }),
+    });
 
     return {
       uid: user.uid,

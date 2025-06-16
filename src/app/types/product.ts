@@ -24,4 +24,5 @@ export interface Product {
   weight: string;
   createdAt: string;
   updatedAt: string;
+
 }
