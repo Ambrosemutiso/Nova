@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 const reviewSchema = new mongoose.Schema(
   {
     productId: { type: String, required: true },
+    userId: { type: String, required: true },
     userName: { type: String, required: true },
     comment: { type: String, required: true },
     rating: { type: Number, required: true },

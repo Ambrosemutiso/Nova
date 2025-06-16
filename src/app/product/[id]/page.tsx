@@ -22,6 +22,7 @@ import BehaviorTracker from '@/components/BehaviourTracker';
 
 type Review = {
   _id: string;
+  userId: string;
   userName: string;
   comment: string;
   rating: number;
@@ -196,7 +197,7 @@ const [showReportModal, setShowReportModal] = useState(false);
 
     useEffect(() => {
     const userReviewed = reviews.some(
-      (r) => r.userName.trim().toLowerCase() === reviewUser.trim().toLowerCase()
+      (r) => r.userId.trim().toLowerCase() === reviewUser.trim().toLowerCase()
     );
     setHasReviewed(userReviewed);
   }, [reviewUser, reviews]);
@@ -238,64 +239,81 @@ const [showReportModal, setShowReportModal] = useState(false);
     </div>
     );
 
-  return (
-    <div className="max-w-3xl mx-auto px-4 py-10">
-    <div className="overflow-x-auto whitespace-nowrap text-sm text-gray-600 px-4 py-2">Home/Shop/{product.category}/{product.name}</div>
+return (
+  <div className="max-w-6xl mx-auto px-4 pt-28 pb-10"> {/* pt-28 to offset navbar height */}
+    
+    {/* Breadcrumb */}
+    <div className="mb-6">
+      <nav className="text-sm text-gray-500">
+        Home / Shop / {product.category} / <span className="text-orange-700 font-medium">{product.name}</span>
+      </nav>
+    </div>
 
-      <div className="relative bg-white p-4 shadow-lg rounded-lg hover:shadow-xl transition duration-300">
-        <div className="absolute top-0 right-0 bg-red-500 text-white px-2 py-0.5 rounded-bl-lg text-sm">
+    {/* Main Product Section */}
+    <div className="bg-white rounded-lg shadow-lg p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+
+      {/* Image Section */}
+      <div className="relative">
+        <div className="absolute top-0 right-0 bg-red-500 text-white px-2 py-0.5 rounded-bl-lg text-sm z-10">
           {calculateDiscount(product.oldPrice, product.calculatedPrice)}% OFF
         </div>
 
-<Swiper
-  modules={[Autoplay]}
-  autoplay={{ delay: 3000 }}
-  loop
-  spaceBetween={10}
-  slidesPerView={1}
-  allowTouchMove={true}
-  className="rounded-md"
->
-  {product.images.slice(0, 4).map((image, index) => (
-    <SwiperSlide key={index} onClick={() => setZoomedImage(image)}>
-      <CldImage
-        src={getPublicId(image)}
-        alt={product.name}
-        width="600"
-        height="400"
-        className="rounded-md object-cover w-full h-64"
-      />
-    </SwiperSlide>
-  ))}
-</Swiper>
-    <div className="p-4 bg-white text-gray-800">
-      <h1 className="text-lg font-semibold">
-        {product.name}
-      </h1>
-      <p className="text-sm text-blue-600 mb-2">Brand: {product.brand}</p>
-      <p className="text-xl font-bold text-orange-600">Ksh.{product.calculatedPrice}</p>
-      <span className="text-gray-500 line-through">Ksh.{product.oldPrice}</span>
-      <p className="text-sm text-red-500 mb-2">{product.quantity}units left</p>
-      <p className="text-sm text-gray-600 mb-1">
-        + shipping from {product.county} is <strong>KSh 200</strong> to your location
-      </p>
-      <div className="flex items-center space-x-1 text-yellow-500 text-sm">
+        <Swiper
+          modules={[Autoplay]}
+          autoplay={{ delay: 3000 }}
+          loop
+          spaceBetween={10}
+          slidesPerView={1}
+          allowTouchMove={true}
+          className="rounded-md"
+        >
+          {product.images.slice(0, 4).map((image, index) => (
+            <SwiperSlide key={index} onClick={() => setZoomedImage(image)}>
+              <CldImage
+                src={getPublicId(image)}
+                alt={product.name}
+                width="600"
+                height="400"
+                className="rounded-md object-cover w-full h-64"
+              />
+            </SwiperSlide>
+          ))}
+        </Swiper>
+
+      {/* Product Info Section */}
+      <div className="text-gray-800 space-y-4">
+        <h1 className="text-2xl font-semibold">{product.name}</h1>
+        <p className="text-sm text-blue-600">Brand: {product.brand}</p>
+        
+        <div className="flex items-center space-x-4">
+          <span className="text-2xl font-bold text-orange-600">Ksh.{product.calculatedPrice}</span>
+          <span className="text-gray-500 line-through">Ksh.{product.oldPrice}</span>
+        </div>
+
+        <p className="text-sm text-red-500">{product.quantity} units left</p>
+
+        <p className="text-sm text-gray-600">
+          + Shipping from {product.county}: <strong>KSh 200</strong>
+        </p>
+
+        <div className="flex items-center space-x-1 text-yellow-500 text-sm">
           {renderStars(averageRating)}
           <span className="ml-2 text-sm text-gray-600">
             ({averageRating.toFixed(1)} out of 5 from {reviews.length} reviews)
           </span>
+        </div>
       </div>
 
-{product.description && (
-  <div className="mt-6 bg-white shadow rounded-lg p-6">
-    <h2 className="text-xl font-semibold mb-4 border-b pb-2">Product Description</h2>
-    <div
-      className="prose max-w-none text-gray-800"
-      dangerouslySetInnerHTML={{ __html: product.description }}
-    />
-  </div>
-)}
-
+    {/* Product Description */}
+    {product.description && (
+      <div className="mt-10 bg-white shadow rounded-lg p-6">
+        <h2 className="text-xl font-semibold mb-4 border-b pb-2">Product Description</h2>
+        <div
+          className="prose max-w-none text-gray-800"
+          dangerouslySetInnerHTML={{ __html: product.description }}
+        />
+      </div>
+    )}
 
 {product.keyFeatures && product.keyFeatures.length > 0 && (
   <div className="mt-6 bg-white shadow rounded-lg p-6">
@@ -349,43 +367,6 @@ const [showReportModal, setShowReportModal] = useState(false);
         </div>
       )}
 
-      {/* ⭐ Ratings & Reviews Section */}
-      <div className="mt-10 bg-white p-6 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-2">Customer Ratings & Reviews</h2>
-        <div className="flex items-center mb-4">
-          {renderStars(averageRating)}
-          <span className="ml-2 text-sm text-gray-600">
-            ({averageRating.toFixed(1)} out of 5 from {reviews.length} reviews)
-          </span>
-        </div>
-        {reviews.length > 0 ? (
-          <div className="space-y-4">
-            {reviews.map((review) => (
-              <div key={review._id} className="border-b pb-2">
-                <div className="flex items-center justify-between">
-                  <p className="font-semibold">{review.userName}</p>
-                  <div className="flex">{renderStars(review.rating)}</div>
-                </div>
-                <p className="text-gray-700 mt-1">{review.comment}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-500">No reviews yet. Be the first to review this product!</p>
-        )}
-      </div>
-      <div className="mt-10 bg-white p-6 rounded-lg shadow">
-  <h2 className="text-lg font-semibold mb-4">Leave a Review</h2>
-  <button
-    className="bg-orange-600 text-white py-2 px-4 rounded hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
-    onClick={() => setShowReviewModal(true)}
-    disabled={hasReviewed}
-  >
-    {hasReviewed ? 'You have already reviewed' : 'Write a Review'}
-  </button>
-</div>
-
-
       {/* Review Modal */}
       {showReviewModal && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
@@ -407,7 +388,7 @@ const [showReportModal, setShowReportModal] = useState(false);
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                      userName: reviewUser,
+                      userId: reviewUser,
                       comment: reviewComment,
                       rating: reviewRating,
                     }),
@@ -456,9 +437,12 @@ const [showReportModal, setShowReportModal] = useState(false);
           }`}
           onClick={() => !hasReviewed && reviewUser && setShowReviewModal(true)}
           disabled={hasReviewed || !reviewUser}
-        >
-          {hasReviewed ? 'You have already reviewed this product' : 'Write a Review'}
-        </button>
+        
+  type="submit"
+>
+  Submit Review
+</button>
+
             </form>
           </div>
         </div>
@@ -506,6 +490,42 @@ const [showReportModal, setShowReportModal] = useState(false);
         </div>
       )}
     </>
+
+      {/* ⭐ Ratings & Reviews Section */}
+      <div className="mt-10 bg-white p-6 rounded-lg shadow">
+        <h2 className="text-xl font-semibold mb-2">Customer Ratings & Reviews</h2>
+        <div className="flex items-center mb-4">
+          {renderStars(averageRating)}
+          <span className="ml-2 text-sm text-gray-600">
+            ({averageRating.toFixed(1)} out of 5 from {reviews.length} reviews)
+          </span>
+        </div>
+        {reviews.length > 0 ? (
+          <div className="space-y-4">
+            {reviews.map((review) => (
+              <div key={review._id} className="border-b pb-2">
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold">{review.userName}</p>
+                  <div className="flex">{renderStars(review.rating)}</div>
+                </div>
+                <p className="text-gray-700 mt-1">{review.comment}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500">No reviews yet. Be the first to review this product!</p>
+        )}
+      </div>
+      <div className="mt-10 bg-white p-6 rounded-lg shadow">
+  <h2 className="text-lg font-semibold mb-4">Leave a Review</h2>
+  <button
+    className="bg-orange-600 text-white py-2 px-4 rounded hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+    onClick={() => setShowReviewModal(true)}
+    disabled={hasReviewed}
+  >
+    {hasReviewed ? 'You have already reviewed' : 'Write a Review'}
+  </button>
+</div>
 
 <button
   className="text-sm text-red-600 underline mt-4"

@@ -27,11 +27,12 @@ export async function POST(
     const { productId } = await context.params;
     await dbConnect();
     const body = await req.json();
-    const { userName, comment, rating } = body;
+    const { userId, userName, comment, rating } = body;
 
     const review = await Review.create({
       productId,
       userName,
+      userId,
       comment,
       rating,
     });
