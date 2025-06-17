@@ -90,7 +90,7 @@ export default function SellerDashboard() {
       {/* Quick Actions */}
       <div className="flex flex-wrap gap-4">
         <a
-          href="/seller/addproduct"
+          href="/seller/products/add"
           className="bg-orange-600 text-white px-4 py-2 rounded shadow hover:bg-orange-700 transition"
         >
           ➕ Add Product
