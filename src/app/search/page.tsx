@@ -51,11 +51,14 @@ export default function SearchPage() {
           <p className="mt-4 text-lg">No products found for &quot;{query}&quot;.</p>
         </div>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {results.map((product) => (
-            <ProductCard key={product._id} product={product} />
-          ))}
-        </div>
+<div className="flex flex-wrap gap-4 justify-center">
+  {results.map((product) => (
+    <div key={product._id} className="w-full sm:w-[48%] md:w-[31%] lg:w-[23%] xl:w-[18%]">
+      <ProductCard product={product} />
+    </div>
+  ))}
+</div>
+
       )}
     </div>
   );

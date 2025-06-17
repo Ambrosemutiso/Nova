@@ -1,75 +1,96 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
-import { db } from '@/lib/firebaseConfig';
-import { useAuth } from '@/app/context/AuthContext';
-import { toast } from 'react-toastify';
 
-interface Order {
-  id: string;
-  productId: string;
+import { useEffect, useState } from 'react';
+
+interface OrderItem {
+  name: string;
   quantity: number;
-  totalPrice: number;
-  status: string;
+  price: number;
+  image: string;
 }
 
-export default function OrdersPage() {
-  const { user } = useAuth();
+interface Order {
+  _id: string;
+  customerInfo: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+  };
+  items: OrderItem[];
+  totalAmount: number;
+  status: string;
+  createdAt: string;
+}
+
+export default function SellerOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    const storedUser = localStorage.getItem('sellerUser');
+    if (!storedUser) return;
+    const seller = JSON.parse(storedUser);
 
-    (async () => {
-      try {
-        const q = query(collection(db, 'orders'), where('sellerId', '==', user.uid));
-        const snap = await getDocs(q);
-        setOrders(snap.docs.map(d => ({ id: d.id, ...d.data() } as Order)));
-      } catch (error) {
-        console.error('Failed to load orders:', error);
-        toast.error('Failed to load orders');
-      }
-    })();
-  }, [user]);
-
-  const updateStatus = async (id: string, newStatus: string) => {
-    try {
-      await updateDoc(doc(db, 'orders', id), { status: newStatus });
-      toast.success('Status updated');
-      setOrders(o => o.map(ord => (ord.id === id ? { ...ord, status: newStatus } : ord)));
-    } catch (error) {
-      console.error('Error updating status:', error);
-      toast.error('Error updating status');
-    }
-  };
+    fetch('/api/seller/orders', {
+      method: 'POST',
+      body: JSON.stringify({ sellerId: seller._id }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setOrders(data.orders || []);
+        setLoading(false);
+      })
+      .catch((err) => console.error('Error loading orders:', err));
+  }, []);
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold text-orange-600 mb-4">Manage Orders</h2>
-      <ul className="space-y-4">
-        {orders.map(o => (
-          <li key={o.id} className="bg-white p-4 rounded shadow">
-            <p>Order: {o.id}</p>
-            <p>Product: {o.productId}</p>
-            <p>Quantity: {o.quantity}</p>
-            <p>Total: Ksh {o.totalPrice}</p>
-            <p>Status: <strong>{o.status}</strong></p>
-            <div className="mt-2 space-x-2">
-              {['pending', 'shipped', 'delivered']
-                .filter(s => s !== o.status)
-                .map(s => (
-                  <button
-                    key={s}
-                    onClick={() => updateStatus(o.id, s)}
-                    className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-                  >
-                    Mark “{s}”
-                  </button>
+    <div className="p-4 md:p-6">
+      <h1 className="text-2xl font-bold text-orange-600 mb-4">Seller Orders</h1>
+      {loading ? (
+        <p>Loading orders...</p>
+      ) : orders.length === 0 ? (
+        <p>No orders found.</p>
+      ) : (
+        <div className="space-y-6">
+          {orders.map((order) => (
+            <div
+              key={order._id}
+              className="bg-white p-4 rounded shadow border border-gray-100"
+            >
+              <div className="mb-2">
+                <h2 className="text-lg font-semibold">Order #{order._id.slice(-6)}</h2>
+                <p className="text-sm text-gray-500">Status: {order.status}</p>
+                <p className="text-sm text-gray-500">
+                  Date: {new Date(order.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+              <div className="text-sm text-gray-700">
+                Customer: {order.customerInfo.firstName} {order.customerInfo.lastName} | {order.customerInfo.phone}
+              </div>
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                {order.items.map((item, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-16 h-16 rounded object-cover border"
+                    />
+                    <div>
+                      <p className="font-medium text-gray-800">{item.name}</p>
+                      <p className="text-sm">Qty: {item.quantity}</p>
+                      <p className="text-sm">Ksh {item.price}</p>
+                    </div>
+                  </div>
                 ))}
+              </div>
+              <div className="mt-3 text-right font-bold text-orange-600">
+                Total: Ksh {order.totalAmount.toLocaleString()}
+              </div>
             </div>
-          </li>
-        ))}
-      </ul>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

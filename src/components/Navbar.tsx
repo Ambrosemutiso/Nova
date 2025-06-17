@@ -17,8 +17,9 @@ import { useTheme } from 'next-themes';
 
 type Notification = {
   id: string;
+  tittle: string; 
   message: string;
-  timestamp?: any; 
+  timestamp?: any;
 };
 
 
@@ -45,7 +46,8 @@ const [showNotifModal, setShowNotifModal] = useState(false);
 useEffect(() => {
   const fetchNotifications = async () => {
     try {
-      const res = await fetch('/api/notification/buyer');
+      const role = localStorage.getItem('sellerUser') ? 'seller' : 'buyer';
+      const res = await fetch(`/api/notifications?role=${role}`);
       const json = await res.json();
       if (json.success) {
         setNotifications(json.data);
@@ -57,6 +59,7 @@ useEffect(() => {
 
   fetchNotifications();
 }, []);
+
 
 
 useEffect(() => {
@@ -197,16 +200,15 @@ useEffect(() => {
         <li className="p-4 text-sm text-gray-500">No notifications</li>
       ) : (
         notifications.map((notif) => (
-          <li key={notif._id} className="p-4 text-sm text-gray-700">
-            {notif.message}
+        <li key={notif._id} className="p-4 text-sm text-gray-700">
+        <span className="font-semibold">Notice:</span> {notif.message}
+            <p className="text-xs text-gray-400 mt-1">{new Date(notif.createdAt).toLocaleString()}</p>
           </li>
         ))
       )}
     </ul>
   </div>
 )}
-
-
 
           {user ? (
             <Image
