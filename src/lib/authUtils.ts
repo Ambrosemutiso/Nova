@@ -15,7 +15,7 @@ export const signInWithGoogle = async (role: 'buyer' | 'seller') => {
 
     if (!userDocSnap.exists()) {
       await setDoc(userDocRef, {
-        uid: user.uid,
+        _id: user.uid,
         email: user.email,
         name: user.displayName,
         photo: user.photoURL,
@@ -29,7 +29,7 @@ export const signInWithGoogle = async (role: 'buyer' | 'seller') => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        uid: user.uid,
+        _id: user.uid,
         email: user.email,
         name: user.displayName,
         photo: user.photoURL,
@@ -38,7 +38,7 @@ export const signInWithGoogle = async (role: 'buyer' | 'seller') => {
     });
 
     return {
-      uid: user.uid,
+      _id: user.uid,
       email: user.email,
       name: user.displayName,
       photo: user.photoURL,

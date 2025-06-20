@@ -1,31 +1,40 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import type { Product } from '@/app/types/product';
+import Link from 'next/link';
+
+interface Product {
+  _id: string;
+  name: string;
+  category: string;
+  price: number;
+  quantity: number;
+  createdAt: string;
+}
 
 export default function InventoryPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
-
-  const getPublicId = (url?: string) => {
-    if (!url || typeof url !== 'string') return '';
-    const match = url.match(/\/upload\/(?:v\d+\/)?([^\.]+)/);
-    return match ? match[1] : url;
-  };
 
   useEffect(() => {
+    const sellerData = localStorage.getItem('sellerUser');
+    if (!sellerData) return;
+
+    const { _id: sellerId } = JSON.parse(sellerData);
+    console.log('Using sellerId:', sellerId);
+
     const fetchProducts = async () => {
       try {
-        const res = await fetch('/api/seller/products');
+        const res = await fetch(`/api/seller/products?sellerId=${sellerId}`);
         const json = await res.json();
-        if (json.success) {
-          setProducts(json.products);
+        if (json.success && Array.isArray(json.data)) {
+          setProducts(json.data);
+        } else {
+          setProducts([]); // fallback in case data is missing
         }
-      } catch (err) {
-        console.error('Error fetching products:', err);
+      } catch (error) {
+        console.error('Failed to fetch products', error);
+        setProducts([]);
       } finally {
         setLoading(false);
       }
@@ -34,49 +43,85 @@ export default function InventoryPage() {
     fetchProducts();
   }, []);
 
+  const handleDelete = async (productId: string) => {
+    const confirmDelete = confirm('Are you sure you want to delete this product?');
+    if (!confirmDelete) return;
+
+    try {
+      const res = await fetch(`/api/seller/products/${productId}`, {
+        method: 'DELETE',
+      });
+      const json = await res.json();
+
+      if (json.success) {
+        alert('Product deleted!');
+        setProducts((prev) => prev.filter((p) => p._id !== productId));
+      } else {
+        alert('Failed to delete: ' + json.message);
+      }
+    } catch (err) {
+      console.error('Delete failed:', err);
+      alert('An error occurred while deleting the product.');
+    }
+  };
+
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">📦 Inventory Management</h1>
+    <div className="pt-24 px-4">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-semibold text-orange-600">My Inventory</h1>
+        <Link
+          href="/seller/products/add"
+          className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600"
+        >
+          + Add Product
+        </Link>
+      </div>
 
       {loading ? (
-        <div className="text-gray-600">Loading products...</div>
-      ) : products.length === 0 ? (
-        <div className="text-gray-600">No products found.</div>
+        <p className="text-gray-500">Loading...</p>
+      ) : Array.isArray(products) && products.length === 0 ? (
+        <p className="text-gray-500">No products in your inventory yet.</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {products.map(product => (
-            <div key={product._id} className="border rounded-lg shadow p-4">
-              <Image
-                src={product.images[0]}
-                alt={product.name}
-                width="600"
-                height="400"
-                className="rounded-md object-cover w-full h-64"
-              />
-              <h2 className="text-lg font-semibold mt-2">{product.name}</h2>
-              <p className="text-gray-600">Price: KSh {product.price}</p>
-              <p className={`mt-1 text-sm ${product.quantity > 0 ? 'text-green-600' : 'text-red-500'}`}>
-                {product.quantity > 0 ? `In Stock: ${product.quantity}` : 'Out of Stock'}
-              </p>
-              <p className="text-xs text-gray-400 mt-1">
-                Added: {new Date(product.createdAt).toLocaleDateString()}
-              </p>
-              <div className="mt-4 flex gap-2">
-                <button
-                  onClick={() => router.push(`/seller/edit/${product._id}`)}
-                  className="px-4 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => console.log('Delete logic here')}
-                  className="px-4 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
+        <div className="overflow-x-auto">
+          <table className="min-w-full border border-gray-200 divide-y">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="px-4 py-2 text-left">Name</th>
+                <th className="px-4 py-2 text-left">Category</th>
+                <th className="px-4 py-2 text-left">Price</th>
+                <th className="px-4 py-2 text-left">Quantity</th>
+                <th className="px-4 py-2 text-left">Created</th>
+                <th className="px-4 py-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {products.map((product) => (
+                <tr key={product._id}>
+                  <td className="px-4 py-2 font-medium">{product.name}</td>
+                  <td className="px-4 py-2">{product.category}</td>
+                  <td className="px-4 py-2">Ksh {product.price.toFixed(2)}</td>
+                  <td className="px-4 py-2">{product.quantity}</td>
+                  <td className="px-4 py-2">
+                    {new Date(product.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-2 space-x-2">
+                    <Link
+                      href={`/seller/editproduct/${product._id}`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      Edit
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(product._id)}
+                      className="text-red-600 hover:underline"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

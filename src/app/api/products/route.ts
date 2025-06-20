@@ -18,6 +18,16 @@ export async function POST(request: NextRequest) {
     const sellerId = formData.get('sellerId')?.toString();
     const county = formData.get('county')?.toString();
     const town = formData.get('town')?.toString();
+    const brand = formData.get('brand')?.toString();
+    const model = formData.get('model')?.toString();
+    const material = formData.get('material')?.toString();
+    const dimensions = formData.get('dimensions')?.toString();
+    const color = formData.get('color')?.toString();
+    const keyFeatures = formData.get('keyFeatures')?.toString();
+    const boxContents = formData.get('boxContents')?.toString();
+    const warranty = formData.get('warranty')?.toString();
+    const weight = formData.get('weight')?.toString();
+                                    
 
     if (!name || !price || !category || !sellerId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -56,6 +66,15 @@ export async function POST(request: NextRequest) {
       county,
       town,
       images,
+      brand,
+      model,
+      material,
+      color,
+      keyFeatures,
+      boxContents,
+      warranty,
+      dimensions,
+      weight
     });
 
     await newProduct.save();

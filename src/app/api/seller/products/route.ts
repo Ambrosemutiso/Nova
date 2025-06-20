@@ -1,21 +1,28 @@
-import { NextResponse } from 'next/server';
-import Product from '@/app/models/product';
+import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
+import Product from '@/app/models/product';
 
-export async function GET(req: Request) {
-  await dbConnect();
-
-  const url = new URL(req.url);
-  const sellerId = url.searchParams.get('sellerId');
-
-  if (!sellerId) {
-    return NextResponse.json({ error: 'Seller ID is required' }, { status: 400 });
-  }
-
+export async function GET(req: NextRequest) {
   try {
+    await dbConnect();
+
+    const sellerId = req.nextUrl.searchParams.get('sellerId');
+
+    if (!sellerId) {
+      return NextResponse.json(
+        { success: false, message: 'Missing sellerId in query' },
+        { status: 400 }
+      );
+    }
+
     const products = await Product.find({ sellerId }).sort({ createdAt: -1 });
-    return NextResponse.json({ products });
+
+    return NextResponse.json({ success: true, data: products }); // ✅ Fix: renamed "products" to "data"
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
+    console.error('Fetch seller products error:', error);
+    return NextResponse.json(
+      { success: false, message: 'Server error fetching products' },
+      { status: 500 }
+    );
   }
 }

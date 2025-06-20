@@ -15,14 +15,13 @@ export interface Product {
   sellerId: string;
   brand: string;
   model: string;
-  mainMaterial: string;
+  material: string;
   color: string;
   keyFeatures: string[]; 
-  whatsInTheBox: string;
+  boxContents: string;
   warranty: string;
   dimensions: string;
   weight: string;
   createdAt: string;
   updatedAt: string;
-
 }

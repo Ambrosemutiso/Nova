@@ -12,7 +12,7 @@ export default function Login({ onClose }: { onClose: () => void }) {
     const user = await signInWithGoogle(role); 
     if (user) {
       console.log('Signed in user:', user);
-       localStorage.setItem('userId', user.uid);
+       localStorage.setItem('userId', user._id);
       if (role === 'buyer') {
         localStorage.setItem('buyerUser', JSON.stringify(user));
         window.location.href = '/';

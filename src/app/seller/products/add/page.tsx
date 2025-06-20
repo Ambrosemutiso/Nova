@@ -63,30 +63,10 @@ const countyTownMap: Record<County, string[]> = {
   Migori: ['Migori Town', 'Awendo', 'Rongo']
 };
 
-
 const productCategories = [
-          'Electronics',
-          'Fashion',
-          'Phones',
-          'Laptops',
-          'Computers',
-          'Household',
-          'Kitchen',
-          'Sofas',
-          'Health',
-          'Beauty',
-          'Women',
-          'Kids',
-          'Skincare',
-          'Men',
-          'Books',
-          'Machines',
-          'Spares',
-          'Motors',
-          'Liquor',
-];
-
-
+          'Electronics','Fashion','Phones','Laptops','Computers','Household','Kitchen','Sofas','Health',
+          'Beauty','Women','Kids','Skincare','Men','Books','Machines','Spares','Motors','Liquor',
+        ];
 export default function AddProduct() {
   const { user } = useAuth();
   const router = useRouter();
@@ -205,8 +185,8 @@ const handleCountyChange = (selectedCounty: County | '') => {
         <input type="text" className="w-full border px-4 py-2 rounded" placeholder="Model" value={model} onChange={(e) => setModel(e.target.value)} />
         <input type="text" className="w-full border px-4 py-2 rounded" placeholder="Main Material" value={material} onChange={(e) => setMaterial(e.target.value)} />
         <input type="text" className="w-full border px-4 py-2 rounded" placeholder="Color" value={color} onChange={(e) => setColor(e.target.value)} />
-        <TextEditor content={description} onChange={setDescription} />
-
+        <label className="block font-semibold">Product Description</label>
+        <TextEditor content={description} onChange={setDescription}/>
         <div>
           <label className="block font-semibold">Key Features:</label>
           {keyFeatures.map((feature, idx) => (

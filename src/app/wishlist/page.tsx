@@ -40,8 +40,8 @@ export default function WishlistPage() {
                 <p className="mt-4 text-lg text-orange-700">Your Wishlist is empty</p>
               </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {wishlistItems.map((product) => (
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {wishlistItems.map((product) => (
             <div key={product._id} className="border p-4 rounded-md bg-white shadow-sm">
               <div
                 onClick={() => router.push(`/product/${product._id}`)}
@@ -57,7 +57,7 @@ export default function WishlistPage() {
                 />
               </div>
               <h3 className="text-md font-semibold">{product.name}</h3>
-              <p className="text-sm text-gray-500">Ksh {product.price}</p>
+              <p className="text-sm text-gray-500">Ksh {product.calculatedPrice}</p>
 
               <div className="mt-2 flex justify-between">
                 <button

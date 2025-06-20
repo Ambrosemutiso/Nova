@@ -257,7 +257,6 @@ return (
         <div className="absolute top-0 right-0 bg-red-500 text-white px-2 py-0.5 rounded-bl-lg text-sm z-10">
           {calculateDiscount(product.oldPrice, product.calculatedPrice)}% OFF
         </div>
-
         <Swiper
           modules={[Autoplay]}
           autoplay={{ delay: 3000 }}
@@ -281,7 +280,6 @@ return (
         </Swiper>
       </div>
     </div>
-
 {/* Product Info Section */}
 <div className="px-4 py-5 space-y-4 bg-white rounded-md shadow-sm text-gray-800">
   <h1 className="text-2xl font-bold text-gray-900">{product.name}</h1>
@@ -289,8 +287,11 @@ return (
   <p className="text-sm font-medium text-blue-600">
     Brand: <span className="capitalize">{product.brand}</span>
   </p>
+    <p className="text-sm font-medium text-blue-600">
+    Model: <span className="capitalize">{product.model}</span>
+  </p>
 
-  <div className="flex items-center gap-3">
+  <div className="flex items-start gap-3">
     <span className="text-2xl font-extrabold text-orange-600">
       Ksh {product.calculatedPrice.toLocaleString()}
     </span>
@@ -307,7 +308,7 @@ return (
   </p>
 
   <p className="text-sm text-gray-600">
-    + Shipping from <strong>{product.county}</strong>: <span className="text-gray-800 font-semibold">Ksh 200</span>
+    + Shipping from <strong>{product.county}</strong>: <span className="text-orange-800 font-semibold">Ksh 200</span>
   </p>
 
   <div className="flex items-center space-x-2">
@@ -332,7 +333,6 @@ return (
       </div>
     )}
 
-
 {product.keyFeatures && product.keyFeatures.length > 0 && (
   <div className="mt-6 bg-white shadow rounded-lg p-6">
     <h2 className="text-xl font-semibold mb-4 border-b pb-2">Key Features</h2>
@@ -344,28 +344,25 @@ return (
   </div>
 )}
 
-
-{product.whatsInTheBox && (
+{product.boxContents && (
   <div className="mt-6 bg-white shadow rounded-lg p-6">
 <h2 className="text-xl font-semibold mb-4 border-b pb-2">What&apos;s in the Box</h2>
-    <p className="text-gray-700">{product.whatsInTheBox}</p>
+    <p className="text-gray-700">{product.boxContents}</p>
   </div>
 )}
-
 
 <div className="mt-6 bg-white shadow rounded-lg p-6">
   <h2 className="text-xl font-semibold mb-4 border-b pb-2">Specifications</h2>
   <div className="grid grid-cols-2 gap-4 text-gray-700">
     {product.brand && <div><span className="font-medium">Brand:</span> {product.brand}</div>}
     {product.model && <div><span className="font-medium">Model:</span> {product.model}</div>}
-    {product.mainMaterial && <div><span className="font-medium">Main Material:</span> {product.mainMaterial}</div>}
+    {product.material && <div><span className="font-medium">Main Material:</span> {product.material}</div>}
     {product.color && <div><span className="font-medium">Color:</span> {product.color}</div>}
     {product.dimensions && <div><span className="font-medium">Dimensions:</span> {product.dimensions}</div>}
     {product.weight && <div><span className="font-medium">Weight:</span> {product.weight}</div>}
     {product.warranty && <div><span className="font-medium">Warranty:</span> {product.warranty}</div>}
   </div>
 </div>
-
 
       {zoomedImage && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
@@ -427,15 +424,8 @@ return (
             >
               <div className="mb-4">
                 <label className="block text-sm font-medium">Comment</label>
-                <textarea
-                  className="mt-1 p-2 border rounded w-full"
-                  rows={3}
-                  value={reviewComment}
-                  onChange={(e) => setReviewComment(e.target.value)}
-                  required
-                />
+                <textarea className="mt-1 p-2 border rounded w-full" rows={3} value={reviewComment} onChange={(e) => setReviewComment(e.target.value)} required/>
               </div>
-
               <div className="mb-4">
                 <label className="block text-sm font-medium">Rating (1–5)</label>
                 <input
@@ -449,18 +439,14 @@ return (
                 />
               </div>
 
-        <button
+        <button type="submit"
           className={`bg-orange-600 text-white py-2 px-4 rounded hover:bg-orange-700 ${
             hasReviewed || !reviewUser ? 'opacity-50 cursor-not-allowed' : ''
           }`}
           onClick={() => !hasReviewed && reviewUser && setShowReviewModal(true)}
-          disabled={hasReviewed || !reviewUser}
-        
-  type="submit"
->
-  Submit Review
-</button>
-
+          disabled={hasReviewed || !reviewUser}>
+            Submit Review
+            </button>
             </form>
           </div>
         </div>
@@ -544,18 +530,11 @@ return (
     {hasReviewed ? 'You have already reviewed' : 'Write a Review'}
   </button>
 </div>
-
-<button
-  className="text-sm text-red-600 underline mt-4"
-  onClick={() => setShowReportModal(true)}
->
-  Report Incorrect Product Details
-</button>
-
+<button className="text-sm text-red-600 underline mt-4" onClick={() => setShowReportModal(true)}>Report Incorrect Product Details</button>
 {showReportModal && (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
     <div className="bg-white p-5 rounded shadow-md w-11/12 max-w-md space-y-3">
-      <h2 className="text-lg font-semibold">Report Product</h2>
+      <h2 className="text-lg font-semibold">Report this Product</h2>
 
       <label className="block text-sm font-medium">Reason</label>
       <select
@@ -570,36 +549,13 @@ return (
         <option value="Inappropriate content">Inappropriate content</option>
         <option value="Other">Other</option>
       </select>
-
       <label className="block text-sm font-medium">Description (optional)</label>
-      <textarea
-        className="w-full border border-gray-300 rounded p-2"
-        rows={3}
-        value={reportMessage}
-        onChange={(e) => setReportMessage(e.target.value)}
-        placeholder="Explain the issue (optional)"
-      />
-
+      <textarea className="w-full border border-gray-300 rounded p-2" rows={3} value={reportMessage} onChange={(e) => setReportMessage(e.target.value)} placeholder="Explain the issue (optional)"/>
       <label className="block text-sm font-medium">Screenshot (optional)</label>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          className="block w-full"
-        />
+        <input type="file" accept="image/*" onChange={handleFileChange} className="block w-full"/>
       <div className="flex justify-end space-x-2 pt-2">
-        <button
-          onClick={() => setShowReportModal(false)}
-          className="px-3 py-1 bg-gray-300 rounded"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleReportSubmit}
-          className="px-3 py-1 bg-red-600 text-white rounded"
-        >
-          Submit
-        </button>
+        <button onClick={() => setShowReportModal(false)} className="px-3 py-1 bg-gray-300 rounded">Cancel</button>
+        <button onClick={handleReportSubmit} className="px-3 py-1 bg-red-600 text-white rounded">Submit</button>
       </div>
     </div>
   </div>
