@@ -129,6 +129,18 @@ export default function CategoryPage() {
 
   return (
     <div className="md:px-8 lg:px-16 max-w-6xl mx-auto px-4 pt-28 pb-10">
+                  {/* Breadcrumb */}
+                    <div className="mb-6 overflow-x-auto">
+                      <nav className="flex items-center text-sm text-gray-500 whitespace-nowrap flex-nowrap gap-1 px-1">
+                        <span>Home</span>
+                        <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
+                        <span>Shop</span>
+                        <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
+                        <span>Products</span>
+                        <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
+                        <span className="text-orange-700 font-medium">{safeCategory}</span>
+                        </nav>
+                      </div>
       <div className="w-full h-40 rounded-md mb-6 overflow-hidden relative">
         <Image src={bannerSrc} alt={`${safeCategory} banner`} fill className="object-cover" />
       </div>
@@ -154,18 +166,6 @@ export default function CategoryPage() {
             const inWishlist = isInWishlist(product._id);
             return (
               <div key={product._id} className="border p-4 rounded-md bg-white shadow-sm">
-                    {/* Breadcrumb */}
-<div className="mb-6 overflow-x-auto">
-  <nav className="flex items-center text-sm text-gray-500 whitespace-nowrap flex-nowrap gap-1 px-1">
-    <span>Home</span>
-    <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
-    <span>Shop</span>
-    <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
-    <span>Products</span>
-    <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
-    <span className="text-orange-700 font-medium">{product.category}</span>
-  </nav>
-</div>
                 <div
                   onClick={() => router.push(`/product/${product._id}`)}
                   className="cursor-pointer mb-2 w-full h-40 relative"

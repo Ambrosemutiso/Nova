@@ -37,7 +37,7 @@ export default function HeroSlider() {
         modules={[Autoplay]}
         autoplay={{ delay: 6000, disableOnInteraction: false }}
         loop
-        slidesPerView={2}
+        slidesPerView={1}
         spaceBetween={0}
         allowTouchMove={true}
       >

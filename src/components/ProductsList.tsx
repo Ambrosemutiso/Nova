@@ -20,8 +20,10 @@ import Spares from '@/components/categories/Spares/page';
 import Beauty from '@/components/categories/Beauty/page';
 import Kitchen from '@/components/categories/Kitchen/page';
 import Liquor from '@/components/categories/Liquor/page';
-import Sports from '@/components/categories/Sports/page'
-import Robotics from '@/components/categories/Robotics/page'
+import Sports from '@/components/categories/Sports/page';
+import Robotics from '@/components/categories/Robotics/page';
+import Systems from '@/components/categories/Sound/page';
+import Gaming from '@/components/categories/Gaming/page';
 
 interface ProductsListProps {
   category: string;
@@ -37,6 +39,8 @@ const renderCategory = (title: string, Component: React.FC) => (
   switch (category) {
     case 'Electronics':
       return renderCategory('Electronics', Electronics);
+    case 'Sound Systems':
+      return renderCategory('Sound Systems', Systems);
     case 'Fashion':
       return renderCategory('Fashion', Fashion);
     case 'Phones & Tablets':
@@ -59,6 +63,8 @@ const renderCategory = (title: string, Component: React.FC) => (
       return renderCategory('Women', Women);
     case 'Kids':
       return renderCategory('Kids', Kids);
+      case 'Gaming':
+      return renderCategory('Gaming', Gaming);
     case 'Skincare':
       return renderCategory('Skincare', Skincare);
     case 'Men':
@@ -81,9 +87,9 @@ const renderCategory = (title: string, Component: React.FC) => (
       return (
         <>
           {renderCategory('Electronics', Electronics)}
-          {renderCategory('Electronics', Electronics)}
-          {renderCategory('Fashion', Fashion)}
           {renderCategory('Phones & Tablets', Phones)}
+          {renderCategory('Sound Systems', Systems)}
+          {renderCategory('Fashion', Fashion)}
           {renderCategory('Laptops', Laptops)}
           {renderCategory('Computers', Computers)}
           {renderCategory('Household', Household)}
@@ -93,6 +99,7 @@ const renderCategory = (title: string, Component: React.FC) => (
           {renderCategory('Beauty', Beauty)}
           {renderCategory('Women', Women)}
           {renderCategory('Kids', Kids)}
+          {renderCategory('Gaming', Gaming)}
           {renderCategory('Skincare', Skincare)}
           {renderCategory('Men', Men)}
           {renderCategory('Books', Books)}

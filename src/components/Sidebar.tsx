@@ -28,7 +28,7 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
     { label: 'Wishlist', icon: <FiHeart />, route: '/wishlist' },
     { label: 'My Orders', icon: <FiPackage />, route: '/orders' },
     { label: 'Phones & Tablets', icon: <FiSmartphone />, route: '/category/Phones' },
-    { label: 'Computing', icon: <FiMonitor />, route: '/category/computing' },
+    { label: 'Computing', icon: <FiMonitor />, route: '/category/Laptops' },
     { label: 'Electronics', icon: <FiTv />, route: '/category/Electronics' },
     { label: 'Fashion', icon: <FiUser />, route: '/category/Fashion' },
     { label: 'Health & Beauty', icon: <FiHeart />, route: '/category/Health' },
@@ -36,7 +36,7 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
     { label: 'Baby Products', icon: <FiGift />, route: '/category/Kids' },
     { label: 'Gaming', icon: <FiWatch />, route: '/category/Gaming' },
     { label: 'Sporting Goods', icon: <FiTruck />, route: '/category/Sports' },
-    { label: 'Automotive', icon: <FiTool />, route: '/category/automotive' },
+    { label: 'Automotive', icon: <FiTool />, route: '/category/Motors' },
     { label: 'Books & Stationery', icon: <FiBook />, route: '/category/Books' },
     { label: 'Other Categories', icon: <FiGrid />, route: '/category/categories' },
   ];

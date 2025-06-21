@@ -96,7 +96,7 @@ const ProductImageViewer = ({
       </Swiper>
 
       {/* Bottom-right Icons */}
-      <div className="absolute bottom-3 right-3 flex gap-3 bg-transparent p-2 rounded-full shadow z-10">
+      <div className="absolute bottom-3 right-3 flex gap-3 bg-white/90 p-2 rounded-full shadow z-10">
         <Share2
           size={20}
           className="text-gray-700 cursor-pointer hover:text-orange-600"
