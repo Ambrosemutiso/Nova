@@ -12,13 +12,14 @@ import ImageZoom from 'react-medium-image-zoom';
 import 'react-medium-image-zoom/dist/styles.css';
 import { useCart } from '@/app/context/CartContext';
 import Image from 'next/image';
-import { Star, StarHalf, StarOff, ShoppingCart, X } from 'lucide-react';
+import { Star, StarHalf, StarOff, ShoppingCart, X , ChevronRight} from 'lucide-react';
 import type { Product } from '@/app/types/product';
 import RelatedProducts from '@/components/RelatedProducts'
 import CustomersAlsoViewed from "@/components/CustomersAlsoViewed";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import SaveToRecentlyViewed from '@/components/SaveToRecentlyViewed';
 import BehaviorTracker from '@/components/BehaviourTracker';
+import ProductImageViewer from '@/components/ProductImageViewer';
 
 type Review = {
   _id: string;
@@ -95,12 +96,10 @@ const [showReportModal, setShowReportModal] = useState(false);
     }
   }, [reportSuccess]);
 
-
-
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const uid = localStorage.getItem('userId');
-      if (uid) setUserId(uid);
+      const _id = localStorage.getItem('userId');
+      if (_id) setUserId(_id);
     }
   }, []);
 
@@ -189,12 +188,6 @@ const [showReportModal, setShowReportModal] = useState(false);
     return Math.round(((oldPrice - newPrice) / oldPrice) * 100);
   };
 
-  const getPublicId = (url?: string) => {
-    if (!url || typeof url !== 'string') return '';
-    const match = url.match(/\/upload\/(?:v\d+\/)?([^\.]+)/);
-    return match ? match[1] : url;
-  };
-
     useEffect(() => {
     const userReviewed = reviews.some(
       (r) => r.userName.trim().toLowerCase() === reviewUser.trim().toLowerCase()
@@ -209,6 +202,9 @@ const [showReportModal, setShowReportModal] = useState(false);
       id: product._id,
       name: product.name,
       images: product.images,
+      brand: product.brand,
+      model: product.model,
+      county: product.county,
       calculatedPrice: product.calculatedPrice,
       quantity: 1,
     });
@@ -232,62 +228,49 @@ const [showReportModal, setShowReportModal] = useState(false);
     return stars;
   };
 
+
   if (!product)
     return (
     <div className="flex items-center justify-center min-h-screen bg-white">
       <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
     </div>
     );
-
 return (
   <div className="max-w-6xl mx-auto px-4 pt-28 pb-10"> {/* pt-28 to offset navbar height */}
-    
-    {/* Breadcrumb */}
-    <div className="mb-6">
-      <nav className="text-sm text-gray-500">
-        Home / Shop / {product.category} / <span className="text-orange-700 font-medium">{product.name}</span>
-      </nav>
-    </div>
+<div className="mb-6 overflow-x-auto">
+  <nav className="flex items-center text-sm text-gray-500 whitespace-nowrap flex-nowrap gap-1 px-1">
+    <span>Home</span>
+    <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
+    <span>Shop</span>
+    <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
+    <span>Products</span>
+    <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
+    <span className="text-orange-700 font-medium">{product.category}</span>
+    <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
+    <span className="text-orange-700 font-medium">{product.name}</span>
+  </nav>
+</div>
+
 
     {/* Main Product Section */}
-    <div className="bg-white rounded-lg shadow-lg p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+{product && (
+  <div className="bg-white rounded-lg shadow-lg p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+    <ProductImageViewer
+      images={product.images}
+      name={product.name}
+    />
+  </div>
+)}
 
-      {/* Image Section */}
-      <div className="relative">
-        <div className="absolute top-0 right-0 bg-red-500 text-white px-2 py-0.5 rounded-bl-lg text-sm z-10">
-          {calculateDiscount(product.oldPrice, product.calculatedPrice)}% OFF
-        </div>
-        <Swiper
-          modules={[Autoplay]}
-          autoplay={{ delay: 3000 }}
-          loop
-          spaceBetween={10}
-          slidesPerView={1}
-          allowTouchMove={true}
-          className="rounded-md"
-        >
-          {product.images.slice(0, 4).map((image, index) => (
-            <SwiperSlide key={index} onClick={() => setZoomedImage(image)}>
-              <CldImage
-                src={getPublicId(image)}
-                alt={product.name}
-                width="600"
-                height="400"
-                className="rounded-md object-cover w-full h-64"
-              />
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      </div>
-    </div>
 {/* Product Info Section */}
 <div className="px-4 py-5 space-y-4 bg-white rounded-md shadow-sm text-gray-800">
-  <h1 className="text-2xl font-bold text-gray-900">{product.name}</h1>
+  <h1 className="text-left text-2xl font-bold text-gray-900">{product.name}</h1>
 
-  <p className="text-sm font-medium text-blue-600">
+  <p className="text-left text-sm font-medium text-blue-600">
     Brand: <span className="capitalize">{product.brand}</span>
   </p>
-    <p className="text-sm font-medium text-blue-600">
+  
+  <p className="text-left text-sm font-medium text-blue-600">
     Model: <span className="capitalize">{product.model}</span>
   </p>
 
@@ -303,24 +286,21 @@ return (
     </span>
   </div>
 
-  <p className={`text-sm font-semibold ${product.quantity > 0 ? 'text-green-600' : 'text-red-500'}`}>
+  <p className={`text-left text-sm font-semibold ${product.quantity > 0 ? 'text-green-600' : 'text-red-500'}`}>
     {product.quantity > 0 ? `${product.quantity} unit${product.quantity > 1 ? 's' : ''} left` : 'Out of stock'}
   </p>
 
-  <p className="text-sm text-gray-600">
+  <p className="text-left text-sm text-gray-600">
     + Shipping from <strong>{product.county}</strong>: <span className="text-orange-800 font-semibold">Ksh 200</span>
   </p>
 
   <div className="flex items-center space-x-2">
-    <div className="flex text-yellow-500">
-      {renderStars(averageRating)}
-    </div>
+    <div className="flex text-yellow-500">{renderStars(averageRating)}</div>
     <span className="text-sm text-gray-600">
       ({averageRating.toFixed(1)} out of 5 from {reviews.length} review{reviews.length !== 1 ? 's' : ''})
     </span>
   </div>
 </div>
-
 
     {/* Product Description */}
     {product.description && (
@@ -333,23 +313,23 @@ return (
       </div>
     )}
 
-{product.keyFeatures && product.keyFeatures.length > 0 && (
   <div className="mt-6 bg-white shadow rounded-lg p-6">
-    <h2 className="text-xl font-semibold mb-4 border-b pb-2">Key Features</h2>
-    <ul className="list-disc list-inside text-gray-700 space-y-1">
-      {product.keyFeatures.map((feature, index) => (
-        <li key={index}>{feature}</li>
-      ))}
-    </ul>
-  </div>
-)}
+  <h2 className="text-lg font-semibold text-gray-900 mb-2">Key Features</h2>
+  <ul className="list-disc list-inside space-y-1 text-gray-700 text-sm">
+    {product.keyFeatures.map((feature: string, idx: number) => (
+      <li key={idx}>{feature}</li>
+    ))}
+  </ul>
+</div>
 
-{product.boxContents && (
   <div className="mt-6 bg-white shadow rounded-lg p-6">
-<h2 className="text-xl font-semibold mb-4 border-b pb-2">What&apos;s in the Box</h2>
-    <p className="text-gray-700">{product.boxContents}</p>
-  </div>
-)}
+  <h2 className="text-lg font-semibold text-gray-900 mb-2">What&apos;s in the Box</h2>
+  <ul className="list-disc list-inside space-y-1 text-gray-700 text-sm">
+    {product.boxContents.map((Box: string, idx: number) => (
+      <li key={idx}>{Box}</li>
+    ))}
+  </ul>
+</div>
 
 <div className="mt-6 bg-white shadow rounded-lg p-6">
   <h2 className="text-xl font-semibold mb-4 border-b pb-2">Specifications</h2>
@@ -363,24 +343,6 @@ return (
     {product.warranty && <div><span className="font-medium">Warranty:</span> {product.warranty}</div>}
   </div>
 </div>
-
-      {zoomedImage && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="relative p-4 bg-white rounded-lg">
-              <X className="w-6 h-6 text-red-500 cursor-pointer" onClick={() => setZoomedImage(null)} />
-            <ImageZoom>
-              <Image
-                src={zoomedImage}
-                alt="Zoomed Image"
-                width={600}
-                height={600}
-                className="object-contain w-full h-full"
-                style={{ maxWidth: '600px', maxHeight: '600px' }}
-              />
-            </ImageZoom>
-          </div>
-        </div>
-      )}
 
       {/* Review Modal */}
       {showReviewModal && (

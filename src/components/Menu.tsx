@@ -11,8 +11,9 @@ interface Category {
 const categories: Category[] = [
   { name: 'Shop',        image: '/shop.png' },
   { name: 'Laptops',     image: '/laptop.jpg' },
-  { name: 'Phones',      image: '/phone.jpg' },
+  { name: 'Phones & Tablets',      image: '/phone.jpg' },
   { name: 'Computers',     image: '/kitchen.jpg' },
+  { name: 'Sound Systems',     image: '/kitchen.jpg' },
   { name: 'Household',    image: '/kitchen1.jpg' },
   { name: 'Kitchen',       image: '/kitchen.jpg' },
   { name: 'Sofas',    image: '/TV.jpg' },
@@ -26,7 +27,9 @@ const categories: Category[] = [
   { name: 'Machines',    image: '/TV.jpg' },
   { name: 'Spares',      image: '/TV2.jpg' },
   { name: 'Motors',      image: '/TV2.jpg' }, 
-  { name: 'Liquor',      image: '/TV2.jpg' },  
+  { name: 'Liquor',      image: '/TV2.jpg' },
+  { name: 'Robotics',      image: '/TV2.jpg' },
+  { name: 'Sports',      image: '/TV2.jpg' },  
 ];
                                      
 export default function CategoryMenu({

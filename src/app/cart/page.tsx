@@ -131,7 +131,9 @@ const getPublicId = (url?: string) => {
           <div className="flex justify-between items-start">
             <div>
               <p className="font-semibold text-gray-800">{item.name}</p>
-              <p className="text-sm text-gray-500 mt-1">Sold by: <span className="font-medium">Official Store</span></p>
+              <p className="text-sm text-gray-500 mt-1">Shipped from <span className="font-medium">{item.county}</span></p>
+              <p className="text-sm text-gray-500 mt-1">Brand: <span className="font-medium">{item.brand}</span></p>
+              <p className="text-sm text-gray-500 mt-1">Model: <span className="font-medium">{item.model}</span></p>
               <p className="text-orange-600 mt-2 font-bold">Ksh.{item.calculatedPrice}</p>
             </div>
             <button

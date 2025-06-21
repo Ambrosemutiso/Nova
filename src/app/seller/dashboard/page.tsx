@@ -52,7 +52,7 @@ export default function SellerDashboard() {
   ]; // Replace with real backend data later
 
   return (
-    <div className="p-4 md:p-6">
+    <div className="p-4 md:p-6 max-w-6xl mx-auto px-4 pt-28 pb-10">
       <h1 className="text-3xl font-bold text-orange-600 mb-4">
         Welcome, {seller?.name || 'Loading...'}
       </h1>

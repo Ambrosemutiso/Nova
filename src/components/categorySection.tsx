@@ -43,21 +43,6 @@ export default function CategorySection({ title, categorySlug, children }: Categ
         </button>
       </div>
 
-      {/* Scroll Arrows */}
-      <button
-        onClick={() => scroll('left')}
-        className="absolute top-1/2 -left-4 transform -translate-y-1/2 bg-white shadow p-1 rounded-full z-20"
-      >
-        <ChevronLeft className="w-5 h-5 text-orange-500" />
-      </button>
-
-      <button
-        onClick={() => scroll('right')}
-        className="absolute top-1/2 -right-4 transform -translate-y-1/2 bg-white shadow p-1 rounded-full z-20"
-      >
-        <ChevronRight className="w-5 h-5 text-orange-500" />
-      </button>
-
       {/* Product Row */}
       <div
         ref={scrollRef}

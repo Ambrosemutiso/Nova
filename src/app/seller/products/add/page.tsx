@@ -65,7 +65,7 @@ const countyTownMap: Record<County, string[]> = {
 
 const productCategories = [
           'Electronics','Fashion','Phones','Laptops','Computers','Household','Kitchen','Sofas','Health',
-          'Beauty','Women','Kids','Skincare','Men','Books','Machines','Spares','Motors','Liquor',
+          'Beauty','Women','Kids','Skincare','Men','Books','Machines','Spares','Motors','Liquor','Sports','Robotics',
         ];
 export default function AddProduct() {
   const { user } = useAuth();
@@ -77,7 +77,7 @@ export default function AddProduct() {
   const [color, setColor] = useState('');
   const [description, setDescription] = useState('');
   const [keyFeatures, setKeyFeatures] = useState(['']);
-  const [boxContents, setBoxContents] = useState('');
+  const [boxContents, setBoxContents] = useState(['']);
   const [warranty, setWarranty] = useState('');
   const [dimensions, setDimensions] = useState('');
   const [weight, setWeight] = useState('');
@@ -99,6 +99,18 @@ export default function AddProduct() {
 
   const addFeatureField = () => setKeyFeatures([...keyFeatures, '']);
   const removeFeatureField = (index: number) => setKeyFeatures(keyFeatures.filter((_, i) => i !== index));
+
+
+  const handleBoxChange = (index: number, value: string) => {
+    const updated = [...boxContents];
+    updated[index] = value;
+    setBoxContents(updated);
+  };
+
+  const addBoxField = () => setKeyFeatures([...boxContents, '']);
+  const removeBoxField = (index: number) => setKeyFeatures(boxContents.filter((_, i) => i !== index));
+
+
 
   const handlePriceChange = (value: string) => {
     const parsed = parseFloat(value);
@@ -137,11 +149,11 @@ const handleCountyChange = (selectedCounty: County | '') => {
     formData.append('name', name);
     formData.append('brand', brand);
     formData.append('model', model);
-    formData.append('mainMaterial', material);
+    formData.append('material', material);
     formData.append('color', color);
     formData.append('description', description);
     formData.append('keyFeatures', JSON.stringify(keyFeatures));
-    formData.append('whatsInTheBox', boxContents);
+    formData.append('boxContents', JSON.stringify(boxContents));
     formData.append('warranty', warranty);
     formData.append('dimensions', dimensions);
     formData.append('weight', weight);
@@ -176,7 +188,7 @@ const handleCountyChange = (selectedCounty: County | '') => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
+    <div className="max-w-2xl p-6 mx-auto px-4 pt-28 pb-10">
       <ToastContainer />
       <h1 className="text-2xl font-bold text-orange-600 mb-4">Add Product</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -195,10 +207,19 @@ const handleCountyChange = (selectedCounty: County | '') => {
               <button type="button" onClick={() => removeFeatureField(idx)} className="text-red-500">Remove</button>
             </div>
           ))}
-          <button type="button" onClick={addFeatureField} className="text-blue-500">+ Add Feature</button>
+          <button type="button" onClick={addFeatureField} className="text-orange-500">+ Add Feature</button>
+        </div>
+        <div>
+          <label className="block font-semibold">What&apos;s in the Box:</label>
+          {boxContents.map((box, idx) => (
+            <div key={idx} className="flex gap-2 mb-2">
+              <input type="text" className="flex-1 border px-4 py-2 rounded" value={box} onChange={(e) => handleBoxChange(idx, e.target.value)} />
+              <button type="button" onClick={() => removeBoxField(idx)} className="text-red-500">Remove</button>
+            </div>
+          ))}
+          <button type="button" onClick={addBoxField} className="text-orange-500">+ Add Box Content</button>
         </div>
 
-        <input type="string" className="w-full border px-4 py-2 rounded" placeholder="What's in the Box" value={boxContents} onChange={(e) => setBoxContents(e.target.value)} />
         <input type="string" className="w-full border px-4 py-2 rounded" placeholder="Warranty Period" value={warranty} onChange={(e) => setWarranty(e.target.value)} />
         <input type="string" className="w-full border px-4 py-2 rounded" placeholder="Dimensions (L x W x H)" value={dimensions} onChange={(e) => setDimensions(e.target.value)} />
         <input type="string" className="w-full border px-4 py-2 rounded" placeholder="Weight" value={weight} onChange={(e) => setWeight(e.target.value)} />

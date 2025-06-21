@@ -20,6 +20,8 @@ import Spares from '@/components/categories/Spares/page';
 import Beauty from '@/components/categories/Beauty/page';
 import Kitchen from '@/components/categories/Kitchen/page';
 import Liquor from '@/components/categories/Liquor/page';
+import Sports from '@/components/categories/Sports/page'
+import Robotics from '@/components/categories/Robotics/page'
 
 interface ProductsListProps {
   category: string;
@@ -37,8 +39,8 @@ const renderCategory = (title: string, Component: React.FC) => (
       return renderCategory('Electronics', Electronics);
     case 'Fashion':
       return renderCategory('Fashion', Fashion);
-    case 'Phones':
-      return renderCategory('Phones', Phones);
+    case 'Phones & Tablets':
+      return renderCategory('Phones & Tablets', Phones);
     case 'Laptops':
       return renderCategory('Laptops', Laptops);
     case 'Computers':
@@ -71,12 +73,17 @@ const renderCategory = (title: string, Component: React.FC) => (
       return renderCategory('Motors', Motors);
     case 'Liquor':
       return renderCategory('Liquor', Liquor);
+          case 'Sports':
+      return renderCategory('Liquor', Sports);
+          case 'Robotics':
+      return renderCategory('Liquor', Robotics);
     default:
       return (
         <>
           {renderCategory('Electronics', Electronics)}
+          {renderCategory('Electronics', Electronics)}
           {renderCategory('Fashion', Fashion)}
-          {renderCategory('Phones', Phones)}
+          {renderCategory('Phones & Tablets', Phones)}
           {renderCategory('Laptops', Laptops)}
           {renderCategory('Computers', Computers)}
           {renderCategory('Household', Household)}
@@ -93,6 +100,8 @@ const renderCategory = (title: string, Component: React.FC) => (
           {renderCategory('Spares', Spares)}
           {renderCategory('Motors', Motors)}
           {renderCategory('Liquor', Liquor)}
+          {renderCategory('Sports', Sports)}
+          {renderCategory('Robotics', Robotics)}
         </>
       );
   }

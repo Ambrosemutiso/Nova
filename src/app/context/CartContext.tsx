@@ -18,6 +18,9 @@ export interface CartItem {
   images: string[];
   calculatedPrice: number;
   quantity: number;
+  county: string;
+  model: string;
+  brand: string;
 }
 
 

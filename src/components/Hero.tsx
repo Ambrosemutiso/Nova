@@ -35,9 +35,9 @@ export default function HeroSlider() {
     <div className="w-full max-w-[100vw] overflow-hidden px-6 pt-28 pb-10">
       <Swiper
         modules={[Autoplay]}
-        autoplay={{ delay: 3000, disableOnInteraction: false }}
+        autoplay={{ delay: 6000, disableOnInteraction: false }}
         loop
-        slidesPerView={1}
+        slidesPerView={2}
         spaceBetween={0}
         allowTouchMove={true}
       >

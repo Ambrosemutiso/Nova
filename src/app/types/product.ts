@@ -18,7 +18,7 @@ export interface Product {
   material: string;
   color: string;
   keyFeatures: string[]; 
-  boxContents: string;
+  boxContents: string[];
   warranty: string;
   dimensions: string;
   weight: string;
