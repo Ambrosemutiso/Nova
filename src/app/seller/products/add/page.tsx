@@ -152,8 +152,8 @@ const handleCountyChange = (selectedCounty: County | '') => {
     formData.append('material', material);
     formData.append('color', color);
     formData.append('description', description);
-    keyFeatures.forEach((feature) => formData.append('keyFeatures', feature));
-    boxContents.forEach((Box) => formData.append('boxContents', Box));
+    formData.append('keyFeatures', JSON.stringify(keyFeatures));
+    formData.append('boxContents', JSON.stringify(boxContents));
     formData.append('warranty', warranty);
     formData.append('dimensions', dimensions);
     formData.append('weight', weight);

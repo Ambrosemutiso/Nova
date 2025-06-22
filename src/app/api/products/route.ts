@@ -23,8 +23,8 @@ export async function POST(request: NextRequest) {
     const material = formData.get('material')?.toString();
     const dimensions = formData.get('dimensions')?.toString();
     const color = formData.get('color')?.toString();
-    const keyFeatures = formData.get('keyFeatures')?.toString();
-    const boxContents = formData.get('boxContents')?.toString();
+    const keyFeatures = JSON.parse(formData.get('keyFeatures')?.toString() || '[]');
+    const boxContents = JSON.parse(formData.get('boxContents')?.toString() || '[]');
     const warranty = formData.get('warranty')?.toString();
     const weight = formData.get('weight')?.toString();
                                     

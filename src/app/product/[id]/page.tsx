@@ -308,25 +308,27 @@ return (
       </div>
     )}
 
-<div>
-  <h2 className="font-bold text-lg mb-1">Key Features</h2>
-  <ul className="list-disc list-inside text-sm text-gray-700">
+{Array.isArray(product.keyFeatures) && (
+  <div className="mt-6 bg-white shadow rounded-lg p-6">
+  <h2 className="text-lg font-semibold text-gray-900 mb-2">Key Features</h2>
+  <ul className="list-disc list-inside space-y-1 text-gray-700 text-sm">
     {product.keyFeatures.map((feature, i) => (
       <li key={i}>{feature}</li>
     ))}
   </ul>
 </div>
+)}
 
-<div className="mt-4">
-  <h2 className="font-bold text-lg mb-1">What's in the Box</h2>
-  <ul className="list-disc list-inside text-sm text-gray-700">
+{Array.isArray(product.boxContents) && (
+  <div className="mt-6 bg-white shadow rounded-lg p-6">
+  <h2 className="text-lg font-semibold text-gray-900 mb-2">What&apos;s in the Box</h2>
+  <ul className="list-disc list-inside space-y-1 text-gray-700 text-sm">
     {product.boxContents.map((item, i) => (
       <li key={i}>{item}</li>
     ))}
   </ul>
 </div>
-
-
+)}
 
 <div className="mt-6 bg-white shadow rounded-lg p-6">
   <h2 className="text-xl font-semibold mb-4 border-b pb-2">Specifications</h2>
