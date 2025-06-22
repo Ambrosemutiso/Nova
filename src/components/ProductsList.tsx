@@ -80,9 +80,9 @@ const renderCategory = (title: string, Component: React.FC) => (
     case 'Liquor':
       return renderCategory('Liquor', Liquor);
           case 'Sports':
-      return renderCategory('Liquor', Sports);
+      return renderCategory('Sports', Sports);
           case 'Robotics':
-      return renderCategory('Liquor', Robotics);
+      return renderCategory('Robotics', Robotics);
     default:
       return (
         <>

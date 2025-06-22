@@ -39,7 +39,6 @@ type Seller = {
 export default function ProductDetails() {
   const { id } = useParams();
   const [product, setProduct] = useState<Product | null>(null);
-  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewUser, setReviewUser] = useState('');
   const [reviewComment, setReviewComment] = useState('');
@@ -184,10 +183,6 @@ const [showReportModal, setShowReportModal] = useState(false);
     fetchReviews();
   }, [id]);
 
-  const calculateDiscount = (oldPrice: number, newPrice: number): number => {
-    return Math.round(((oldPrice - newPrice) / oldPrice) * 100);
-  };
-
     useEffect(() => {
     const userReviewed = reviews.some(
       (r) => r.userName.trim().toLowerCase() === reviewUser.trim().toLowerCase()
@@ -313,23 +308,29 @@ return (
       </div>
     )}
 
-  <div className="mt-6 bg-white shadow rounded-lg p-6">
-  <h2 className="text-lg font-semibold text-gray-900 mb-2">Key Features</h2>
-  <ul className="list-disc list-inside space-y-1 text-gray-700 text-sm">
-    {product.keyFeatures.map((feature: string, idx: number) => (
-      <li key={idx}>{feature}</li>
-    ))}
-  </ul>
-</div>
+{product.keyFeatures && product.keyFeatures.length > 0 && (
+  <div className="bg-white p-4 rounded-md shadow-sm">
+    <h2 className="text-lg font-semibold mb-2">Key Features</h2>
+    <ul className="list-disc list-inside text-sm text-gray-700">
+      {product.keyFeatures.map((feature, idx) => (
+        <li key={idx}>{feature}</li>
+      ))}
+    </ul>
+  </div>
+)}
 
-  <div className="mt-6 bg-white shadow rounded-lg p-6">
-  <h2 className="text-lg font-semibold text-gray-900 mb-2">What&apos;s in the Box</h2>
-  <ul className="list-disc list-inside space-y-1 text-gray-700 text-sm">
-    {product.boxContents.map((Box: string, idx: number) => (
-      <li key={idx}>{Box}</li>
-    ))}
-  </ul>
-</div>
+
+{product.boxContents && product.boxContents.length > 0 && (
+  <div className="bg-white p-4 rounded-md shadow-sm">
+    <h2 className="text-lg font-semibold mb-2">What's in the Box</h2>
+    <ul className="list-disc list-inside text-sm text-gray-700">
+      {product.boxContents.map((item, idx) => (
+        <li key={idx}>{item}</li>
+      ))}
+    </ul>
+  </div>
+)}
+
 
 <div className="mt-6 bg-white shadow rounded-lg p-6">
   <h2 className="text-xl font-semibold mb-4 border-b pb-2">Specifications</h2>

@@ -107,8 +107,8 @@ export default function AddProduct() {
     setBoxContents(updated);
   };
 
-  const addBoxField = () => setKeyFeatures([...boxContents, '']);
-  const removeBoxField = (index: number) => setKeyFeatures(boxContents.filter((_, i) => i !== index));
+  const addBoxField = () => setBoxContents([...boxContents, '']);
+  const removeBoxField = (index: number) => setBoxContents(boxContents.filter((_, i) => i !== index));
 
 
 
@@ -152,8 +152,8 @@ const handleCountyChange = (selectedCounty: County | '') => {
     formData.append('material', material);
     formData.append('color', color);
     formData.append('description', description);
-    formData.append('keyFeatures', JSON.stringify(keyFeatures));
-    formData.append('boxContents', JSON.stringify(boxContents));
+    keyFeatures.forEach((feature) => formData.append('keyFeatures', feature));
+    boxContents.forEach((Box) => formData.append('boxContents', Box));
     formData.append('warranty', warranty);
     formData.append('dimensions', dimensions);
     formData.append('weight', weight);

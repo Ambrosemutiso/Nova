@@ -88,7 +88,7 @@ const ProductImageViewer = ({
               src={getPublicId(image)}
               alt={name}
               width="400"
-              height="200"
+              height="400"
               className="rounded-md object-cover w-full h-64"
             />
           </SwiperSlide>

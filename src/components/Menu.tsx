@@ -11,6 +11,7 @@ interface Category {
 const categories: Category[] = [
   { name: 'Shop',        image: '/shop.png' },
   { name: 'Laptops',     image: '/laptop.jpg' },
+  { name: 'Electronics',     image: '/laptop.jpg' },
   { name: 'Phones & Tablets',      image: '/phone.jpg' },
   { name: 'Computers',     image: '/kitchen.jpg' },
   { name: 'Sound Systems',     image: '/kitchen.jpg' },
