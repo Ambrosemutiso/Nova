@@ -308,28 +308,24 @@ return (
       </div>
     )}
 
-{product.keyFeatures && product.keyFeatures.length > 0 && (
-  <div className="bg-white p-4 rounded-md shadow-sm">
-    <h2 className="text-lg font-semibold mb-2">Key Features</h2>
-    <ul className="list-disc list-inside text-sm text-gray-700">
-      {product.keyFeatures.map((feature, idx) => (
-        <li key={idx}>{feature}</li>
-      ))}
-    </ul>
-  </div>
-)}
+<div>
+  <h2 className="font-bold text-lg mb-1">Key Features</h2>
+  <ul className="list-disc list-inside text-sm text-gray-700">
+    {product.keyFeatures.map((feature, i) => (
+      <li key={i}>{feature}</li>
+    ))}
+  </ul>
+</div>
 
+<div className="mt-4">
+  <h2 className="font-bold text-lg mb-1">What's in the Box</h2>
+  <ul className="list-disc list-inside text-sm text-gray-700">
+    {product.boxContents.map((item, i) => (
+      <li key={i}>{item}</li>
+    ))}
+  </ul>
+</div>
 
-{product.boxContents && product.boxContents.length > 0 && (
-  <div className="bg-white p-4 rounded-md shadow-sm">
-    <h2 className="text-lg font-semibold mb-2">What's in the Box</h2>
-    <ul className="list-disc list-inside text-sm text-gray-700">
-      {product.boxContents.map((item, idx) => (
-        <li key={idx}>{item}</li>
-      ))}
-    </ul>
-  </div>
-)}
 
 
 <div className="mt-6 bg-white shadow rounded-lg p-6">
