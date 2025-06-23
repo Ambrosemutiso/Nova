@@ -2,17 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { CldImage } from 'next-cloudinary';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay } from 'swiper/modules';
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
-import ImageZoom from 'react-medium-image-zoom';
-import 'react-medium-image-zoom/dist/styles.css';
 import { useCart } from '@/app/context/CartContext';
-import Image from 'next/image';
-import { Star, StarHalf, StarOff, ShoppingCart, X , ChevronRight} from 'lucide-react';
+import { ShoppingCart, ChevronRight} from 'lucide-react';
 import type { Product } from '@/app/types/product';
 import RelatedProducts from '@/components/RelatedProducts'
 import CustomersAlsoViewed from "@/components/CustomersAlsoViewed";
@@ -20,41 +11,21 @@ import RecentlyViewed from "@/components/RecentlyViewed";
 import SaveToRecentlyViewed from '@/components/SaveToRecentlyViewed';
 import BehaviorTracker from '@/components/BehaviourTracker';
 import ProductImageViewer from '@/components/ProductImageViewer';
-
-type Review = {
-  _id: string;
-  userId: string;
-  userName: string;
-  comment: string;
-  rating: number;
-  createdAt: string;
-};
-type Seller = {
-  name: string;
-  score: number;
-  isVerified: boolean;
-  followers: string[]; 
-};
+import SellerSection from '@/components/SellerSection';
+import MoreFromSeller from '@/components/MoreFromSeller';
+import Login from '@/components/Login';
 
 export default function ProductDetails() {
   const { id } = useParams();
   const [product, setProduct] = useState<Product | null>(null);
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [reviewUser, setReviewUser] = useState('');
-  const [reviewComment, setReviewComment] = useState('');
-  const [reviewRating, setReviewRating] = useState<number | ''>(0);
   const { addToCart, cartItems, increaseQuantity, decreaseQuantity } = useCart();
-  const [showReviewModal, setShowReviewModal] = useState(false);
-  const [hasReviewed, setHasReviewed] = useState(false);
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [seller, setSeller] = useState<Seller | null>(null);
-  const [followersCount, setFollowersCount] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
 const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [reportMessage, setReportMessage] = useState('');
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [reportSuccess, setReportSuccess] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -101,61 +72,6 @@ const [showReportModal, setShowReportModal] = useState(false);
       if (_id) setUserId(_id);
     }
   }, []);
-
-  const sellerId = product?.sellerId;
-
-  useEffect(() => {
-    const fetchSeller = async () => {
-      if (!sellerId) return;
-      try {
-        const res = await fetch(`/api/user/${sellerId}`);
-        if (!res.ok) {
-          console.warn('Seller not found or fetch failed');
-          return;
-        }
-
-        const data = await res.json();
-        setSeller(data);
-        setFollowersCount(data.followers?.length || 0);
-
-        if (userId && data.followers?.includes(userId)) {
-          setIsFollowing(true);
-        }
-      } catch (error) {
-        console.error('Error fetching seller:', error);
-      }
-    };
-
-    fetchSeller();
-  }, [sellerId, userId]);
-
-  const handleFollowToggle = async () => {
-    if (!userId || !sellerId) return;
-
-    try {
-      const res = await fetch(`/api/user/${sellerId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId }),
-      });
-
-      if (!res.ok) {
-        console.warn('Follow/unfollow request failed');
-        return;
-      }
-
-      const data = await res.json();
-      setIsFollowing(data.isFollowing);
-      setFollowersCount(data.followers);
-    } catch (err) {
-      console.error('Follow/unfollow failed:', err);
-    }
-  };
-
-
-
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -168,28 +84,8 @@ const [showReportModal, setShowReportModal] = useState(false);
       }
     };
 
-    const fetchReviews = async () => {
-      try {
-        const res = await fetch(`/api/review/${id}`);
-        if (!res.ok) throw new Error('Failed to fetch reviews');
-        const data = await res.json();
-        setReviews(data.reviews);
-      } catch (err) {
-        console.error('Error fetching reviews:', err);
-      }
-    };
-
     fetchProduct();
-    fetchReviews();
   }, [id]);
-
-    useEffect(() => {
-    const userReviewed = reviews.some(
-      (r) => r.userName.trim().toLowerCase() === reviewUser.trim().toLowerCase()
-    );
-    setHasReviewed(userReviewed);
-  }, [reviewUser, reviews]);
-
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -204,25 +100,6 @@ const [showReportModal, setShowReportModal] = useState(false);
       quantity: 1,
     });
   };
-
-  const averageRating = reviews.length
-    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-    : 0;
-
-  const renderStars = (rating: number) => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      if (rating >= i) {
-        stars.push(<Star key={i} className="text-yellow-500 w-5 h-5" fill="currentColor" />);
-      } else if (rating >= i - 0.5) {
-        stars.push(<StarHalf key={i} className="text-yellow-500 w-5 h-5" fill="currentColor" />);
-      } else {
-        stars.push(<StarOff key={i} className="text-gray-300 w-5 h-5" />);
-      }
-    }
-    return stars;
-  };
-
 
   if (!product)
     return (
@@ -289,14 +166,7 @@ return (
     + Shipping from <strong>{product.county}</strong>: <span className="text-orange-800 font-semibold">Ksh 200</span>
   </p>
 
-  <div className="flex items-center space-x-2">
-    <div className="flex text-yellow-500">{renderStars(averageRating)}</div>
-    <span className="text-sm text-gray-600">
-      ({averageRating.toFixed(1)} out of 5 from {reviews.length} review{reviews.length !== 1 ? 's' : ''})
-    </span>
-  </div>
 </div>
-
     {/* Product Description */}
     {product.description && (
       <div className="mt-10 bg-white shadow rounded-lg p-6">
@@ -343,154 +213,14 @@ return (
   </div>
 </div>
 
-      {/* Review Modal */}
-      {showReviewModal && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md relative shadow-lg">
-            <button
-              className="absolute top-2 right-2 text-gray-600 hover:text-red-500"
-              onClick={() => setShowReviewModal(false)}
-            >
-              ×
-            </button>
-            <h2 className="text-xl font-semibold mb-4">Write a Review</h2>
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                if (!reviewUser || !reviewComment || !reviewRating) return;
-
-                try {
-                  const res = await fetch(`/api/review/${product._id}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      userName: reviewUser,
-                      comment: reviewComment,
-                      rating: reviewRating,
-                    }),
-                  });
-
-                  if (!res.ok) throw new Error('Failed to submit review');
-                  const data = await res.json();
-                  setReviews((prev) => [...prev, data.review]);
-
-                  setReviewUser('');
-                  setReviewComment('');
-                  setReviewRating(0);
-                  setShowReviewModal(false);
-                } catch (err) {
-                  console.error('Error submitting review:', err);
-                }
-              }}
-            >
-              <div className="mb-4">
-                <label className="block text-sm font-medium">Comment</label>
-                <textarea className="mt-1 p-2 border rounded w-full" rows={3} value={reviewComment} onChange={(e) => setReviewComment(e.target.value)} required/>
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium">Rating (1–5)</label>
-                <input
-                  type="number"
-                  className="mt-1 p-2 border rounded w-full"
-                  min="1"
-                  max="5"
-                  value={reviewRating}
-                  onChange={(e) => setReviewRating(Number(e.target.value))}
-                  required
-                />
-              </div>
-
-        <button type="submit"
-          className={`bg-orange-600 text-white py-2 px-4 rounded hover:bg-orange-700 ${
-            hasReviewed || !reviewUser ? 'opacity-50 cursor-not-allowed' : ''
-          }`}
-          onClick={() => !hasReviewed && reviewUser && setShowReviewModal(true)}
-          disabled={hasReviewed || !reviewUser}>
-            Submit Review
-            </button>
-            </form>
-          </div>
-        </div>
-      )}
-
       <SaveToRecentlyViewed id={product._id.toString()} />
       <RecentlyViewed />
       <RelatedProducts name={product.name} currentId={product._id.toString()} />
       <CustomersAlsoViewed productId={product._id.toString()} />
       <BehaviorTracker product={product} />
-
-    <>
-      {/* 🏪 Seller Info UI */}
-      {seller && (
-        <div className="bg-white p-4 rounded-lg shadow mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-semibold text-gray-800">
-                  {seller.name || 'Seller Name'}
-                </span>
-                {seller.isVerified && (
-                  <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-medium">
-                    ✅ Verified Seller
-                  </span>
-                )}
-              </div>
-              <div className="text-sm text-gray-600">
-                Seller Score: <span className="font-semibold">{seller.score ?? 'N/A'}</span> • Followers:{' '}
-                <span className="font-semibold">{followersCount}</span>
-              </div>
-            </div>
-          </div>
-
-          <button
-            onClick={handleFollowToggle}
-            className={`text-sm px-4 py-2 rounded-full border transition duration-200 ${
-              isFollowing
-                ? 'text-gray-700 border-gray-400 hover:bg-gray-100'
-                : 'text-orange-600 border-orange-600 hover:bg-orange-600 hover:text-white'
-            }`}
-          >
-            {isFollowing ? 'Unfollow Seller' : 'Follow Seller'}
-          </button>
-        </div>
-      )}
-    </>
-
-      {/* ⭐ Ratings & Reviews Section */}
-      <div className="mt-10 bg-white p-6 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-2">Customer Ratings & Reviews</h2>
-        <div className="flex items-center mb-4">
-          {renderStars(averageRating)}
-          <span className="ml-2 text-sm text-gray-600">
-            ({averageRating.toFixed(1)} out of 5 from {reviews.length} reviews)
-          </span>
-        </div>
-        {reviews.length > 0 ? (
-          <div className="space-y-4">
-            {reviews.map((review) => (
-              <div key={review._id} className="border-b pb-2">
-                <div className="flex items-center justify-between">
-                  <p className="font-semibold">{review.userName}</p>
-                  <div className="flex">{renderStars(review.rating)}</div>
-                </div>
-                <p className="text-gray-700 mt-1">{review.comment}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-500">No reviews yet. Be the first to review this product!</p>
-        )}
-      </div>
-      <div className="mt-10 bg-white p-6 rounded-lg shadow">
-  <h2 className="text-lg font-semibold mb-4">Leave a Review</h2>
-  <button
-    className="bg-orange-600 text-white py-2 px-4 rounded hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
-    onClick={() => setShowReviewModal(true)}
-    disabled={hasReviewed}
-  >
-    {hasReviewed ? 'You have already reviewed' : 'Write a Review'}
-  </button>
-</div>
+      {showLoginModal && <Login onClose={() => setShowLoginModal(false)} />}
+      <SellerSection sellerId={product.sellerId} showLoginModal={() => setShowLoginModal(true)} />
+      <MoreFromSeller sellerId={product.sellerId} currentProductId={product._id.toString()} />
 <button className="text-sm text-red-600 underline mt-4" onClick={() => setShowReportModal(true)}>Report Incorrect Product Details</button>
 {showReportModal && (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
