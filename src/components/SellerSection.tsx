@@ -17,16 +17,28 @@ export default function SellerSection({
   const [reviews, setReviews] = useState<any[]>([]);
   const [isFollowing, setIsFollowing] = useState(false);
   const { user } = useAuth();
+
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
+  const [existingReviewId, setExistingReviewId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchSeller = async () => {
       const info = await getSellerInfo(sellerId);
       const revs = await getSellerReviews(sellerId);
+
       setSeller(info);
       setReviews(revs);
-      setIsFollowing(info.followers?.includes(user?.uid ?? '') ?? false);
+
+      if (user) {
+        const userReview = revs.find((r) => r.userId === user.uid);
+        if (userReview) {
+          setRating(userReview.rating);
+          setComment(userReview.comment);
+          setExistingReviewId(userReview.id); // assume your API returns `id`
+        }
+        setIsFollowing(info.followers?.includes(user.uid) ?? false);
+      }
     };
 
     if (sellerId) fetchSeller();
@@ -54,10 +66,10 @@ export default function SellerSection({
     if (res.ok) setIsFollowing(false);
   };
 
-const reviewCount = reviews.length;
-const averageRating = reviewCount
-  ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount
-  : 0;
+  const reviewCount = reviews.length;
+  const averageRating = reviewCount
+    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount
+    : 0;
 
   if (!seller) {
     return (
@@ -72,7 +84,7 @@ const averageRating = reviewCount
       <div className="flex justify-between items-center">
         <div>
           <h2 className="font-bold text-lg">{seller.name} - Official Store</h2>
-          {reviews.length > 0 && (
+          {reviewCount > 0 && (
             <div className="text-sm text-yellow-500 flex items-center gap-2">
               <span>
                 ⭐ {averageRating.toFixed(1)} ({reviewCount} reviews)
@@ -81,20 +93,22 @@ const averageRating = reviewCount
           )}
           <p className="text-gray-500">{seller.followers?.length || 0} Followers</p>
         </div>
-        {isFollowing ? (
-          <button
-            onClick={handleUnfollow}
-            className="px-4 py-1 rounded bg-gray-300 text-black"
-          >
-            Unfollow
-          </button>
-        ) : (
-          <button
-            onClick={handleFollow}
-            className="px-4 py-1 rounded bg-orange-500 text-white"
-          >
-            Follow
-          </button>
+        {user && (
+          isFollowing ? (
+            <button
+              onClick={handleUnfollow}
+              className="px-4 py-1 rounded bg-gray-300 text-black"
+            >
+              Unfollow
+            </button>
+          ) : (
+            <button
+              onClick={handleFollow}
+              className="px-4 py-1 rounded bg-orange-500 text-white"
+            >
+              Follow
+            </button>
+          )
         )}
       </div>
 
@@ -103,8 +117,9 @@ const averageRating = reviewCount
         <p><span className="font-medium">Quality Score:</span> Good</p>
         <p><span className="font-medium">Customer Rating:</span> Good</p>
       </div>
-<StarRatingDisplay rating={averageRating} />
-<p className="text-sm text-gray-500">{reviewCount} reviews</p>
+
+      <StarRatingDisplay rating={averageRating} />
+      <p className="text-sm text-gray-500">{reviewCount} reviews</p>
 
       {reviews.length > 0 && (
         <div className="mt-6">
@@ -128,7 +143,7 @@ const averageRating = reviewCount
 
       {user && (
         <div className="mt-6 border-t pt-4">
-          <h3 className="font-semibold">Write a Review</h3>
+          <h3 className="font-semibold">{existingReviewId ? 'Update Your Review' : 'Write a Review'}</h3>
           <form
             onSubmit={async (e) => {
               e.preventDefault();
@@ -148,9 +163,10 @@ const averageRating = reviewCount
               if (res.ok) {
                 setComment('');
                 setRating(0);
-                alert('Review submitted!');
-                const newReviews = await getSellerReviews(sellerId);
-                setReviews(newReviews);
+                setExistingReviewId(null); // reset if updated
+                alert(existingReviewId ? 'Review updated!' : 'Review submitted!');
+                const updated = await getSellerReviews(sellerId);
+                setReviews(updated);
               } else {
                 const err = await res.json();
                 alert(err.error || 'Failed to submit review');
@@ -175,7 +191,7 @@ const averageRating = reviewCount
               type="submit"
               className="bg-orange-500 text-white px-4 py-1 rounded"
             >
-              Submit Review
+              {existingReviewId ? 'Update Review' : 'Submit Review'}
             </button>
           </form>
         </div>

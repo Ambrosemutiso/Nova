@@ -1,29 +1,36 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebaseConfig';
-import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { adminDb } from '@/lib/firebaseAdmin'; // Use admin SDK
+import { FieldValue } from 'firebase-admin/firestore';
 
 export async function POST(req: Request) {
   try {
     const { sellerId, userId, action } = await req.json();
 
     if (!sellerId || !userId || !['follow', 'unfollow'].includes(action)) {
-      return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid request data' }, { status: 400 });
     }
 
-    const docRef = doc(db, 'followers', sellerId);
-    const docSnap = await getDoc(docRef);
+    const docRef = adminDb.collection('followers').doc(sellerId);
+    const docSnap = await docRef.get();
 
-    if (!docSnap.exists() && action === 'follow') {
-      await setDoc(docRef, { followers: [userId] });
-    } else if (action === 'follow') {
-      await updateDoc(docRef, { followers: arrayUnion(userId) });
-    } else if (action === 'unfollow') {
-      await updateDoc(docRef, { followers: arrayRemove(userId) });
+    if (!docSnap.exists) {
+      if (action === 'follow') {
+        await docRef.set({ followers: [userId] });
+      } else {
+        return NextResponse.json({ error: 'Nothing to unfollow' }, { status: 400 });
+      }
+    } else {
+      await docRef.update({
+        followers:
+          action === 'follow'
+            ? FieldValue.arrayUnion(userId)
+            : FieldValue.arrayRemove(userId),
+      });
     }
 
-    return NextResponse.json({ message: `${action}ed successfully` });
+    return NextResponse.json({ message: `${action} successful` });
   } catch (err) {
-    console.error('Error following/unfollowing seller:', err);
-    return NextResponse.json({ error: 'Failed to follow/unfollow seller' }, { status: 500 });
+    console.error('Error updating follow status:', err);
+    return NextResponse.json({ error: 'Failed to update follow status' }, { status: 500 });
   }
 }

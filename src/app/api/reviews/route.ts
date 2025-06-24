@@ -1,32 +1,41 @@
-// Assuming Firestore
-import { db } from '@/lib/firebaseConfig';
-import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
+import { NextResponse } from 'next/server';
+import { adminDb } from '@/lib/firebaseAdmin';
 
 export async function POST(req: Request) {
-  const { sellerId, userId, name, rating, comment, verified } = await req.json();
+  try {
+    const { sellerId, userId, name, rating, comment, verified } = await req.json();
 
-  const q = query(
-    collection(db, 'reviews'),
-    where('sellerId', '==', sellerId),
-    where('userId', '==', userId)
-  );
+    const reviewsRef = adminDb.collection('reviews');
+    const existingReviewQuery = reviewsRef
+      .where('sellerId', '==', sellerId)
+      .where('userId', '==', userId);
+    
+    const existingReviewSnap = await existingReviewQuery.get();
 
-  const existingReviews = await getDocs(q);
-  if (!existingReviews.empty) {
-    return new Response(JSON.stringify({ error: 'You have already reviewed this seller.' }), {
-      status: 400,
+    if (!existingReviewSnap.empty) {
+      const existingDoc = existingReviewSnap.docs[0];
+      await reviewsRef.doc(existingDoc.id).update({
+        rating,
+        comment,
+        verified,
+        updatedAt: new Date().toISOString(),
+      });
+      return NextResponse.json({ message: 'Review updated' });
+    }
+
+    await reviewsRef.add({
+      sellerId,
+      userId,
+      name,
+      rating,
+      comment,
+      verified,
+      createdAt: new Date().toISOString(),
     });
+
+    return NextResponse.json({ message: 'Review submitted' });
+  } catch (err) {
+    console.error('Error submitting review:', err);
+    return NextResponse.json({ error: 'Failed to submit review' }, { status: 500 });
   }
-
-  await addDoc(collection(db, 'reviews'), {
-    sellerId,
-    userId,
-    name,
-    rating,
-    comment,
-    verified,
-    date: new Date(),
-  });
-
-  return new Response(JSON.stringify({ message: 'Review submitted successfully.' }), { status: 200 });
 }
