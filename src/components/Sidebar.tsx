@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   FiHome, FiSmartphone, FiMonitor, FiHeart, FiUser, FiShoppingCart,
-  FiTv, FiWatch, FiGift, FiTruck, FiBook, FiTool, FiGrid, FiZoomIn, FiZoomOut, FiPackage
+  FiTv, FiWatch, FiGift, FiTruck, FiBook, FiTool, FiGrid, FiZoomIn, FiZoomOut, FiPackage,
+  FiLayout,
+  FiLoader
 } from 'react-icons/fi';
 
 export default function Sidebar({ onClose }: { onClose: () => void }) {
@@ -31,16 +33,18 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
     { label: 'Computing', icon: <FiMonitor />, route: '/category/Laptops' },
     { label: 'Electronics', icon: <FiTv />, route: '/category/Electronics' },
     { label: 'Fashion', icon: <FiUser />, route: '/category/Fashion' },
-    { label: 'Health & Beauty', icon: <FiHeart />, route: '/category/Health' },
-    { label: 'Supermarket', icon: <FiShoppingCart />, route: '/category/Supermarket' },
+    { label: 'Health', icon: <FiHeart />, route: '/category/Health' },
+    { label: 'Beauty', icon: <FiLayout />, route: '/category/Beauty' },
+    { label: 'Supermarket', icon: <FiShoppingCart />, route: '/Shop' },
     { label: 'Baby Products', icon: <FiGift />, route: '/category/Kids' },
     { label: 'Gaming', icon: <FiWatch />, route: '/category/Gaming' },
     { label: 'Sporting Goods', icon: <FiTruck />, route: '/category/Sports' },
     { label: 'Automotive', icon: <FiTool />, route: '/category/Motors' },
     { label: 'Books & Stationery', icon: <FiBook />, route: '/category/Books' },
-    { label: 'Other Categories', icon: <FiGrid />, route: '/category/categories' },
+    { label: 'Sound Systems', icon: <FiLoader />, route: '/category/Systems' },
+    { label: 'Other Categories', icon: <FiGrid />, route: '/Shop' },
   ];
-
+  
   return (
     <div className="fixed inset-0 z-40 flex">
       {/* Backdrop */}

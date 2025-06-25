@@ -1,10 +1,6 @@
 'use client';
 
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay } from 'swiper/modules';
 import Image from 'next/image';
-import 'swiper/css';
-import 'swiper/css/autoplay';
 
 const banners = [
   {
@@ -32,38 +28,31 @@ const banners = [
 
 export default function HeroSlider() {
   return (
-    <div className="w-full max-w-[100vw] overflow-hidden px-6 pt-28 pb-10">
-      <Swiper
-        modules={[Autoplay]}
-        autoplay={{ delay: 6000, disableOnInteraction: false }}
-        loop
-        slidesPerView={1}
-        spaceBetween={0}
-        allowTouchMove={true}
-      >
+    <div className="w-full overflow-x-auto whitespace-nowrap scroll-smooth scrollbar-hide px-4 pt-28 pb-10">
+      <div className="inline-flex gap-4">
         {banners.map((banner) => (
-          <SwiperSlide key={banner.id}>
-            <div className="relative w-full h-[180px] sm:h-[220px] md:h-[280px] lg:h-[320px] xl:h-[360px]">
-              <Image
-                src={banner.src}
-                alt={banner.alt}
-                fill
-                className="object-cover"
-                priority
-              />
-              {/* Overlay */}
-              <div className="absolute inset-0 bg-black/30 flex flex-col items-start justify-center px-6">
-                <h2 className="text-white text-xl sm:text-2xl md:text-3xl font-bold mb-2 drop-shadow">
-                  {banner.heading}
-                </h2>
-                <button className="bg-orange-500 text-white text-sm sm:text-base px-4 py-2 rounded-md shadow hover:bg-orange-600 transition">
-                  {banner.cta}
-                </button>
-              </div>
+          <div
+            key={banner.id}
+            className="relative w-[300px] sm:w-[340px] md:w-[400px] h-[180px] sm:h-[220px] md:h-[280px] lg:h-[320px] xl:h-[360px] rounded-lg overflow-hidden shadow-md flex-shrink-0"
+          >
+            <Image
+              src={banner.src}
+              alt={banner.alt}
+              fill
+              className="object-cover"
+              priority
+            />
+            <div className="absolute inset-0 bg-black/30 flex flex-col items-start justify-center px-4">
+              <h2 className="text-white text-xl sm:text-2xl md:text-3xl font-bold mb-2 drop-shadow">
+                {banner.heading}
+              </h2>
+              <button className="bg-orange-500 text-white text-sm sm:text-base px-4 py-2 rounded-md shadow hover:bg-orange-600 transition">
+                {banner.cta}
+              </button>
             </div>
-          </SwiperSlide>
+          </div>
         ))}
-      </Swiper>
+      </div>
     </div>
   );
 }
