@@ -53,7 +53,7 @@ export default function SearchPage() {
       ) : (
 <div className="flex flex-wrap gap-4 justify-center">
   {results.map((product) => (
-    <div key={product._id} className="w-full sm:w-[48%] md:w-[31%] lg:w-[23%] xl:w-[18%]">
+    <div key={product._id} className="w-1/2 sm:w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5">
       <ProductCard product={product} />
     </div>
   ))}
