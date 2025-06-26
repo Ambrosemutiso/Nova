@@ -2,26 +2,48 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { signInWithGoogle } from '@/lib/authUtils';
+import { toast } from 'react-hot-toast';
 
-export default function Login({ onClose }: { onClose: () => void }) {
-  const [role, setRole] = useState<'buyer' | 'seller' | null>(null);
+export interface User {
+  _id: string;
+  name: string;
+  email: string;
+  role: 'buyer' | 'seller';
+}
+
+export default function LoginModal({
+  onClose,
+  defaultRole = null,
+}: {
+  onClose: () => void;
+  defaultRole?: 'buyer' | 'seller' | null;
+}) {
+  const [role, setRole] = useState<'buyer' | 'seller' | null>(defaultRole);
 
   const handleGoogleSignIn = async () => {
-    if (!role) return;
+    if (!role) {
+      toast.error('Please select a role');
+      return;
+    }
 
-    const user = await signInWithGoogle(role); 
-    if (user) {
-      console.log('Signed in user:', user);
-       localStorage.setItem('userId', user._id);
-      if (role === 'buyer') {
-        localStorage.setItem('buyerUser', JSON.stringify(user));
-        window.location.href = '/';
-      } else if (role === 'seller') {
-        localStorage.setItem('sellerUser', JSON.stringify(user));
-        window.location.href = '/seller/dashboard';
+    try {
+      const user: User | null = await signInWithGoogle(role);
+
+      if (user) {
+        localStorage.setItem('userId', user._id);
+        if (role === 'buyer') {
+          localStorage.setItem('buyerUser', JSON.stringify(user));
+          window.location.href = '/';
+        } else if (role === 'seller') {
+          localStorage.setItem('sellerUser', JSON.stringify(user));
+          window.location.href = '/seller/dashboard';
+        }
+        toast.success('Signed in successfully');
+        onClose();
       }
-
-      onClose();
+    } catch (error) {
+      toast.error('Login failed');
+      console.error('Login error:', error);
     }
   };
 
@@ -53,7 +75,7 @@ export default function Login({ onClose }: { onClose: () => void }) {
           <div className="space-y-4">
             <p className="text-center text-sm text-gray-600">
               You&#39;re signing in as a <span className="font-semibold">{role}</span>
-              </p>
+            </p>
 
             <button
               onClick={handleGoogleSignIn}

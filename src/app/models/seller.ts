@@ -1,21 +1,13 @@
-// models/Seller.js
 import mongoose from 'mongoose';
 
-const SellerSchema = new mongoose.Schema({
+const sellerSchema = new mongoose.Schema({
   name: String,
-  logo: String,
-  isVerified: { type: Boolean, default: false },
-  followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  rating: {
-    type: Number,
-    default: 0,
-  },
-  totalSales: {
-    type: Number,
-    default: 0,
-  },
-  shopImage: String,
-}, { timestamps: true });
+  email: { type: String, unique: true },
+  image: String,
+  role: { type: String, enum: ['seller'], default: 'seller' },
+  shopName: String,
+  createdAt: { type: Date, default: Date.now }
+});
 
-export default mongoose.models.Seller || mongoose.model('Seller', SellerSchema);
-
+const Seller = mongoose.models.Seller || mongoose.model('Seller', sellerSchema);
+export default Seller;

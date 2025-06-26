@@ -1,7 +1,7 @@
 // app/api/sync-user/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
-import { User } from '@/app/models/user';
+import User from '@/app/models/user';
 
 export async function POST(req: NextRequest) {
   await dbConnect();

@@ -6,9 +6,10 @@ import { AuthProvider } from '@/app/context/AuthContext'
 import { Toaster } from 'react-hot-toast';
 import CartNotification  from '@/app/cart/CartNotification';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import BackToTopButton from '@/components/BackToTopButton';
 import { ThemeProvider } from 'next-themes';
+import Script from 'next/script';
+import LoginWrapper from '@/components/LoginWrapper';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,6 +31,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
@@ -38,12 +40,15 @@ export default function RootLayout({
         <CartProvider>
           <CartNotification />
           <Navbar />
-          
+<Script
+  src="https://accounts.google.com/gsi/client"
+  strategy="beforeInteractive"
+/>
+<LoginWrapper />      
           <main className="min-h-screen">
             {children}
           </main>
           <BackToTopButton />
-          <Footer />
           <Toaster
             position="top-right"
             reverseOrder={false}

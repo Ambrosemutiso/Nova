@@ -1,51 +1,40 @@
-// lib/authUtils.ts
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { auth, db } from './firebaseConfig';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { User } from '@/app/types/User'; // Make sure this interface exists
 
-export const signInWithGoogle = async (role: 'buyer' | 'seller') => {
+export async function signInWithGoogle(role: 'buyer' | 'seller'): Promise<User | null> {
   try {
-    const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
+    const tokenClient = window.google.accounts.oauth2.initTokenClient({
+      client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+      scope: 'email profile',
+      callback: async (tokenResponse) => {
+        const googleRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: {
+            Authorization: `Bearer ${tokenResponse.access_token}`,
+          },
+        });
 
-    // Save to Firestore
-    const userDocRef = doc(db, 'users', user.uid);
-    const userDocSnap = await getDoc(userDocRef);
+        const profile = await googleRes.json();
 
-    if (!userDocSnap.exists()) {
-      await setDoc(userDocRef, {
-        _id: user.uid,
-        email: user.email,
-        name: user.displayName,
-        photo: user.photoURL,
-        role,
-        createdAt: new Date(),
-      });
-    }
+        const response = await fetch('/api/auth/google-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: profile.name,
+            email: profile.email,
+            image: profile.picture,
+            role,
+          }),
+        });
 
-    // 🔁 Sync to MongoDB via API
-    await fetch('/api/sync-user', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        _id: user.uid,
-        email: user.email,
-        name: user.displayName,
-        photo: user.photoURL,
-        role,
-      }),
+        const user = await response.json();
+        return user;
+      },
     });
 
-    return {
-      _id: user.uid,
-      email: user.email,
-      name: user.displayName,
-      photo: user.photoURL,
-      role,
-    };
+    tokenClient.requestAccessToken();
   } catch (error) {
-    console.error('Google Sign-In Error:', error);
+    console.error('Google sign-in error:', error);
     return null;
   }
-};
+
+  return null;
+}

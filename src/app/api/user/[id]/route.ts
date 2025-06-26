@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
-import { User } from '@/app/models/user';
+import User from '@/app/models/user';
 
 type Params = { params: { id: string } };
 
