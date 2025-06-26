@@ -11,7 +11,7 @@ export default function AnalyticsPage() {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const q = query(collection(db, 'orders'), where('sellerId', '==', user.uid));
+      const q = query(collection(db, 'orders'), where('sellerId', '==', user._id));
       const snap = await getDocs(q);
       let revenue = 0;
       snap.docs.forEach(d => revenue += (d.data().totalPrice || 0));

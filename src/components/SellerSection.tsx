@@ -31,25 +31,25 @@ export default function SellerSection({
       setReviews(revs);
 
       if (user) {
-        const userReview = revs.find((r) => r.userId === user.uid);
+        const userReview = revs.find((r) => r.userId === user._id);
         if (userReview) {
           setRating(userReview.rating);
           setComment(userReview.comment);
           setExistingReviewId(userReview.id); // assume your API returns `id`
         }
-        setIsFollowing(info.followers?.includes(user.uid) ?? false);
+        setIsFollowing(info.followers?.includes(user._id) ?? false);
       }
     };
 
     if (sellerId) fetchSeller();
-  }, [sellerId, user?.uid]);
+  }, [sellerId, user?._id]);
 
   const handleFollow = async () => {
     if (!user) return showLoginModal();
 
     const res = await fetch('/api/follow-seller', {
       method: 'POST',
-      body: JSON.stringify({ sellerId, userId: user.uid, action: 'follow' }),
+      body: JSON.stringify({ sellerId, userId: user._id, action: 'follow' }),
     });
 
     if (res.ok) setIsFollowing(true);
@@ -60,7 +60,7 @@ export default function SellerSection({
 
     const res = await fetch('/api/follow-seller', {
       method: 'POST',
-      body: JSON.stringify({ sellerId, userId: user.uid, action: 'unfollow' }),
+      body: JSON.stringify({ sellerId, userId: user._id, action: 'unfollow' }),
     });
 
     if (res.ok) setIsFollowing(false);
@@ -152,8 +152,8 @@ export default function SellerSection({
                 method: 'POST',
                 body: JSON.stringify({
                   sellerId,
-                  userId: user.uid,
-                  name: user.displayName || 'Anonymous',
+                  userId: user._id,
+                  name: user.name || 'Anonymous',
                   rating,
                   comment,
                   verified: true,

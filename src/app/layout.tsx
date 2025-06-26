@@ -42,7 +42,7 @@ export default function RootLayout({
           <Navbar />
 <Script
   src="https://accounts.google.com/gsi/client"
-  strategy="beforeInteractive"
+  strategy="afterInteractive"
 />
           <main className="min-h-screen">
             {children}

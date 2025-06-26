@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const userSchema = new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
-  image: String,
+  image: String, 
   role: { type: String, enum: ['buyer'], default: 'buyer' },
   createdAt: { type: Date, default: Date.now }
 });

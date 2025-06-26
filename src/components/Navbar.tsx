@@ -8,19 +8,23 @@ import Login from './Login';
 import Sidebar from './Sidebar';
 import SellerSidebar from '@/app/seller/sidebar/SellerSidebar';
 import Image from 'next/image';
-import { signOut, updateProfile } from 'firebase/auth';
-import { auth, db } from '@/lib/firebaseConfig';
-import { collection, query, where, getDocs } from 'firebase/firestore';
 import { AnimatePresence, motion } from 'framer-motion';
 import { LogOut, ZoomIn, ZoomOut } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
-type Notification = {
-  id: string;
-  tittle: string; 
+interface Notification {
+  _id: string;
   message: string;
-  timestamp?: any;
-};
+  createdAt: string;
+}
+
+export interface User {
+  _id: string;
+  name: string;
+  email: string;
+  role: 'buyer' | 'seller';
+  photoURL?: string;
+}
 
 
 export default function Navbar() {
@@ -37,93 +41,88 @@ export default function Navbar() {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const { cartItems } = useCart();
-  const { user, setUser } = useAuth();
+ const [user, setUser] = useState<User | null>(null);
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
-  const [showNotifications, setShowNotifications] = useState(false);
-const [notifications, setNotifications] = useState<{ _id: string; message: string; createdAt: string }[]>([]);
-const [showNotifModal, setShowNotifModal] = useState(false);
+  const [showNotifModal, setShowNotifModal] = useState(false);
+const [notifications, setNotifications] = useState<Notification[]>([]);
 
-useEffect(() => {
-  const fetchNotifications = async () => {
-    try {
-      const role = localStorage.getItem('sellerUser') ? 'seller' : 'buyer';
-      const res = await fetch(`/api/notifications?role=${role}`);
-      const json = await res.json();
-      if (json.success) {
-        setNotifications(json.data);
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const role = localStorage.getItem('sellerUser') ? 'seller' : 'buyer';
+        const res = await fetch(`/api/notifications?role=${role}`);
+        const json = await res.json();
+        if (json.success) {
+          setNotifications(json.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch notifications', error);
       }
-    } catch (error) {
-      console.error('Failed to fetch notifications', error);
+    };
+
+    fetchNotifications();
+  }, []);
+
+  useEffect(() => {
+    const sellerData = localStorage.getItem('sellerUser');
+    if (sellerData) {
+      setIsSeller(true);
+      const seller = JSON.parse(sellerData);
+      fetchOrders(seller._id);
     }
-  };
 
-  fetchNotifications();
-}, []);
+    const savedLang = localStorage.getItem('language');
+    const savedFontScale = parseFloat(localStorage.getItem('fontScale') || '1');
+    const savedTheme = localStorage.getItem('theme');
 
-
-
-useEffect(() => {
-  const handleClickOutside = (event: MouseEvent) => {
-    const notifModal = document.getElementById('notification-modal');
-    if (notifModal && !notifModal.contains(event.target as Node)) {
-      setShowNotifications(false);
-    }
-  };
-
-  if (showNotifications) {
-    document.addEventListener('mousedown', handleClickOutside);
-  }
-
-  return () => {
-    document.removeEventListener('mousedown', handleClickOutside);
-  };
-}, [showNotifications]);
-
-
-useEffect(() => {
-  const sellerData = localStorage.getItem('sellerUser');
-  if (sellerData) {
-    setIsSeller(true);
-    const seller = JSON.parse(sellerData);
-    fetchOrders(seller.uid);
-  }
-
-  const savedLang = localStorage.getItem('language');
-  const savedFontScale = parseFloat(localStorage.getItem('fontScale') || '1');
-  const savedTheme = localStorage.getItem('theme');
-
-  if (savedLang) setLanguage(savedLang);
-  if (!isNaN(savedFontScale)) setFontScale(savedFontScale);
-  if (savedTheme) setTheme(savedTheme);
-}, [setTheme]);
-
+    if (savedLang) setLanguage(savedLang);
+    if (!isNaN(savedFontScale)) setFontScale(savedFontScale);
+    if (savedTheme) setTheme(savedTheme);
+  }, [setTheme]);
 
   useEffect(() => {
     document.documentElement.style.setProperty('--app-font-size', `${fontScale}rem`);
   }, [fontScale]);
 
   const fetchOrders = async (sellerId: string) => {
-    const q = query(collection(db, 'orders'), where('sellerId', '==', sellerId));
-    const snap = await getDocs(q);
-    setOrderCount(snap.size);
+    try {
+      const res = await fetch(`/api/orders/count?sellerId=${sellerId}`);
+      const data = await res.json();
+      if (res.ok) {
+        setOrderCount(data.count);
+      }
+    } catch (err) {
+      console.error('Failed to fetch order count:', err);
+    }
   };
 
-  const handleLogout = async () => {
-    await signOut(auth);
+  const handleLogout = () => {
     localStorage.removeItem('buyerUser');
     localStorage.removeItem('sellerUser');
+    localStorage.removeItem('userId');
     setUser(null);
     setShowSettings(false);
   };
 
   const handleUpdateProfile = async () => {
-    if (auth.currentUser) {
-      await updateProfile(auth.currentUser, {
-        displayName,
-        photoURL,
+    try {
+      const res = await fetch('/api/user/update-profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: displayName, photoURL }),
       });
-      setUser({ ...auth.currentUser });
-      alert('Profile updated!');
+
+      if (res.ok) {
+        const updatedUser = await res.json();
+        localStorage.setItem(isSeller ? 'sellerUser' : 'buyerUser', JSON.stringify(updatedUser));
+        setUser(updatedUser);
+        alert('Profile updated!');
+      } else {
+        alert('Failed to update profile');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Error updating profile');
     }
   };
 
@@ -134,81 +133,70 @@ useEffect(() => {
           <FiMenu />
         </button>
 
-<div className="flex-1 mx-4 relative">
-  <input
-    type="text"
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
-    onKeyDown={(e) => {
-      if (e.key === 'Enter' && searchTerm.trim()) {
-        router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
-      }
-    }}
-    placeholder="Search..."
-    className="w-full border border-gray-300 rounded-full py-2 px-4 pr-10 focus:outline-none focus:border-orange-500"
-  />
-  <FiSearch
-    className="absolute right-3 top-2.5 text-gray-500 cursor-pointer"
-    onClick={() => {
-      if (searchTerm.trim()) {
-        router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
-      }
-    }}
-  />
-</div>
-
-
+        <div className="flex-1 mx-4 relative">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && searchTerm.trim()) {
+                router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+              }
+            }}
+            placeholder="Search..."
+            className="w-full border border-gray-300 rounded-full py-2 px-4 pr-10 focus:outline-none focus:border-orange-500"
+          />
+          <FiSearch
+            className="absolute right-3 top-2.5 text-gray-500 cursor-pointer"
+            onClick={() => {
+              if (searchTerm.trim()) {
+                router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+              }
+            }}
+          />
+        </div>
 
         <div className="flex items-center gap-4 relative">
           {isSeller ? (
             <button onClick={() => router.push('/seller/orders')} className="relative text-2xl text-orange-500">
               <FiPackage />
               {orderCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full px-1.5 py-0.5">
-                  {orderCount}
-                </span>
+                <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full px-1.5 py-0.5">{orderCount}</span>
               )}
             </button>
           ) : (
             <button onClick={() => router.push('/cart')} className="relative text-2xl text-orange-500">
               <FiShoppingCart />
               {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
-                  {cartCount}
-                </span>
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">{cartCount}</span>
               )}
             </button>
           )}
 
-  {/* Notification Bell */}
-<button onClick={() => setShowNotifModal(!showNotifModal)} className="relative text-2xl text-orange-500">
-  <FiBell/>
-  {notifications.length > 0 && (
-    <span className="absolute -top-2 -right-2 bg-green-600 text-white text-xs rounded-full px-1.5 py-0.5">
-      {notifications.length}
-    </span>
-  )}
-</button>
+          <button onClick={() => setShowNotifModal(!showNotifModal)} className="relative text-2xl text-orange-500">
+            <FiBell />
+            {notifications.length > 0 && (
+              <span className="absolute -top-2 -right-2 bg-green-600 text-white text-xs rounded-full px-1.5 py-0.5">{notifications.length}</span>
+            )}
+          </button>
 
-
-    {/* Notifications Modal */}
-{showNotifModal && (
-  <div className="absolute right-4 top-16 w-80 bg-white shadow-lg rounded-lg z-50 border">
-    <div className="p-4 border-b text-lg font-semibold text-gray-700">Notifications</div>
-    <ul className="max-h-64 overflow-y-auto divide-y">
-      {notifications.length === 0 ? (
-        <li className="p-4 text-sm text-gray-500">No notifications</li>
-      ) : (
-        notifications.map((notif) => (
-        <li key={notif._id} className="p-4 text-sm text-gray-700">
-        <span className="font-semibold">Notice:</span> {notif.message}
-            <p className="text-xs text-gray-400 mt-1">{new Date(notif.createdAt).toLocaleString()}</p>
-          </li>
-        ))
-      )}
-    </ul>
-  </div>
-)}
+          {showNotifModal && (
+            <div className="absolute right-4 top-16 w-80 bg-white shadow-lg rounded-lg z-50 border">
+              <div className="p-4 border-b text-lg font-semibold text-gray-700">Notifications</div>
+              <ul className="max-h-64 overflow-y-auto divide-y">
+                {notifications.length === 0 ? (
+                  <li className="p-4 text-sm text-gray-500">No notifications</li>
+                ) : (
+                  notifications.map((notif) => (
+                    <li key={notif._id} className="p-4 text-sm text-gray-700">
+                      <span className="font-semibold">Notice:</span> {notif.message}
+                      <p className="text-xs text-gray-400 mt-1">{new Date(notif.createdAt).toLocaleString()}</p>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </div>
+          )}
 
           {user ? (
             <Image
@@ -218,7 +206,7 @@ useEffect(() => {
               height={40}
               className="rounded-full cursor-pointer border"
               onClick={() => {
-                setDisplayName(user.displayName || '');
+                setDisplayName(user.name || '');
                 setPhotoURL(user.photoURL || '');
                 setShowSettings(true);
               }}
@@ -233,16 +221,11 @@ useEffect(() => {
           )}
         </div>
 
-        {showSidebar && (isSeller ? (
-          <SellerSidebar onClose={() => setShowSidebar(false)} />
-        ) : (
-          <Sidebar onClose={() => setShowSidebar(false)} />
-        ))}
-
+        {showSidebar && (isSeller ? <SellerSidebar onClose={() => setShowSidebar(false)} /> : <Sidebar onClose={() => setShowSidebar(false)} />)}
         {showLogin && <Login onClose={() => setShowLogin(false)} />}
       </nav>
 
-      {/* Settings Drawer */}
+      {/* Settings Modal */}
       <AnimatePresence>
         {showSettings && (
           <motion.div
@@ -257,18 +240,16 @@ useEffect(() => {
               <button onClick={() => setShowSettings(false)} className="text-gray-600 hover:text-black dark:hover:text-white text-lg">✕</button>
             </div>
 
-            {/* Profile Section */}
+            {/* Profile Edit */}
             <div className="mb-6">
-              <label className="block text-gray-700 dark:text-gray-200 font-semibold mb-1">Name</label>
-              <input value={displayName} onChange={e => setDisplayName(e.target.value)} className="w-full border p-2 rounded mb-2" />
-
-              <label className="block text-gray-700 dark:text-gray-200 font-semibold mb-1">Photo URL</label>
-              <input value={photoURL} onChange={e => setPhotoURL(e.target.value)} className="w-full border p-2 rounded mb-2" />
-
+              <label className="block font-semibold mb-1 text-gray-700 dark:text-gray-200">Name</label>
+              <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="w-full border p-2 rounded mb-2" />
+              <label className="block font-semibold mb-1 text-gray-700 dark:text-gray-200">Photo URL</label>
+              <input value={photoURL} onChange={(e) => setPhotoURL(e.target.value)} className="w-full border p-2 rounded mb-2" />
               <button onClick={handleUpdateProfile} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Update Profile</button>
             </div>
 
-            {/* Language */}
+            {/* Settings */}
             <div className="mb-4">
               <label className="block font-semibold mb-1 text-gray-700 dark:text-gray-200">Language</label>
               <select
@@ -285,7 +266,6 @@ useEffect(() => {
               </select>
             </div>
 
-            {/* Theme */}
             <div className="mb-4">
               <label className="block font-semibold mb-1 text-gray-700 dark:text-gray-200">Theme</label>
               <select
@@ -302,7 +282,7 @@ useEffect(() => {
               </select>
             </div>
 
-            {/* Accessibility Zoom */}
+            {/* Zoom controls */}
             <div className="mb-4">
               <span className="block font-semibold mb-2 text-gray-700 dark:text-gray-200">Accessibility</span>
               <div className="flex gap-4">
@@ -329,7 +309,6 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* Logout */}
             <button
               onClick={handleLogout}
               className="mt-6 w-full px-4 py-2 bg-red-500 text-white rounded flex items-center justify-center gap-2 hover:bg-red-600"
@@ -342,3 +321,8 @@ useEffect(() => {
     </>
   );
 }
+
+
+
+
+
