@@ -44,11 +44,11 @@ export default function RootLayout({
   src="https://accounts.google.com/gsi/client"
   strategy="beforeInteractive"
 />
-<LoginWrapper />      
           <main className="min-h-screen">
             {children}
           </main>
           <BackToTopButton />
+          <LoginWrapper />      
           <Toaster
             position="top-right"
             reverseOrder={false}
