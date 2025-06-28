@@ -1,36 +1,59 @@
-import { NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebaseAdmin'; // Use admin SDK
-import { FieldValue } from 'firebase-admin/firestore';
+// app/api/follow-seller/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { dbConnect } from '@/lib/dbConnect';
+import Seller from '@/app/models/seller';
 
-export async function POST(req: Request) {
+import { Types } from 'mongoose'; // make sure this is imported
+
+type Follower = {
+  userId: Types.ObjectId;
+  followedAt: Date;
+};
+
+export async function POST(req: NextRequest) {
   try {
     const { sellerId, userId, action } = await req.json();
 
-    if (!sellerId || !userId || !['follow', 'unfollow'].includes(action)) {
-      return NextResponse.json({ error: 'Invalid request data' }, { status: 400 });
+    if (!sellerId || !userId || !action) {
+      return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
     }
 
-    const docRef = adminDb.collection('followers').doc(sellerId);
-    const docSnap = await docRef.get();
+    await dbConnect();
 
-    if (!docSnap.exists) {
-      if (action === 'follow') {
-        await docRef.set({ followers: [userId] });
+    const seller = await Seller.findById(sellerId);
+    if (!seller) {
+      return NextResponse.json({ success: false, error: 'Seller not found' }, { status: 404 });
+    }
+
+    if (sellerId === userId) {
+      return NextResponse.json({ success: false, error: 'You cannot follow yourself' }, { status: 400 });
+    }
+
+const alreadyFollowing = seller.followers.some((f: Follower) => f.userId.toString() === userId);
+
+    if (action === 'follow') {
+      if (!alreadyFollowing) {
+        seller.followers.push({ userId, followedAt: new Date() });
+        await seller.save();
+        return NextResponse.json({ success: true, message: 'Followed seller' });
       } else {
-        return NextResponse.json({ error: 'Nothing to unfollow' }, { status: 400 });
+        return NextResponse.json({ success: false, message: 'Already following this seller' });
       }
-    } else {
-      await docRef.update({
-        followers:
-          action === 'follow'
-            ? FieldValue.arrayUnion(userId)
-            : FieldValue.arrayRemove(userId),
-      });
     }
 
-    return NextResponse.json({ message: `${action} successful` });
+    if (action === 'unfollow') {
+      if (alreadyFollowing) {
+seller.followers = seller.followers.filter((f: Follower) => f.userId.toString() !== userId);
+        await seller.save();
+        return NextResponse.json({ success: true, message: 'Unfollowed seller' });
+      } else {
+        return NextResponse.json({ success: false, message: 'You are not following this seller' });
+      }
+    }
+
+    return NextResponse.json({ success: false, error: 'Invalid action' }, { status: 400 });
   } catch (err) {
-    console.error('Error updating follow status:', err);
-    return NextResponse.json({ error: 'Failed to update follow status' }, { status: 500 });
+    console.error('Follow/Unfollow error:', err);
+    return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
   }
 }

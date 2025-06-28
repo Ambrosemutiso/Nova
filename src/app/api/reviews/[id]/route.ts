@@ -8,7 +8,8 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
   try {
     await deleteDoc(doc(db, 'reviews', id));
     return new Response(JSON.stringify({ message: 'Review deleted' }), { status: 200 });
-  } catch (err) {
+    } catch (error) {
+    console.error('Error fetching reviews:', error);
     return new Response(JSON.stringify({ error: 'Failed to delete review' }), { status: 500 });
   }
 }

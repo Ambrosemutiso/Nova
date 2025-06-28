@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { getSellerInfo, getSellerReviews } from '@/lib/getSellerDetails';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/app/context/AuthContext';
 import StarRatingInput from '@/components/ReviewsInput';
 import StarRatingDisplay from '@/components/StarRatingsDisplay';
+import { Review } from '@/app/types/review';
+import { Seller } from '@/app/types/seller';
+import toast from 'react-hot-toast';
 
 export default function SellerSection({
   sellerId,
@@ -13,8 +15,8 @@ export default function SellerSection({
   sellerId: string;
   showLoginModal: () => void;
 }) {
-  const [seller, setSeller] = useState<any>(null);
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [seller, setSeller] = useState<Seller | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [isFollowing, setIsFollowing] = useState(false);
   const { user } = useAuth();
 
@@ -22,10 +24,13 @@ export default function SellerSection({
   const [comment, setComment] = useState('');
   const [existingReviewId, setExistingReviewId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchSeller = async () => {
-      const info = await getSellerInfo(sellerId);
-      const revs = await getSellerReviews(sellerId);
+  const fetchData = useCallback(async () => {
+    try {
+      const sellerRes = await fetch(`/api/seller/${sellerId}`);
+      const info: Seller = await sellerRes.json();
+
+      const reviewsRes = await fetch(`/api/seller/${sellerId}/reviews`);
+      const revs: Review[] = await reviewsRes.json();
 
       setSeller(info);
       setReviews(revs);
@@ -35,35 +40,50 @@ export default function SellerSection({
         if (userReview) {
           setRating(userReview.rating);
           setComment(userReview.comment);
-          setExistingReviewId(userReview.id); // assume your API returns `id`
+          setExistingReviewId(userReview._id ?? null);
         }
-        setIsFollowing(info.followers?.includes(user._id) ?? false);
+
+        const following = info.followers?.includes(user._id);
+        setIsFollowing(following ?? false);
       }
-    };
+    } catch (err) {
+      console.error('Error fetching seller data:', err);
+    }
+  }, [sellerId, user]);
 
-    if (sellerId) fetchSeller();
-  }, [sellerId, user?._id]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-  const handleFollow = async () => {
-    if (!user) return showLoginModal();
+  const handleFollowAction = async (action: 'follow' | 'unfollow') => {
+    if (!user) {
+      toast.error(`Please log in to ${action} sellers`);
+      return showLoginModal();
+    }
 
-    const res = await fetch('/api/follow-seller', {
-      method: 'POST',
-      body: JSON.stringify({ sellerId, userId: user._id, action: 'follow' }),
-    });
+    if (user._id === sellerId) {
+      return toast.error('You cannot follow yourself.');
+    }
 
-    if (res.ok) setIsFollowing(true);
-  };
+    try {
+      const res = await fetch('/api/follow-seller', {
+        method: 'POST',
+        body: JSON.stringify({ sellerId, userId: user._id, action }),
+      });
 
-  const handleUnfollow = async () => {
-    if (!user) return showLoginModal();
+      const data = await res.json();
 
-    const res = await fetch('/api/follow-seller', {
-      method: 'POST',
-      body: JSON.stringify({ sellerId, userId: user._id, action: 'unfollow' }),
-    });
-
-    if (res.ok) setIsFollowing(false);
+      if (res.ok && data.success) {
+        toast.success(data.message || `${action}ed seller`);
+        setIsFollowing(action === 'follow');
+        fetchData();
+      } else {
+        toast.error(data.message || `Failed to ${action}`);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('An error occurred.');
+    }
   };
 
   const reviewCount = reviews.length;
@@ -86,36 +106,20 @@ export default function SellerSection({
           <h2 className="font-bold text-lg">{seller.name} - Official Store</h2>
           {reviewCount > 0 && (
             <div className="text-sm text-yellow-500 flex items-center gap-2">
-              <span>
-                ⭐ {averageRating.toFixed(1)} ({reviewCount} reviews)
-              </span>
+              <span>⭐ {averageRating.toFixed(1)} ({reviewCount} reviews)</span>
             </div>
           )}
           <p className="text-gray-500">{seller.followers?.length || 0} Followers</p>
         </div>
-        {user && (
-          isFollowing ? (
-            <button
-              onClick={handleUnfollow}
-              className="px-4 py-1 rounded bg-gray-300 text-black"
-            >
-              Unfollow
-            </button>
-          ) : (
-            <button
-              onClick={handleFollow}
-              className="px-4 py-1 rounded bg-orange-500 text-white"
-            >
-              Follow
-            </button>
-          )
-        )}
-      </div>
 
-      <div className="mt-4 text-sm space-y-1">
-        <p><span className="font-medium">Shipping speed:</span> Excellent</p>
-        <p><span className="font-medium">Quality Score:</span> Good</p>
-        <p><span className="font-medium">Customer Rating:</span> Good</p>
+        {user && (
+          <button
+            onClick={() => handleFollowAction(isFollowing ? 'unfollow' : 'follow')}
+            className={`px-4 py-1 rounded ${isFollowing ? 'bg-gray-300 text-black' : 'bg-orange-500 text-white'}`}
+          >
+            {isFollowing ? 'Unfollow' : 'Follow'}
+          </button>
+        )}
       </div>
 
       <StarRatingDisplay rating={averageRating} />
@@ -143,13 +147,16 @@ export default function SellerSection({
 
       {user && (
         <div className="mt-6 border-t pt-4">
-          <h3 className="font-semibold">{existingReviewId ? 'Update Your Review' : 'Write a Review'}</h3>
+          <h3 className="font-semibold text-orange-500">
+            {existingReviewId ? 'Update Your Review' : 'Write a Review'}
+          </h3>
           <form
             onSubmit={async (e) => {
               e.preventDefault();
 
               const res = await fetch('/api/reviews', {
                 method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   sellerId,
                   userId: user._id,
@@ -160,16 +167,17 @@ export default function SellerSection({
                 }),
               });
 
+              const data = await res.json();
+
               if (res.ok) {
+                toast.success(existingReviewId ? 'Review updated!' : 'Review submitted!');
                 setComment('');
                 setRating(0);
-                setExistingReviewId(null); // reset if updated
-                alert(existingReviewId ? 'Review updated!' : 'Review submitted!');
-                const updated = await getSellerReviews(sellerId);
+                setExistingReviewId(null);
+                const updated = await fetch(`/api/seller/${sellerId}/reviews`).then((res) => res.json());
                 setReviews(updated);
               } else {
-                const err = await res.json();
-                alert(err.error || 'Failed to submit review');
+                toast.error(data.error || 'Failed to submit review');
               }
             }}
             className="space-y-2 mt-2"

@@ -13,7 +13,8 @@ export async function GET(req: NextRequest) {
     }).sort({ createdAt: -1 });
 
     return NextResponse.json({ success: true, data: notifications });
-  } catch (error) {
+      } catch (error) {
+    console.error('Error fetching products:', error);
     return NextResponse.json({ success: false, error: 'Failed to fetch notifications' }, { status: 500 });
   }
 }

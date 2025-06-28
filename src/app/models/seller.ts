@@ -6,6 +6,14 @@ const sellerSchema = new mongoose.Schema({
   image: String,
   role: { type: String, enum: ['seller'], default: 'seller' },
   shopName: String,
+  followers: [
+    {
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      followedAt: Date,
+    },
+  ],
+  averageRating: { type: Number, default: 0 },
+  reviewCount: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now }
 });
 

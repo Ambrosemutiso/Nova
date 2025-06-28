@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { FiMenu, FiShoppingCart, FiPackage, FiSearch, FiBell } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/app/context/CartContext';
-import { useAuth } from '@/app/context/AuthContext';
 import Login from './Login';
 import Sidebar from './Sidebar';
 import SellerSidebar from '@/app/seller/sidebar/SellerSidebar';
@@ -11,6 +10,7 @@ import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
 import { LogOut, ZoomIn, ZoomOut } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { useAuth } from '@/app/context/AuthContext';
 
 interface Notification {
   _id: string;
@@ -18,21 +18,11 @@ interface Notification {
   createdAt: string;
 }
 
-export interface User {
-  _id: string;
-  name: string;
-  email: string;
-  role: 'buyer' | 'seller';
-  photoURL?: string;
-}
-
-
 export default function Navbar() {
   const [showLogin, setShowLogin] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [orderCount, setOrderCount] = useState(0);
-  const [isSeller, setIsSeller] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [photoURL, setPhotoURL] = useState('');
   const [language, setLanguage] = useState('English');
@@ -41,15 +31,17 @@ export default function Navbar() {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const { cartItems } = useCart();
- const [user, setUser] = useState<User | null>(null);
+  const { user, logout } = useAuth();
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
   const [showNotifModal, setShowNotifModal] = useState(false);
-const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  const isSeller = user?.role === 'seller';
 
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const role = localStorage.getItem('sellerUser') ? 'seller' : 'buyer';
+        const role = isSeller ? 'seller' : 'buyer';
         const res = await fetch(`/api/notifications?role=${role}`);
         const json = await res.json();
         if (json.success) {
@@ -61,14 +53,11 @@ const [notifications, setNotifications] = useState<Notification[]>([]);
     };
 
     fetchNotifications();
-  }, []);
+  }, [isSeller]);
 
   useEffect(() => {
-    const sellerData = localStorage.getItem('sellerUser');
-    if (sellerData) {
-      setIsSeller(true);
-      const seller = JSON.parse(sellerData);
-      fetchOrders(seller._id);
+    if (user?.role === 'seller') {
+      fetchOrders(user._id);
     }
 
     const savedLang = localStorage.getItem('language');
@@ -78,7 +67,7 @@ const [notifications, setNotifications] = useState<Notification[]>([]);
     if (savedLang) setLanguage(savedLang);
     if (!isNaN(savedFontScale)) setFontScale(savedFontScale);
     if (savedTheme) setTheme(savedTheme);
-  }, [setTheme]);
+  }, [user, setTheme]);
 
   useEffect(() => {
     document.documentElement.style.setProperty('--app-font-size', `${fontScale}rem`);
@@ -96,14 +85,6 @@ const [notifications, setNotifications] = useState<Notification[]>([]);
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('buyerUser');
-    localStorage.removeItem('sellerUser');
-    localStorage.removeItem('userId');
-    setUser(null);
-    setShowSettings(false);
-  };
-
   const handleUpdateProfile = async () => {
     try {
       const res = await fetch('/api/user/update-profile', {
@@ -114,9 +95,8 @@ const [notifications, setNotifications] = useState<Notification[]>([]);
 
       if (res.ok) {
         const updatedUser = await res.json();
-        localStorage.setItem(isSeller ? 'sellerUser' : 'buyerUser', JSON.stringify(updatedUser));
-        setUser(updatedUser);
-        alert('Profile updated!');
+        localStorage.setItem(user?.role === 'seller' ? 'sellerUser' : 'buyerUser', JSON.stringify(updatedUser));
+        window.location.reload(); // Refresh to update image
       } else {
         alert('Failed to update profile');
       }
@@ -225,7 +205,6 @@ const [notifications, setNotifications] = useState<Notification[]>([]);
         {showLogin && <Login onClose={() => setShowLogin(false)} />}
       </nav>
 
-      {/* Settings Modal */}
       <AnimatePresence>
         {showSettings && (
           <motion.div
@@ -240,7 +219,6 @@ const [notifications, setNotifications] = useState<Notification[]>([]);
               <button onClick={() => setShowSettings(false)} className="text-gray-600 hover:text-black dark:hover:text-white text-lg">✕</button>
             </div>
 
-            {/* Profile Edit */}
             <div className="mb-6">
               <label className="block font-semibold mb-1 text-gray-700 dark:text-gray-200">Name</label>
               <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="w-full border p-2 rounded mb-2" />
@@ -249,7 +227,6 @@ const [notifications, setNotifications] = useState<Notification[]>([]);
               <button onClick={handleUpdateProfile} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Update Profile</button>
             </div>
 
-            {/* Settings */}
             <div className="mb-4">
               <label className="block font-semibold mb-1 text-gray-700 dark:text-gray-200">Language</label>
               <select
@@ -282,7 +259,6 @@ const [notifications, setNotifications] = useState<Notification[]>([]);
               </select>
             </div>
 
-            {/* Zoom controls */}
             <div className="mb-4">
               <span className="block font-semibold mb-2 text-gray-700 dark:text-gray-200">Accessibility</span>
               <div className="flex gap-4">
@@ -310,7 +286,7 @@ const [notifications, setNotifications] = useState<Notification[]>([]);
             </div>
 
             <button
-              onClick={handleLogout}
+              onClick={logout}
               className="mt-6 w-full px-4 py-2 bg-red-500 text-white rounded flex items-center justify-center gap-2 hover:bg-red-600"
             >
               <LogOut size={18} /> Logout
@@ -321,8 +297,3 @@ const [notifications, setNotifications] = useState<Notification[]>([]);
     </>
   );
 }
-
-
-
-
-

@@ -12,6 +12,7 @@ import {
   ChevronRight,
   X,
 } from 'lucide-react';
+import Image from 'next/image';
 
 const ProductImageViewer = ({
   images,
@@ -176,13 +177,8 @@ const ProductImageViewer = ({
                   scrollToImage(index);
                 }}
               >
-                <img
-                  src={image}
-                  alt={`Zoomed ${index}`}
-                  className={`max-h-full max-w-full object-contain transition-transform duration-300 ${
-                    currentIndex === index && zoomed ? 'scale-150' : 'scale-100'
-                  }`}
-                />
+                <Image src={image} alt={`Zoomed ${index}`} width={64} height={64} className="rounded object-cover border"/>
+
               </div>
             ))}
           </div>
@@ -203,11 +199,14 @@ const ProductImageViewer = ({
                   scrollToImage(index);
                 }}
               >
-                <img
-                  src={image}
-                  alt={`Thumb ${index}`}
-                  className="w-full h-full object-cover rounded"
-                />
+                <Image
+  src={image}
+  alt={`Thumb ${index}`}
+  width={80}
+  height={80}
+  className="w-full h-full object-cover rounded"
+/>
+
               </div>
             ))}
           </div>

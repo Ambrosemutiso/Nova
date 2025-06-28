@@ -1,7 +1,6 @@
 'use client';
 
 import { ReactNode, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface CategorySectionProps {
@@ -14,17 +13,6 @@ export default function CategorySection({ title, categorySlug, children }: Categ
   const scrollRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const [visibleCount] = useState(10); // Show only first 10 items
-
-  const scroll = (direction: 'left' | 'right') => {
-    const container = scrollRef.current;
-    if (container) {
-      const scrollAmount = container.offsetWidth * 0.8;
-      container.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth',
-      });
-    }
-  };
 
   // Convert children to array for slicing
   const childrenArray = Array.isArray(children) ? children : [children];

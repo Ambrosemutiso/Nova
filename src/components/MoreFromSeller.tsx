@@ -2,7 +2,6 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { Product } from '@/app/types/product';
-import Link from 'next/link';
 import ProductCard from './ProductCard';
 
 export default function MoreFromSeller({ sellerId, currentProductId }: { sellerId: string; currentProductId: string }) {

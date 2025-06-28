@@ -3,13 +3,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { signInWithGoogle } from '@/lib/authUtils';
 import { toast } from 'react-hot-toast';
-
-export interface User {
-  _id: string;
-  name: string;
-  email: string;
-  role: 'buyer' | 'seller';
-}
+import { useAuth } from '@/app/context/AuthContext';
 
 export default function LoginModal({
   onClose,
@@ -19,6 +13,7 @@ export default function LoginModal({
   defaultRole?: 'buyer' | 'seller' | null;
 }) {
   const [role, setRole] = useState<'buyer' | 'seller' | null>(defaultRole);
+  const { login } = useAuth();
 
   const handleGoogleSignIn = async () => {
     if (!role) {
@@ -27,19 +22,18 @@ export default function LoginModal({
     }
 
     try {
-      const user: User | null = await signInWithGoogle(role);
-
+      const user = await signInWithGoogle(role);
       if (user) {
-        localStorage.setItem('userId', user._id);
-        if (role === 'buyer') {
-          localStorage.setItem('buyerUser', JSON.stringify(user));
-          window.location.href = '/';
-        } else if (role === 'seller') {
-          localStorage.setItem('sellerUser', JSON.stringify(user));
-          window.location.href = '/seller/dashboard';
-        }
+        login(user); // ✅ context login
+
         toast.success('Signed in successfully');
         onClose();
+
+        if (role === 'buyer') {
+          window.location.href = '/';
+        } else {
+          window.location.href = '/seller/dashboard';
+        }
       }
     } catch (error) {
       toast.error('Login failed');
@@ -74,7 +68,7 @@ export default function LoginModal({
         ) : (
           <div className="space-y-4">
             <p className="text-center text-sm text-gray-600">
-              You&#39;re signing in as a <span className="font-semibold">{role}</span>
+              You&apos;re signing in as a <span className="font-semibold">{role}</span>
             </p>
 
             <button

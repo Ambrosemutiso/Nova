@@ -8,7 +8,6 @@ import CartNotification  from '@/app/cart/CartNotification';
 import Navbar from '@/components/Navbar';
 import BackToTopButton from '@/components/BackToTopButton';
 import { ThemeProvider } from 'next-themes';
-import Script from 'next/script';
 import LoginWrapper from '@/components/LoginWrapper';
 
 const geistSans = Geist({
@@ -40,10 +39,6 @@ export default function RootLayout({
         <CartProvider>
           <CartNotification />
           <Navbar />
-<Script
-  src="https://accounts.google.com/gsi/client"
-  strategy="afterInteractive"
-/>
           <main className="min-h-screen">
             {children}
           </main>

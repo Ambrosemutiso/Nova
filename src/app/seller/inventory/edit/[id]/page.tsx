@@ -23,8 +23,12 @@ export default function EditProductPage() {
         } else {
           setError('Failed to load product.');
         }
-      } catch (err) {
-        console.error(err);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          console.error('Error loading product:', err.message);
+        } else {
+          console.error('Unknown error loading product');
+        }
         setError('Error loading product.');
       } finally {
         setLoading(false);
@@ -55,7 +59,12 @@ export default function EditProductPage() {
       } else {
         alert('Failed to update product');
       }
-    } catch (err) {
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error('Error updating product:', err.message);
+      } else {
+        console.error('Unknown error updating product');
+      }
       alert('Error updating product');
     } finally {
       setSaving(false);

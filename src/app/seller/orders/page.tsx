@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 interface OrderItem {
   name: string;
@@ -71,11 +72,14 @@ export default function SellerOrdersPage() {
               <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
                 {order.items.map((item, i) => (
                   <div key={i} className="flex items-center gap-3">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-16 h-16 rounded object-cover border"
-                    />
+<Image
+  src={item.image}
+  alt={item.name}
+  width={64}
+  height={64}
+  className="rounded object-cover border"
+/>
+
                     <div>
                       <p className="font-medium text-gray-800">{item.name}</p>
                       <p className="text-sm">Qty: {item.quantity}</p>

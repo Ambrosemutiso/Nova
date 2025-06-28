@@ -1,41 +1,38 @@
-import { NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebaseAdmin';
+import { NextRequest, NextResponse } from 'next/server';
+import { dbConnect } from '@/lib/dbConnect';
+import Review from '@/app/models/review';
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const { sellerId, userId, name, rating, comment, verified } = await req.json();
+    await dbConnect();
+    const body = await req.json();
 
-    const reviewsRef = adminDb.collection('reviews');
-    const existingReviewQuery = reviewsRef
-      .where('sellerId', '==', sellerId)
-      .where('userId', '==', userId);
-    
-    const existingReviewSnap = await existingReviewQuery.get();
+    const { sellerId, userId, name, rating, comment, verified } = body;
 
-    if (!existingReviewSnap.empty) {
-      const existingDoc = existingReviewSnap.docs[0];
-      await reviewsRef.doc(existingDoc.id).update({
-        rating,
-        comment,
-        verified,
-        updatedAt: new Date().toISOString(),
-      });
-      return NextResponse.json({ message: 'Review updated' });
+    if (!sellerId || !userId || !rating || !comment || !name) {
+      return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
     }
 
-    await reviewsRef.add({
-      sellerId,
-      userId,
-      name,
-      rating,
-      comment,
-      verified,
-      createdAt: new Date().toISOString(),
-    });
+    // Check if user already reviewed
+    const existing = await Review.findOne({ sellerId, userId });
 
-    return NextResponse.json({ message: 'Review submitted' });
-  } catch (err) {
-    console.error('Error submitting review:', err);
-    return NextResponse.json({ error: 'Failed to submit review' }, { status: 500 });
+    if (existing) {
+      // Update existing review
+      existing.rating = rating;
+      existing.comment = comment;
+      existing.name = name;
+      existing.verified = verified;
+      await existing.save();
+      return NextResponse.json({ success: true, message: 'Review updated' });
+    }
+
+    // Create new review
+    const newReview = new Review({ sellerId, userId, name, rating, comment, verified });
+    await newReview.save();
+
+    return NextResponse.json({ success: true, message: 'Review submitted' });
+  } catch (error) {
+    console.error('Review error:', error);
+    return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
   }
 }

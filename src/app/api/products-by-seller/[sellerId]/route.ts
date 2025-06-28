@@ -10,7 +10,8 @@ export async function GET(req: Request, { params }: { params: { sellerId: string
   try {
     const products = await Product.find({ sellerId }).limit(6);
     return NextResponse.json({ products });
-  } catch (err) {
+    } catch (error) {
+    console.error('Error fetching products:', error);
     return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
   }
 }
