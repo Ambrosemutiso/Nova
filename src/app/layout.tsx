@@ -31,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
 
-const { user, isSeller, loading } = useAuth();
+const { loading } = useAuth();
 if (loading) return null; // or a spinner
 
 
