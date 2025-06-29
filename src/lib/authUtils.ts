@@ -1,5 +1,3 @@
-'use client';
-
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth, db } from './firebaseConfig';
 import { collection, doc, setDoc } from 'firebase/firestore';
