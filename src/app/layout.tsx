@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import '@/styles/globals.css';
 import { CartProvider } from '@/app/context/CartContext';
-import { AuthProvider } from '@/app/context/AuthContext'
+import { useAuth, AuthProvider } from '@/app/context/AuthContext'
 import { Toaster } from 'react-hot-toast';
 import CartNotification  from '@/app/cart/CartNotification';
 import Navbar from '@/components/Navbar';
@@ -30,6 +30,10 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
+const { user, isSeller, loading } = useAuth();
+if (loading) return null; // or a spinner
+
 
   return (
     <html lang="en">
