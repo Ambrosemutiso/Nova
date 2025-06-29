@@ -13,6 +13,7 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   isSeller: boolean;
+  loading: boolean;
   login: (user: User) => void;
   logout: () => void;
 }
@@ -22,26 +23,30 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isSeller, setIsSeller] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const buyerData = localStorage.getItem('buyerUser');
     const sellerData = localStorage.getItem('sellerUser');
 
-    if (buyerData) {
-      const buyer = JSON.parse(buyerData);
-      setUser(buyer);
-      setIsSeller(false);
-    } else if (sellerData) {
+    if (sellerData) {
       const seller = JSON.parse(sellerData);
       setUser(seller);
       setIsSeller(true);
+    } else if (buyerData) {
+      const buyer = JSON.parse(buyerData);
+      setUser(buyer);
+      setIsSeller(false);
     }
+
+    setLoading(false);
   }, []);
 
   const login = (user: User) => {
     setUser(user);
-    setIsSeller(user.role === 'seller');
-    localStorage.setItem(user.role === 'seller' ? 'sellerUser' : 'buyerUser', JSON.stringify(user));
+    const isSeller = user.role === 'seller';
+    setIsSeller(isSeller);
+    localStorage.setItem(isSeller ? 'sellerUser' : 'buyerUser', JSON.stringify(user));
     localStorage.setItem('userId', user._id);
   };
 
@@ -54,8 +59,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isSeller, login, logout }}>
-      {children}
+    <AuthContext.Provider value={{ user, isSeller, loading, login, logout }}>
+      {!loading && children}
     </AuthContext.Provider>
   );
 };

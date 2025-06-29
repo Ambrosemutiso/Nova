@@ -177,8 +177,13 @@ const ProductImageViewer = ({
                   scrollToImage(index);
                 }}
               >
-                <Image src={image} alt={`Zoomed ${index}`} width={64} height={64} className="rounded object-cover border"/>
-
+                <CldImage
+                src={getPublicId(image)}
+                alt={`Thumb ${index}`}
+                width={64}
+                height={64}
+                className="rounded object-cover border"
+                />
               </div>
             ))}
           </div>
@@ -199,18 +204,16 @@ const ProductImageViewer = ({
                   scrollToImage(index);
                 }}
               >
-                <Image
-  src={image}
-  alt={`Thumb ${index}`}
-  width={80}
-  height={80}
-  className="w-full h-full object-cover rounded"
-/>
-
+                <CldImage
+                src={getPublicId(image)}
+                alt={`Thumb ${index}`}
+                width={80}
+                height={80}
+                className="w-full h-full object-cover rounded"
+                />
               </div>
             ))}
           </div>
-
           <div className="absolute bottom-4 text-white text-sm">
             {currentIndex + 1} / {images.length}
           </div>
