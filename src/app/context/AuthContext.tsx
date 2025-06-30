@@ -7,7 +7,7 @@ export interface User {
   name: string;
   email: string;
   role: 'buyer' | 'seller';
-  photoURL: string;
+  image: string;
 }
 
 interface AuthContextType {
