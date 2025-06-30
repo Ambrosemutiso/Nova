@@ -1,3 +1,4 @@
+// components/StarRatingDisplay.tsx
 import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 
 export default function StarRatingDisplay({ rating }: { rating: number }) {

@@ -1,8 +1,7 @@
-// src/app/types/User.ts
-export interface AppUser {
-  _id: string;          
+export interface User {
+  _id: string;
   name: string;
   email: string;
-  photoURL: string;    
+  image: string;
   role: 'buyer' | 'seller';
 }

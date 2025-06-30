@@ -94,11 +94,12 @@ const ProductImageViewer = ({
       {/* Horizontal Scrollable Cards */}
       <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide">
         {images.map((image, index) => (
-          <div
-            key={index}
-            className="min-w-[250px] bg-white rounded-xl shadow-md p-3 flex-shrink-0 cursor-pointer relative"
-            onClick={() => handleOpenModal(index)}
-          >
+<div
+  key={index}
+  className="min-w-[250px] flex-shrink-0 cursor-pointer hover:ring hover:ring-orange-200 transition"
+  onClick={() => handleOpenModal(index)}
+>
+
             <CldImage
               src={getPublicId(image)}
               alt={name}

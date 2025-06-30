@@ -1,13 +1,16 @@
-// types/seller.ts
-export type Follower = {
-  userId: string;
-  followedAt?: Date;
-};
-
-export type Seller = {
+export interface Seller {
   _id: string;
   name: string;
-  followers: string[]; 
+  email: string;
+  image: string;
+  shopName?: string;
+  role: 'seller';
+  followers: {
+    userId: string;
+    followedAt: string;
+  }[];
   averageRating: number;
   reviewCount: number;
-};
+  createdAt: string;
+}
+

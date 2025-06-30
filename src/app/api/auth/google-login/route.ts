@@ -7,14 +7,14 @@ export async function POST(req: Request) {
   await dbConnect();
 
   try {
-    const { name, email, image, role } = await req.json();
+    const { _id, name, email, image, role } = await req.json(); // ✅ include _id
 
-    // Check if user already exists
+    // Check if user already exists by email
     let user = await User.findOne({ email });
 
-    // If not, create new user
+    // If not, create new user with _id
     if (!user) {
-      user = await User.create({ name, email, image, role });
+      user = await User.create({ _id, name, email, image, role });
     }
 
     return NextResponse.json({ success: true, user });
@@ -23,4 +23,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: false, error: 'Login failed' }, { status: 500 });
   }
 }
+
 

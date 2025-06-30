@@ -7,6 +7,7 @@ import StarRatingDisplay from '@/components/StarRatingsDisplay';
 import { Review } from '@/app/types/review';
 import { Seller } from '@/app/types/seller';
 import toast from 'react-hot-toast';
+import Image from 'next/image';
 
 export default function SellerSection({
   sellerId,
@@ -28,23 +29,23 @@ export default function SellerSection({
     try {
       const sellerRes = await fetch(`/api/seller/${sellerId}`);
       const info: Seller = await sellerRes.json();
-
-      const reviewsRes = await fetch(`/api/seller/${sellerId}/reviews`);
-      const revs: Review[] = await reviewsRes.json();
-
       setSeller(info);
-      setReviews(revs);
+
+      const res = await fetch(`/api/reviews?sellerId=${sellerId}`);
+      const { data } = await res.json();
+      const fetchedReviews: Review[] = data.reviews;
+      setReviews(fetchedReviews);
 
       if (user) {
-        const userReview = revs.find((r) => r.userId === user._id);
+        const userReview = fetchedReviews.find((r) => r.userId._id === user._id);
         if (userReview) {
           setRating(userReview.rating);
           setComment(userReview.comment);
           setExistingReviewId(userReview._id ?? null);
         }
 
-        const following = info.followers?.includes(user._id);
-        setIsFollowing(following ?? false);
+        const isUserFollowing = info.followers?.some((f) => f.userId === user._id);
+        setIsFollowing(isUserFollowing);
       }
     } catch (err) {
       console.error('Error fetching seller data:', err);
@@ -68,6 +69,7 @@ export default function SellerSection({
     try {
       const res = await fetch('/api/follow-seller', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sellerId, userId: user._id, action }),
       });
 
@@ -86,11 +88,6 @@ export default function SellerSection({
     }
   };
 
-  const reviewCount = reviews.length;
-  const averageRating = reviewCount
-    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount
-    : 0;
-
   if (!seller) {
     return (
       <div className="mt-4 p-4">
@@ -104,9 +101,9 @@ export default function SellerSection({
       <div className="flex justify-between items-center">
         <div>
           <h2 className="font-bold text-lg">{seller.name} - Official Store</h2>
-          {reviewCount > 0 && (
+          {seller.reviewCount > 0 && (
             <div className="text-sm text-yellow-500 flex items-center gap-2">
-              <span>⭐ {averageRating.toFixed(1)} ({reviewCount} reviews)</span>
+              <span>⭐ {seller.averageRating.toFixed(1)} ({seller.reviewCount} reviews)</span>
             </div>
           )}
           <p className="text-gray-500">{seller.followers?.length || 0} Followers</p>
@@ -122,18 +119,27 @@ export default function SellerSection({
         )}
       </div>
 
-      <StarRatingDisplay rating={averageRating} />
-      <p className="text-sm text-gray-500">{reviewCount} reviews</p>
+      <StarRatingDisplay rating={seller.averageRating} />
+      <p className="text-sm text-gray-500">{seller.reviewCount} reviews</p>
 
       {reviews.length > 0 && (
         <div className="mt-6">
           <h3 className="font-semibold text-orange-500">Top Reviews</h3>
           <div className="space-y-2 mt-2">
-            {reviews.map((review, idx) => (
-              <div key={idx} className="border p-2 rounded bg-gray-50">
-                <div className="flex justify-between">
-                  <p className="font-semibold">{review.name}</p>
-                  <p className="text-yellow-500">⭐ {review.rating}/5</p>
+            {reviews.map((review) => (
+              <div key={review._id} className="border p-2 rounded bg-gray-50">
+                <div className="flex items-center gap-2 mb-1">
+                  <Image
+                    src={review.userId?.image || '/avatar.png'}
+                    alt={review.userId?.name}
+                    width={30}
+                    height={30}
+                    className="rounded-full"
+                  />
+                  <div>
+                    <p className="font-semibold">{review.userId?.name}</p>
+                    <p className="text-yellow-500 text-sm">⭐ {review.rating}/5</p>
+                  </div>
                 </div>
                 <p className="text-sm">{review.comment}</p>
                 {review.verified && (
@@ -174,8 +180,7 @@ export default function SellerSection({
                 setComment('');
                 setRating(0);
                 setExistingReviewId(null);
-                const updated = await fetch(`/api/seller/${sellerId}/reviews`).then((res) => res.json());
-                setReviews(updated);
+                fetchData();
               } else {
                 toast.error(data.error || 'Failed to submit review');
               }
@@ -184,7 +189,7 @@ export default function SellerSection({
           >
             <div>
               <label className="block text-sm mb-1">Rating:</label>
-              <StarRatingInput rating={rating} setRating={setRating} />
+              <StarRatingInput value={rating} onChange={setRating} />
             </div>
             <div>
               <label className="block text-sm mb-1">Comment:</label>

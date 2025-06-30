@@ -1,38 +1,43 @@
-import { NextRequest, NextResponse } from 'next/server';
+// app/api/reviews/route.ts
+import { NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
 import Review from '@/app/models/review';
+import Seller from '@/app/models/seller';
 
-export async function POST(req: NextRequest) {
+export async function GET(req: Request) {
+  await dbConnect();
+
+  const { searchParams } = new URL(req.url);
+  const sellerId = searchParams.get('sellerId');
+
+  if (!sellerId) {
+    return NextResponse.json({ success: false, message: 'Missing sellerId' }, { status: 400 });
+  }
+
   try {
-    await dbConnect();
-    const body = await req.json();
+    // Fetch all reviews for the seller
+    const reviews = await Review.find({ sellerId }).populate('userId', 'name image').sort({ createdAt: -1 });
 
-    const { sellerId, userId, name, rating, comment, verified } = body;
+    // Calculate average rating
+    const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
+    const averageRating = reviews.length > 0 ? totalRating / reviews.length : 0;
 
-    if (!sellerId || !userId || !rating || !comment || !name) {
-      return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
-    }
+    // Update seller's averageRating and reviewCount
+    await Seller.findByIdAndUpdate(sellerId, {
+      averageRating,
+      reviewCount: reviews.length,
+    });
 
-    // Check if user already reviewed
-    const existing = await Review.findOne({ sellerId, userId });
-
-    if (existing) {
-      // Update existing review
-      existing.rating = rating;
-      existing.comment = comment;
-      existing.name = name;
-      existing.verified = verified;
-      await existing.save();
-      return NextResponse.json({ success: true, message: 'Review updated' });
-    }
-
-    // Create new review
-    const newReview = new Review({ sellerId, userId, name, rating, comment, verified });
-    await newReview.save();
-
-    return NextResponse.json({ success: true, message: 'Review submitted' });
-  } catch (error) {
-    console.error('Review error:', error);
-    return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
+    return NextResponse.json({
+      success: true,
+      data: {
+        reviews,
+        averageRating,
+        reviewCount: reviews.length,
+      },
+    });
+  } catch (err) {
+    console.error('Review fetch error:', err);
+    return NextResponse.json({ success: false, message: 'Server error' }, { status: 500 });
   }
 }

@@ -16,22 +16,29 @@ export const signInWithGoogle = async (role: 'buyer' | 'seller') => {
       role,
     };
 
-    // Save to Firestore
-    await setDoc(doc(collection(db, 'users'), user.uid), userData, { merge: true });
+    // ✅ Save to Firestore (Buyer and Seller separated by collection or doc ID prefix)
+    const docRef = role === 'buyer'
+      ? doc(collection(db, 'users'), user.uid)
+      : doc(collection(db, 'sellers'), user.uid);
+    await setDoc(docRef, userData, { merge: true });
 
-    // Save to MongoDB
-    const res = await fetch('/api/auth/google-login', {
+    // ✅ Save to correct MongoDB model based on role
+    const endpoint = role === 'buyer'
+      ? '/api/auth/google-login'
+      : '/api/seller/google-login'; // you need this route
+
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userData),
     });
 
     const data = await res.json();
-
     if (!res.ok || !data.success) throw new Error(data.message || 'Failed to log in');
     return data.user;
   } catch (error) {
-    console.error('Firebase Google Sign-in Error:', error);
+    console.error('Google Sign-in Error:', error);
     throw error;
   }
 };
+
