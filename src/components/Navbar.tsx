@@ -180,14 +180,14 @@ export default function Navbar() {
 
           {user ? (
             <Image
-              src={user.photoURL || '/avatar.png'}
+              src={user.image || '/avatar.png'}
               alt="Profile"
               width={40}
               height={40}
               className="rounded-full cursor-pointer border"
               onClick={() => {
                 setDisplayName(user.name || '');
-                setPhotoURL(user.photoURL || '');
+                setPhotoURL(user.image || '');
                 setShowSettings(true);
               }}
             />
