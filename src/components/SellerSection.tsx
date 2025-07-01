@@ -98,24 +98,28 @@ export default function SellerSection({
   }
 
   return (
-    <div className="mt-4 border p-4 rounded shadow-sm">
+    <div className="mt-4 border p-4 rounded shadow-sm relative">
+<div className="relative mt-4 border p-4 rounded shadow-sm overflow-hidden z-0">
+  {seller.followers?.length >= 1 && (
+    <span className="absolute top-2 right-2 bg-yellow-400 text-black text-xs px-3 py-1 rounded-full shadow font-semibold z-10 flex items-center gap-1">
+      <ShieldCheck size={14} className="text-green-700" />
+      Verified Seller
+    </span>
+  )}
+</div>
+
+
+
       <div className="flex justify-between items-center">
         <div>
-<div className="flex items-center gap-2">
-  <h2 className="font-bold text-lg">{seller.name} - Official Store</h2>
-{seller.followers && seller.followers.length >= 1 && (
-  <span
-    className="absolute top-2 right-2 bg-[color:#FFD700] text-black text-xs px-3 py-1 rounded-full shadow font-semibold z-10 flex items-center gap-1"
-    title="Verified Seller (1000+ followers)"
-  >
-    <ShieldCheck size={14} className="text-green-700" />
-    Verified Seller
-  </span>
-)}
-</div>
+          <div className="flex items-center gap-2">
+            <h2 className="font-bold text-lg">{seller.name} - Official Store</h2>
+          </div>
           {seller.reviewCount > 0 && (
             <div className="text-sm text-yellow-500 flex items-center gap-2">
-              <span>⭐ {seller.averageRating.toFixed(1)} ({seller.reviewCount} reviews)</span>
+              <span>
+                ⭐ {seller.averageRating.toFixed(1)} ({seller.reviewCount} reviews)
+              </span>
             </div>
           )}
           <p className="text-gray-500">{seller.followers?.length || 0} Followers</p>
@@ -124,7 +128,9 @@ export default function SellerSection({
         {user && (
           <button
             onClick={() => handleFollowAction(isFollowing ? 'unfollow' : 'follow')}
-            className={`px-4 py-1 rounded ${isFollowing ? 'bg-gray-300 text-black' : 'bg-orange-500 text-white'}`}
+            className={`px-4 py-1 rounded ${
+              isFollowing ? 'bg-gray-300 text-black' : 'bg-orange-500 text-white'
+            }`}
           >
             {isFollowing ? 'Unfollow' : 'Follow'}
           </button>
@@ -212,10 +218,7 @@ export default function SellerSection({
                 onChange={(e) => setComment(e.target.value)}
               />
             </div>
-            <button
-              type="submit"
-              className="bg-orange-500 text-white px-4 py-1 rounded"
-            >
+            <button type="submit" className="bg-orange-500 text-white px-4 py-1 rounded">
               {existingReviewId ? 'Update Review' : 'Submit Review'}
             </button>
           </form>
