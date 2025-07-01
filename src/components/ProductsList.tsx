@@ -40,11 +40,11 @@ const renderCategory = (title: string, Component: React.FC) => (
     case 'Electronics':
       return renderCategory('Electronics', Electronics);
     case 'Sound Systems':
-      return renderCategory('Sound Systems', Systems);
+      return renderCategory('Systems', Systems);
     case 'Fashion':
       return renderCategory('Fashion', Fashion);
     case 'Phones&Tablets':
-      return renderCategory('Phones & Tablets', Phones);
+      return renderCategory('Phones', Phones);
     case 'Laptops':
       return renderCategory('Laptops', Laptops);
     case 'Computers':
@@ -87,8 +87,8 @@ const renderCategory = (title: string, Component: React.FC) => (
       return (
         <>
           {renderCategory('Electronics', Electronics)}
-          {renderCategory('Phones&Tablets', Phones)}
-          {renderCategory('Sound Systems', Systems)}
+          {renderCategory('Phones', Phones)}
+          {renderCategory('Systems', Systems)}
           {renderCategory('Fashion', Fashion)}
           {renderCategory('Laptops', Laptops)}
           {renderCategory('Computers', Computers)}

@@ -11,12 +11,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { LogOut, ZoomIn, ZoomOut } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/app/context/AuthContext';
-
-interface Notification {
-  _id: string;
-  message: string;
-  createdAt: string;
-}
+import type { Notification } from '@/app/types/notification';
 
 export default function Navbar() {
   const [showLogin, setShowLogin] = useState(false);
@@ -42,7 +37,7 @@ export default function Navbar() {
     const fetchNotifications = async () => {
       try {
         const role = isSeller ? 'seller' : 'buyer';
-        const res = await fetch(`/api/notifications?role=${role}`);
+        const res = await fetch(`/api/notifications?role=${role}&userId=${user?._id}`);
         const json = await res.json();
         if (json.success) {
           setNotifications(json.data);
@@ -153,28 +148,55 @@ export default function Navbar() {
             </button>
           )}
 
-          <button onClick={() => setShowNotifModal(!showNotifModal)} className="relative text-2xl text-orange-500">
-            <FiBell />
-            {notifications.length > 0 && (
-              <span className="absolute -top-2 -right-2 bg-green-600 text-white text-xs rounded-full px-1.5 py-0.5">{notifications.length}</span>
-            )}
-          </button>
+<button
+  onClick={async () => {
+    setShowNotifModal(!showNotifModal);
+
+    if (!showNotifModal && user) {
+      try {
+        await fetch('/api/notifications/mark-read', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user._id }),
+        });
+
+        // Optionally update local state to reflect changes
+        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      } catch (err) {
+        console.error('Failed to mark notifications as read:', err);
+      }
+    }
+  }}
+  className="relative text-2xl text-orange-500"
+>
+  <FiBell />
+  {notifications.some((n) => !n.read) && (
+    <span className="absolute -top-2 -right-2 bg-green-600 text-white text-xs rounded-full px-1.5 py-0.5">
+      {notifications.filter((n) => !n.read).length}
+    </span>
+  )}
+</button>
+
 
           {showNotifModal && (
             <div className="absolute right-4 top-16 w-80 bg-white shadow-lg rounded-lg z-50 border">
               <div className="p-4 border-b text-lg font-semibold text-gray-700">Notifications</div>
-              <ul className="max-h-64 overflow-y-auto divide-y">
-                {notifications.length === 0 ? (
-                  <li className="p-4 text-sm text-gray-500">No notifications</li>
-                ) : (
-                  notifications.map((notif) => (
-                    <li key={notif._id} className="p-4 text-sm text-gray-700">
-                      <span className="font-semibold">Notice:</span> {notif.message}
-                      <p className="text-xs text-gray-400 mt-1">{new Date(notif.createdAt).toLocaleString()}</p>
-                    </li>
-                  ))
-                )}
-              </ul>
+<ul className="max-h-64 overflow-y-auto divide-y">
+  {notifications.length === 0 ? (
+    <li className="p-4 text-sm text-gray-500">No notifications</li>
+  ) : (
+    notifications.map((notif) => (
+      <li
+        key={notif._id}
+        className={`p-4 text-sm ${notif.read ? 'text-gray-700' : 'text-black font-semibold'}`}
+      >
+        <span className="font-semibold">Notice:</span> {notif.message}
+        <p className="text-xs text-gray-400 mt-1">{new Date(notif.createdAt).toLocaleString()}</p>
+      </li>
+    ))
+  )}
+</ul>
+
             </div>
           )}
 

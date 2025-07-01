@@ -120,7 +120,7 @@ export default function SellerSection({
       </div>
 
       <StarRatingDisplay rating={seller.averageRating} />
-      <p className="text-sm text-gray-500">{seller.reviewCount} reviews</p>
+      <p className="text-sm text-gray-500">({seller.reviewCount} reviews)</p>
 
       {reviews.length > 0 && (
         <div className="mt-6">
@@ -130,14 +130,14 @@ export default function SellerSection({
               <div key={review._id} className="border p-2 rounded bg-gray-50">
                 <div className="flex items-center gap-2 mb-1">
                   <Image
-                    src={review.userId?.image || '/avatar.png'}
-                    alt={review.userId?.name}
+                    src={review.userId.image || '/avatar.png'}
+                    alt={review.userId.name}
                     width={30}
                     height={30}
                     className="rounded-full"
                   />
                   <div>
-                    <p className="font-semibold">{review.userId?.name}</p>
+                    <p className="font-semibold">{review.userId.name}</p>
                     <p className="text-yellow-500 text-sm">⭐ {review.rating}/5</p>
                   </div>
                 </div>

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
 import Product from '@/app/models/product';
 import cloudinary from '@/lib/cloudinary';
+import Notification from '@/app/models/notification';
+import Seller from '@/app/models/seller';
+import type { Follower } from '@/app/types/follower';
 
 export async function POST(request: NextRequest) {
   await dbConnect();
@@ -13,7 +16,7 @@ export async function POST(request: NextRequest) {
     const oldPrice = parseFloat(formData.get('oldPrice')?.toString() || '0');
     const calculatedPrice = parseFloat(formData.get('calculatedPrice')?.toString() || '0');
     const description = formData.get('description')?.toString();
-    const quantity = formData.get('quantity')?.toString()||('0');
+    const quantity = formData.get('quantity')?.toString() || '0';
     const category = formData.get('category')?.toString();
     const sellerId = formData.get('sellerId')?.toString();
     const county = formData.get('county')?.toString();
@@ -27,7 +30,6 @@ export async function POST(request: NextRequest) {
     const boxContents = JSON.parse(formData.get('boxContents')?.toString() || '[]');
     const warranty = formData.get('warranty')?.toString();
     const weight = formData.get('weight')?.toString();
-                                    
 
     if (!name || !price || !category || !sellerId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -45,7 +47,7 @@ export async function POST(request: NextRequest) {
           folder: 'products',
         });
 
-        // Remove the version number from the URL before saving
+        // Remove version from URL
         const cleanedUrl = result.secure_url.replace(/\/v\d+\//, '/');
         images.push(cleanedUrl);
       } catch (err) {
@@ -74,10 +76,29 @@ export async function POST(request: NextRequest) {
       boxContents,
       warranty,
       dimensions,
-      weight
+      weight,
     });
 
     await newProduct.save();
+
+    // 🔔 Send notifications to followers of the seller
+    try {
+      const seller = await Seller.findById(sellerId).populate('followers.userId', 'name');
+
+      if (seller?.followers?.length) {
+const notifications = seller.followers.map((follower: Follower) => ({
+  type: 'new_product',
+  sender: seller._id,
+  recipient: follower.userId._id,
+  message: `🛒 ${seller.shopName || seller.name} just added a new product: ${name}`,
+}));
+
+
+        await Notification.insertMany(notifications);
+      }
+    } catch (notifError) {
+      console.error('❌ Failed to send notifications to followers:', notifError);
+    }
 
     return NextResponse.json(
       { message: 'Product created successfully', product: newProduct },

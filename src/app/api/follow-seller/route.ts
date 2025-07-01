@@ -2,8 +2,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
 import Seller from '@/app/models/seller';
-
-import { Types } from 'mongoose'; // make sure this is imported
+import Notification from '@/app/models/notification'; // ✅ import Notification model
+import { Types } from 'mongoose';
 
 type Follower = {
   userId: Types.ObjectId;
@@ -29,12 +29,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'You cannot follow yourself' }, { status: 400 });
     }
 
-const alreadyFollowing = seller.followers.some((f: Follower) => f.userId.toString() === userId);
+    const alreadyFollowing = seller.followers.some(
+      (f: Follower) => f.userId.toString() === userId
+    );
 
     if (action === 'follow') {
       if (!alreadyFollowing) {
         seller.followers.push({ userId, followedAt: new Date() });
         await seller.save();
+
+        // ✅ Send notification to seller
+        await Notification.create({
+          type: 'new_follower',
+          sender: userId,
+          recipient: sellerId,
+          message: 'You have a new follower',
+        });
+
         return NextResponse.json({ success: true, message: 'Followed seller' });
       } else {
         return NextResponse.json({ success: false, message: 'Already following this seller' });
@@ -43,8 +54,11 @@ const alreadyFollowing = seller.followers.some((f: Follower) => f.userId.toStrin
 
     if (action === 'unfollow') {
       if (alreadyFollowing) {
-seller.followers = seller.followers.filter((f: Follower) => f.userId.toString() !== userId);
+        seller.followers = seller.followers.filter(
+          (f: Follower) => f.userId.toString() !== userId
+        );
         await seller.save();
+
         return NextResponse.json({ success: true, message: 'Unfollowed seller' });
       } else {
         return NextResponse.json({ success: false, message: 'You are not following this seller' });
