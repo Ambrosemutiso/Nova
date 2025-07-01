@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from 'recharts';
+import { ShieldCheck } from 'lucide-react';
 
 interface Seller {
   _id: string;
@@ -21,6 +22,7 @@ interface Metrics {
   totalOrders: number;
   totalRevenue: number;
   activeProducts: number;
+  totalFollowers: number; // ✅ added
 }
 
 export default function SellerDashboard() {
@@ -49,7 +51,7 @@ export default function SellerDashboard() {
     { month: 'Mar', revenue: 24500 },
     { month: 'Apr', revenue: 30000 },
     { month: 'May', revenue: 27000 },
-  ]; // Replace with real backend data later
+  ];
 
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto px-4 pt-28 pb-10">
@@ -58,7 +60,7 @@ export default function SellerDashboard() {
       </h1>
 
       {/* Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="bg-white p-6 rounded-xl shadow-md text-center">
           <h3 className="text-lg font-medium text-gray-600">Total Orders</h3>
           <p className="text-3xl font-bold text-orange-600">{metrics?.totalOrders ?? '--'}</p>
@@ -71,6 +73,17 @@ export default function SellerDashboard() {
           <h3 className="text-lg font-medium text-gray-600">Active Products</h3>
           <p className="text-3xl font-bold text-orange-600">{metrics?.activeProducts ?? '--'}</p>
         </div>
+<div className="bg-white p-6 rounded-xl shadow-md text-center relative">
+{typeof metrics?.totalFollowers === 'number' && metrics.totalFollowers >= 1 && (
+  <span className="absolute top-2 right-2 bg-[color:#FFD700] text-black text-xs px-3 py-1 rounded-full shadow font-semibold z-10 flex items-center gap-1">
+    <ShieldCheck size={14} className="text-green-700" />
+    Verified Seller
+  </span>
+)}
+  <h3 className="text-lg font-medium text-gray-600">Followers</h3>
+  <p className="text-3xl font-bold text-orange-600">{metrics?.totalFollowers ?? '--'}</p>
+</div>
+
       </div>
 
       {/* Revenue Chart */}

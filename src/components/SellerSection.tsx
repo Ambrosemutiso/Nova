@@ -8,6 +8,7 @@ import { Review } from '@/app/types/review';
 import { Seller } from '@/app/types/seller';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
+import { ShieldCheck } from 'lucide-react';
 
 export default function SellerSection({
   sellerId,
@@ -100,7 +101,18 @@ export default function SellerSection({
     <div className="mt-4 border p-4 rounded shadow-sm">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="font-bold text-lg">{seller.name} - Official Store</h2>
+<div className="flex items-center gap-2">
+  <h2 className="font-bold text-lg">{seller.name} - Official Store</h2>
+{seller.followers && seller.followers.length >= 1 && (
+  <span
+    className="absolute top-2 right-2 bg-[color:#FFD700] text-black text-xs px-3 py-1 rounded-full shadow font-semibold z-10 flex items-center gap-1"
+    title="Verified Seller (1000+ followers)"
+  >
+    <ShieldCheck size={14} className="text-green-700" />
+    Verified Seller
+  </span>
+)}
+</div>
           {seller.reviewCount > 0 && (
             <div className="text-sm text-yellow-500 flex items-center gap-2">
               <span>⭐ {seller.averageRating.toFixed(1)} ({seller.reviewCount} reviews)</span>
@@ -130,14 +142,14 @@ export default function SellerSection({
               <div key={review._id} className="border p-2 rounded bg-gray-50">
                 <div className="flex items-center gap-2 mb-1">
                   <Image
-                    src={review.userId.image || '/avatar.png'}
-                    alt={review.userId.name}
+                    src={review.userId?.image || '/avatar.png'}
+                    alt={review.userId?.name}
                     width={30}
                     height={30}
                     className="rounded-full"
                   />
                   <div>
-                    <p className="font-semibold">{review.userId.name}</p>
+                    <p className="font-semibold">{review.userId?.name}</p>
                     <p className="text-yellow-500 text-sm">⭐ {review.rating}/5</p>
                   </div>
                 </div>
