@@ -126,12 +126,10 @@ return (
 
     {/* Main Product Section */}
 {product && (
-  <div className="bg-white rounded-lg shadow-lg p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
     <ProductImageViewer
       images={product.images}
       name={product.name}
     />
-  </div>
 )}
 
 {/* Product Info Section */}
