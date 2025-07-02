@@ -24,7 +24,7 @@ export default function SuggestedForYou() {
   return (
     <section className="mt-10">
       <h2 className="text-xl font-semibold mb-4">Suggested for You</h2>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="flex gap-4 overflow-x-auto pb-2">
         {products.map(product => (
           <ProductCard key={product._id} product={product} />
         ))}

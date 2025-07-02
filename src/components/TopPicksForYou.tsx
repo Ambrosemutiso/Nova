@@ -30,7 +30,7 @@ useEffect(() => {
   return (
     <section className="mt-10">
       <h2 className="text-xl font-semibold mb-4">Top Picks for You</h2>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="flex gap-4 overflow-x-auto pb-2">
         {products.map(p => (
           <ProductCard key={p._id} product={p} />
         ))}

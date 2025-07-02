@@ -39,11 +39,11 @@ const renderCategory = (title: string, Component: React.FC) => (
   switch (category) {
     case 'Electronics':
       return renderCategory('Electronics', Electronics);
-    case 'Sound Systems':
+    case 'Systems':
       return renderCategory('Systems', Systems);
     case 'Fashion':
       return renderCategory('Fashion', Fashion);
-    case 'Phones&Tablets':
+    case 'Phones':
       return renderCategory('Phones', Phones);
     case 'Laptops':
       return renderCategory('Laptops', Laptops);
