@@ -7,6 +7,7 @@ import ProductsList from '@/components/ProductsList';
 import TopPicksForYou from '@/components/TopPicksForYou';
 import SuggestedForYou from '@/components/SuggestedForYou';
 import SponsoredProducts from '@/components/SponsoredProducts';
+import FlashSales from '@/components/FlashSales';
 
 export default function Main() {
   const [category, setCategory] = useState('Shop');
@@ -15,6 +16,7 @@ export default function Main() {
       <Hero />
       <Menu onSelectCategory={setCategory}/>
       <ProductsList category={category} />
+      <FlashSales/>
       <SponsoredProducts/>
       <SuggestedForYou/>
       <TopPicksForYou/>

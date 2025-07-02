@@ -171,7 +171,7 @@ export default function Navbar() {
 >
   <FiBell />
   {notifications.some((n) => !n.read) && (
-    <span className="absolute -top-2 -right-2 bg-green-600 text-white text-xs rounded-full px-1.5 py-0.5">
+    <span className="absolute -top-2 -right-2 bg-orange-600 text-white text-xs rounded-full px-1.5 py-0.5">
       {notifications.filter((n) => !n.read).length}
     </span>
   )}
