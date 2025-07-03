@@ -16,7 +16,10 @@ const productSchema = new Schema(
     category: { type: String, required: true },
     price: { type: Number, required: true },
     oldPrice: { type: Number, default: null },
-    calculatedPrice: { type: String },
+    calculatedPrice: {
+      type: Schema.Types.Mixed, // Can be number or string
+      required: true,
+    },
     county: { type: String, required: true },
     town: { type: String, required: true },
     quantity: { type: Number, required: true, min: 0 },

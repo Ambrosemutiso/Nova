@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import mongoose from 'mongoose';
 
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -19,6 +22,7 @@ export async function dbConnect() {
     isConnected = true;
     console.log('✅ MongoDB: Connected successfully');
     return db;
+
   } catch (err) {
     console.error('❌ MongoDB: Connection error', err);
     throw new Error('Failed to connect to MongoDB');
