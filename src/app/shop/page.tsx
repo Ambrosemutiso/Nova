@@ -15,8 +15,8 @@ export default function Main() {
     <div className="flex flex-col min-h-screen">
       <Hero />
       <Menu onSelectCategory={setCategory}/>
-      <FlashSales/>
       <ProductsList category={category} />
+      <FlashSales/>
       <SponsoredProducts/>
       <SuggestedForYou/>
       <TopPicksForYou/>
