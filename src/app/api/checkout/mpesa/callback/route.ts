@@ -1,5 +1,5 @@
 // POST /api/checkout/mpesa/callback
-import Order from '@/app/models/order';
+import Order from '@/app/models/orders';
 
 export async function POST(req) {
   const body = await req.json();

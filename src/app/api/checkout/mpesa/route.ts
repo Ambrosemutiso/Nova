@@ -1,5 +1,5 @@
 // POST /api/checkout/mpesa
-import Order from '@/app/models/order'; 
+import Order from '@/app/models/orders'; 
 import { initiateSTKPush } from '@/lib/mpesa'; 
 
 export async function POST(req) {

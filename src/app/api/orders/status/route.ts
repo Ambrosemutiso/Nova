@@ -1,5 +1,5 @@
 // GET /api/orders/status
-import Order from '@/app/models/order';
+import Order from '@/app/models/orders';
 
 export async function GET(req) {
   const orderId = new URL(req.url).searchParams.get('orderId');
