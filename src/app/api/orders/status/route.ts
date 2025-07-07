@@ -1,20 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { dbConnect } from '@/lib/dbConnect';
-import Order from '@/app/models/orders';
+// GET /api/orders/status
+import Order from '@/app/models/order';
 
-export async function GET(req: NextRequest) {
-  await dbConnect();
-
-  const orderId = req.nextUrl.searchParams.get('orderId');
-
-  if (!orderId) {
-    return NextResponse.json({ message: 'Missing order ID' }, { status: 400 });
-  }
+export async function GET(req) {
+  const orderId = new URL(req.url).searchParams.get('orderId');
 
   const order = await Order.findById(orderId);
-  if (!order) {
-    return NextResponse.json({ message: 'Order not found' }, { status: 404 });
-  }
+  if (!order) return Response.json({ error: 'Order not found' }, { status: 404 });
 
-  return NextResponse.json({ status: order.status });
+  return Response.json({ status: order.status });
 }

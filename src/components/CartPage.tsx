@@ -6,6 +6,9 @@ import { CldImage } from 'next-cloudinary';
 import { useRouter } from 'next/navigation';
 import { Player } from '@lottiefiles/react-lottie-player';
 import RecentlyViewed from "@/components/RecentlyViewed";
+import SponsoredProducts from '@/components/SponsoredProducts';
+import TopPicksForYou from '@/components/TopPicksForYou';
+import SuggestedForYou from '@/components/SuggestedForYou';
 
 type County = 'Nairobi' | 'Mombasa' | 'Kisumu' | 'Nakuru';
 
@@ -205,6 +208,9 @@ const getPublicId = (url?: string) => {
   </div>
   </div>
       <RecentlyViewed />
+      <SponsoredProducts/>
+      <SuggestedForYou/>
+      <TopPicksForYou/>
 </div>
   );
 }

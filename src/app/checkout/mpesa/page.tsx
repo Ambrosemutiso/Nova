@@ -56,62 +56,81 @@ export default function CheckoutPage() {
     setCustomerInfo({ ...customerInfo, [e.target.name]: e.target.value });
   };
 
-  const handlePayment = async () => {
-    setLoading(true);
-    try {
-      if (!userId) {
-        toast.error('User not logged in.');
-        setLoading(false);
-        return;
-      }
+const handlePayment = async () => {
+  setLoading(true);
+  toast.loading('Waiting for M-Pesa confirmation...');
 
-      const normalizedPhone = customerInfo.phone.replace(/^0/, '254');
-
-      const response = await fetch('/api/checkout/mpesa', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone: normalizedPhone,
-          totalAmount,
-          customerInfo,
-          items: cartItems.map(item => ({
-            name: item.name,
-            quantity: item.quantity,
-            price: item.calculatedPrice,
-            images: item.images,
-          })),
-          deliveryFee,
-          userId,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        const orderId = result.orderId;
-
-        const interval = setInterval(async () => {
-          const statusRes = await fetch(`/api/orders/status?orderId=${orderId}`);
-          const statusData = await statusRes.json();
-
-          if (statusData.status === 'Paid') {
-            clearInterval(interval);
-            router.push('/success');
-          } else if (statusData.status === 'Cancelled') {
-            clearInterval(interval);
-            toast.error('Payment cancelled or failed.');
-          }
-        }, 3000);
-      } else {
-        toast.error('Payment failed: ' + result.message);
-      }
-    } catch (error) {
-      console.error('Payment error:', error);
-      toast.error('An error occurred during payment.');
-    } finally {
-      toast.loading('Waiting for M-Pesa confirmation...');
+  try {
+    if (!userId) {
+      toast.error('User not logged in.');
+      setLoading(false);
+      return;
     }
-  };
+
+    const normalizedPhone = customerInfo.phone.replace(/^0/, '254');
+
+    const response = await fetch('/api/checkout/mpesa', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: normalizedPhone,
+        totalAmount,
+        customerInfo,
+        items: cartItems.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.calculatedPrice,
+          images: item.images,
+        })),
+        deliveryFee,
+        userId,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      const orderId = result.orderId;
+      let attempts = 0;
+      const maxAttempts = 10;
+
+      const interval = setInterval(async () => {
+        attempts++;
+
+        const statusRes = await fetch(`/api/orders/status?orderId=${orderId}`);
+        const statusData = await statusRes.json();
+
+        if (statusData.status === 'Paid') {
+          clearInterval(interval);
+          toast.dismiss(); // remove "waiting" toast
+          toast.success('Payment successful!');
+          localStorage.removeItem('cart'); // optional, depending on cart context
+          router.push('/orders'); // redirect to orders page
+        } else if (statusData.status === 'Cancelled') {
+          clearInterval(interval);
+          toast.dismiss();
+          toast.error('Payment cancelled.');
+          router.push('/cart');
+        } else if (attempts >= maxAttempts) {
+          clearInterval(interval);
+          toast.dismiss();
+          toast.error('Transaction timed out. Try again.');
+          router.push('/cart');
+        }
+      }, 3000);
+    } else {
+      toast.dismiss();
+      toast.error('Payment failed: ' + result.message);
+    }
+  } catch (error) {
+    console.error('Payment error:', error);
+    toast.dismiss();
+    toast.error('An error occurred during payment.');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="pt-28 pb-10 px-4">

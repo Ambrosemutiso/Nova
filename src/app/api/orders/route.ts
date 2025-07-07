@@ -1,29 +1,36 @@
-//app/api/orders/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
-import Order from '@/app/models/orders';
+import Order from '@/models/order';
 
-export async function PATCH(req: NextRequest) {
+export async function GET(req: NextRequest) {
   await dbConnect();
 
-  try {
-    const { orderId, status } = await req.json();
+  const url = new URL(req.url);
+  const userId = url.searchParams.get('userId');
+  const page = parseInt(url.searchParams.get('page') || '1');
+  const limit = parseInt(url.searchParams.get('limit') || '10');
+  const sort = url.searchParams.get('sort') || 'createdAt';
+  const order = url.searchParams.get('order') === 'asc' ? 1 : -1;
+  const status = url.searchParams.get('status');
 
-    if (!['Processing', 'Delivered'].includes(status)) {
-      return NextResponse.json({ message: 'Invalid status' }, { status: 400 });
-    }
-
-    const order = await Order.findById(orderId);
-    if (!order) {
-      return NextResponse.json({ message: 'Order not found' }, { status: 404 });
-    }
-
-    order.status = status;
-    await order.save();
-
-    return NextResponse.json({ message: 'Order status updated' });
-  } catch (error) {
-    console.error('Order update error:', error);
-    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
+  if (!userId) {
+    return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
   }
+
+  const query: any = { userId };
+
+  if (status && status !== 'all') {
+    query.status = status;
+  }
+
+  const totalOrders = await Order.countDocuments(query);
+  const totalPages = Math.ceil(totalOrders / limit);
+
+  const orders = await Order.find(query)
+    .sort({ [sort]: order })
+    .skip((page - 1) * limit)
+    .limit(limit)
+    .select('_id createdAt status paymentInfo');
+
+  return NextResponse.json({ orders, totalPages });
 }
