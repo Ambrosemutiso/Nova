@@ -1,7 +1,8 @@
 // POST /api/checkout/mpesa/callback
+import { NextRequest } from 'next/server';
 import Order from '@/app/models/orders';
 
-export async function POST(req) {
+export async function POST(req: NextRequest) {
   const body = await req.json();
 
   const resultCode = body.Body.stkCallback.ResultCode;
