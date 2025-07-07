@@ -5,18 +5,7 @@ import { Player } from '@lottiefiles/react-lottie-player';
 import { useOrders } from '@/app/hooks/useOrder';
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
-
-type OrderType = {
-  _id: string;
-  createdAt: string;
-  status: string;
-  items?: { name: string; quantity: number; price: number }[];
-  paymentInfo?: {
-    receipt?: string;
-    phone?: string;
-    amount?: number;
-  };
-};
+import { OrderType } from '@/app/types/order';
 
 export default function OrdersPage() {
   const [page, setPage] = useState(1);
@@ -181,7 +170,7 @@ export default function OrdersPage() {
                 </tr>
               </thead>
               <tbody>
-                {orders.map((order) => (
+                {orders.map((order: OrderType) => (
                   <tr key={order._id} className="border-t">
                     <td className="p-2">{new Date(order.createdAt).toLocaleString()}</td>
                     <td className="p-2">Ksh {order.paymentInfo?.amount ?? 0}</td>
@@ -230,7 +219,9 @@ export default function OrdersPage() {
                     <p className="font-semibold">Items:</p>
                     <ul className="list-disc pl-5 text-sm">
                       {selectedOrder.items.map((item, index) => (
-                        <li key={index}>{item.name} × {item.quantity} - Ksh {item.price}</li>
+                        <li key={index}>
+                          {item.name} × {item.quantity} - Ksh {item.price}
+                        </li>
                       ))}
                     </ul>
                   </div>

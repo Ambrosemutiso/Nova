@@ -18,11 +18,18 @@ export async function POST(req: NextRequest) {
   if (resultCode === 0) {
     // Successful payment
     order.status = 'Paid';
-    order.paymentInfo = {
-      receipt: metadata?.Item?.find(i => i.Name === 'MpesaReceiptNumber')?.Value,
-      phone: metadata?.Item?.find(i => i.Name === 'PhoneNumber')?.Value,
-      amount: metadata?.Item?.find(i => i.Name === 'Amount')?.Value,
-    };
+order.paymentInfo = {
+  receipt: metadata?.Item?.find(
+    (i: { Name: string; Value: any }) => i.Name === 'MpesaReceiptNumber'
+  )?.Value,
+  phone: metadata?.Item?.find(
+    (i: { Name: string; Value: any }) => i.Name === 'PhoneNumber'
+  )?.Value,
+  amount: metadata?.Item?.find(
+    (i: { Name: string; Value: any }) => i.Name === 'Amount'
+  )?.Value,
+};
+
   } else {
     // Cancelled / failed
     order.status = 'Cancelled';
