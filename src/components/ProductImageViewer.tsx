@@ -96,17 +96,17 @@ const ProductImageViewer = ({
         {images.map((image, index) => (
 <div
   key={index}
-  className="min-w-[250px] flex-shrink-0 cursor-pointer hover:ring hover:ring-orange-200 transition"
+  className="min-w-[250px] flex-shrink-0 flex items-center justify-center cursor-pointer hover:ring hover:ring-orange-200 transition bg-white p-2"
   onClick={() => handleOpenModal(index)}
 >
+<CldImage
+  src={getPublicId(image)}
+  alt={name}
+  width="600"
+  height="400"
+  className="rounded-md w-full max-h-80 object-contain bg-white"
+/>
 
-            <CldImage
-              src={getPublicId(image)}
-              alt={name}
-              width="600"
-              height="400"
-              className="rounded-md w-full h-48 object-cover"
-            />
             <div className="absolute top-2 right-2 flex gap-2 bg-white/80 p-1 rounded-full shadow">
               <Share2
                 size={18}
