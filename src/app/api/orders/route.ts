@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
-import Order from '@/models/orders';
+import Order from '@/app/models/orders';
 
 export async function GET(req: NextRequest) {
   await dbConnect();
