@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   FiHome, FiSmartphone, FiMonitor, FiHeart, FiUser, FiShoppingCart,
   FiTv, FiWatch, FiGift, FiTruck, FiBook, FiTool, FiGrid, FiZoomIn, FiZoomOut, FiPackage,
-  FiLayout,
-  FiLoader
+  FiLayout, FiLoader
 } from 'react-icons/fi';
 
 export default function Sidebar({ onClose }: { onClose: () => void }) {
@@ -44,7 +43,7 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
     { label: 'Sound Systems', icon: <FiLoader />, route: '/category/Systems' },
     { label: 'Other Categories', icon: <FiGrid />, route: '/Shop' },
   ];
-  
+
   return (
     <div className="fixed inset-0 z-40 flex">
       {/* Backdrop */}
@@ -63,9 +62,16 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
         </button>
 
         <div className="p-6 pt-14">
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-6">
-            Shop by Category
-          </h2>
+          {/* Logo Section */}
+          <div className="flex justify-center mb-6">
+            <a onClick={() => { router.push('/'); onClose(); }} className="cursor-pointer">
+              <img
+                src="/Logo.png"
+                alt="Logo"
+                className="h-12 object-contain"
+              />
+            </a>
+          </div>
           <ul className="space-y-4">
             {categories.map(({ label, icon, route }, index) => (
               <li

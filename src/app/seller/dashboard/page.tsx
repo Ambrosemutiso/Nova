@@ -22,8 +22,13 @@ interface Metrics {
   totalOrders: number;
   totalRevenue: number;
   activeProducts: number;
-  totalFollowers: number; // ✅ added
+  totalFollowers: number;
+  deliveredOrders: number;
+  cancelledOrders: number;
+  pendingOrders: number;
+  paidOrders: number;
 }
+
 
 export default function SellerDashboard() {
   const [seller, setSeller] = useState<Seller | null>(null);
@@ -60,31 +65,47 @@ export default function SellerDashboard() {
       </h1>
 
       {/* Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-xl shadow-md text-center">
-          <h3 className="text-lg font-medium text-gray-600">Total Orders</h3>
-          <p className="text-3xl font-bold text-orange-600">{metrics?.totalOrders ?? '--'}</p>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-md text-center">
-          <h3 className="text-lg font-medium text-gray-600">Revenue</h3>
-          <p className="text-3xl font-bold text-orange-600">Ksh {metrics?.totalRevenue?.toLocaleString() ?? '--'}</p>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-md text-center">
-          <h3 className="text-lg font-medium text-gray-600">Active Products</h3>
-          <p className="text-3xl font-bold text-orange-600">{metrics?.activeProducts ?? '--'}</p>
-        </div>
-<div className="bg-white p-6 rounded-xl shadow-md text-center relative">
-{typeof metrics?.totalFollowers === 'number' && metrics.totalFollowers >= 1 && (
-  <span className="absolute top-2 right-2 bg-[color:#FFD700] text-black text-xs px-3 py-1 rounded-full shadow font-semibold z-10 flex items-center gap-1">
-    <ShieldCheck size={14} className="text-green-700" />
-    Verified Seller
-  </span>
-)}
-  <h3 className="text-lg font-medium text-gray-600">Followers</h3>
-  <p className="text-3xl font-bold text-orange-600">{metrics?.totalFollowers ?? '--'}</p>
+<div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+  <div className="bg-white p-6 rounded-xl shadow-md text-center">
+    <h3 className="text-lg font-medium text-gray-600">Total Orders</h3>
+    <p className="text-3xl font-bold text-orange-600">{metrics?.totalOrders ?? '--'}</p>
+  </div>
+  <div className="bg-white p-6 rounded-xl shadow-md text-center">
+    <h3 className="text-lg font-medium text-gray-600">Delivered Orders</h3>
+    <p className="text-3xl font-bold text-green-600">{metrics?.deliveredOrders ?? '--'}</p>
+  </div>
+  <div className="bg-white p-6 rounded-xl shadow-md text-center">
+    <h3 className="text-lg font-medium text-gray-600">Cancelled Orders</h3>
+    <p className="text-3xl font-bold text-red-500">{metrics?.cancelledOrders ?? '--'}</p>
+  </div>
+  <div className="bg-white p-6 rounded-xl shadow-md text-center">
+    <h3 className="text-lg font-medium text-gray-600">Pending Orders</h3>
+    <p className="text-3xl font-bold text-yellow-500">{metrics?.pendingOrders ?? '--'}</p>
+  </div>
+  <div className="bg-white p-6 rounded-xl shadow-md text-center">
+    <h3 className="text-lg font-medium text-gray-600">Paid Orders</h3>
+    <p className="text-3xl font-bold text-blue-600">{metrics?.paidOrders ?? '--'}</p>
+  </div>
+  <div className="bg-white p-6 rounded-xl shadow-md text-center">
+    <h3 className="text-lg font-medium text-gray-600">Revenue</h3>
+    <p className="text-3xl font-bold text-orange-600">Ksh {metrics?.totalRevenue?.toLocaleString() ?? '--'}</p>
+  </div>
+  <div className="bg-white p-6 rounded-xl shadow-md text-center">
+    <h3 className="text-lg font-medium text-gray-600">Active Products</h3>
+    <p className="text-3xl font-bold text-orange-600">{metrics?.activeProducts ?? '--'}</p>
+  </div>
+  <div className="bg-white p-6 rounded-xl shadow-md text-center relative">
+    {typeof metrics?.totalFollowers === 'number' && metrics.totalFollowers >= 1 && (
+      <span className="absolute top-2 right-2 bg-[color:#FFD700] text-black text-xs px-3 py-1 rounded-full shadow font-semibold z-10 flex items-center gap-1">
+        <ShieldCheck size={14} className="text-green-700" />
+        Verified Seller
+      </span>
+    )}
+    <h3 className="text-lg font-medium text-gray-600">Followers</h3>
+    <p className="text-3xl font-bold text-orange-600">{metrics?.totalFollowers ?? '--'}</p>
+  </div>
 </div>
 
-      </div>
 
       {/* Revenue Chart */}
       <div className="bg-white p-6 rounded-xl shadow-md mb-8">
@@ -126,7 +147,7 @@ export default function SellerDashboard() {
       {seller && (
         <div className="mt-8 bg-white p-4 rounded-xl shadow">
           <p className="text-sm text-gray-600 font-medium">Email:</p>
-          <p className="text-lg text-gray-800">{seller.email}</p>
+          <p className="text-lg text-orange-500">{seller.email}</p>
         </div>
       )}
     </div>

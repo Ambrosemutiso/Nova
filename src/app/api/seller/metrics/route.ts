@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
 import Order from '@/app/models/orders';
 import Product from '@/app/models/product';
-import Seller from '@/app/models/seller'; // ✅ Add this
+import Seller from '@/app/models/seller';
 
 export async function POST(req: NextRequest) {
   await dbConnect();
@@ -28,6 +28,12 @@ export async function POST(req: NextRequest) {
     const totalOrders = orders.length;
     const totalRevenue = orders.reduce((acc, order) => acc + (order.paidAmount || 0), 0);
 
+    // ✅ Filter orders by status
+    const deliveredOrders = orders.filter((o) => o.status === 'Delivered').length;
+    const cancelledOrders = orders.filter((o) => o.status === 'Cancelled').length;
+    const pendingOrders = orders.filter((o) => o.status === 'Pending').length;
+    const paidOrders = orders.filter((o) => o.status === 'Paid').length;
+
     // ✅ Get total followers
     const seller = await Seller.findById(sellerId).select('followers');
     const totalFollowers = seller?.followers?.length || 0;
@@ -36,7 +42,11 @@ export async function POST(req: NextRequest) {
       totalOrders,
       totalRevenue,
       activeProducts,
-      totalFollowers, // ✅ Include in response
+      totalFollowers,
+      deliveredOrders,
+      cancelledOrders,
+      pendingOrders,
+      paidOrders,
     });
   } catch (error) {
     console.error('Dashboard error:', error);

@@ -24,6 +24,48 @@ const banners = [
     heading: 'Hot Offers',
     cta: 'Buy Now',
   },
+    {
+    id: 4,
+    src: '/banner4.jpg',
+    alt: 'Banner 4',
+    heading: 'Hot Offers',
+    cta: 'Buy Now',
+  },
+    {
+    id: 5,
+    src: '/banner5.jpg',
+    alt: 'Banner 5',
+    heading: 'Hot Offers',
+    cta: 'Buy Now',
+  },
+    {
+    id: 6,
+    src: '/banner6.jpg',
+    alt: 'Banner 6',
+    heading: 'Hot Offers',
+    cta: 'Buy Now',
+  },
+    {
+    id: 7,
+    src: '/banner7.jpg',
+    alt: 'Banner 7',
+    heading: 'Hot Offers',
+    cta: 'Buy Now',
+  },
+    {
+    id: 8,
+    src: '/banner8.jpg',
+    alt: 'Banner 8',
+    heading: 'Hot Offers',
+    cta: 'Buy Now',
+  },
+    {
+    id: 9,
+    src: '/banner9.jpg',
+    alt: 'Banner 9',
+    heading: 'Hot Offers',
+    cta: 'Buy Now',
+  },
 ];
 
 export default function HeroSlider() {

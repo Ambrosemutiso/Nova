@@ -102,10 +102,10 @@ const handlePayment = async () => {
 
         if (statusData.status === 'Paid') {
           clearInterval(interval);
-          toast.dismiss(); // remove "waiting" toast
+          toast.dismiss(); 
           toast.success('Payment successful!');
-          localStorage.removeItem('cart'); // optional, depending on cart context
-          router.push('/orders'); // redirect to orders page
+          localStorage.removeItem('cart'); 
+          router.push('/orders'); 
         } else if (statusData.status === 'Cancelled') {
           clearInterval(interval);
           toast.dismiss();

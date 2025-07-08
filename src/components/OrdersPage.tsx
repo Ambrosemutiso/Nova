@@ -154,7 +154,7 @@ export default function OrdersPage() {
               key={status}
               onClick={() => setStatusFilter(status)}
               className={`px-3 py-1 mr-2 rounded ${
-                statusFilter === status ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                statusFilter === status ? 'bg-orange-500 text-white' : 'bg-gray-200'
               }`}
             >
               {status}
@@ -208,7 +208,7 @@ export default function OrdersPage() {
                       </button>
                       <button
                         onClick={() => generateReceipt(order)}
-                        className="text-blue-600 hover:underline"
+                        className="text-orange-600 hover:underline"
                       >
                         Download
                       </button>
@@ -218,9 +218,6 @@ export default function OrdersPage() {
               </tbody>
             </table>
           </div>
-
-          {/* Modal and pagination remain unchanged */}
-          
           {showModal && selectedOrder && (
             <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex justify-center items-center">
               <div className="bg-white p-6 rounded shadow max-w-md w-full relative">
@@ -262,7 +259,7 @@ export default function OrdersPage() {
                       generateReceipt(selectedOrder);
                       setShowModal(false);
                     }}
-                    className="px-4 py-2 bg-blue-500 text-white rounded"
+                    className="px-4 py-2 bg-orange-500 text-white rounded"
                   >
                     Download PDF
                   </button>
