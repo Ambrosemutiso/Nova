@@ -11,7 +11,7 @@ import { OrderType } from '@/app/types/order';
 export default function OrdersPage() {
   const [page, setPage] = useState(1);
   const [sort] = useState('createdAt');
-  const [order, setOrder] = useState<'asc' | 'desc'>('desc');
+  const order: 'asc' | 'desc' = 'desc';
   const [statusFilter, setStatusFilter] = useState('all');
   const [userId, setUserId] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -61,15 +61,14 @@ export default function OrdersPage() {
     doc.text(`Phone: ${order.paymentInfo?.phone || '-'}`, 10, 63);
     doc.text(`Status: ${order.status}`, 10, 70);
 
-    // Items table
     if (order.items?.length) {
       doc.text('Items:', 10, 80);
       const bodyData = await Promise.all(
         order.items.map(async (item) => [
           await getImageBase64(item.image),
           item.name,
-          `${item.quantity} x ${item.price}`,
-          `Ksh ${(item.quantity * item.price).toFixed(2)}`,
+          `${item.quantity} x ${item.calculatedPrice}`,
+          `Ksh ${(item.quantity * item.calculatedPrice).toFixed(2)}`,
         ])
       );
 
@@ -102,7 +101,7 @@ export default function OrdersPage() {
     doc.text('Thank you for your purchase!', 105, 280, { align: 'center' });
     doc.text('Contact info@Nova.co.ke for assistance.', 105, 285, { align: 'center' });
 
-    doc.save(`receipt-${order._id}.pdf`);
+    doc.save(`Nova-receipt-${order._id}.pdf`);
   };
 
   const getImageBase64 = (url: string): Promise<string | null> => {
@@ -129,6 +128,19 @@ export default function OrdersPage() {
       </div>
     );
   }
+
+  const renderStatusIcon = (status: string) => {
+    if (status === 'Pending') {
+      return <span className="inline-block w-2.5 h-2.5 mr-2 rounded-full bg-green-500 animate-ping"></span>;
+    }
+    if (status === 'Cancelled') {
+      return <span className="inline-block w-2.5 h-2.5 mr-2 rounded-full bg-red-500"></span>;
+    }
+    if (status === 'Paid' || status === 'Delivered') {
+      return <span className="inline-block text-green-600 mr-1">✔️</span>;
+    }
+    return null;
+  };
 
   return (
     <div className="px-6 pt-28 pb-10">
@@ -183,7 +195,7 @@ export default function OrdersPage() {
                     <td className="p-2">Ksh {order.paymentInfo?.amount ?? 0}</td>
                     <td className="p-2">{order.paymentInfo?.receipt ?? '-'}</td>
                     <td className="p-2">{order.paymentInfo?.phone ?? '-'}</td>
-                    <td className="p-2">{order.status}</td>
+                    <td className="p-2 flex items-center">{renderStatusIcon(order.status)}{order.status}</td>
                     <td className="p-2 space-x-2">
                       <button
                         onClick={() => {
@@ -207,6 +219,8 @@ export default function OrdersPage() {
             </table>
           </div>
 
+          {/* Modal and pagination remain unchanged */}
+          
           {showModal && selectedOrder && (
             <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex justify-center items-center">
               <div className="bg-white p-6 rounded shadow max-w-md w-full relative">
@@ -227,7 +241,7 @@ export default function OrdersPage() {
                     <ul className="list-disc pl-5 text-sm">
                       {selectedOrder.items.map((item, index) => (
                         <li key={index}>
-                          {item.name} × {item.quantity} - Ksh {item.price}
+                          {item.name} × {item.quantity} - Ksh {item.calculatedPrice}
                         </li>
                       ))}
                     </ul>
@@ -279,3 +293,5 @@ export default function OrdersPage() {
     </div>
   );
 }
+
+

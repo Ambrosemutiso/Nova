@@ -5,7 +5,7 @@ export type OrderType = {
   items?: {
     name: string;
     quantity: number;
-    price: number;
+    calculatedPrice: number;
     image: string;
   }[];
   paymentInfo?: {
