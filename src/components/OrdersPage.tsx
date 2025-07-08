@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Player } from '@lottiefiles/react-lottie-player';
 import { useOrders } from '@/app/hooks/useOrder';
 import jsPDF from 'jspdf';
+import { autoTable } from 'jspdf-autotable';
 import QRCode from 'qrcode';
 import { OrderType } from '@/app/types/order';
 
@@ -46,54 +47,60 @@ export default function OrdersPage() {
 
     doc.setFontSize(18);
     doc.setTextColor(0);
-    doc.text('Official Payment Receipt', 105, 15, { align: 'center' });
+    doc.text('Nova Official Payment Receipt', 105, 15, { align: 'center' });
 
     const qrText = `Order ID: ${order._id}\nAmount: Ksh ${order.paymentInfo?.amount}\nStatus: ${order.status}`;
     const qrImage = await QRCode.toDataURL(qrText);
 
-    doc.setDrawColor(100);
-    doc.setLineWidth(0.5);
-    doc.rect(10, 30, 190, 150);
-
     doc.setFontSize(12);
-    doc.setTextColor(50);
-    doc.text(`Order ID:`, 20, 45);
     doc.setTextColor(0);
-    doc.text(order._id, 60, 45);
+    doc.text(`Order ID: ${order._id}`, 10, 35);
+    doc.text(`Date: ${new Date(order.createdAt).toLocaleString()}`, 10, 42);
+    doc.text(`Amount: Ksh ${order.paymentInfo?.amount?.toFixed(2) || '0.00'}`, 10, 49);
+    doc.text(`Receipt: ${order.paymentInfo?.receipt || '-'}`, 10, 56);
+    doc.text(`Phone: ${order.paymentInfo?.phone || '-'}`, 10, 63);
+    doc.text(`Status: ${order.status}`, 10, 70);
 
-    doc.setTextColor(50);
-    doc.text(`Date:`, 20, 55);
-    doc.setTextColor(0);
-    doc.text(new Date(order.createdAt).toLocaleString(), 60, 55);
+    // Items table
+    if (order.items?.length) {
+      doc.text('Items:', 10, 80);
+      const bodyData = await Promise.all(
+        order.items.map(async (item) => [
+          await getImageBase64(item.image),
+          item.name,
+          `${item.quantity} x ${item.price}`,
+          `Ksh ${(item.quantity * item.price).toFixed(2)}`,
+        ])
+      );
 
-    doc.setTextColor(50);
-    doc.text(`Amount Paid:`, 20, 65);
-    doc.setTextColor(0);
-    doc.text(`Ksh ${order.paymentInfo?.amount?.toFixed(2) || '0.00'}`, 60, 65);
+      autoTable(doc, {
+        startY: 85,
+        head: [['Image', 'Item', 'Qty x Price', 'Subtotal']],
+        body: bodyData.map(([img, name, qtyPrice, subtotal]) => [
+          {
+            content: '',
+            styles: { cellWidth: 20, minCellHeight: 15 },
+            didDrawCell: (data: any) => {
+              if (img) {
+                doc.addImage(img, 'PNG', data.cell.x + 1, data.cell.y + 1, 18, 13);
+              }
+            },
+          },
+          name,
+          qtyPrice,
+          subtotal,
+        ]),
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [255, 204, 0] },
+      });
+    }
 
-    doc.setTextColor(50);
-    doc.text(`Mpesa Receipt:`, 20, 75);
-    doc.setTextColor(0);
-    doc.text(order.paymentInfo?.receipt || '-', 60, 75);
-
-    doc.setTextColor(50);
-    doc.text(`Phone Number:`, 20, 85);
-    doc.setTextColor(0);
-    doc.text(order.paymentInfo?.phone || '-', 60, 85);
-
-    doc.setTextColor(50);
-    doc.text(`Order Status:`, 20, 95);
-    doc.setTextColor(0);
-    doc.text(order.status, 60, 95);
-
-    doc.setTextColor(50);
-    doc.text(`Scan for Order Info`, 20, 110);
-    doc.addImage(qrImage, 'PNG', 20, 115, 50, 50);
+    doc.addImage(qrImage, 'PNG', 150, 35, 40, 40);
 
     doc.setFontSize(10);
     doc.setTextColor(120);
-    doc.text('Thank you for your purchase!', 105, 190, { align: 'center' });
-    doc.text('Contact support@gmail.com for assistance.', 105, 195, { align: 'center' });
+    doc.text('Thank you for your purchase!', 105, 280, { align: 'center' });
+    doc.text('Contact info@Nova.co.ke for assistance.', 105, 285, { align: 'center' });
 
     doc.save(`receipt-${order._id}.pdf`);
   };

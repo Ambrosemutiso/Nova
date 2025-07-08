@@ -11,12 +11,11 @@ export async function POST(req: NextRequest) {
 
   const metadata = body.Body.stkCallback.CallbackMetadata;
 
-  const order = await Order.findOne({ checkoutRequestID }); // You must save this ID when initiating STK push
+  const order = await Order.findOne({ checkoutRequestID });
 
   if (!order) return new Response('Order not found', { status: 404 });
 
   if (resultCode === 0) {
-    // Successful payment
     order.status = 'Paid';
 order.paymentInfo = {
   receipt: metadata?.Item?.find(
