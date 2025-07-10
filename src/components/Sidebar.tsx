@@ -34,14 +34,13 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
     { label: 'Fashion', icon: <FiUser />, route: '/category/Fashion' },
     { label: 'Health', icon: <FiHeart />, route: '/category/Health' },
     { label: 'Beauty', icon: <FiLayout />, route: '/category/Beauty' },
-    { label: 'Supermarket', icon: <FiShoppingCart />, route: '/Shop' },
     { label: 'Baby Products', icon: <FiGift />, route: '/category/Kids' },
     { label: 'Gaming', icon: <FiWatch />, route: '/category/Gaming' },
     { label: 'Sporting Goods', icon: <FiTruck />, route: '/category/Sports' },
     { label: 'Automotive', icon: <FiTool />, route: '/category/Motors' },
     { label: 'Books & Stationery', icon: <FiBook />, route: '/category/Books' },
     { label: 'Sound Systems', icon: <FiLoader />, route: '/category/Systems' },
-    { label: 'Other Categories', icon: <FiGrid />, route: '/Shop' },
+    { label: 'Other Categories', icon: <FiGrid />, route: '/' },
   ];
 
   return (
@@ -64,13 +63,7 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
         <div className="p-6 pt-14">
           {/* Logo Section */}
           <div className="flex justify-center mb-6">
-            <a onClick={() => { router.push('/'); onClose(); }} className="cursor-pointer">
-              <img
-                src="/Logo.png"
-                alt="Logo"
-                className="h-12 object-contain"
-              />
-            </a>
+            <h2 onClick={() => { router.push('/'); onClose(); }} className="cursor-pointer text-orange-500 hover:text-orange-600">NOVA</h2>
           </div>
           <ul className="space-y-4">
             {categories.map(({ label, icon, route }, index) => (

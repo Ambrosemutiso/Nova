@@ -24,4 +24,6 @@ export interface Product {
   weight: string;
   createdAt: string;
   updatedAt: string;
+  averageRating: number;
+  reviewCount: number;
 }

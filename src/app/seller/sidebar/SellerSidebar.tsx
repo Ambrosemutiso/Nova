@@ -66,12 +66,12 @@ export default function SellerSidebar({ onClose }: Props) {
           </button>
           <button
             onClick={() => {
-              router.push('/seller/products');
+              router.push('/seller/inventory');
               handleClose();
             }}
             className="text-left text-gray-700 hover:text-orange-500"
           >
-            Products
+            inventory
           </button>
           <button
             onClick={() => {

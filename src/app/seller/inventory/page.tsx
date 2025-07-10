@@ -8,7 +8,7 @@ interface Product {
   _id: string;
   name: string;
   category: string;
-  price: number;
+  calculatedPrice: number;
   quantity: number;
   createdAt: string;
 }
@@ -111,14 +111,14 @@ export default function InventoryPage() {
                 <tr key={product._id}>
                   <td className="px-4 py-2 font-medium">{product.name}</td>
                   <td className="px-4 py-2">{product.category}</td>
-                  <td className="px-4 py-2">Ksh {product.price.toFixed(2)}</td>
+                  <td className="px-4 py-2">Ksh {product.calculatedPrice.toFixed(2)}</td>
                   <td className="px-4 py-2">{product.quantity}</td>
                   <td className="px-4 py-2">
                     {new Date(product.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-2 space-x-2">
                     <Link
-                      href={`/seller/editproduct/${product._id}`}
+                      href={`/seller/inventory/editproduct/${product._id}`}
                       className="text-blue-600 hover:underline"
                     >
                       Edit

@@ -56,6 +56,13 @@ export default function SellerDashboard() {
     { month: 'Mar', revenue: 24500 },
     { month: 'Apr', revenue: 30000 },
     { month: 'May', revenue: 27000 },
+    { month: 'June', revenue: 37000 },
+    { month: 'July', revenue: 17000 },
+    { month: 'Aug', revenue: 24000 },
+    { month: 'Sep', revenue: 28000 },
+    { month: 'Oct', revenue: 21000 },
+    { month: 'Nov', revenue: 47000 },
+    { month: 'Dec', revenue: 100000 },
   ];
 
   return (

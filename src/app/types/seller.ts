@@ -9,8 +9,6 @@ export interface Seller {
     userId: string;
     followedAt: string;
   }[];
-  averageRating: number;
-  reviewCount: number;
   createdAt: string;
 }
 

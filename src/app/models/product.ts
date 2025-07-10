@@ -25,6 +25,8 @@ const productSchema = new Schema(
     quantity: { type: Number, required: true, min: 0 },
     images: { type: [String], default: [] },
     sellerId: { type: String, required: true },
+    averageRating: { type: Number, default: 0, },
+    reviewCount: { type: Number, default: 0, },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },

@@ -1,24 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
 import Review from '@/app/models/review';
-import Seller from '@/app/models/seller';
+import Product from '@/app/models/product';
+import User from '@/app/models/user'; // 🔑 make sure this exists and is correct
 
 export async function GET(req: NextRequest) {
   try {
     await dbConnect();
 
     const { searchParams } = new URL(req.url);
-    const sellerId = searchParams.get('sellerId');
+    const productId = searchParams.get('productId');
 
-    if (!sellerId) {
-      return NextResponse.json({ error: 'Missing sellerId' }, { status: 400 });
+    if (!productId) {
+      return NextResponse.json({ error: 'Missing productId' }, { status: 400 });
     }
 
-    const reviews = await Review.find({ sellerId })
-      .populate('userId', 'name image') // Ensure `User` schema is linked
-      .sort({ createdAt: -1 });
+    const reviews = await Review.find({ productId }).sort({ createdAt: -1 });
 
-    return NextResponse.json({ success: true, data: { reviews } });
+    // 🔁 Manually attach user info
+    const reviewsWithUser = await Promise.all(
+      reviews.map(async (review) => {
+        const user = await User.findById(review.userId).select('name image');
+        return {
+          ...review.toObject(),
+          userId: {
+            _id: user?._id || null,
+            name: user?.name || 'Anonymous',
+            image: user?.image || null,
+          },
+        };
+      })
+    );
+
+    return NextResponse.json({ success: true, data: { reviews: reviewsWithUser } });
   } catch (error) {
     console.error('GET /api/reviews error:', error);
     return NextResponse.json({ error: 'Failed to fetch reviews' }, { status: 500 });
@@ -31,7 +45,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const {
-      sellerId,
+      productId,
       userId,
       name,
       rating,
@@ -39,12 +53,12 @@ export async function POST(req: NextRequest) {
       verified = false,
     } = body;
 
-    if (!sellerId || !userId || !rating || !comment) {
+    if (!productId || !userId || !rating || !comment) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Check for existing review
-    const existing = await Review.findOne({ sellerId, userId });
+    // Check if user already reviewed the product
+    const existing = await Review.findOne({ productId, userId });
 
     if (existing) {
       existing.rating = rating;
@@ -54,7 +68,7 @@ export async function POST(req: NextRequest) {
       await existing.save();
     } else {
       await Review.create({
-        sellerId,
+        productId,
         userId,
         name,
         rating,
@@ -64,15 +78,15 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Update seller rating
-    const allReviews = await Review.find({ sellerId });
+    // Update product's average rating and review count
+    const allReviews = await Review.find({ productId });
     const reviewCount = allReviews.length;
     const averageRating =
       reviewCount > 0
         ? allReviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount
         : 0;
 
-    await Seller.findByIdAndUpdate(sellerId, {
+    await Product.findByIdAndUpdate(productId, {
       averageRating,
       reviewCount,
     });

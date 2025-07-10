@@ -12,8 +12,6 @@ const sellerSchema = new mongoose.Schema({
       followedAt: Date,
     },
   ],
-  averageRating: { type: Number, default: 0 },
-  reviewCount: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now }
 });
 

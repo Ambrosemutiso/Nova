@@ -217,7 +217,7 @@ return (
       <CustomersAlsoViewed productId={product._id.toString()} />
       <BehaviorTracker product={product} />
       {showLoginModal && <Login onClose={() => setShowLoginModal(false)} />}
-      <SellerSection sellerId={product.sellerId} showLoginModal={() => setShowLoginModal(true)} />
+      <SellerSection product={product} showLoginModal={() => setShowLoginModal(true)} />
       <MoreFromSeller sellerId={product.sellerId} currentProductId={product._id.toString()} />
 <button className="text-sm text-red-600 underline mt-4" onClick={() => setShowReportModal(true)}>Report Incorrect Product Details</button>
 {showReportModal && (

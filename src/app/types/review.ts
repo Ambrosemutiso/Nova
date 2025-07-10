@@ -1,6 +1,6 @@
 export interface Review {
   _id: string;
-  sellerId: string;
+  productId: string;
   userId: {
     _id: string;
     name: string;
