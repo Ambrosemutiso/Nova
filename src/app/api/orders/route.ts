@@ -26,11 +26,11 @@ export async function GET(req: NextRequest) {
   const totalOrders = await Order.countDocuments(query);
   const totalPages = Math.ceil(totalOrders / limit);
 
-  const orders = await Order.find(query)
-    .sort({ [sort]: order })
-    .skip((page - 1) * limit)
-    .limit(limit)
-    .select('_id createdAt status paymentInfo');
+const orders = await Order.find(query)
+  .sort({ [sort]: order })
+  .skip((page - 1) * limit)
+  .limit(limit)
+  .select('_id createdAt status paymentInfo items deliveryFee');
 
   return NextResponse.json({ orders, totalPages });
 }

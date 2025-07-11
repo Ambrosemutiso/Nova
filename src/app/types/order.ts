@@ -2,10 +2,11 @@ export type OrderType = {
   _id: string;
   createdAt: string;
   status: string;
+  deliveryFee: number;
   items?: {
     name: string;
     quantity: number;
-    calculatedPrice: number;
+    price: number;
     image: string;
     status?: string;
   }[];
