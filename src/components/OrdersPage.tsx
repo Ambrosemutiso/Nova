@@ -7,6 +7,7 @@ import jsPDF from 'jspdf';
 import { autoTable } from 'jspdf-autotable';
 import QRCode from 'qrcode';
 import { OrderType } from '@/app/types/order';
+import toast from 'react-hot-toast';
 
 export default function OrdersPage() {
   const [page, setPage] = useState(1);
@@ -27,10 +28,10 @@ export default function OrdersPage() {
   const cancelOrder = async (orderId: string) => {
     const res = await fetch(`/api/orders/cancel/${orderId}`, { method: 'PATCH' });
     if (res.ok) {
-      alert('Order cancelled successfully');
+      toast.success('Order cancelled successfully');
       setShowModal(false);
     } else {
-      alert('Failed to cancel the order');
+      toast.error('Failed to cancel the order');
     }
   };
 
@@ -60,87 +61,93 @@ export default function OrdersPage() {
       img.src = transformedUrl;
     });
   };
+const generateReceipt = async (order: OrderType, adminName = "Cate Ruguru, senior sales consultant") => {
+  const doc = new jsPDF();
 
-  const generateReceipt = async (order: OrderType, adminName = "Cate Ruguru, senior sales consultant") => {
-    const doc = new jsPDF();
+  // Header bar with logo
+  doc.setFillColor(255, 204, 0); // Nova orange
+  doc.rect(0, 0, 210, 25, 'F');
 
-    doc.setFillColor(255, 204, 0);
-    doc.rect(0, 0, 210, 25, 'F');
-    const logoUrl = '/Logo.png';
-    const logo = await getImageBase64(logoUrl);
-    if (logo) doc.addImage(logo, 'PNG', 10, 5, 25, 15);
+  const logoUrl = '/Logo.png';
+  const logo = await getImageBase64(logoUrl);
+  if (logo) doc.addImage(logo, 'PNG', 10, 5, 25, 15);
 
-    doc.setFontSize(18);
+  doc.setFontSize(18);
+  doc.setTextColor(0);
+  doc.text('Nova Official Payment Receipt', 105, 15, { align: 'center' });
+
+  // Order Summary
+  let y = 35;
+  doc.setFontSize(12);
+  doc.setTextColor(0);
+  doc.text('Order Summary:', 10, y);
+  y += 7;
+
+  doc.setFontSize(11);
+  doc.text(`Order ID: ${order._id}`, 10, y);
+  doc.text(`Date: ${new Date(order.createdAt).toLocaleString()}`, 10, y += 7);
+  doc.text(`Receipt: ${order.paymentInfo?.receipt || '-'}`, 10, y += 7);
+  doc.text(`Phone: ${order.paymentInfo?.phone || '-'}`, 10, y += 7);
+  doc.text(`Status: ${order.status}`, 10, y += 7);
+  doc.text(`Amount Paid: Ksh ${order.paymentInfo?.amount?.toFixed(2) || '0.00'}`, 10, y += 10);
+
+  // QR Code
+  const qrText = `Order ID: ${order._id}\nAmount: Ksh ${order.paymentInfo?.amount}\nStatus: ${order.status}`;
+  const qrImage = await QRCode.toDataURL(qrText);
+  doc.addImage(qrImage, 'PNG', 170, 35, 30, 30);
+
+  // Item Breakdown Table
+  if (order.items?.length) {
+    doc.setFontSize(13);
     doc.setTextColor(0);
-    doc.text('Nova Official Payment Receipt', 105, 15, { align: 'center' });
+    doc.text('Purchased Items:', 10, y);
+    y += 5;
 
-    let y = 35;
-    doc.setFontSize(12);
-    doc.text(`Order ID: ${order._id}`, 10, y);
-    doc.text(`Date: ${new Date(order.createdAt).toLocaleString()}`, 10, y += 7);
-    doc.text(`Amount: Ksh ${order.paymentInfo?.amount?.toFixed(2) || '0.00'}`, 10, y += 7);
-    doc.text(`Receipt: ${order.paymentInfo?.receipt || '-'}`, 10, y += 7);
-    doc.text(`Phone: ${order.paymentInfo?.phone || '-'}`, 10, y += 7);
-    doc.text(`Status: ${order.status}`, 10, y += 7);
+    const bodyData = order.items.map(item => {
+      const name = item.name ?? 'Unnamed Item';
+      const qty = item.quantity ?? 0;
+      const price = item.price ?? 0;
+      const subtotal = qty * price;
+      return [name, `${qty} × ${price.toFixed(2)}`, `Ksh ${subtotal.toFixed(2)}`];
+    });
 
-    const qrText = `Order ID: ${order._id}\nAmount: Ksh ${order.paymentInfo?.amount}\nStatus: ${order.status}`;
-    const qrImage = await QRCode.toDataURL(qrText);
-    doc.addImage(qrImage, 'PNG', 170, 35, 30, 30);
+    autoTable(doc, {
+      startY: y,
+      head: [['Item Name', 'Qty × Price', 'Subtotal']],
+      body: bodyData,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [255, 204, 0], textColor: 0 },
+      theme: 'grid',
+    });
+  }
 
-    if (order.items?.length) {
-      y += 15;
-      doc.setFontSize(13);
-      doc.text('Items:', 10, y);
-      y += 5;
+  const finalY = (doc as any).lastAutoTable?.finalY || y + 30;
+  const delivery = order.deliveryFee ?? 0;
+  const itemsTotal = (order.items || []).reduce((acc, item) => acc + (item.quantity ?? 0) * (item.price ?? 0), 0);
+  const total = itemsTotal + delivery;
 
-      const bodyData = await Promise.all(order.items.map(async item => {
-        const image = await getImageBase64(item.image);
-        const name = item.name ?? 'Unnamed Item';
-        const qty = item.quantity ?? 0;
-        const price = item.price ?? 0;
-        const subtotal = qty * price;
-        return [image, name, `${qty} x ${price.toFixed(2)}`, `Ksh ${subtotal.toFixed(2)}`];
-      }));
+  // Total Section
+  doc.setFontSize(12);
+  doc.setTextColor(0);
+  doc.setFillColor(240, 240, 240);
+  doc.rect(10, finalY + 5, 190, 20, 'F');
+  doc.text(`Delivery Fee: Ksh ${delivery.toFixed(2)}`, 15, finalY + 13);
+  doc.setFontSize(13);
+doc.setFont('helvetica', 'bold');
+doc.text(`Total Amount: Ksh ${total.toFixed(2)}`, 15, finalY + 22);
+doc.setFont('helvetica', 'normal');
 
-      autoTable(doc, {
-        startY: y,
-        head: [['Image', 'Item', 'Qty x Price', 'Subtotal']],
-        body: bodyData.map(([img, name, qtyPrice, subtotal]) => [
-          {
-            content: '',
-            styles: { cellWidth: 20, minCellHeight: 20 },
-            didDrawCell: (data: any) => {
-              if (img) {
-                doc.addImage(img, 'PNG', data.cell.x + 1, data.cell.y + 1, 18, 15);
-              }
-            }
-          },
-          name,
-          qtyPrice,
-          subtotal
-        ]),
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [255, 204, 0] },
-        theme: 'grid',
-      });
-    }
+  // Footer
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.text('Thank you for your purchase!', 105, 280, { align: 'center' });
+  doc.text('Contact: info@Nova.co.ke | Ronald Ngala Street, NRG Plaza', 105, 285, { align: 'center' });
+  doc.text(`Served By: ${adminName}`, 105, 290, { align: 'center' });
 
-    const finalY = (doc as any).lastAutoTable?.finalY || y + 30;
-    const delivery = order.deliveryFee ?? 0;
-    const total = (order.items || []).reduce((acc, item) => acc + (item.quantity ?? 0) * (item.price ?? 0), 0) + delivery;
+  doc.save(`Nova-receipt-${order._id}.pdf`);
+};
 
-    doc.setFontSize(12);
-    doc.text(`Delivery Fee: Ksh ${delivery.toFixed(2)}`, 10, finalY + 10);
-    doc.text(`Total Amount: Ksh ${total.toFixed(2)}`, 10, finalY + 17);
 
-    doc.setFontSize(10);
-    doc.setTextColor(120);
-    doc.text('Thank you for your purchase!', 105, 280, { align: 'center' });
-    doc.text('Contact: info@Nova.co.ke | Location: Ronald Ngala Street, NRG Plaza', 105, 285, { align: 'center' });
-    doc.text(`Served By: ${adminName}`, 105, 290, { align: 'center' });
-
-    doc.save(`Nova-receipt-${order._id}.pdf`);
-  };
 
   const renderStatusIcon = (status: string) => {
     if (status === 'Pending') {
@@ -261,7 +268,6 @@ export default function OrdersPage() {
                       <table className="w-full text-sm border">
                         <thead>
                           <tr className="bg-gray-100">
-                            <th className="border p-2 text-left">Image</th>
                             <th className="border p-2 text-left">Item</th>
                             <th className="border p-2 text-left">Qty</th>
                             <th className="border p-2 text-left">Price</th>
@@ -271,9 +277,6 @@ export default function OrdersPage() {
                         <tbody>
                           {selectedOrder.items.map((item, index) => (
                             <tr key={index} className="border-t">
-                              <td className="p-2">
-                                <img src={item.image} alt={item.name} className="w-12 h-12 object-cover rounded shadow" />
-                              </td>
                               <td className="p-2">{item.name}</td>
                               <td className="p-2">{item.quantity}</td>
                               <td className="p-2">Ksh {item.price.toFixed(2)}</td>

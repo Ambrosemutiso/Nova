@@ -3,7 +3,7 @@ export type OrderType = {
   createdAt: string;
   status: string;
   deliveryFee: number;
-  items?: {
+  items: {
     name: string;
     quantity: number;
     price: number;
