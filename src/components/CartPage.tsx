@@ -9,6 +9,7 @@ import RecentlyViewed from "@/components/RecentlyViewed";
 import SponsoredProducts from '@/components/SponsoredProducts';
 import TopPicksForYou from '@/components/TopPicksForYou';
 import SuggestedForYou from '@/components/SuggestedForYou';
+import { toast, ToastContainer } from 'react-toastify';
 
 type County = 'Nairobi' | 'Mombasa' | 'Kisumu' | 'Nakuru';
 
@@ -46,7 +47,7 @@ const getPublicId = (url?: string) => {
     try {
       router.push('/checkout');
     } catch (error) {
-      alert('Checkout failed');
+      toast.error('Checkout failed');
       console.error(error);
     } finally {
       setLoading(false);
@@ -96,6 +97,7 @@ const getPublicId = (url?: string) => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 pt-28 pb-10 relative">
+      <ToastContainer />
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

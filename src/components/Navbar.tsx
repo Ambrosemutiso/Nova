@@ -12,6 +12,7 @@ import { LogOut, ZoomIn, ZoomOut } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/app/context/AuthContext';
 import type { Notification } from '@/app/types/notification';
+import { toast, ToastContainer } from 'react-toastify';
 
 export default function Navbar() {
   const [showLogin, setShowLogin] = useState(false);
@@ -93,16 +94,17 @@ export default function Navbar() {
         localStorage.setItem(user?.role === 'seller' ? 'sellerUser' : 'buyerUser', JSON.stringify(updatedUser));
         window.location.reload(); // Refresh to update image
       } else {
-        alert('Failed to update profile');
+        toast.error('Failed to update profile');
       }
     } catch (error) {
       console.error(error);
-      alert('Error updating profile');
+      toast.error('Error updating profile');
     }
   };
 
   return (
     <>
+    <ToastContainer/>
       <nav className="bg-white shadow-md p-3 flex items-center justify-between fixed top-0 left-0 w-full z-50" style={{ fontSize: 'var(--app-font-size)' }}>
         <button onClick={() => setShowSidebar(true)} className="text-2xl text-orange-500">
           <FiMenu />

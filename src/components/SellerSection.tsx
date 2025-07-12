@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/app/context/AuthContext';
 import StarRatingInput from '@/components/ReviewsInput';
-import toast from 'react-hot-toast';
+import { toast, ToastContainer } from 'react-toastify';
 import { ShieldCheck } from 'lucide-react';
 import { Seller } from '@/app/types/seller';
 import { Review } from '@/app/types/review';
@@ -95,6 +95,7 @@ export default function ProductReviewSection({
 
   return (
     <div className="mt-8 border p-4 rounded shadow-sm">
+      <ToastContainer/>
       <div className="mb-4">
         <h2 className="text-lg font-bold text-gray-800">Product Rating & Reviews</h2>
         <div className="flex items-center gap-2 mt-1">

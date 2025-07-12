@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { signInWithGoogle } from '@/lib/authUtils';
-import { toast } from 'react-hot-toast';
+import { toast, ToastContainer } from 'react-toastify';
 import { useAuth } from '@/app/context/AuthContext';
 
 export default function LoginModal({
@@ -47,6 +47,7 @@ export default function LoginModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
+      <ToastContainer/>
       <div className="bg-white p-6 rounded-lg shadow-lg w-80 relative">
         <h2 className="text-2xl font-bold mb-4 text-orange-500 text-center">Sign In</h2>
 

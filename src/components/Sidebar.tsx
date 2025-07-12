@@ -62,9 +62,20 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
 
         <div className="p-6 pt-14">
           {/* Logo Section */}
-          <div className="flex justify-center mb-6">
-            <h2 onClick={() => { router.push('/'); onClose(); }} className="cursor-pointer text-orange-500 hover:text-orange-600">NOVA</h2>
-          </div>
+<div className="flex items-center justify-center mb-6 space-x-2">
+  
+  <h2
+    onClick={() => {
+      router.push('/');
+      onClose();
+    }}
+    className="cursor-pointer font-bold text-black text-xl"
+  >
+    NOVA
+  </h2>
+  <FiShoppingCart className="text-orange-500 text-xl" />
+</div>
+
           <ul className="space-y-4">
             {categories.map(({ label, icon, route }, index) => (
               <li

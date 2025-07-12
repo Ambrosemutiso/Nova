@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import ProductCard from './ProductCard';
 import { Product } from '@/app/types/product';
-import toast from 'react-hot-toast';
+import { toast, ToastContainer } from 'react-toastify';
 
 const FLASH_SALE_DURATION_MS = 3 * 60 * 60 * 1000; // 3 hours
 
@@ -86,6 +86,7 @@ export default function FlashSales() {
 
   return (
     <div className="mt-10">
+      <ToastContainer/>
       <div className="flex justify-between items-center mb-2">
         <h2 className="text-xl font-semibold text-red-600">
           🔥 Flash Sales{' '}
