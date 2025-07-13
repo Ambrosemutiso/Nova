@@ -103,7 +103,7 @@ export default function SellerOrdersPage() {
   const paginatedOrders = orders.slice((page - 1) * pageSize, page * pageSize);
 
   return (
-    <div className="p-4 md:p-6">
+    <div className="px-6 pt-28 pb-10">
       <ToastContainer />
       <h1 className="text-2xl font-bold text-orange-600 mb-4">Seller Orders</h1>
 
@@ -152,13 +152,13 @@ export default function SellerOrdersPage() {
   <CldImage
     src={getPublicId(item.images[0])}
     alt={item.name}
-    width="300"
-    height="300"
+    width="100"
+    height="100"
     crop="fill"
-    className="w-full h-44 object-cover rounded"
+    className="w-44 h-44 object-cover rounded"
   />
 ) : (
-  <div className="w-full h-44 bg-gray-200 text-gray-500 flex items-center justify-center rounded">
+  <div className="w-44 h-44 bg-gray-200 text-gray-500 flex items-center justify-center rounded">
     No image
   </div>
 )}
