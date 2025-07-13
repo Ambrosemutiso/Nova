@@ -7,7 +7,7 @@ const orderSchema = new mongoose.Schema({
       name: String,
       quantity: Number,
       price: Number,
-      image: String,
+      images: [String],
       sellerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Seller' }, // ✅ Added
       status: { type: String, enum: ['Pending', 'Delivered', 'Cancelled'], default: 'Pending' }
     }

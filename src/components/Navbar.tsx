@@ -69,17 +69,25 @@ export default function Navbar() {
     document.documentElement.style.setProperty('--app-font-size', `${fontScale}rem`);
   }, [fontScale]);
 
-  const fetchOrders = async (sellerId: string) => {
-    try {
-      const res = await fetch(`/api/orders/count?sellerId=${sellerId}`);
-      const data = await res.json();
-      if (res.ok) {
-        setOrderCount(data.count);
-      }
-    } catch (err) {
-      console.error('Failed to fetch order count:', err);
+const fetchOrders = async (sellerId: string) => {
+  try {
+    const res = await fetch('/api/orders/count', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ sellerId }),
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      setOrderCount(data.count);
     }
-  };
+  } catch (err) {
+    console.error('Failed to fetch order count:', err);
+  }
+};
+
 
   const handleUpdateProfile = async () => {
     try {
@@ -138,7 +146,7 @@ export default function Navbar() {
             <button onClick={() => router.push('/seller/orders')} className="relative text-2xl text-orange-500">
               <FiPackage />
               {orderCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full px-1.5 py-0.5">{orderCount}</span>
+                <span className="absolute -top-2 -right-2 bg-orange-600 text-white text-xs rounded-full px-1.5 py-0.5">{orderCount}</span>
               )}
             </button>
           ) : (

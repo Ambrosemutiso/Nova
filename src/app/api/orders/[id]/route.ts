@@ -1,21 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
 import Order from '@/app/models/orders';
+import mongoose from 'mongoose';
 
 export async function GET(
   req: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: { id: string } }
 ) {
-    try {
-        const { id } = await context.params;
-        await dbConnect();
-        const order = await Order.findById(id).lean() as {
-            status: string;
-            _id: string;
-            mpesaReceiptNumber?: string;
-            paidAmount?: number;
-            paidPhone?: string;
-        } | null;
+  try {
+    const { id } = context.params;
+
+    // Validate MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ message: 'Invalid order ID' }, { status: 400 });
+    }
+
+    await dbConnect();
+
+    const order = await Order.findById(id).lean() as {
+      status: string;
+      _id: string;
+      mpesaReceiptNumber?: string;
+      paidAmount?: number;
+      paidPhone?: string;
+    } | null;
 
     if (!order) {
       return NextResponse.json({ message: 'Order not found' }, { status: 404 });

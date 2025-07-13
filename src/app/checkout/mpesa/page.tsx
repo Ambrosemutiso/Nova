@@ -81,6 +81,8 @@ const handlePayment = async () => {
           quantity: item.quantity,
           price: item.calculatedPrice,
           images: item.images,
+          productId: item.productId || item.id,
+          sellerId: item.sellerId, 
         })),
         deliveryFee,
         userId,

@@ -1,7 +1,7 @@
 // /api/seller/orders.ts
 import { NextRequest, NextResponse } from 'next/server';
 import Order from '@/app/models/orders';
-import { dbConnect } from '@/lib/dbConnect'; // your db connection logic
+import { dbConnect } from '@/lib/dbConnect'; 
 
 export async function POST(req: NextRequest) {
   try {

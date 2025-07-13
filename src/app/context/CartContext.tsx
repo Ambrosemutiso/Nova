@@ -22,6 +22,7 @@ export interface CartItem {
   model: string;
   brand: string;
   sellerId: string;
+  productId: string;
 }
 
 

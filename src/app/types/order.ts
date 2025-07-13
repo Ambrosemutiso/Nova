@@ -7,7 +7,7 @@ export type OrderType = {
     name: string;
     quantity: number;
     price: number;
-    image: string;
+    images: string[];
     status?: string;
   }[];
   paymentInfo?: {
