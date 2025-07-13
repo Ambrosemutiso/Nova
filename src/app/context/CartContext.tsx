@@ -21,6 +21,7 @@ export interface CartItem {
   county: string;
   model: string;
   brand: string;
+  sellerId: string;
 }
 
 

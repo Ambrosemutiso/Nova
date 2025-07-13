@@ -1,32 +1,22 @@
+// POST /api/checkout/mpesa
 import { NextRequest } from 'next/server';
-import Order from '@/app/models/orders'; 
-import Product from '@/app/models/product';
-import { initiateSTKPush } from '@/lib/mpesa'; 
+import Order from '@/app/models/orders';
+import { initiateSTKPush } from '@/lib/mpesa';
 
 export async function POST(req: NextRequest) {
-  const { phone, totalAmount, customerInfo, items, deliveryFee, userId } = await req.json();
-
   try {
-    const productIds = items.map((item: any) => item.productId);
-    const products = await Product.find({ _id: { $in: productIds } });
+    const { phone, totalAmount, customerInfo, items, deliveryFee, userId } = await req.json();
 
-    const enrichedItems = items.map((item: any) => {
-      const product = products.find(p => p._id.toString() === item.productId);
-      if (!product) throw new Error(`Product not found: ${item.productId}`);
-
-      return {
-        name: product.name,
-        quantity: item.quantity,
-        price: product.price,
-        image: product.image,
-        sellerId: product.sellerId,
-        status: 'Pending',
-      };
-    });
+    // Validate that each item has a sellerId (optional but good practice)
+    for (const item of items) {
+      if (!item.sellerId) {
+        return new Response(JSON.stringify({ error: 'Each item must include sellerId' }), { status: 400 });
+      }
+    }
 
     const order = await Order.create({
       userId,
-      items: enrichedItems,
+      items,
       customerInfo,
       totalAmount,
       deliveryFee,
@@ -41,15 +31,10 @@ export async function POST(req: NextRequest) {
     });
 
     return Response.json({ orderId: order._id });
-
   } catch (err) {
     console.error('[M-Pesa Checkout Error]', err);
-
-    const errorMessage =
-      err instanceof Error ? err.message : 'Unknown error occurred';
-
     return new Response(
-      JSON.stringify({ error: 'Checkout failed', details: errorMessage }),
+      JSON.stringify({ error: 'Checkout failed', details: err instanceof Error ? err.message : 'Unknown error' }),
       { status: 500 }
     );
   }

@@ -81,6 +81,7 @@ export default function CategoryPage() {
       brand: product.brand,
       calculatedPrice: product.calculatedPrice,
       quantity: 1,
+      sellerId: product.sellerId,
     });
   };
 

@@ -98,6 +98,7 @@ const [showReportModal, setShowReportModal] = useState(false);
       county: product.county,
       calculatedPrice: product.calculatedPrice,
       quantity: 1,
+      sellerId: product.sellerId,
     });
   };
 
