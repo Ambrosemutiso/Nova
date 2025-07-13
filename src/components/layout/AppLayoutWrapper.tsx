@@ -7,7 +7,7 @@ import LoginWrapper from '@/components/LoginWrapper';
 import CartNotification from '@/app/cart/CartNotification';
 import { CartProvider } from '@/app/context/CartContext';
 import { AuthProvider } from '@/app/context/AuthContext';
-import { Toaster } from 'react-hot-toast';
+import { toast, ToastContainer } from 'react-toastify';
 import { ThemeProvider } from 'next-themes';
 
 export default function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
@@ -35,29 +35,7 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
           <main className="min-h-screen">{children}</main>
           <BackToTopButton />
           <LoginWrapper />
-          <Toaster
-            position="top-right"
-            reverseOrder={false}
-            toastOptions={{
-              duration: 3000,
-              style: {
-                background: '#fff',
-                color: '#333',
-                fontSize: '14px',
-                border: '1px solid #FFA500',
-                padding: '12px',
-                borderRadius: '8px',
-              },
-              success: {
-                style: { background: '#d1fae5', color: '#065f46' },
-                iconTheme: { primary: '#10b981', secondary: '#d1fae5' },
-              },
-              error: {
-                style: { background: '#fee2e2', color: '#991b1b' },
-                iconTheme: { primary: '#ef4444', secondary: '#fee2e2' },
-              },
-            }}
-          />
+          <ToastContainer/>
         </CartProvider>
       </AuthProvider>
     </ThemeProvider>

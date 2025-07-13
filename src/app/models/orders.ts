@@ -8,19 +8,20 @@ const orderSchema = new mongoose.Schema({
       quantity: Number,
       price: Number,
       image: String,
-      status: { type: String, enum: ['Pending', 'Delivered', 'Cancelled'], default: 'Pending' }, // ✅ Add this
-    },
+      sellerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Seller' }, // ✅ Added
+      status: { type: String, enum: ['Pending', 'Delivered', 'Cancelled'], default: 'Pending' }
+    }
   ],
   totalAmount: Number,
   deliveryFee: Number,
   customerInfo: Object,
-  status: { type: String, enum: ['Pending', 'Paid', 'Cancelled'], default: 'Pending' }, // Overall order status
+  status: { type: String, enum: ['Pending', 'Paid', 'Cancelled'], default: 'Pending' },
   paymentInfo: Object,
   checkoutRequestID: String,
   createdAt: {
     type: Date,
-    default: Date.now,
-  },
+    default: Date.now
+  }
 });
 
 export default mongoose.models.Order || mongoose.model('Order', orderSchema);

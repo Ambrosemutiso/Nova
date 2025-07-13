@@ -1,42 +1,35 @@
+// /api/seller/orders.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { dbConnect } from '@/lib/dbConnect';
 import Order from '@/app/models/orders';
+import { dbConnect } from '@/lib/dbConnect'; // your db connection logic
 
-export async function PATCH(req: NextRequest) {
-  await dbConnect();
-  const body = await req.json();
-  const { orderId, itemName, newStatus } = body;
-
-  if (!orderId || !itemName || !newStatus) {
-    return NextResponse.json({ error: 'Missing data' }, { status: 400 });
-  }
-
+export async function POST(req: NextRequest) {
   try {
-    const order = await Order.findById(orderId);
-    if (!order) {
-      return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 });
+    await dbConnect();
+    const { sellerId } = await req.json();
+
+    if (!sellerId) {
+      return NextResponse.json({ error: 'Seller ID is required' }, { status: 400 });
     }
 
-    // Cast items array safely
-    const items = order.items as {
-      name: string;
-      quantity: number;
-      price: number;
-      image: string;
-      status?: string;
-    }[];
+    // Find orders that contain items with this sellerId
+    const allOrders = await Order.find({ 'items.sellerId': sellerId }).lean();
 
-    const item = items.find((item) => item.name === itemName);
+    // Filter items per seller inside each order
+    const sellerOrders = allOrders.map((order) => {
+      const sellerItems = order.items.filter((item: any) =>
+        item.sellerId?.toString() === sellerId
+      );
 
-    if (item) {
-      item.status = newStatus;
-      await order.save();
-      return NextResponse.json({ success: true, message: 'Order item status updated' });
-    } else {
-      return NextResponse.json({ success: false, error: 'Item not found in order' }, { status: 404 });
-    }
-  } catch (err) {
-    console.error('Error updating item status:', err);
-    return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
+      return {
+        ...order,
+        items: sellerItems,
+      };
+    }).filter(order => order.items.length > 0); // Only return orders with items from this seller
+
+    return NextResponse.json({ orders: sellerOrders });
+  } catch (error) {
+    console.error('Error fetching seller orders:', error);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

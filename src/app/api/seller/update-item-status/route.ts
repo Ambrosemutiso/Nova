@@ -1,40 +1,26 @@
-// File: app/api/seller/update-item-status/route.ts
-
+// /api/seller/update-item-status.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { dbConnect } from '@/lib/dbConnect';
 import Order from '@/app/models/orders';
+import { dbConnect } from '@/lib/dbConnect';
 
 export async function PATCH(req: NextRequest) {
-  await dbConnect();
-  const { orderId, itemName, newStatus } = await req.json();
-
-  if (!orderId || !itemName || !newStatus) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-  }
-
   try {
+    await dbConnect();
+    const { orderId, itemName, newStatus } = await req.json();
+
     const order = await Order.findById(orderId);
-    if (!order) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
-    }
+    if (!order) return NextResponse.json({ success: false, message: 'Order not found' }, { status: 404 });
 
-    // Update the status of the matching item in the order
-    let updated = false;
-    for (const item of order.items) {
-      if (item.name === itemName) {
-        item.status = newStatus;
-        updated = true;
-      }
-    }
+    // Find item and update status
+    const item = order.items.find((item: any) => item.name === itemName);
+    if (!item) return NextResponse.json({ success: false, message: 'Item not found' }, { status: 404 });
 
-    if (!updated) {
-      return NextResponse.json({ error: 'Item not found in order' }, { status: 404 });
-    }
-
+    item.status = newStatus;
     await order.save();
-    return NextResponse.json({ success: true, message: 'Item status updated successfully' });
+
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Update error:', error);
-    return NextResponse.json({ error: 'Failed to update item status' }, { status: 500 });
+    console.error('Item update error:', error);
+    return NextResponse.json({ success: false, message: 'Server error' }, { status: 500 });
   }
 }
