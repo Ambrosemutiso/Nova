@@ -1,14 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
+import { CldImage } from 'next-cloudinary';
 import { toast, ToastContainer } from 'react-toastify';
 
 interface OrderItem {
   name: string;
   quantity: number;
   price: number;
-  image: string;
+  images: string[]; 
   status?: string;
 }
 
@@ -59,24 +59,23 @@ export default function SellerOrdersPage() {
       });
   }, []);
 
+    const getPublicId = (url: string) => {
+    const regex = /\/upload\/(?:v\d+\/)?([^\.]+)/;
+    const match = url.match(regex);
+    return match ? match[1] : url;
+  };
+
   const markItemDelivered = async (orderId: string, itemName: string) => {
     try {
       const res = await fetch('/api/seller/update-item-status', {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          orderId,
-          itemName,
-          newStatus: 'Delivered',
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, itemName, newStatus: 'Delivered' }),
       });
 
       const json = await res.json();
       if (res.ok && json.success) {
         toast.success('Item marked as delivered! ✅');
-
         setOrders((prev) =>
           prev.map((order) =>
             order._id === orderId
@@ -134,10 +133,7 @@ export default function SellerOrdersPage() {
               if (visibleItems.length === 0) return null;
 
               return (
-                <div
-                  key={order._id}
-                  className="bg-white p-4 rounded shadow border border-gray-100"
-                >
+                <div key={order._id} className="bg-white p-4 rounded shadow border border-gray-100">
                   <div className="mb-2">
                     <h2 className="text-lg font-semibold">Order #{order._id.slice(-6)}</h2>
                     <p className="text-sm text-gray-500">Status: {order.status}</p>
@@ -151,32 +147,32 @@ export default function SellerOrdersPage() {
                   </div>
                   <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
                     {visibleItems.map((item, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center gap-3 border p-2 rounded"
-                      >
-                        <Image
-                          src={item.image}
-                          alt={item.name}
-                          width={64}
-                          height={64}
-                          className="rounded object-cover border"
-                        />
+                      <div key={i} className="flex items-center gap-3 border p-2 rounded">
+{item.images?.length > 0 ? (
+  <CldImage
+    src={getPublicId(item.images[0])}
+    alt={item.name}
+    width="300"
+    height="300"
+    crop="fill"
+    className="w-full h-44 object-cover rounded"
+  />
+) : (
+  <div className="w-full h-44 bg-gray-200 text-gray-500 flex items-center justify-center rounded">
+    No image
+  </div>
+)}
+
                         <div className="flex-1">
                           <p className="font-medium text-gray-800">{item.name}</p>
                           <p className="text-sm">Qty: {item.quantity}</p>
                           <p className="text-sm">Ksh {item.price}</p>
                           <p className="text-xs text-gray-500">
-                            Status:{' '}
-                            <span className="font-semibold">
-                              {item.status || 'Pending'}
-                            </span>
+                            Status: <span className="font-semibold">{item.status || 'Pending'}</span>
                           </p>
                           {item.status !== 'Delivered' && (
                             <button
-                              onClick={() =>
-                                markItemDelivered(order._id, item.name)
-                              }
+                              onClick={() => markItemDelivered(order._id, item.name)}
                               className="mt-2 text-sm bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
                             >
                               Mark as Delivered
@@ -194,7 +190,6 @@ export default function SellerOrdersPage() {
             })}
           </div>
 
-          {/* Pagination Controls */}
           <div className="mt-8 flex justify-between items-center">
             <button
               onClick={() => setPage((p) => Math.max(p - 1, 1))}
@@ -203,9 +198,7 @@ export default function SellerOrdersPage() {
             >
               Previous
             </button>
-            <span className="text-sm">
-              Page {page} of {totalPages}
-            </span>
+            <span className="text-sm">Page {page} of {totalPages}</span>
             <button
               onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
               disabled={page === totalPages}
