@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev --turbopack node server.js",
     "build": "next build --no-lint",
-    "start": "next start"
+    "start": "next start NODE_ENV=production node server.js"
   },
   "dependencies": {
     "@lottiefiles/react-lottie-player": "^3.6.0",

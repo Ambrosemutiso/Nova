@@ -28,7 +28,7 @@ interface Metrics {
   cancelledOrders: number;
   pendingOrders: number;
   paidOrders: number;
-  subtotalRevenue: number; // <-- Add this in backend as well
+  subtotalRevenue: number;
 }
 
 export default function SellerDashboard() {
@@ -36,9 +36,8 @@ export default function SellerDashboard() {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [withdrawMethod, setWithdrawMethod] = useState<'mpesa' | 'airtel' | ''>('');
-const [withdrawPhone, setWithdrawPhone] = useState('');
-const [withdrawAmount, setWithdrawAmount] = useState<number>(0);
-
+  const [withdrawPhone, setWithdrawPhone] = useState('');
+  const [withdrawAmount, setWithdrawAmount] = useState<number>(0);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('sellerUser');
@@ -71,77 +70,73 @@ const [withdrawAmount, setWithdrawAmount] = useState<number>(0);
     { month: 'Dec', revenue: 100000 },
   ];
 
+  const handleWithdraw = async () => {
+    const sellerData = JSON.parse(localStorage.getItem('sellerUser') || '{}');
+    const res = await fetch('/api/seller/withdraw', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sellerId: sellerData._id,
+        amount: withdrawAmount,
+        phoneNumber: withdrawPhone,
+        method: withdrawMethod,
+      }),
+    });
+
+    const json = await res.json();
+    if (json.success) {
+      toast.success('Withdrawal request submitted!');
+      setShowWithdrawModal(false);
+    } else {
+      toast.error(json.error || 'Error submitting withdrawal.');
+    }
+  };
+
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto px-4 pt-28 pb-10">
-      <ToastContainer/>
+      <ToastContainer />
       <h1 className="text-3xl font-bold text-orange-600 mb-4">
         Welcome, {seller?.name || 'Loading...'}
       </h1>
+
       {/* Metrics */}
-<div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-  <div className="bg-white p-6 rounded-xl shadow-md text-center">
-    <h3 className="text-lg font-medium text-gray-600">Total Orders</h3>
-    <p className="text-3xl font-bold text-orange-600">{metrics?.totalOrders ?? '--'}</p>
-  </div>
-  <div className="bg-white p-6 rounded-xl shadow-md text-center">
-    <h3 className="text-lg font-medium text-gray-600">Delivered Orders</h3>
-    <p className="text-3xl font-bold text-green-600">{metrics?.deliveredOrders ?? '--'}</p>
-  </div>
-  <div className="bg-white p-6 rounded-xl shadow-md text-center">
-    <h3 className="text-lg font-medium text-gray-600">Cancelled Orders</h3>
-    <p className="text-3xl font-bold text-red-500">{metrics?.cancelledOrders ?? '--'}</p>
-  </div>
-  <div className="bg-white p-6 rounded-xl shadow-md text-center">
-    <h3 className="text-lg font-medium text-gray-600">Pending Orders</h3>
-    <p className="text-3xl font-bold text-yellow-500">{metrics?.pendingOrders ?? '--'}</p>
-  </div>
-  <div className="bg-white p-6 rounded-xl shadow-md text-center">
-    <h3 className="text-lg font-medium text-gray-600">Paid Orders</h3>
-    <p className="text-3xl font-bold text-blue-600">{metrics?.paidOrders ?? '--'}</p>
-  </div>
-  <div className="bg-white p-6 rounded-xl shadow-md text-center">
-    <h3 className="text-lg font-medium text-gray-600">Active Products</h3>
-    <p className="text-3xl font-bold text-orange-600">{metrics?.activeProducts ?? '--'}</p>
-  </div>
-  <div className="bg-white p-6 rounded-xl shadow-md text-center relative">
-    {typeof metrics?.totalFollowers === 'number' && metrics.totalFollowers >= 1 && (
-      <span className="absolute top-2 right-2 bg-[color:#FFD700] text-black text-xs px-3 py-1 rounded-full shadow font-semibold z-10 flex items-center gap-1">
-        <ShieldCheck size={14} className="text-green-700" />
-        Verified Seller
-      </span>
-    )}
-    <h3 className="text-lg font-medium text-gray-600">Followers</h3>
-    <p className="text-3xl font-bold text-orange-600">{metrics?.totalFollowers ?? '--'}</p>
-  </div>
-</div>
-        <div className="bg-white p-6 rounded-xl shadow-md text-center">
-          <h3 className="text-lg font-medium text-gray-600">Revenue</h3>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <MetricCard label="Total Orders" value={metrics?.totalOrders} color="orange" />
+        <MetricCard label="Delivered Orders" value={metrics?.deliveredOrders} color="green" />
+        <MetricCard label="Cancelled Orders" value={metrics?.cancelledOrders} color="red" />
+        <MetricCard label="Pending Orders" value={metrics?.pendingOrders} color="yellow" />
+        <MetricCard label="Paid Orders" value={metrics?.paidOrders} color="blue" />
+        <MetricCard label="Active Products" value={metrics?.activeProducts} color="orange" />
+        <div className="bg-white p-6 rounded-xl shadow-md text-center relative">
+          {metrics?.totalFollowers && metrics.totalFollowers >= 1 && (
+            <span className="absolute top-2 right-2 bg-yellow-400 text-black text-xs px-3 py-1 rounded-full shadow font-semibold flex items-center gap-1">
+              <ShieldCheck size={14} className="text-green-700" />
+              Verified Seller
+            </span>
+          )}
+          <h3 className="text-lg font-medium text-gray-600">Followers</h3>
+          <p className="text-3xl font-bold text-orange-600">
+            {metrics?.totalFollowers ?? '--'}
+          </p>
+        </div>
+
+        {/* Subtotal Revenue Card */}
+        <div className="bg-white p-6 rounded-xl shadow-md text-center col-span-full md:col-span-2">
+          <h3 className="text-lg font-medium text-gray-600">Subtotal Revenue</h3>
           <p className="text-3xl font-bold text-orange-600">
             Ksh {metrics?.subtotalRevenue?.toLocaleString() ?? '--'}
           </p>
-
           <button
-            onClick={() => setShowWithdrawModal(true)}
+            onClick={() => {
+              setWithdrawAmount(metrics?.subtotalRevenue || 0);
+              setShowWithdrawModal(true);
+            }}
             className="mt-3 bg-orange-500 hover:bg-orange-600 text-white text-sm py-2 px-4 rounded transition"
           >
             Withdraw Funds
           </button>
         </div>
-<div className="bg-white p-6 rounded-xl shadow-md text-center">
-  <h3 className="text-lg font-medium text-gray-600">Subtotal Revenue</h3>
-  <p className="text-3xl font-bold text-orange-600">
-    Ksh {metrics?.subtotalRevenue?.toLocaleString() ?? '--'}
-  </p>
-  <button
-    onClick={() => {
-      setWithdrawAmount(metrics?.subtotalRevenue || 0);
-      setShowWithdrawModal(true);
-    }}
-    className="mt-2 px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700"
-  >
-    Withdraw Funds
-  </button>
-</div>
+      </div>
 
       {/* Revenue Chart */}
       <div className="bg-white p-6 rounded-xl shadow-md mb-8">
@@ -159,24 +154,9 @@ const [withdrawAmount, setWithdrawAmount] = useState<number>(0);
 
       {/* Quick Actions */}
       <div className="flex flex-wrap gap-4">
-        <a
-          href="/seller/products/add"
-          className="bg-orange-600 text-white px-4 py-2 rounded shadow hover:bg-orange-700 transition"
-        >
-          ➕ Add Product
-        </a>
-        <a
-          href="/seller/orders"
-          className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition"
-        >
-          📦 View Orders
-        </a>
-        <a
-          href="/seller/inventory"
-          className="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 transition"
-        >
-          📊 Manage Inventory
-        </a>
+        <a href="/seller/products/add" className="action-btn bg-orange-600">➕ Add Product</a>
+        <a href="/seller/orders" className="action-btn bg-blue-600">📦 View Orders</a>
+        <a href="/seller/inventory" className="action-btn bg-green-600">📊 Manage Inventory</a>
       </div>
 
       {/* Seller Info */}
@@ -187,71 +167,76 @@ const [withdrawAmount, setWithdrawAmount] = useState<number>(0);
         </div>
       )}
 
-      {/* 💳 Withdrawal Modal */}
-{showWithdrawModal && (
-  <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
-    <div className="bg-white p-6 rounded-xl w-full max-w-md relative">
-      <button onClick={() => setShowWithdrawModal(false)} className="absolute top-2 right-4 text-gray-500 text-2xl font-bold">×</button>
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">Withdraw Funds</h2>
-      
-      <label className="block mb-2 text-sm text-orange-600">Phone Number</label>
-      <input
-        type="text"
-        value={withdrawPhone}
-        onChange={(e) => setWithdrawPhone(e.target.value)}
-        className="w-full border px-3 py-2 rounded mb-4"
-        placeholder="Enter phone number"
-      />
+      {/* Withdrawal Modal */}
+      {showWithdrawModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-xl w-full max-w-md relative">
+            <button
+              onClick={() => setShowWithdrawModal(false)}
+              className="absolute top-2 right-4 text-gray-500 text-2xl font-bold"
+            >
+              ×
+            </button>
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Withdraw Funds</h2>
 
-      <label className="block mb-2 text-sm text-orange-600">Amount</label>
-      <input
-        type="number"
-        value={withdrawAmount}
-        onChange={(e) => setWithdrawAmount(Number(e.target.value))}
-        className="w-full border px-3 py-2 rounded mb-4"
-        placeholder="Enter amount"
-      />
+            <label className="block mb-2 text-sm text-orange-600">Phone Number</label>
+            <input
+              type="text"
+              value={withdrawPhone}
+              onChange={(e) => setWithdrawPhone(e.target.value)}
+              className="w-full border px-3 py-2 rounded mb-4"
+              placeholder="Enter phone number"
+            />
 
-      <label className="block mb-2 text-sm text-orange-600">Withdraw Method</label>
-      <select
-        value={withdrawMethod}
-        onChange={(e) => setWithdrawMethod(e.target.value as 'mpesa' | 'airtel')}
-        className="w-full border px-3 py-2 rounded mb-4"
-      >
-        <option value="mpesa">M-Pesa</option>
-        <option value="airtel">Airtel Money</option>
-      </select>
+            <label className="block mb-2 text-sm text-orange-600">Amount</label>
+            <input
+              type="number"
+              value={withdrawAmount}
+              onChange={(e) => setWithdrawAmount(Number(e.target.value))}
+              className="w-full border px-3 py-2 rounded mb-4"
+              placeholder="Enter amount"
+            />
 
-      <button
-        onClick={async () => {
-          const sellerData = JSON.parse(localStorage.getItem('sellerUser') || '{}');
-          const res = await fetch('/api/seller/withdraw', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              sellerId: sellerData._id,
-              amount: withdrawAmount,
-              phoneNumber: withdrawPhone,
-              method: withdrawMethod,
-            }),
-          });
+            <label className="block mb-2 text-sm text-orange-600">Withdraw Method</label>
+            <select
+              value={withdrawMethod}
+              onChange={(e) => setWithdrawMethod(e.target.value as 'mpesa' | 'airtel')}
+              className="w-full border px-3 py-2 rounded mb-4"
+            >
+              <option value="">Select Method</option>
+              <option value="mpesa">M-Pesa</option>
+              <option value="airtel">Airtel Money</option>
+            </select>
 
-          const json = await res.json();
-          if (json.success) {
-            alert('Withdrawal request submitted!');
-            setShowWithdrawModal(false);
-          } else {
-            alert(json.error || 'Error submitting withdrawal.');
-          }
-        }}
-        className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded"
-      >
-        Submit Withdrawal
-      </button>
+            <button
+              onClick={handleWithdraw}
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded"
+            >
+              Submit Withdrawal
+            </button>
+          </div>
+        </div>
+      )}
     </div>
-  </div>
-)}
+  );
+}
 
+// 🔧 Reusable Metric Card Component
+function MetricCard({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: number | undefined;
+  color: string;
+}) {
+  return (
+    <div className="bg-white p-6 rounded-xl shadow-md text-center">
+      <h3 className="text-lg font-medium text-gray-600">{label}</h3>
+      <p className={`text-3xl font-bold text-${color}-600`}>
+        {value !== undefined ? value : '--'}
+      </p>
     </div>
   );
 }

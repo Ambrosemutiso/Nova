@@ -195,37 +195,51 @@ export default function ProductReviewSection({
         </div>
       )}
 
-      {/* Seller Footer */}
-      {seller && (
-        <div className="mt-8 border-t pt-4 flex justify-between items-center">
-          <div>
-            <div className="flex items-center gap-1">
-              <p className="text-sm font-semibold text-gray-700">
-                {seller.name || 'Unknown Seller'} - Official Store
-              </p>
-              {(seller.followers?.length ?? 0) > 0 && (
-                <span title="Verified Seller">
-                  <ShieldCheck className="w-4 h-4 text-orange-600" />
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-gray-500">
-              {seller.followers?.length || 0} Followers
-            </p>
-          </div>
+{/* Seller Footer */}
+{seller && (
+  <div className="mt-8 border-t pt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div>
+      <div className="flex items-center gap-1">
+        <p className="text-sm font-semibold text-gray-700">
+          {seller.name || 'Unknown Seller'} - Official Store
+        </p>
+        {(seller.followers?.length ?? 0) > 0 && (
+          <span title="Verified Seller">
+            <ShieldCheck className="w-4 h-4 text-orange-600" />
+          </span>
+        )}
+      </div>
+      <p className="text-xs text-gray-500">
+        {seller.followers?.length || 0} Followers
+      </p>
+    </div>
 
-          {user && (
-            <button
-              onClick={() => handleFollowAction(isFollowing ? 'unfollow' : 'follow')}
-              className={`px-4 py-1 rounded text-sm ${
-                isFollowing ? 'bg-gray-300 text-black' : 'bg-orange-500 text-white'
-              }`}
-            >
-              {isFollowing ? 'Unfollow' : 'Follow'}
-            </button>
-          )}
-        </div>
+    <div className="flex gap-3">
+      {user && (
+        <>
+          <button
+            onClick={() => handleFollowAction(isFollowing ? 'unfollow' : 'follow')}
+            className={`px-4 py-1 rounded text-sm ${
+              isFollowing ? 'bg-gray-300 text-black' : 'bg-orange-500 text-white'
+            }`}
+          >
+            {isFollowing ? 'Unfollow' : 'Follow'}
+          </button>
+
+          <button
+            onClick={() => {
+              window.location.href = `/seller/chat/${seller._id}`;
+            }}
+            className="px-4 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700"
+          >
+            💬 Chat with Seller
+          </button>
+        </>
       )}
+    </div>
+  </div>
+)}
+
     </div>
   );
 }
