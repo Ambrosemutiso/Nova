@@ -28,19 +28,31 @@ export async function POST(req: NextRequest) {
     const totalOrders = orders.length;
     const totalRevenue = orders.reduce((acc, order) => acc + (order.paidAmount || 0), 0);
 
-    // ✅ Filter orders by status
+    // ✅ Count order statuses
     const deliveredOrders = orders.filter((o) => o.status === 'Delivered').length;
     const cancelledOrders = orders.filter((o) => o.status === 'Cancelled').length;
     const pendingOrders = orders.filter((o) => o.status === 'Pending').length;
     const paidOrders = orders.filter((o) => o.status === 'Paid').length;
 
-    // ✅ Get total followers
+    // ✅ Subtotal revenue (only seller's delivered items)
+    let subtotalRevenue = 0;
+
+    for (const order of orders) {
+      for (const item of order.items) {
+        if (sellerProductNames.includes(item.name) && item.status === 'Delivered') {
+          subtotalRevenue += item.price * item.quantity;
+        }
+      }
+    }
+
+    // ✅ Followers
     const seller = await Seller.findById(sellerId).select('followers');
     const totalFollowers = seller?.followers?.length || 0;
 
     return NextResponse.json({
       totalOrders,
       totalRevenue,
+      subtotalRevenue,
       activeProducts,
       totalFollowers,
       deliveredOrders,

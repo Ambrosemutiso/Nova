@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { toast, ToastContainer } from 'react-toastify';
 import {
   LineChart,
   Line,
@@ -27,12 +28,17 @@ interface Metrics {
   cancelledOrders: number;
   pendingOrders: number;
   paidOrders: number;
+  subtotalRevenue: number; // <-- Add this in backend as well
 }
-
 
 export default function SellerDashboard() {
   const [seller, setSeller] = useState<Seller | null>(null);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawMethod, setWithdrawMethod] = useState<'mpesa' | 'airtel' | ''>('');
+const [withdrawPhone, setWithdrawPhone] = useState('');
+const [withdrawAmount, setWithdrawAmount] = useState<number>(0);
+
 
   useEffect(() => {
     const storedUser = localStorage.getItem('sellerUser');
@@ -67,10 +73,10 @@ export default function SellerDashboard() {
 
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto px-4 pt-28 pb-10">
+      <ToastContainer/>
       <h1 className="text-3xl font-bold text-orange-600 mb-4">
         Welcome, {seller?.name || 'Loading...'}
       </h1>
-
       {/* Metrics */}
 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
   <div className="bg-white p-6 rounded-xl shadow-md text-center">
@@ -94,10 +100,6 @@ export default function SellerDashboard() {
     <p className="text-3xl font-bold text-blue-600">{metrics?.paidOrders ?? '--'}</p>
   </div>
   <div className="bg-white p-6 rounded-xl shadow-md text-center">
-    <h3 className="text-lg font-medium text-gray-600">Revenue</h3>
-    <p className="text-3xl font-bold text-orange-600">Ksh {metrics?.totalRevenue?.toLocaleString() ?? '--'}</p>
-  </div>
-  <div className="bg-white p-6 rounded-xl shadow-md text-center">
     <h3 className="text-lg font-medium text-gray-600">Active Products</h3>
     <p className="text-3xl font-bold text-orange-600">{metrics?.activeProducts ?? '--'}</p>
   </div>
@@ -112,7 +114,34 @@ export default function SellerDashboard() {
     <p className="text-3xl font-bold text-orange-600">{metrics?.totalFollowers ?? '--'}</p>
   </div>
 </div>
+        <div className="bg-white p-6 rounded-xl shadow-md text-center">
+          <h3 className="text-lg font-medium text-gray-600">Revenue</h3>
+          <p className="text-3xl font-bold text-orange-600">
+            Ksh {metrics?.subtotalRevenue?.toLocaleString() ?? '--'}
+          </p>
 
+          <button
+            onClick={() => setShowWithdrawModal(true)}
+            className="mt-3 bg-orange-500 hover:bg-orange-600 text-white text-sm py-2 px-4 rounded transition"
+          >
+            Withdraw Funds
+          </button>
+        </div>
+<div className="bg-white p-6 rounded-xl shadow-md text-center">
+  <h3 className="text-lg font-medium text-gray-600">Subtotal Revenue</h3>
+  <p className="text-3xl font-bold text-orange-600">
+    Ksh {metrics?.subtotalRevenue?.toLocaleString() ?? '--'}
+  </p>
+  <button
+    onClick={() => {
+      setWithdrawAmount(metrics?.subtotalRevenue || 0);
+      setShowWithdrawModal(true);
+    }}
+    className="mt-2 px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700"
+  >
+    Withdraw Funds
+  </button>
+</div>
 
       {/* Revenue Chart */}
       <div className="bg-white p-6 rounded-xl shadow-md mb-8">
@@ -150,13 +179,79 @@ export default function SellerDashboard() {
         </a>
       </div>
 
-      {/* Seller Info (optional) */}
+      {/* Seller Info */}
       {seller && (
         <div className="mt-8 bg-white p-4 rounded-xl shadow">
           <p className="text-sm text-gray-600 font-medium">Email:</p>
           <p className="text-lg text-orange-500">{seller.email}</p>
         </div>
       )}
+
+      {/* 💳 Withdrawal Modal */}
+{showWithdrawModal && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
+    <div className="bg-white p-6 rounded-xl w-full max-w-md relative">
+      <button onClick={() => setShowWithdrawModal(false)} className="absolute top-2 right-4 text-gray-500 text-2xl font-bold">×</button>
+      <h2 className="text-xl font-semibold text-gray-800 mb-4">Withdraw Funds</h2>
+      
+      <label className="block mb-2 text-sm text-orange-600">Phone Number</label>
+      <input
+        type="text"
+        value={withdrawPhone}
+        onChange={(e) => setWithdrawPhone(e.target.value)}
+        className="w-full border px-3 py-2 rounded mb-4"
+        placeholder="Enter phone number"
+      />
+
+      <label className="block mb-2 text-sm text-orange-600">Amount</label>
+      <input
+        type="number"
+        value={withdrawAmount}
+        onChange={(e) => setWithdrawAmount(Number(e.target.value))}
+        className="w-full border px-3 py-2 rounded mb-4"
+        placeholder="Enter amount"
+      />
+
+      <label className="block mb-2 text-sm text-orange-600">Withdraw Method</label>
+      <select
+        value={withdrawMethod}
+        onChange={(e) => setWithdrawMethod(e.target.value as 'mpesa' | 'airtel')}
+        className="w-full border px-3 py-2 rounded mb-4"
+      >
+        <option value="mpesa">M-Pesa</option>
+        <option value="airtel">Airtel Money</option>
+      </select>
+
+      <button
+        onClick={async () => {
+          const sellerData = JSON.parse(localStorage.getItem('sellerUser') || '{}');
+          const res = await fetch('/api/seller/withdraw', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              sellerId: sellerData._id,
+              amount: withdrawAmount,
+              phoneNumber: withdrawPhone,
+              method: withdrawMethod,
+            }),
+          });
+
+          const json = await res.json();
+          if (json.success) {
+            alert('Withdrawal request submitted!');
+            setShowWithdrawModal(false);
+          } else {
+            alert(json.error || 'Error submitting withdrawal.');
+          }
+        }}
+        className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded"
+      >
+        Submit Withdrawal
+      </button>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }
