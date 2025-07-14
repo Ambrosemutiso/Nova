@@ -187,10 +187,10 @@ export default function SellerOrdersPage() {
                       </div>
                     ))}
                   </div>
-                  <div className="mt-3 text-right font-bold text-orange-600">
-                    Total: Ksh {order.totalAmount.toLocaleString()}
-                  </div>
-
+<div className="mt-3 text-right font-bold text-orange-600">
+  Subtotal: Ksh{' '}
+  {visibleItems.reduce((sum, item) => sum + item.price * item.quantity, 0).toLocaleString()}
+</div>
                   {/* View Delivery Info Button */}
                   <div className="mt-2 text-right">
                     <button
