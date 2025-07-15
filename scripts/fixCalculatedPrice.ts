@@ -1,38 +1,42 @@
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 dotenv.config();
 
-import mongoose from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { dbConnect } from '@/lib/dbConnect';
-import Product from '@/app/models/product';
+import SellerType from '@/app/models/seller';
 
-async function fixCalculatedPrices() {
+const Seller = SellerType as Model<any>;
+
+async function injectTestShopData() {
   await dbConnect();
 
-  const products = await Product.find({});
+  const today = new Date();
+  const oneYearLater = new Date(today);
+  oneYearLater.setFullYear(today.getFullYear() + 1);
+
+  const sellers = await Seller.find({});
 
   const updates = [];
 
-  for (const product of products) {
-    if (typeof product.calculatedPrice === 'string') {
-      const parsed = parseFloat(product.calculatedPrice);
+  for (const seller of sellers) {
+    seller.shop = {
+      isActive: true,
+      activatedAt: today,
+      expiresAt: oneYearLater,
+      amountPaid: 1300,
+      transactionId: `TEST-${Math.floor(Math.random() * 1000000)}`,
+    };
 
-      if (!isNaN(parsed)) {
-        product.calculatedPrice = parsed;
-        updates.push(product.save());
-        console.log(`✅ Updated product: ${product.name} (${product._id})`);
-      } else {
-        console.warn(`⚠️ Skipping invalid price: ${product.name} (${product.calculatedPrice})`);
-      }
-    }
+    updates.push(seller.save());
+    console.log(`✅ Updated seller shop for: ${seller.name}`);
   }
 
   await Promise.all(updates);
-  console.log(`✅ Done. Updated ${updates.length} product(s).`);
-
+  console.log('✅ All seller shops updated.');
   mongoose.connection.close();
 }
 
-fixCalculatedPrices().catch((err) => {
-  console.error('❌ Script failed:', err);
+injectTestShopData().catch((err) => {
+  console.error('❌ Failed:', err);
   mongoose.connection.close();
 });

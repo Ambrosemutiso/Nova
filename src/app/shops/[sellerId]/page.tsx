@@ -1,0 +1,117 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import Link from 'next/link';
+import ProductCard from '@/components/ProductCard';
+import type { Product } from '@/app/types/product';
+
+interface Seller {
+  _id: string;
+  name: string;
+  email: string;
+  image?: string;
+  shopName?: string;
+}
+
+export default function SellerShopPage() {
+  const { sellerId } = useParams();
+  const [seller, setSeller] = useState<Seller | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!sellerId) return;
+
+    fetch(`/api/shops/${sellerId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          setSeller(null);
+        } else {
+          setSeller(data.seller);
+          setProducts(data.products);
+        }
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [sellerId]);
+
+  const groupedByCategory = products.reduce<Record<string, Product[]>>((acc, product) => {
+    const cat = product.category || 'Uncategorized';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(product);
+    return acc;
+  }, {});
+
+  const sortedCategories = Object.keys(groupedByCategory).sort();
+
+  if (loading) {
+    return (
+      <div className="text-center py-10">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-600 mx-auto"></div>
+        <p className="mt-2 text-gray-500">Loading shop...</p>
+      </div>
+    );
+  }
+
+  if (!seller) {
+    return (
+      <div className="text-center py-20 text-gray-600">
+        <p>Shop not found or inactive.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 pt-24 pb-12">
+      {/* Shop Header */}
+      <div className="flex items-center gap-6 mb-8 border-b pb-6">
+        <img
+          src={seller.image || '/default-avatar.png'}
+          alt={seller.name}
+          className="w-20 h-20 rounded-full object-cover border"
+        />
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">
+            {seller.shopName || `${seller.name}'s Shop`}
+          </h1>
+          <p className="text-sm text-gray-500">{seller.email}</p>
+        </div>
+      </div>
+
+      {/* Products by Category */}
+      {sortedCategories.length === 0 ? (
+        <p className="text-gray-500">No products found.</p>
+      ) : (
+        sortedCategories.map((category) => {
+          const productsInCategory = groupedByCategory[category];
+          const displayedProducts = productsInCategory.slice(0, 6); // Show only 6
+
+          return (
+            <div key={category} className="mb-10">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-xl font-semibold text-gray-700">{category}</h2>
+                {productsInCategory.length > 6 && (
+                  <Link
+                    href={`/shops/${sellerId}/category/${encodeURIComponent(category)}`}
+                    className="text-sm text-orange-600 hover:underline"
+                  >
+                    See All →
+                  </Link>
+                )}
+              </div>
+              <div className="flex overflow-x-auto gap-4 pb-2">
+                {displayedProducts.map((product) => (
+                  <div key={product._id} className="min-w-[250px]">
+                    <ProductCard product={product} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+}

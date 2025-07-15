@@ -36,50 +36,37 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var dotenv = require("dotenv");
-dotenv.config();
-var mongoose_1 = require("mongoose");
-var dbConnect_1 = require("../lib/dbConnect");
 var seller_1 = require("../models/seller");
-var Seller = seller_1.default;
-function injectTestShopData() {
+var dbConnect_1 = require("../lib/dbConnect");
+function addShopFieldToExistingSellers() {
     return __awaiter(this, void 0, void 0, function () {
-        var today, oneYearLater, sellers, updates, _i, sellers_1, seller;
+        var now, oneYearLater;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, (0, dbConnect_1.dbConnect)()];
                 case 1:
                     _a.sent();
-                    today = new Date();
-                    oneYearLater = new Date(today);
-                    oneYearLater.setFullYear(today.getFullYear() + 1);
-                    return [4 /*yield*/, Seller.find({})];
+                    now = new Date();
+                    oneYearLater = new Date();
+                    oneYearLater.setFullYear(now.getFullYear() + 1);
+                    return [4 /*yield*/, seller_1.default.updateMany({ shop: { $exists: false } }, // only update those without the `shop` field
+                        {
+                            $set: {
+                                shop: {
+                                    isActive: false,
+                                    activatedAt: null,
+                                    expiresAt: null,
+                                    amountPaid: 0,
+                                    transactionId: '',
+                                },
+                            },
+                        })];
                 case 2:
-                    sellers = _a.sent();
-                    updates = [];
-                    for (_i = 0, sellers_1 = sellers; _i < sellers_1.length; _i++) {
-                        seller = sellers_1[_i];
-                        seller.shop = {
-                            isActive: true,
-                            activatedAt: today,
-                            expiresAt: oneYearLater,
-                            amountPaid: 1300,
-                            transactionId: "TEST-".concat(Math.floor(Math.random() * 1000000)),
-                        };
-                        updates.push(seller.save());
-                        console.log("\u2705 Updated seller shop for: ".concat(seller.name));
-                    }
-                    return [4 /*yield*/, Promise.all(updates)];
-                case 3:
                     _a.sent();
-                    console.log('✅ All seller shops updated.');
-                    mongoose_1.default.connection.close();
+                    console.log('✅ All sellers updated with default shop fields');
                     return [2 /*return*/];
             }
         });
     });
 }
-injectTestShopData().catch(function (err) {
-    console.error('❌ Failed:', err);
-    mongoose_1.default.connection.close();
-});
+addShopFieldToExistingSellers().catch(console.error);

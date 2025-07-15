@@ -40,7 +40,7 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
     { label: 'Automotive', icon: <FiTool />, route: '/category/Motors' },
     { label: 'Books & Stationery', icon: <FiBook />, route: '/category/Books' },
     { label: 'Sound Systems', icon: <FiLoader />, route: '/category/Systems' },
-    { label: 'Other Categories', icon: <FiGrid />, route: '/' },
+    { label: 'Shops', icon: <FiGrid />, route: '/shops' },
   ];
 
   return (
