@@ -6,11 +6,15 @@ import Seller from '@/app/models/seller';
 
 export async function POST(req: NextRequest) {
   await dbConnect();
-  const { sellerId } = await req.json();
+  const { sellerId, year } = await req.json();
 
   if (!sellerId) {
     return NextResponse.json({ error: 'Missing sellerId' }, { status: 400 });
   }
+
+  const selectedYear = year || new Date().getFullYear();
+  const startDate = new Date(`${selectedYear}-01-01`);
+  const endDate = new Date(`${selectedYear + 1}-01-01`);
 
   try {
     const activeProducts = await Product.countDocuments({
@@ -23,31 +27,50 @@ export async function POST(req: NextRequest) {
 
     const orders = await Order.find({
       'items.name': { $in: sellerProductNames },
+      createdAt: { $gte: startDate, $lt: endDate },
     });
 
     const totalOrders = orders.length;
     const totalRevenue = orders.reduce((acc, order) => acc + (order.paidAmount || 0), 0);
 
-    // ✅ Count order statuses
     const deliveredOrders = orders.filter((o) => o.status === 'Delivered').length;
     const cancelledOrders = orders.filter((o) => o.status === 'Cancelled').length;
     const pendingOrders = orders.filter((o) => o.status === 'Pending').length;
     const paidOrders = orders.filter((o) => o.status === 'Paid').length;
 
-    // ✅ Subtotal revenue (only seller's delivered items)
     let subtotalRevenue = 0;
 
     for (const order of orders) {
       for (const item of order.items) {
-        if (sellerProductNames.includes(item.name) && item.status === 'Delivered') {
+        if (
+          sellerProductNames.includes(item.name) &&
+          item.status === 'Delivered'
+        ) {
           subtotalRevenue += item.price * item.quantity;
         }
       }
     }
 
-    // ✅ Followers
     const seller = await Seller.findById(sellerId).select('followers');
     const totalFollowers = seller?.followers?.length || 0;
+
+    // Build chart data
+    const chartData = Array.from({ length: 12 }, (_, i) => ({
+      month: new Date(2000, i).toLocaleString('default', { month: 'short' }),
+      revenue: 0,
+    }));
+
+    for (const order of orders) {
+      for (const item of order.items) {
+        if (
+          sellerProductNames.includes(item.name) &&
+          item.status === 'Delivered'
+        ) {
+          const month = new Date(order.createdAt).getMonth();
+          chartData[month].revenue += item.price * item.quantity;
+        }
+      }
+    }
 
     return NextResponse.json({
       totalOrders,
@@ -59,6 +82,7 @@ export async function POST(req: NextRequest) {
       cancelledOrders,
       pendingOrders,
       paidOrders,
+      chartData,
     });
   } catch (error) {
     console.error('Dashboard error:', error);

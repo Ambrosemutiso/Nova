@@ -19,6 +19,11 @@ interface Seller {
   email: string;
 }
 
+interface ChartPoint {
+  month: string;
+  revenue: number;
+}
+
 interface Metrics {
   totalOrders: number;
   totalRevenue: number;
@@ -29,11 +34,15 @@ interface Metrics {
   pendingOrders: number;
   paidOrders: number;
   subtotalRevenue: number;
+  chartData: ChartPoint[];
 }
 
 export default function SellerDashboard() {
   const [seller, setSeller] = useState<Seller | null>(null);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [year, setYear] = useState(new Date().getFullYear());
+
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [withdrawMethod, setWithdrawMethod] = useState<'mpesa' | 'airtel' | ''>('');
   const [withdrawPhone, setWithdrawPhone] = useState('');
@@ -41,42 +50,38 @@ export default function SellerDashboard() {
 
   useEffect(() => {
     const storedUser = localStorage.getItem('sellerUser');
-    if (storedUser) {
-      const parsed = JSON.parse(storedUser);
-      setSeller(parsed);
+    if (!storedUser) return;
 
-      fetch('/api/seller/metrics', {
+    const parsed = JSON.parse(storedUser);
+    setSeller(parsed);
+    fetchMetrics(parsed._id, year);
+  }, [year]);
+
+  const fetchMetrics = async (sellerId: string, selectedYear: number) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/seller/metrics', {
         method: 'POST',
-        body: JSON.stringify({ sellerId: parsed._id }),
-      })
-        .then((res) => res.json())
-        .then((data) => setMetrics(data))
-        .catch((err) => console.error('Metrics fetch error:', err));
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sellerId, year: selectedYear }),
+      });
+      const data = await res.json();
+      setMetrics(data);
+    } catch (err) {
+      console.error('Metrics fetch error:', err);
+      toast.error('Failed to load metrics');
+    } finally {
+      setLoading(false);
     }
-  }, []);
-
-  const chartData = [
-    { month: 'Jan', revenue: 12000 },
-    { month: 'Feb', revenue: 18000 },
-    { month: 'Mar', revenue: 24500 },
-    { month: 'Apr', revenue: 30000 },
-    { month: 'May', revenue: 27000 },
-    { month: 'June', revenue: 37000 },
-    { month: 'July', revenue: 17000 },
-    { month: 'Aug', revenue: 24000 },
-    { month: 'Sep', revenue: 28000 },
-    { month: 'Oct', revenue: 21000 },
-    { month: 'Nov', revenue: 47000 },
-    { month: 'Dec', revenue: 100000 },
-  ];
+  };
 
   const handleWithdraw = async () => {
-    const sellerData = JSON.parse(localStorage.getItem('sellerUser') || '{}');
+    if (!seller) return;
     const res = await fetch('/api/seller/withdraw', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        sellerId: sellerData._id,
+        sellerId: seller._id,
         amount: withdrawAmount,
         phoneNumber: withdrawPhone,
         method: withdrawMethod,
@@ -93,78 +98,105 @@ export default function SellerDashboard() {
   };
 
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto px-4 pt-28 pb-10">
+    <div className="p-4 md:p-6 max-w-6xl mx-auto pt-28 pb-10">
       <ToastContainer />
       <h1 className="text-3xl font-bold text-orange-600 mb-4">
         Welcome, {seller?.name || 'Loading...'}
       </h1>
 
-      {/* Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <MetricCard label="Total Orders" value={metrics?.totalOrders} color="orange" />
-        <MetricCard label="Delivered Orders" value={metrics?.deliveredOrders} color="green" />
-        <MetricCard label="Cancelled Orders" value={metrics?.cancelledOrders} color="red" />
-        <MetricCard label="Pending Orders" value={metrics?.pendingOrders} color="yellow" />
-        <MetricCard label="Paid Orders" value={metrics?.paidOrders} color="blue" />
-        <MetricCard label="Active Products" value={metrics?.activeProducts} color="orange" />
-        <div className="bg-white p-6 rounded-xl shadow-md text-center relative">
-          {metrics?.totalFollowers && metrics.totalFollowers >= 1 && (
-            <span className="absolute top-2 right-2 bg-yellow-400 text-black text-xs px-3 py-1 rounded-full shadow font-semibold flex items-center gap-1">
-              <ShieldCheck size={14} className="text-green-700" />
-              Verified Seller
-            </span>
+      {/* Year Selector */}
+      <div className="mb-4">
+        <label className="text-sm font-medium text-gray-700 mr-2">Select Year:</label>
+        <select
+          value={year}
+          onChange={(e) => setYear(Number(e.target.value))}
+          className="border rounded px-3 py-1"
+        >
+          {[2023, 2024, 2025].map((yr) => (
+            <option key={yr} value={yr}>
+              {yr}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Loading State */}
+      {loading ? (
+        <div className="flex justify-center items-center h-48">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-600"></div>
+        </div>
+      ) : (
+        <>
+          {/* Metrics Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <MetricCard label="Total Orders" value={metrics?.totalOrders} color="orange" />
+            <MetricCard label="Delivered Orders" value={metrics?.deliveredOrders} color="green" />
+            <MetricCard label="Cancelled Orders" value={metrics?.cancelledOrders} color="red" />
+            <MetricCard label="Pending Orders" value={metrics?.pendingOrders} color="yellow" />
+            <MetricCard label="Paid Orders" value={metrics?.paidOrders} color="blue" />
+            <MetricCard label="Active Products" value={metrics?.activeProducts} color="orange" />
+
+            {/* Followers */}
+            <div className="bg-white p-6 rounded-xl shadow-md text-center relative">
+              {metrics?.totalFollowers && metrics.totalFollowers >= 1 && (
+                <span className="absolute top-2 right-2 bg-yellow-400 text-black text-xs px-3 py-1 rounded-full shadow font-semibold flex items-center gap-1">
+                  <ShieldCheck size={14} className="text-green-700" />
+                  Verified Seller
+                </span>
+              )}
+              <h3 className="text-lg font-medium text-gray-600">Followers</h3>
+              <p className="text-3xl font-bold text-orange-600">
+                {metrics?.totalFollowers ?? '--'}
+              </p>
+            </div>
+
+            {/* Revenue Card */}
+            <div className="bg-white p-6 rounded-xl shadow-md text-center col-span-full md:col-span-2">
+              <h3 className="text-lg font-medium text-gray-600">Subtotal Revenue</h3>
+              <p className="text-3xl font-bold text-orange-600">
+                Ksh {metrics?.subtotalRevenue?.toLocaleString() ?? '--'}
+              </p>
+              <button
+                onClick={() => {
+                  setWithdrawAmount(metrics?.subtotalRevenue || 0);
+                  setShowWithdrawModal(true);
+                }}
+                className="mt-3 bg-orange-500 hover:bg-orange-600 text-white text-sm py-2 px-4 rounded transition"
+              >
+                Withdraw Funds
+              </button>
+            </div>
+          </div>
+
+          {/* Revenue Chart */}
+          <div className="bg-white p-6 rounded-xl shadow-md mb-8">
+            <h2 className="text-lg font-semibold mb-4 text-gray-700">Revenue Overview ({year})</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={metrics?.chartData || []}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis tickFormatter={(val) => `Ksh ${val / 1000}k`} />
+                <Tooltip formatter={(val: number) => `Ksh ${val.toLocaleString()}`} />
+                <Line type="monotone" dataKey="revenue" stroke="#f97316" strokeWidth={3} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="flex flex-wrap gap-4">
+            <a href="/seller/products/add" className="action-btn bg-orange-600">➕ Add Product</a>
+            <a href="/seller/orders" className="action-btn bg-blue-600">📦 View Orders</a>
+            <a href="/seller/inventory" className="action-btn bg-green-600">📊 Manage Inventory</a>
+          </div>
+
+          {/* Seller Info */}
+          {seller && (
+            <div className="mt-8 bg-white p-4 rounded-xl shadow">
+              <p className="text-sm text-gray-600 font-medium">Email:</p>
+              <p className="text-lg text-orange-500">{seller.email}</p>
+            </div>
           )}
-          <h3 className="text-lg font-medium text-gray-600">Followers</h3>
-          <p className="text-3xl font-bold text-orange-600">
-            {metrics?.totalFollowers ?? '--'}
-          </p>
-        </div>
-
-        {/* Subtotal Revenue Card */}
-        <div className="bg-white p-6 rounded-xl shadow-md text-center col-span-full md:col-span-2">
-          <h3 className="text-lg font-medium text-gray-600">Subtotal Revenue</h3>
-          <p className="text-3xl font-bold text-orange-600">
-            Ksh {metrics?.subtotalRevenue?.toLocaleString() ?? '--'}
-          </p>
-          <button
-            onClick={() => {
-              setWithdrawAmount(metrics?.subtotalRevenue || 0);
-              setShowWithdrawModal(true);
-            }}
-            className="mt-3 bg-orange-500 hover:bg-orange-600 text-white text-sm py-2 px-4 rounded transition"
-          >
-            Withdraw Funds
-          </button>
-        </div>
-      </div>
-
-      {/* Revenue Chart */}
-      <div className="bg-white p-6 rounded-xl shadow-md mb-8">
-        <h2 className="text-lg font-semibold mb-4 text-gray-700">Revenue Overview</h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
-            <YAxis tickFormatter={(val) => `Ksh ${val / 1000}k`} />
-            <Tooltip formatter={(val: number) => `Ksh ${val.toLocaleString()}`} />
-            <Line type="monotone" dataKey="revenue" stroke="#f97316" strokeWidth={3} />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="flex flex-wrap gap-4">
-        <a href="/seller/products/add" className="action-btn bg-orange-600">➕ Add Product</a>
-        <a href="/seller/orders" className="action-btn bg-blue-600">📦 View Orders</a>
-        <a href="/seller/inventory" className="action-btn bg-green-600">📊 Manage Inventory</a>
-      </div>
-
-      {/* Seller Info */}
-      {seller && (
-        <div className="mt-8 bg-white p-4 rounded-xl shadow">
-          <p className="text-sm text-gray-600 font-medium">Email:</p>
-          <p className="text-lg text-orange-500">{seller.email}</p>
-        </div>
+        </>
       )}
 
       {/* Withdrawal Modal */}
@@ -221,7 +253,7 @@ export default function SellerDashboard() {
   );
 }
 
-// 🔧 Reusable Metric Card Component
+// 🔧 Reusable Metric Card
 function MetricCard({
   label,
   value,

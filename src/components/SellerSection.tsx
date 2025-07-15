@@ -230,7 +230,7 @@ export default function ProductReviewSection({
             onClick={() => {
               window.location.href = `/seller/chat/${seller._id}`;
             }}
-            className="px-4 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700"
+            className="px-4 py-1 bg-orange-500 text-white rounded text-sm hover:bg-orange-600"
           >
             💬 Chat with Seller
           </button>
