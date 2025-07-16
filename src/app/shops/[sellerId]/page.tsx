@@ -48,8 +48,8 @@ export default function SellerShopPage() {
 
   if (loading) {
     return (
-      <div className="text-center py-10">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-600 mx-auto"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mx-auto"></div>
         <p className="mt-2 text-gray-500">Loading shop...</p>
       </div>
     );
@@ -64,7 +64,7 @@ export default function SellerShopPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 pt-24 pb-12">
+    <div className="px-6 pt-28 pb-10">
       {/* Shop Header */}
       <div className="flex items-center gap-6 mb-8 border-b pb-6">
         <img
@@ -92,7 +92,7 @@ export default function SellerShopPage() {
             <div key={category} className="mb-10">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-xl font-semibold text-gray-700">{category}</h2>
-                {productsInCategory.length > 6 && (
+                {productsInCategory.length > 2 && (
                   <Link
                     href={`/shops/${sellerId}/category/${encodeURIComponent(category)}`}
                     className="text-sm text-orange-600 hover:underline"
@@ -101,9 +101,9 @@ export default function SellerShopPage() {
                   </Link>
                 )}
               </div>
-              <div className="flex overflow-x-auto gap-4 pb-2">
+              <div className="mt-10">
                 {displayedProducts.map((product) => (
-                  <div key={product._id} className="min-w-[250px]">
+                  <div key={product._id} className="flex gap-4 overflow-x-auto pb-2">
                     <ProductCard product={product} />
                   </div>
                 ))}

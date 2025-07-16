@@ -27,7 +27,7 @@ export default function CategorySection({ title, categorySlug, children }: Categ
           onClick={() => router.push(`/category/${categorySlug}`)}
           className="text-xs underline hover:text-white/80"
         >
-          See All
+          See All →
         </button>
       </div>
 
