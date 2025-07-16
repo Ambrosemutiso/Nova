@@ -2,6 +2,10 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import Kids from './categories/Kids/page';
+import Skincare from './categories/Skincare/page';
+import Books from './categories/Books/page';
+import Machines from './categories/Machines/page';
 
 interface Category {
   name: string;
@@ -10,29 +14,30 @@ interface Category {
 
 const categories: Category[] = [
   { name: 'Shop',        image: '/shop.png' },
-  { name: 'Laptops',     image: '/laptop.jpg' },
-  { name: 'Electronics',     image: '/laptop.jpg' },
-  { name: 'Phones',      image: '/phone.jpg' },
-  { name: 'Computers',     image: '/kitchen.jpg' },
-  { name: 'Systems',     image: '/kitchen.jpg' },
-  { name: 'Household',    image: '/kitchen1.jpg' },
-  { name: 'Kitchen',       image: '/kitchen.jpg' },
-  { name: 'Sofas',    image: '/TV.jpg' },
-  { name: 'Health',  image: '/TV1.jpg' },
-  { name: 'Beauty',image: '/kitchen.jpg' },
-  { name: 'Women',    image: '/TV.jpg' },
-  { name: 'Kids',      image: '/TV2.jpg' },
-  { name: 'Skincare',    image: '/TV.jpg' },
-  { name: 'Men',  image: '/TV1.jpg' },
-  { name: 'Books',image: '/kitchen.jpg' },
-  { name: 'Machines',    image: '/TV.jpg' },
-  { name: 'Spares',      image: '/TV2.jpg' },
-  { name: 'Motors',      image: '/TV2.jpg' }, 
-  { name: 'Liquor',      image: '/TV2.jpg' },
-  { name: 'Robotics',      image: '/TV2.jpg' },
-  { name: 'Sports',      image: '/TV2.jpg' },  
+  { name: 'Laptops',     image: '/Menu/Laptop.jpg' },
+  { name: 'Electronics',     image: '/Menu/Electronics.jpg' },
+  { name: 'Phones',      image: '/Menu/phone.jpg' },
+  { name: 'Computers',     image: '/Menu/kitchen.jpg' },
+  { name: 'Systems',     image: '/Menu/Systems.jpg' },
+  { name: 'Household',    image: '/Menu/Household.jpg' },
+  { name: 'Kitchen',       image: '/Menu/kitchen1.jpg' },
+  { name: 'Sofas',    image: '/Menu/Sofas.jpg' },
+  { name: 'Health',  image: '/Menu/Health.jpg' },
+  { name: 'Beauty',image: '/Menu/Beauty.jpg' },
+  { name: 'Women',    image: '/Menu/Women.jpg' },
+  { name: 'Kids',      image: '/Menu/Kids.jpg' },
+  { name: 'Skincare',    image: '/Menu/Skincare.jpg' },
+  { name: 'Men',  image: '/Menu/Men.jpg' },
+  { name: 'Books',image: '/Menu/Books.jpg' },
+  { name: 'Machines',    image: '/Menu/Machines.jpg' },
+  { name: 'Spares',      image: '/Menu/Spares.jpg' },
+  { name: 'Motors',      image: '/Menu/Motors.jpg' }, 
+  { name: 'Liquor',      image: '/Menu/Liquor.jpg' },
+  { name: 'Robotics',      image: '/Menu/Robotics.jpg' },
+  { name: 'Sports',      image: '/Menu/Sports.jpg' },
+  { name: 'Gaming',      image: '/Menu/Gaming.jpg' },  
 ];
-                                     
+                                   
 export default function CategoryMenu({
   onSelectCategory,
 }: {

@@ -28,6 +28,20 @@ export async function GET() {
         heading: 'Hot Offers',
         cta: 'Buy Now',
       },
+            {
+        id: 4,
+        src: '/banner4.jpg',
+        alt: 'Banner 4',
+        heading: 'Best Offers',
+        cta: 'Explore',
+      },
+            {
+        id: 5,
+        src: '/banner5.jpg',
+        alt: 'Banner 5',
+        heading: 'Most Viewed',
+        cta: 'Check Now',
+      },
     ];
 
     // For each banner, fetch 3 random products
