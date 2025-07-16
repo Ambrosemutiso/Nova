@@ -50,7 +50,6 @@ export default function SellerShopPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mx-auto"></div>
-        <p className="mt-2 text-gray-500">Loading shop...</p>
       </div>
     );
   }
@@ -101,13 +100,13 @@ export default function SellerShopPage() {
                   </Link>
                 )}
               </div>
-              <div className="mt-10">
-                {displayedProducts.map((product) => (
-                  <div key={product._id} className="flex gap-4 overflow-x-auto pb-2">
-                    <ProductCard product={product} />
+                  <div className="mt-10">
+                    <div className="flex gap-4 overflow-x-auto pb-2">
+                      {displayedProducts.map((product) => (
+                        <ProductCard key={product._id} product={product} />
+                      ))}
+                    </div>
                   </div>
-                ))}
-              </div>
             </div>
           );
         })

@@ -32,7 +32,6 @@ export default function ActiveShops() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mx-auto"></div>
-        <p className="mt-2 text-gray-500">Loading shops...</p>
       </div>
     );
   }
