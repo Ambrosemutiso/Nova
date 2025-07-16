@@ -14,13 +14,13 @@ interface Category {
 
 const categories: Category[] = [
   { name: 'Shop',        image: '/shop.png' },
-  { name: 'Laptops',     image: '/Menu/Laptop.jpg' },
+  { name: 'Laptops',     image: '/Menu/Laptops.jpg' },
   { name: 'Electronics',     image: '/Menu/Electronics.jpg' },
-  { name: 'Phones',      image: '/Menu/phone.jpg' },
-  { name: 'Computers',     image: '/Menu/kitchen.jpg' },
+  { name: 'Phones',      image: '/Menu/phones.jpg' },
+  { name: 'Computers',     image: '/Menu/Computers.jpg' },
   { name: 'Systems',     image: '/Menu/Systems.jpg' },
   { name: 'Household',    image: '/Menu/Household.jpg' },
-  { name: 'Kitchen',       image: '/Menu/kitchen1.jpg' },
+  { name: 'Kitchen',       image: '/Menu/Kitchen1.jpg' },
   { name: 'Sofas',    image: '/Menu/Sofas.jpg' },
   { name: 'Health',  image: '/Menu/Health.jpg' },
   { name: 'Beauty',image: '/Menu/Beauty.jpg' },
