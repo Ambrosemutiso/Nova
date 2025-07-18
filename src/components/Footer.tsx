@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
+import { Link } from 'lucide-react';
 
 export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () => void }) {
   const [isSeller, setIsSeller] = useState(false);
@@ -27,10 +28,10 @@ export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () =>
         <div>
           <h4 className="font-bold mb-4">About Us</h4>
           <ul className="space-y-2">
-            <li><a href="#">About NovaMart</a></li>
-            <li><a href="#">Careers</a></li>
-            <li><a href="#">Terms & Conditions</a></li>
-            <li><a href="#">Privacy Policy</a></li>
+              <li><Link href="/desc/about">About NovaXpress</Link></li>
+              <li><Link href="/desc/careers">Careers</Link></li>
+              <li><Link href="/desc/terms">Terms & Conditions</Link></li>
+              <li><Link href="/desc/privacy">Privacy Policy</Link></li>
           </ul>
         </div>
 
@@ -38,10 +39,10 @@ export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () =>
         <div>
           <h4 className="font-bold mb-4">Help Center</h4>
           <ul className="space-y-2">
-            <li><a href="#">How to Shop</a></li>
-            <li><a href="#">Track Your Order</a></li>
-            <li><a href="#">Returns & Refunds</a></li>
-            <li><a href="#">Contact Us</a></li>
+              <li><Link href="/desc/help/shop">How to Shop</Link></li>
+              <li><Link href="/desc/help/track-order">Track Your Order</Link></li>
+              <li><Link href="/desc/help/returns">Returns & Refunds</Link></li>
+              <li><Link href="/desc/help/contact">Contact Us</Link></li>
           </ul>
         </div>
 
@@ -52,7 +53,7 @@ export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () =>
             <li>
               <button
                 onClick={onOpenSellerLogin}
-                className="text-left text-blue-600 hover:underline"
+                className="text-left text-orange-600 hover:underline"
               >
                 Sell on NovaMart
               </button>

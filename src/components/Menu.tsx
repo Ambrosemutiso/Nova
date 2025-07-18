@@ -16,7 +16,7 @@ const categories: Category[] = [
   { name: 'Shop',        image: '/shop.png' },
   { name: 'Laptops',     image: '/Menu/Laptops.jpg' },
   { name: 'Electronics',     image: '/Menu/Electronics.jpg' },
-  { name: 'Phones',      image: '/Menu/phones.jpg' },
+  { name: 'Phones',      image: '/Menu/Phones.jpg' },
   { name: 'Computers',     image: '/Menu/Computers.jpg' },
   { name: 'Systems',     image: '/Menu/Systems.jpg' },
   { name: 'Household',    image: '/Menu/Household.jpg' },

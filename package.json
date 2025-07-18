@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.4",
     "@lottiefiles/react-lottie-player": "^3.6.0",
     "@prisma/client": "^6.6.0",
     "@radix-ui/react-dialog": "^1.1.14",
