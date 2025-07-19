@@ -61,11 +61,11 @@ export default function OrdersPage() {
       img.src = transformedUrl;
     });
   };
-const generateReceipt = async (order: OrderType, adminName = "Cate Ruguru, senior sales consultant") => {
+const generateReceipt = async (order: OrderType, adminName = "Cate Ruguru, senior sales consultant officer") => {
   const doc = new jsPDF();
 
   // Header bar with logo
-  doc.setFillColor(255, 204, 0); // Nova orange
+  doc.setFillColor(255, 204, 0); 
   doc.rect(0, 0, 210, 25, 'F');
 
   const logoUrl = '/Logo.png';
@@ -108,7 +108,7 @@ const generateReceipt = async (order: OrderType, adminName = "Cate Ruguru, senio
       const qty = item.quantity ?? 0;
       const price = item.price ?? 0;
       const subtotal = qty * price;
-      return [name, `${qty} × ${price.toFixed(2)}`, `Ksh ${subtotal.toFixed(2)}`];
+      return [name, `${qty} × ${price.toLocaleString()}`, `Ksh ${subtotal.toLocaleString()}`];
     });
 
     autoTable(doc, {
@@ -131,10 +131,10 @@ const generateReceipt = async (order: OrderType, adminName = "Cate Ruguru, senio
   doc.setTextColor(0);
   doc.setFillColor(240, 240, 240);
   doc.rect(10, finalY + 5, 190, 20, 'F');
-  doc.text(`Delivery Fee: Ksh ${delivery.toFixed(2)}`, 15, finalY + 13);
+  doc.text(`Delivery Fee: Ksh ${delivery.toLocaleString()}`, 15, finalY + 13);
   doc.setFontSize(13);
 doc.setFont('helvetica', 'bold');
-doc.text(`Total Amount: Ksh ${total.toFixed(2)}`, 15, finalY + 22);
+doc.text(`Total Amount: Ksh ${total.toLocaleString()}`, 15, finalY + 22);
 doc.setFont('helvetica', 'normal');
 
   // Footer

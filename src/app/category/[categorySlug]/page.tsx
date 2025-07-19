@@ -187,9 +187,9 @@ export default function CategoryPage() {
                 {renderStars(product.rating || 4)}
 
                 {renderStockProgress(product.quantity)}
-
-                <span className="text-gray-500 line-through text-sm">Ksh.{product.oldPrice}</span>
-                <span className="text-red-600 font-bold block">Ksh.{product.calculatedPrice}</span>
+                
+                <span className="text-gray-500 line-through text-sm">Ksh.{product.oldPrice.toLocaleString()}</span>
+                <span className="text-red-600 font-bold block">Ksh.{product.calculatedPrice.toLocaleString()}</span>
 
                 <div className="flex gap-2 mt-2">
                   {(() => {

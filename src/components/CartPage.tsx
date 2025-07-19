@@ -139,7 +139,7 @@ const getPublicId = (url?: string) => {
               <p className="text-sm text-gray-500 mt-1">Shipped from <span className="font-medium">{item.county}</span></p>
               <p className="text-sm text-gray-500 mt-1">Brand: <span className="font-medium">{item.brand}</span></p>
               <p className="text-sm text-gray-500 mt-1">Model: <span className="font-medium">{item.model}</span></p>
-              <p className="text-orange-600 mt-2 font-bold">Ksh.{item.calculatedPrice}</p>
+              <p className="text-orange-600 mt-2 font-bold">Ksh.{item.calculatedPrice.toLocaleString()}</p>
             </div>
             <button
               onClick={() => confirmRemove(item.id)}
@@ -176,15 +176,15 @@ const getPublicId = (url?: string) => {
     <div className="space-y-3">
       <div className="flex justify-between text-sm">
         <span>Subtotal</span>
-        <span className="font-medium">Ksh.{subtotal}</span>
+        <span className="font-medium">Ksh.{subtotal.toLocaleString()}</span>
       </div>
       <div className="flex justify-between text-sm">
         <span>Delivery Fee</span>
-        <span className="font-medium">Ksh.{deliveryFee}</span>
+        <span className="font-medium">Ksh.{deliveryFee.toLocaleString()}</span>
       </div>
       <div className="flex justify-between font-semibold border-t pt-3">
         <span>Total</span>
-        <span>Ksh.{total}</span>
+        <span>Ksh.{total.toLocaleString()}</span>
       </div>
     </div>
 

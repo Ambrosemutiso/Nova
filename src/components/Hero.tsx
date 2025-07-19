@@ -151,18 +151,18 @@ function BannerCard({ banner }: { banner: Banner }) {
             </p>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-orange-600 font-bold text-sm">
-                KSh {currentProduct.calculatedPrice}
+                KSh {currentProduct.calculatedPrice.toLocaleString()}
               </span>
               <span className="line-through text-gray-500 text-xs">
-                KSh {currentProduct.oldPrice}
+                KSh {currentProduct.oldPrice.toLocaleString()}
               </span>
               <span className="text-xs text-green-600">
                 -{getDiscount(currentProduct.oldPrice, currentProduct.calculatedPrice)}%
               </span>
             </div>
-            <p className="text-[11px] text-gray-600 mt-1">
-              {currentProduct.quantity} items left
-            </p>
+               <p className={`text-left text-sm font-semibold ${currentProduct.quantity > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                 {currentProduct.quantity > 0 ? `${currentProduct.quantity} unit${currentProduct.quantity > 1 ? 's' : ''} left` : 'Out of stock'}
+               </p>
           </div>
 
           {/* Product image */}
