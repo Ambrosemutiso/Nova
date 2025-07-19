@@ -2,7 +2,7 @@
 
 export default function AboutNovaXpress() {
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="max-w-3xl mx-auto px-4 pt-28 pb-10">
       <h1 className="text-2xl font-bold mb-4">About NovaXpress</h1>
       <p className="text-gray-700 leading-relaxed">
         NovaXpress is a dynamic multi-vendor eCommerce platform designed to connect buyers and sellers

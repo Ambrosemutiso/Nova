@@ -61,8 +61,8 @@ export default function ProductCard({ product, showSponsoredBadge, badge }: Prod
 
       <h3 className="mt-2 text-sm font-medium">{product.name}</h3>
       <div className="text-sm mt-1 flex gap-2 items-center">
-        <span className="line-through text-gray-400">Ksh.{product.oldPrice}</span>
-        <span className="text-red-600 font-bold">Ksh.{product.calculatedPrice}</span>
+        <span className="line-through text-gray-400">Ksh.{product.oldPrice.toLocaleString()}</span>
+        <span className="text-red-600 font-bold">Ksh.{product.calculatedPrice.toLocaleString()}</span>
       </div>
     </div>
   );

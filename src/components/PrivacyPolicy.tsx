@@ -2,7 +2,7 @@
 
 export default function PrivacyPolicy() {
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="max-w-3xl mx-auto px-4 pt-28 pb-10">
       <h1 className="text-2xl font-bold mb-4">Privacy Policy</h1>
       <p className="text-gray-700 leading-relaxed">
         NovaXpress is committed to protecting your privacy. We collect only the necessary data to enhance

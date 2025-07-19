@@ -163,7 +163,7 @@ return (
   </p>
 
   <p className="text-left text-sm text-gray-600">
-    + Shipped from <strong>{product.county}</strong>: <span className="text-orange-800 font-semibold">{product.town}</span>
+    + Shipped from <strong>{product.county}</strong>: <span className="text-orange-600 font-semibold">{product.town}</span>
   </p>
 
 </div>
