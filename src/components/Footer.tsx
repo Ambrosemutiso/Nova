@@ -28,10 +28,10 @@ export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () =>
         <div>
           <h4 className="font-bold mb-4">About Us</h4>
           <ul className="space-y-2">
-              <li><Link to="/desc/about">About NovaXpress</Link></li>
-              <li><Link to="/desc/careers">Careers</Link></li>
-              <li><Link to="/desc/terms">Terms & Conditions</Link></li>
-              <li><Link to="/desc/privacy">Privacy Policy</Link></li>
+              <li><a href="#desc/about">About NovaXpress</a></li>
+              <li><a href="#desc/careers">Careers</a></li>
+              <li><a href="#desc/terms">Terms & Conditions</a></li>
+              <li><a href="#desc/privacy">Privacy Policy</a></li>
           </ul>
         </div>
 
@@ -39,10 +39,10 @@ export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () =>
         <div>
           <h4 className="font-bold mb-4">Help Center</h4>
           <ul className="space-y-2">
-              <li><Link to="/desc/help/shop">How to Shop</Link></li>
-              <li><Link to="/desc/help/track-order">Track Your Order</Link></li>
-              <li><Link to="/desc/help/returns">Returns & Refunds</Link></li>
-              <li><Link to="/desc/help/contact">Contact Us</Link></li>
+              <li><a href="#desc/help/shop">How to Shop</a></li>
+              <li><a href="#desc/help/track-order">Track Your Order</a></li>
+              <li><a href="#desc/help/returns">Returns & Refunds</a></li>
+              <li><a href="#desc/help/contact">Contact Us</a></li>
           </ul>
         </div>
 
