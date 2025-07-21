@@ -52,12 +52,12 @@ export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () =>
             <li>
               <button
                 onClick={onOpenSellerLogin}
-                className="text-left text-orange-600 hover:underline"
+                className="text-left text-gray-500 hover:underline"
               >
                 Sell on NovaMart
               </button>
             </li>
-            <li><a href="/(logistics)/login">Become a Logistics Partner</a></li>
+            <li><a href="/logistics/login">Become a Logistics Partner</a></li>
             <li><a href="#">Join Affiliate Program</a></li>
           </ul>
         </div>

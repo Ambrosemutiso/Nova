@@ -14,7 +14,7 @@ export default function LogisticsLogin() {
     try {
       const res = await axios.post('/api/logistics/login', { phone, password });
       localStorage.setItem('logisticsToken', res.data.token);
-      router.push('/dashboard');
+      router.push('/logistics/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Login failed');
     }
