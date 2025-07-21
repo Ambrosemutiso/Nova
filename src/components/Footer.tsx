@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
-import { Link } from 'lucide-react';
 
 export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () => void }) {
   const [isSeller, setIsSeller] = useState(false);
@@ -58,7 +57,7 @@ export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () =>
                 Sell on NovaMart
               </button>
             </li>
-            <li><a href="#">Become a Logistics Partner</a></li>
+            <li><a href="/(logistics)/login">Become a Logistics Partner</a></li>
             <li><a href="#">Join Affiliate Program</a></li>
           </ul>
         </div>

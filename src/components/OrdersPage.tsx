@@ -133,15 +133,15 @@ const generateReceipt = async (order: OrderType, adminName = "Cate Ruguru, senio
   doc.rect(10, finalY + 5, 190, 20, 'F');
   doc.text(`Delivery Fee: Ksh ${delivery.toLocaleString()}`, 15, finalY + 13);
   doc.setFontSize(13);
-doc.setFont('helvetica', 'bold');
-doc.text(`Total Amount: Ksh ${total.toLocaleString()}`, 15, finalY + 22);
-doc.setFont('helvetica', 'normal');
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Total Amount: Ksh ${total.toLocaleString()}`, 15, finalY + 22);
+  doc.setFont('helvetica', 'normal');
 
   // Footer
   doc.setFontSize(10);
   doc.setTextColor(100);
   doc.text('Thank you for your purchase!', 105, 280, { align: 'center' });
-  doc.text('Contact: info@Nova.co.ke | Ronald Ngala Street, NRG Plaza', 105, 285, { align: 'center' });
+  doc.text('Contact: info@NovaXpress.co.ke | Ronald Ngala Street, NRG Plaza', 105, 285, { align: 'center' });
   doc.text(`Served By: ${adminName}`, 105, 290, { align: 'center' });
 
   doc.save(`Nova-receipt-${order._id}.pdf`);
@@ -165,7 +165,8 @@ doc.setFont('helvetica', 'normal');
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="w-10 h-10 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-4 border-orange-500 border-dashed rounded-full animate-spin">
+        </div>
       </div>
     );
   }
@@ -319,7 +320,7 @@ doc.setFont('helvetica', 'normal');
                 </div>
 
                 <div className="mt-4 text-sm text-gray-500 text-center">
-                  Served by: <strong>Cate Ruguru</strong>, senior sales consultant
+                  Served by: <strong>Cate Ruguru</strong>, senior sales consultant officer
                 </div>
               </div>
             </div>
