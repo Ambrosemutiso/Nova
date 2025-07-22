@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
+import { FaFacebook, FaInstagram, FaTiktok, FaTwitter, FaYoutube } from 'react-icons/fa';
 
 export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () => void }) {
   const [isSeller, setIsSeller] = useState(false);
@@ -54,7 +54,7 @@ export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () =>
                 onClick={onOpenSellerLogin}
                 className="text-left text-gray-500 hover:underline"
               >
-                Sell on NovaMart
+                Sell on NovaXpress
               </button>
             </li>
             <li><a href="/logistics/login">Become a Logistics Partner</a></li>
@@ -66,10 +66,11 @@ export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () =>
         <div>
           <h4 className="font-bold mb-4">Connect With Us</h4>
           <div className="flex space-x-4 mb-4">
-            <a href="#"><Facebook className="w-5 h-5" /></a>
-            <a href="#"><Twitter className="w-5 h-5" /></a>
-            <a href="#"><Instagram className="w-5 h-5" /></a>
-            <a href="#"><Youtube className="w-5 h-5" /></a>
+            <a href="#"><FaFacebook className="w-5 h-5" /></a>
+            <a href="#"><FaTwitter className="w-5 h-5" /></a>
+            <a href="#"><FaInstagram className="w-5 h-5" /></a>
+            <a href="#"><FaYoutube className="w-5 h-5" /></a>
+            <a href="#"><FaTiktok className="w-5 h-5" /></a>
           </div>
           <h4 className="font-bold mb-2">Newsletter</h4>
           <input
@@ -87,7 +88,7 @@ export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () =>
             <h4 className="font-semibold text-sm">Payment Methods:</h4>
             <Image src="/visa.png" alt="Visa" width={40} height={24} />
             <Image src="/mastercard.png" alt="MasterCard" width={40} height={24} />
-            <Image src="/M-PESA.png" alt="MPesa" width={40} height={24} />
+            <Image src="/mpesa.png" alt="MPesa" width={40} height={24} />
           </div>
 
           <div className="flex space-x-4">
