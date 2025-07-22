@@ -1,6 +1,6 @@
 // POST /api/orders/assign-logistics
 import Order from '@/app/models/orders';
-import LogisticsPartner from '@/app/models/LogisticsPartner';
+import LogisticsPartner from '@/app/models/Logistics';
 import { dbConnect } from '@/lib/dbConnect';
 
 export async function POST(req: Request) {
