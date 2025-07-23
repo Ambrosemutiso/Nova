@@ -147,8 +147,7 @@ export default function SellerOrdersPage() {
                     </p>
                   </div>
                   <div className="text-sm text-gray-700">
-                    Customer: {order.customerInfo.firstName} {order.customerInfo.lastName} |{' '}
-                    {order.customerInfo.phone}
+                    Customer: {order.customerInfo.firstName} {order.customerInfo.lastName}
                   </div>
                   <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
                     {visibleItems.map((item, i) => (
