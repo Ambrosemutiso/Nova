@@ -13,13 +13,25 @@ const sellerSchema = new mongoose.Schema({
     },
   ],
   shop: {
-  isActive: { type: Boolean, default: false },
-  activatedAt: Date,
-  expiresAt: Date,
-  amountPaid: Number,
-  transactionId: String,
-},
-  createdAt: { type: Date, default: Date.now }
+    isActive: { type: Boolean, default: false },
+    activatedAt: Date,
+    expiresAt: Date,
+    amountPaid: Number,
+    transactionId: String,
+  },
+  subscription: {
+    type: {
+      type: String,
+      enum: ['basic', 'premium'],
+      default: 'basic',
+    },
+    totalPaid: {
+      type: Number,
+      default: 0,
+    },
+    lastPaymentDate: Date,
+  },
+  createdAt: { type: Date, default: Date.now },
 });
 
 const Seller = mongoose.models.Seller || mongoose.model('Seller', sellerSchema);
