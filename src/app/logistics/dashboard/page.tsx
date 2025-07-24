@@ -1,160 +1,278 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import axios from 'axios';
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
+import { CldImage } from 'next-cloudinary';
+import { toast, ToastContainer } from 'react-toastify';
 
-type Order = {
+interface OrderItem {
+  name: string;
+  quantity: number;
+  price: number;
+  images: string[];
+  status?: string;
+}
+
+interface Order {
   _id: string;
-  customerName: string;
-  deliveryAddress: string;
-  deliveryStatus: string;
-  items: { name: string; quantity: number }[];
+  customerInfo: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    address?: string;
+    city?: string;
+    deliveryInstructions?: string;
+  };
+  items: OrderItem[];
+  totalAmount: number;
+  status: string;
   createdAt: string;
-};
+}
 
-const COLORS = ['#34D399', '#FB923C']; // green, orange
-
-export default function LogisticsDashboard() {
+export default function SellerOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [search, setSearch] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<'All' | 'Pending' | 'Delivered'>('All');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [showDeliveryModal, setShowDeliveryModal] = useState(false);
+  const [selectedDeliveryOrder, setSelectedDeliveryOrder] = useState<Order | null>(null);
+
+  const pageSize = 5;
 
   useEffect(() => {
-    axios
-      .get('/api/logistics/orders')
-      .then((res) => setOrders(res.data))
-      .catch((err) => console.error('Failed to fetch orders', err));
+    const storedUser = localStorage.getItem('sellerUser');
+    if (!storedUser) return;
+
+    const seller = JSON.parse(storedUser);
+    setLoading(true);
+
+    fetch('/api/seller/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sellerId: seller._id }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setOrders(data.orders || []);
+        setTotalPages(Math.ceil((data.orders?.length || 0) / pageSize));
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error loading orders:', err);
+        setLoading(false);
+      });
   }, []);
 
-  // Filter logic
-  const filteredOrders = orders.filter((order) =>
-    order.customerName.toLowerCase().includes(search.toLowerCase()) ||
-    order.deliveryAddress.toLowerCase().includes(search.toLowerCase())
-  );
+  const getPublicId = (url: string) => {
+    const regex = /\/upload\/(?:v\d+\/)?([^\.]+)/;
+    const match = url.match(regex);
+    return match ? match[1] : url;
+  };
 
-  const filteredByDate = filteredOrders.filter((order) => {
-    const orderDate = new Date(order.createdAt);
-    const start = startDate ? new Date(startDate) : null;
-    const end = endDate ? new Date(endDate) : null;
-    return (!start || orderDate >= start) && (!end || orderDate <= end);
-  });
+  const markItemDelivered = async (orderId: string, itemName: string) => {
+    try {
+      const res = await fetch('/api/seller/update-item-status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, itemName, newStatus: 'Delivered' }),
+      });
 
-  const delivered = filteredByDate.filter((o) => o.deliveryStatus === 'Delivered').length;
-  const pending = filteredByDate.filter((o) => o.deliveryStatus !== 'Delivered').length;
+      const json = await res.json();
+      if (res.ok && json.success) {
+        toast.success('Item marked as delivered! ✅');
+        setOrders((prev) =>
+          prev.map((order) =>
+            order._id === orderId
+              ? {
+                  ...order,
+                  items: order.items.map((item) =>
+                    item.name === itemName ? { ...item, status: 'Delivered' } : item
+                  ),
+                }
+              : order
+          )
+        );
+      } else {
+        toast.error(json.message || 'Failed to update item status');
+      }
+    } catch (err) {
+      console.error('Update error:', err);
+      toast.error('Something went wrong');
+    }
+  };
 
-  const chartData = [
-    { name: 'Delivered', value: delivered },
-    { name: 'Pending', value: pending },
-  ];
+  const filteredItems = (items: OrderItem[]) =>
+    statusFilter === 'All' ? items : items.filter((item) => item.status === statusFilter);
+
+  const paginatedOrders = orders.slice((page - 1) * pageSize, page * pageSize);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <h2 className="text-2xl font-bold mb-4">📦 Logistics Partner Dashboard</h2>
+    <div className="px-6 pt-28 pb-10">
+      <ToastContainer />
+      <h1 className="text-2xl font-bold text-orange-600 mb-4">Seller Orders</h1>
 
-      {/* Filters */}
-      <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-6">
-        <input
-          type="text"
-          placeholder="🔍 Search by name or address"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="border px-3 py-2 rounded w-full md:w-1/3"
-        />
-        <input
-          type="date"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-          className="border px-3 py-2 rounded"
-        />
-        <input
-          type="date"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-          className="border px-3 py-2 rounded"
-        />
+      <div className="mb-4 flex gap-2">
+        {['All', 'Pending', 'Delivered'].map((status) => (
+          <button
+            key={status}
+            onClick={() => setStatusFilter(status as any)}
+            className={`px-3 py-1 rounded ${
+              statusFilter === status ? 'bg-orange-500 text-white' : 'bg-gray-200'
+            }`}
+          >
+            {status}
+          </button>
+        ))}
       </div>
 
-      {/* Pie Chart */}
-      <div className="bg-white rounded-xl shadow p-4">
-        <h3 className="text-lg font-semibold mb-2">📊 Delivery Status Summary</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <PieChart>
-            <Pie
-              data={chartData}
-              dataKey="value"
-              nameKey="name"
-              outerRadius={100}
-              label
-            >
-              {chartData.map((entry, index) => (
-                <Cell key={index} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip />
-            <Legend />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
+      {loading ? (
+        <p>Loading orders...</p>
+      ) : orders.length === 0 ? (
+        <p>No orders found.</p>
+      ) : (
+        <>
+          <div className="space-y-6">
+            {paginatedOrders.map((order) => {
+              const visibleItems = filteredItems(order.items);
+              if (visibleItems.length === 0) return null;
 
-      {/* Orders Table */}
-      <div className="overflow-x-auto bg-white rounded-xl shadow">
-        <table className="min-w-full divide-y divide-gray-200 text-sm">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="text-left px-4 py-2">Customer</th>
-              <th className="text-left px-4 py-2">Address</th>
-              <th className="text-left px-4 py-2">Status</th>
-              <th className="text-left px-4 py-2">Date</th>
-              <th className="text-left px-4 py-2">Items</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {filteredByDate.map((order) => (
-              <tr key={order._id} className="hover:bg-gray-50">
-                <td className="px-4 py-2 font-medium">{order.customerName}</td>
-                <td className="px-4 py-2">{order.deliveryAddress}</td>
-                <td className="px-4 py-2">
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                      order.deliveryStatus === 'Delivered'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-orange-100 text-orange-700'
-                    }`}
-                  >
-                    {order.deliveryStatus}
-                  </span>
-                </td>
-                <td className="px-4 py-2">{new Date(order.createdAt).toLocaleDateString()}</td>
-                <td className="px-4 py-2">
-                  <ul className="list-disc list-inside">
-                    {order.items.map((item, idx) => (
-                      <li key={idx}>
-                        {item.name} × {item.quantity}
-                      </li>
+              return (
+                <div key={order._id} className="bg-white p-4 rounded shadow border border-gray-100">
+                  <div className="mb-2">
+                    <h2 className="text-lg font-semibold">Order #{order._id.slice(-6)}</h2>
+                    <p className="text-sm text-gray-500">Status: {order.status}</p>
+                    <p className="text-sm text-gray-500">
+                      Date: {new Date(order.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="text-sm text-gray-700">
+                    Customer: {order.customerInfo.firstName} {order.customerInfo.lastName}
+                  </div>
+                  <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {visibleItems.map((item, i) => (
+                      <div key={i} className="flex items-center gap-3 border p-2 rounded">
+                        {item.images?.length > 0 ? (
+                          <CldImage
+                            src={getPublicId(item.images[0])}
+                            alt={item.name}
+                            width="100"
+                            height="100"
+                            crop="fill"
+                            className="w-44 h-44 object-cover rounded"
+                          />
+                        ) : (
+                          <div className="w-44 h-44 bg-gray-200 text-gray-500 flex items-center justify-center rounded">
+                            No image
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-800">{item.name}</p>
+                          <p className="text-sm">Qty: {item.quantity}</p>
+                          <p className="text-sm">Ksh {item.price}</p>
+                          <p className="text-xs text-gray-500">
+                            Status:{' '}
+                            <span className="font-semibold">{item.status || 'Pending'}</span>
+                          </p>
+                          {item.status !== 'Delivered' && (
+                            <button
+                              onClick={() => markItemDelivered(order._id, item.name)}
+                              className="mt-2 text-sm bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
+                            >
+                              Mark as Delivered
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     ))}
-                  </ul>
-                </td>
-              </tr>
-            ))}
-            {filteredByDate.length === 0 && (
-              <tr>
-                <td colSpan={5} className="text-center py-6 text-gray-400">
-                  No orders match the current filters.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+                  </div>
+<div className="mt-3 text-right font-bold text-orange-600">
+  Subtotal: Ksh{' '}
+  {visibleItems.reduce((sum, item) => sum + item.price * item.quantity, 0).toLocaleString()}
+</div>
+                  {/* View Delivery Info Button */}
+                  <div className="mt-2 text-right">
+                    <button
+                      onClick={() => {
+                        setSelectedDeliveryOrder(order);
+                        setShowDeliveryModal(true);
+                      }}
+                      className="text-sm text-orange-600 underline"
+                    >
+                      View Delivery Information
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Pagination */}
+          <div className="mt-8 flex justify-between items-center">
+            <button
+              onClick={() => setPage((p) => Math.max(p - 1, 1))}
+              disabled={page === 1}
+              className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <span className="text-sm">
+              Page {page} of {totalPages}
+            </span>
+            <button
+              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+              disabled={page === totalPages}
+              className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Modal for Delivery Info */}
+      {showDeliveryModal && selectedDeliveryOrder && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center">
+          <div className="bg-white w-full max-w-md p-6 rounded shadow-lg relative">
+            <button
+              className="absolute top-2 right-2 text-gray-600 text-xl"
+              onClick={() => setShowDeliveryModal(false)}
+            >
+              ✕
+            </button>
+            <h2 className="text-lg font-semibold mb-4 text-orange-600">Delivery Information</h2>
+            <p>
+              <strong>Name:</strong> {selectedDeliveryOrder.customerInfo.firstName}{' '}
+              {selectedDeliveryOrder.customerInfo.lastName}
+            </p>
+            <p>
+              <strong>Phone:</strong> {selectedDeliveryOrder.customerInfo.phone}
+            </p>
+            <p>
+              <strong>Email:</strong> {selectedDeliveryOrder.customerInfo.email}
+            </p>
+            <p>
+              <strong>Address:</strong>{' '}
+              {selectedDeliveryOrder.customerInfo.address || 'N/A'}
+            </p>
+            <p>
+              <strong>City:</strong> {selectedDeliveryOrder.customerInfo.city || 'N/A'}
+            </p>
+            <p>
+              <strong>Instructions:</strong>{' '}
+              {selectedDeliveryOrder.customerInfo.deliveryInstructions || 'None'}
+            </p>
+            <div className="mt-4 text-right">
+              <button
+                onClick={() => setShowDeliveryModal(false)}
+                className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

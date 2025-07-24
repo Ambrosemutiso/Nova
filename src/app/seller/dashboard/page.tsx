@@ -16,75 +16,44 @@ import { ShieldCheck, Store } from 'lucide-react';
 interface Seller {
   _id: string;
   name: string;
-  email: string;
   shop?: {
     isActive: boolean;
     activatedAt?: string;
-    expiresAt: string;
+    expiresAt?: string;
     amountPaid?: number;
     transactionId?: string;
   };
 }
 
-interface ChartPoint {
-  month: string;
-  revenue: number;
-}
-
-interface Metrics {
-  totalOrders: number;
-  totalRevenue: number;
-  activeProducts: number;
-  totalFollowers: number;
-  deliveredOrders: number;
-  cancelledOrders: number;
-  pendingOrders: number;
-  paidOrders: number;
-  subtotalRevenue: number;
-  chartData: ChartPoint[];
-}
-
 export default function SellerDashboard() {
   const [seller, setSeller] = useState<Seller | null>(null);
-  const [metrics, setMetrics] = useState<Metrics | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [year, setYear] = useState(new Date().getFullYear());
-
-  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-  const [withdrawMethod, setWithdrawMethod] = useState<'mpesa' | 'airtel' | ''>('');
-  const [withdrawPhone, setWithdrawPhone] = useState('');
-  const [withdrawAmount, setWithdrawAmount] = useState<number>(0);
-
   const [activatingShop, setActivatingShop] = useState(false);
+  const [metrics, setMetrics] = useState<any[]>([]);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('sellerUser');
-    if (!storedUser) return;
+    const storedSeller = localStorage.getItem('sellerUser');
+    if (storedSeller) {
+      setSeller(JSON.parse(storedSeller));
+    }
+  }, []);
 
-    const parsed = JSON.parse(storedUser);
-    setSeller(parsed);
-    fetchMetrics(parsed._id, year);
-  }, [year]);
+  useEffect(() => {
+    if (seller?.shop?.isActive && seller.shop.amountPaid === 3000) {
+      fetchMetrics();
+    }
+  }, [seller]);
 
-  const fetchMetrics = async (sellerId: string, selectedYear: number) => {
-    setLoading(true);
+  const fetchMetrics = async () => {
     try {
-      const res = await fetch('/api/seller/metrics', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sellerId, year: selectedYear }),
-      });
+      const res = await fetch(`/api/seller/metrics?sellerId=${seller?._id}`);
       const data = await res.json();
-      setMetrics(data);
-    } catch (err) {
-      console.error('Metrics fetch error:', err);
+      setMetrics(data.metrics);
+    } catch (error) {
       toast.error('Failed to load metrics');
-    } finally {
-      setLoading(false);
     }
   };
 
-  const activateShop = async () => {
+  const activateShop = async (amount: number) => {
     if (!seller) return;
     setActivatingShop(true);
 
@@ -92,7 +61,7 @@ export default function SellerDashboard() {
       const res = await fetch('/api/seller/shop-subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sellerId: seller._id }),
+        body: JSON.stringify({ sellerId: seller._id, amount }),
       });
 
       const data = await res.json();
@@ -102,250 +71,92 @@ export default function SellerDashboard() {
           ...seller,
           shop: {
             isActive: true,
-            expiresAt: data.shopExpiry,
             activatedAt: new Date().toISOString(),
-            amountPaid: 1300,
+            expiresAt: data.shopExpiry,
+            amountPaid: amount,
             transactionId: data.transactionId || 'TEST-ID',
           },
         };
         setSeller(updated);
         localStorage.setItem('sellerUser', JSON.stringify(updated));
       } else {
-        toast.error(data.error || 'Failed to activate shop');
+        toast.error(data.error || 'Activation failed');
       }
-    } catch (error) {
+    } catch (err) {
       toast.error('Activation failed');
     } finally {
       setActivatingShop(false);
     }
   };
 
-  const handleWithdraw = async () => {
-    if (!seller) return;
-    const res = await fetch('/api/seller/withdraw', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sellerId: seller._id,
-        amount: withdrawAmount,
-        phoneNumber: withdrawPhone,
-        method: withdrawMethod,
-      }),
-    });
-
-    const json = await res.json();
-    if (json.success) {
-      toast.success('Withdrawal request submitted!');
-      setShowWithdrawModal(false);
-    } else {
-      toast.error(json.error || 'Error submitting withdrawal.');
-    }
-  };
-
-  const isShopActive =
-    seller?.shop?.isActive &&
-    seller.shop.expiresAt &&
-    new Date(seller.shop.expiresAt) > new Date();
-
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto pt-28 pb-10">
+    <div className="p-6">
       <ToastContainer />
-      <h1 className="text-3xl font-bold text-orange-600 mb-4">
-        Welcome, {seller?.name || 'Loading...'}
+      <h1 className="text-2xl font-semibold mb-4 flex items-center gap-2">
+        <Store className="w-6 h-6" /> Welcome, {seller?.name || 'Seller'}
       </h1>
 
-      {/* Shop Status */}
-      <div className="mb-6 p-4 rounded-lg border bg-white shadow flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-700">
-            <Store className="w-5 h-5 text-orange-500" />
-            Seller Shop
-          </h2>
-{seller?.shop?.expiresAt ? (
-  <p className="text-green-600 text-sm mt-1">
-    Your shop is active until{' '}
-    <strong>{new Date(seller.shop.expiresAt).toLocaleDateString()}</strong>.
-  </p>
-) : (
-  <p className="text-red-600 text-sm mt-1">You don’t have an active shop.</p>
-)}
-
-        </div>
-        {!isShopActive && (
-          <button
-            onClick={activateShop}
-            disabled={activatingShop}
-            className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded"
-          >
-            {activatingShop ? 'Activating...' : 'Activate Shop (Ksh 1300)'}
-          </button>
-        )}
-      </div>
-
-      {/* Year Selector */}
-      <div className="mb-4">
-        <label className="text-sm font-medium text-gray-700 mr-2">Select Year:</label>
-        <select
-          value={year}
-          onChange={(e) => setYear(Number(e.target.value))}
-          className="border rounded px-3 py-1"
-        >
-          {[2023, 2024, 2025].map((yr) => (
-            <option key={yr} value={yr}>
-              {yr}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Metrics */}
-      {loading ? (
-        <div className="flex justify-center items-center h-48">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-600"></div>
+      {seller?.shop?.isActive ? (
+        <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded mb-4">
+          <p>Your shop is active</p>
+          <p>Expires on: <strong>{new Date(seller.shop.expiresAt!).toLocaleDateString()}</strong></p>
+          <p className="mt-1">
+            Subscription:{' '}
+            <span className={`font-semibold ${seller.shop.amountPaid === 3000 ? 'text-purple-600' : 'text-orange-600'}`}>
+              {seller.shop.amountPaid === 3000 ? 'Premium Seller' : 'Basic Seller'}
+            </span>
+          </p>
         </div>
       ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <MetricCard label="Total Orders" value={metrics?.totalOrders} color="orange" />
-            <MetricCard label="Delivered Orders" value={metrics?.deliveredOrders} color="green" />
-            <MetricCard label="Cancelled Orders" value={metrics?.cancelledOrders} color="red" />
-            <MetricCard label="Pending Orders" value={metrics?.pendingOrders} color="yellow" />
-            <MetricCard label="Paid Orders" value={metrics?.paidOrders} color="blue" />
-            <MetricCard label="Active Products" value={metrics?.activeProducts} color="orange" />
-            <div className="bg-white p-6 rounded-xl shadow-md text-center relative">
-              {metrics?.totalFollowers && metrics.totalFollowers >= 1 && (
-                <span className="absolute top-2 right-2 bg-yellow-400 text-black text-xs px-3 py-1 rounded-full shadow font-semibold flex items-center gap-1">
-                  <ShieldCheck size={14} className="text-green-700" />
-                  Verified Seller
-                </span>
-              )}
-              <h3 className="text-lg font-medium text-gray-600">Followers</h3>
-              <p className="text-3xl font-bold text-orange-600">
-                {metrics?.totalFollowers ?? '--'}
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-md text-center col-span-full md:col-span-2">
-              <h3 className="text-lg font-medium text-gray-600">Subtotal Revenue</h3>
-              <p className="text-3xl font-bold text-orange-600">
-                Ksh {metrics?.subtotalRevenue?.toLocaleString() ?? '--'}
-              </p>
-              <button
-                onClick={() => {
-                  setWithdrawAmount(metrics?.subtotalRevenue || 0);
-                  setShowWithdrawModal(true);
-                }}
-                className="mt-3 bg-orange-500 hover:bg-orange-600 text-white text-sm py-2 px-4 rounded transition"
-              >
-                Withdraw Funds
-              </button>
-            </div>
-          </div>
-
-          {/* Revenue Chart */}
-          <div className="bg-white p-6 rounded-xl shadow-md mb-8">
-            <h2 className="text-lg font-semibold mb-4 text-gray-700">
-              Revenue Overview ({year})
-            </h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={metrics?.chartData || []}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis tickFormatter={(val) => `Ksh ${val / 1000}k`} />
-                <Tooltip formatter={(val: number) => `Ksh ${val.toLocaleString()}`} />
-                <Line type="monotone" dataKey="revenue" stroke="#f97316" strokeWidth={3} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Actions */}
-          <div className="flex flex-wrap gap-4">
-            <a href="/seller/products/add" className="action-btn bg-orange-600">
-              ➕ Add Product
-            </a>
-            <a href="/seller/orders" className="action-btn bg-blue-600">
-              📦 View Orders
-            </a>
-            <a href="/seller/inventory" className="action-btn bg-green-600">
-              📊 Manage Inventory
-            </a>
-          </div>
-
-          {/* Seller Info */}
-          {seller && (
-            <div className="mt-8 bg-white p-4 rounded-xl shadow">
-              <p className="text-sm text-gray-600 font-medium">Email:</p>
-              <p className="text-lg text-orange-500">{seller.email}</p>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Withdrawal Modal */}
-      {showWithdrawModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-xl w-full max-w-md relative">
+        <div className="mb-6">
+          <p className="mb-2 text-gray-700">Activate your shop to start selling:</p>
+          <div className="flex gap-4">
             <button
-              onClick={() => setShowWithdrawModal(false)}
-              className="absolute top-2 right-4 text-gray-500 text-2xl font-bold"
+              onClick={() => activateShop(1300)}
+              disabled={activatingShop}
+              className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded"
             >
-              ×
+              {activatingShop ? 'Activating...' : 'Activate Basic (Ksh 1300)'}
             </button>
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Withdraw Funds</h2>
-            <label className="block mb-2 text-sm text-orange-600">Phone Number</label>
-            <input
-              type="text"
-              value={withdrawPhone}
-              onChange={(e) => setWithdrawPhone(e.target.value)}
-              className="w-full border px-3 py-2 rounded mb-4"
-              placeholder="Enter phone number"
-            />
-            <label className="block mb-2 text-sm text-orange-600">Amount</label>
-            <input
-              type="number"
-              value={withdrawAmount}
-              onChange={(e) => setWithdrawAmount(Number(e.target.value))}
-              className="w-full border px-3 py-2 rounded mb-4"
-              placeholder="Enter amount"
-            />
-            <label className="block mb-2 text-sm text-orange-600">Withdraw Method</label>
-            <select
-              value={withdrawMethod}
-              onChange={(e) => setWithdrawMethod(e.target.value as 'mpesa' | 'airtel')}
-              className="w-full border px-3 py-2 rounded mb-4"
-            >
-              <option value="">Select Method</option>
-              <option value="mpesa">M-Pesa</option>
-              <option value="airtel">Airtel Money</option>
-            </select>
             <button
-              onClick={handleWithdraw}
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded"
+              onClick={() => activateShop(3000)}
+              disabled={activatingShop}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded"
             >
-              Submit Withdrawal
+              {activatingShop ? 'Activating...' : 'Activate Premium (Ksh 3000)'}
             </button>
           </div>
         </div>
       )}
-    </div>
-  );
-}
 
-function MetricCard({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: number | undefined;
-  color: string;
-}) {
-  return (
-    <div className="bg-white p-6 rounded-xl shadow-md text-center">
-      <h3 className="text-lg font-medium text-gray-600">{label}</h3>
-      <p className={`text-3xl font-bold text-${color}-600`}>
-        {value !== undefined ? value : '--'}
-      </p>
+      {seller?.shop?.isActive && seller.shop.amountPaid === 3000 ? (
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5" /> Analytics
+          </h2>
+          <div className="w-full h-64 bg-white shadow rounded p-4">
+            {metrics.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={metrics}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="sales" stroke="#8884d8" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-gray-500">No sales data available</p>
+            )}
+          </div>
+        </div>
+      ) : (
+        seller?.shop?.isActive && (
+          <div className="bg-yellow-100 border-l-4 border-yellow-400 p-4 rounded shadow-sm text-gray-700 mb-6">
+            Upgrade to <strong>Premium (Ksh 3000)</strong> to access revenue analytics and insights.
+          </div>
+        )
+      )}
     </div>
   );
 }
