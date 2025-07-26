@@ -1,33 +1,29 @@
 import mongoose from 'mongoose';
 
+const subscriptionSchema = new mongoose.Schema({
+  isActive: { type: Boolean, default: false },
+  activatedAt: { type: Date },
+  expiresAt: { type: Date },
+  amountPaid: { type: Number },
+  transactionId: { type: String }
+}, { _id: false }); // _id disabled because it's a subdocument
+
 const sellerSchema = new mongoose.Schema({
-  name: String,
+  name: { type: String },
   email: { type: String, unique: true },
-  image: String,
+  image: { type: String },
   role: { type: String, enum: ['seller'], default: 'seller' },
-  shopName: String,
+  shopName: { type: String },
   followers: [
     {
       userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-      followedAt: Date,
-    },
+      followedAt: { type: Date },
+    }
   ],
-shop: {
-  basic?: {
-    isActive: boolean;
-    activatedAt: Date;
-    expiresAt: Date;
-    amountPaid: number;
-    transactionId: string;
+  shop: {
+    basic: { type: subscriptionSchema, default: undefined },
+    premium: { type: subscriptionSchema, default: undefined },
   },
-  premium?: {
-    isActive: boolean;
-    activatedAt: Date;
-    expiresAt: Date;
-    amountPaid: number;
-    transactionId: string;
-  },
-},
   createdAt: { type: Date, default: Date.now },
 });
 
