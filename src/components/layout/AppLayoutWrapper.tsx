@@ -9,13 +9,12 @@ import { CartProvider } from '@/app/context/CartContext';
 import { AuthProvider } from '@/app/context/AuthContext';
 import { toast, ToastContainer } from 'react-toastify';
 import { ThemeProvider } from 'next-themes';
-import { SpeedInsights } from '@vercel/speedinsights/next'
 
 export default function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const timeout = setTimeout(() => setLoading(false), 1000); // simulate a short loading delay
+    const timeout = setTimeout(() => setLoading(false), 1000); 
     return () => clearTimeout(timeout);
   }, []);
 
@@ -36,7 +35,6 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
           <main className="min-h-screen">
             {children}
           </main>
-          <SpeedInsights/>
           <BackToTopButton />
           <LoginWrapper />
           <ToastContainer/>
