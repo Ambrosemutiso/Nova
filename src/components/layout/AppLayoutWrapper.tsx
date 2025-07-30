@@ -9,6 +9,7 @@ import { CartProvider } from '@/app/context/CartContext';
 import { AuthProvider } from '@/app/context/AuthContext';
 import { toast, ToastContainer } from 'react-toastify';
 import { ThemeProvider } from 'next-themes';
+import { SpeedInsights } from '@vercel/speedinsights/next'
 
 export default function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
@@ -32,7 +33,10 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
         <CartProvider>
           <CartNotification />
           <Navbar />
-          <main className="min-h-screen">{children}</main>
+          <main className="min-h-screen">
+            {children}
+          </main>
+          <SpeedInsights/>
           <BackToTopButton />
           <LoginWrapper />
           <ToastContainer/>
