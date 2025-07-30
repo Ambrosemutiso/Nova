@@ -7,7 +7,7 @@ import {
   useState,
   ReactNode,
 } from 'react';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 
 const CART_KEY = 'cart_items';
 

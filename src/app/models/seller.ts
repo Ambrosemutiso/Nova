@@ -12,15 +12,13 @@ const sellerSchema = new mongoose.Schema({
       followedAt: { type: Date },
     }
   ],
-  shop: [
-    {
-  isActive: { type: Boolean, default: false },
-  activatedAt: { type: Date },
-  expiresAt: { type: Date },
-  amountPaid: { type: Number },
-  transactionId: { type: String }
-    }
-  ],
+  shop: {
+    isActive: { type: Boolean, default: false },
+    activatedAt: { type: Date },
+    expiresAt: { type: Date },
+    amountPaid: { type: Number },
+    transactionId: { type: String }
+  },
   createdAt: { type: Date, default: Date.now },
 });
 
