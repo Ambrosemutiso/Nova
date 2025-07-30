@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import {
   LineChart,
   Line,
@@ -149,7 +149,6 @@ export default function SellerDashboard() {
 
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto pt-28 pb-10">
-      <ToastContainer />
       <h1 className="text-3xl font-bold text-orange-600 mb-4">
         Welcome, {seller?.name || 'Loading...'}
       </h1>
@@ -161,14 +160,14 @@ export default function SellerDashboard() {
             <Store className="w-5 h-5 text-orange-500" />
             Seller Shop
           </h2>
-          {isShopActive ? (
-            <p className="text-green-600 text-sm mt-1">
-              Your shop is active until{' '}
-              <strong>{new Date(seller.shop?.expiresAt).toLocaleDateString()}</strong>.
-            </p>
-          ) : (
-            <p className="text-red-600 text-sm mt-1">You don’t have an active shop.</p>
-          )}
+{seller?.shop?.expiresAt ? (
+  <p className="text-green-600 text-sm mt-1">
+    Your shop is active until{' '}
+    <strong>{new Date(seller.shop.expiresAt).toLocaleDateString()}</strong>.
+  </p>
+) : (
+  <p className="text-red-600 text-sm mt-1">You don&apos;t have an active shop.</p>
+)}
         </div>
         {!isShopActive && (
           <button

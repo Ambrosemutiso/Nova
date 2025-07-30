@@ -7,7 +7,7 @@ import jsPDF from 'jspdf';
 import { autoTable } from 'jspdf-autotable';
 import QRCode from 'qrcode';
 import { OrderType } from '@/app/types/order';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 
 export default function OrdersPage() {
   const [page, setPage] = useState(1);
@@ -173,7 +173,6 @@ const generateReceipt = async (order: OrderType, adminName = "Cate Ruguru, senio
 
   return (
     <div className="px-6 pt-28 pb-10">
-      <ToastContainer/>
       <h1 className="text-2xl font-bold mb-4">My Orders</h1>
 
       <div className="mb-4 flex items-center justify-between">

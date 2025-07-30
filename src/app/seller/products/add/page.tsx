@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import { useAuth } from '@/app/context/AuthContext';
 import TextEditor from '@/components/TextEditor';
 
@@ -189,7 +189,6 @@ const handleCountyChange = (selectedCounty: County | '') => {
 
   return (
     <div className="max-w-2xl p-6 mx-auto px-4 pt-28 pb-10">
-      <ToastContainer />
       <h1 className="text-2xl font-bold text-orange-600 mb-4">Add Product</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input type="text" className="w-full border px-4 py-2 rounded" placeholder="Product Name" value={name} onChange={(e) => setName(e.target.value)} required />

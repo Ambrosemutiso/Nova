@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 
 interface Product {
   _id: string;
@@ -68,17 +68,6 @@ export default function InventoryPage() {
 
   return (
     <div className="pt-24 px-4">
-      <ToastContainer
-  position="top-right"
-  autoClose={3000}
-  hideProgressBar={false}
-  newestOnTop
-  closeOnClick
-  pauseOnHover
-  draggable
-  theme="light"
-/>
-
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-orange-600">My Inventory</h1>
         <Link

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import type { Product } from '@/app/types/product';
 
 export default function EditProductPage() {
@@ -65,7 +65,6 @@ export default function EditProductPage() {
 
   return (
     <div className="pt-24 px-4 max-w-xl mx-auto">
-      <ToastContainer />
       <h1 className="text-2xl font-bold text-orange-600 mb-4">Edit Product</h1>
       {product && (
         <form onSubmit={handleUpdate} className="space-y-4">
