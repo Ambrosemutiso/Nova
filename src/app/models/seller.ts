@@ -1,13 +1,5 @@
 import mongoose from 'mongoose';
 
-const subscriptionSchema = new mongoose.Schema({
-  isActive: { type: Boolean, default: false },
-  activatedAt: { type: Date },
-  expiresAt: { type: Date },
-  amountPaid: { type: Number },
-  transactionId: { type: String }
-}, { _id: false }); // _id disabled because it's a subdocument
-
 const sellerSchema = new mongoose.Schema({
   name: { type: String },
   email: { type: String, unique: true },
@@ -20,10 +12,15 @@ const sellerSchema = new mongoose.Schema({
       followedAt: { type: Date },
     }
   ],
-  shop: {
-    basic: { type: subscriptionSchema, default: undefined },
-    premium: { type: subscriptionSchema, default: undefined },
-  },
+  shop: [
+    {
+  isActive: { type: Boolean, default: false },
+  activatedAt: { type: Date },
+  expiresAt: { type: Date },
+  amountPaid: { type: Number },
+  transactionId: { type: String }
+    }
+  ],
   createdAt: { type: Date, default: Date.now },
 });
 
