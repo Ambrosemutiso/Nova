@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  FiHome, FiSmartphone, FiMonitor, FiHeart, FiUser, FiShoppingCart,
-  FiTv, FiWatch, FiGift, FiTruck, FiBook, FiTool, FiGrid, FiZoomIn, FiZoomOut, FiPackage,
-  FiLayout, FiLoader
+  FiHome, FiSmartphone, FiMonitor, FiHeart, FiUser,
+  FiTv, FiWatch, FiGift, FiTruck, FiBook, FiTool, 
+  FiGrid, FiZoomIn, FiZoomOut, FiPackage, FiLayout, 
+  FiLoader, FiSend
 } from 'react-icons/fi';
 
 export default function Sidebar({ onClose }: { onClose: () => void }) {
@@ -71,9 +72,9 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
     }}
     className="cursor-pointer font-bold text-black text-xl"
   >
-    NOVA
+    NOVAXPRESS
   </h2>
-  <FiShoppingCart className="text-orange-500 text-xl" />
+  <FiSend className="text-orange-500 text-xl" />
 </div>
 
           <ul className="space-y-4">

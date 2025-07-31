@@ -12,7 +12,7 @@ import { LogOut, ZoomIn, ZoomOut } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/app/context/AuthContext';
 import type { Notification } from '@/app/types/notification';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 
 export default function Navbar() {
   const [showLogin, setShowLogin] = useState(false);
@@ -112,7 +112,6 @@ const fetchOrders = async (sellerId: string) => {
 
   return (
     <>
-    <ToastContainer/>
       <nav className="bg-white shadow-md p-3 flex items-center justify-between fixed top-0 left-0 w-full z-50" style={{ fontSize: 'var(--app-font-size)' }}>
         <button onClick={() => setShowSidebar(true)} className="text-2xl text-orange-500">
           <FiMenu />

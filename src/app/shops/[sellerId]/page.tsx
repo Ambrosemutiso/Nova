@@ -90,8 +90,8 @@ export default function SellerShopPage() {
 
           return (
             <div key={category} className="mb-10">
-              <div className="flex bg-orange-500 items-center justify-between mb-3">
-                <h2 className="text-xl font-semibold text-white">{category}</h2>
+              <div className="absolute -top-4 left-4 right-4 bg-orange-500 text-white px-4 py-2 text-sm font-semibold rounded-md shadow-lg z-10 flex justify-between items-center">
+                <span>{category}</span>
                 {productsInCategory.length > 1 && (
                   <Link
                     href={`/shops/${sellerId}/category/${encodeURIComponent(category)}`}
