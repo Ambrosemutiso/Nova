@@ -12,6 +12,7 @@ interface Seller {
   email: string;
   image?: string;
   shopName?: string;
+  followers: number;
 }
 
 export default function SellerShopPage() {
@@ -56,7 +57,7 @@ export default function SellerShopPage() {
 
   if (!seller) {
     return (
-      <div className="text-center py-20 text-gray-600">
+      <div className="text-center py-20 text-orange-500">
         <p>Shop not found or inactive.</p>
       </div>
     );
@@ -75,7 +76,7 @@ export default function SellerShopPage() {
           <h1 className="text-2xl font-bold text-gray-800">
             {seller.shopName || `${seller.name}'s Shop`}
           </h1>
-          <p className="text-sm text-gray-500">{seller.email}</p>
+          <p className="text-sm text-gray-500">Followers: {seller.followers}</p>
         </div>
       </div>
 
@@ -85,16 +86,16 @@ export default function SellerShopPage() {
       ) : (
         sortedCategories.map((category) => {
           const productsInCategory = groupedByCategory[category];
-          const displayedProducts = productsInCategory.slice(0, 6); // Show only 6
+          const displayedProducts = productsInCategory.slice(0, 12); // Show only 12
 
           return (
             <div key={category} className="mb-10">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-xl font-semibold text-gray-700">{category}</h2>
-                {productsInCategory.length > 2 && (
+              <div className="flex bg-orange-500 items-center justify-between mb-3">
+                <h2 className="text-xl font-semibold text-white">{category}</h2>
+                {productsInCategory.length > 1 && (
                   <Link
                     href={`/shops/${sellerId}/category/${encodeURIComponent(category)}`}
-                    className="text-sm text-orange-600 hover:underline"
+                    className="text-sm text-white hover:underline"
                   >
                     See All →
                   </Link>

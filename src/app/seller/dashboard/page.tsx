@@ -188,7 +188,7 @@ export default function SellerDashboard() {
           onChange={(e) => setYear(Number(e.target.value))}
           className="border rounded px-3 py-1"
         >
-          {[2023, 2024, 2025].map((yr) => (
+          {[2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map((yr) => (
             <option key={yr} value={yr}>
               {yr}
             </option>
