@@ -76,7 +76,7 @@ export default function SellerShopPage() {
           <h1 className="text-2xl font-bold text-gray-800">
             {seller.shopName || `${seller.name}'s Shop`}
           </h1>
-          <p className="text-sm text-gray-500">Followers: {seller.followers}</p>
+          <p className="text-sm text-gray-500">{seller.email}</p>
         </div>
       </div>
 
