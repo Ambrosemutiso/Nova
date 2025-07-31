@@ -101,7 +101,7 @@ export default function SellerShopPage() {
                   </Link>
                 )}
               </div>
-                  <div className="mt-10">
+                  <div className="pt-8">
                     <div className="flex gap-4 overflow-x-auto pb-2">
                       {displayedProducts.map((product) => (
                         <ProductCard key={product._id} product={product} />
