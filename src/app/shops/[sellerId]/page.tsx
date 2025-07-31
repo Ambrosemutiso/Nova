@@ -89,7 +89,7 @@ export default function SellerShopPage() {
           const displayedProducts = productsInCategory.slice(0, 12); // Show only 12
 
           return (
-            <div key={category} className="mb-10">
+            <div key={category} className="mb-10 relative">
               <div className="absolute -top-4 left-4 right-4 bg-orange-500 text-white px-4 py-2 text-sm font-semibold rounded-md shadow-lg z-10 flex justify-between items-center">
                 <span>{category}</span>
                 {productsInCategory.length > 1 && (
