@@ -74,12 +74,6 @@ export default function SellerShopPage() {
           alt={seller.name}
           className="w-20 h-20 rounded-full object-cover border-4 border-white bg-white"
         />
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">
-            {seller.shopName || `${seller.name}'s Shop`}
-          </h1>
-          <p className="text-sm text-gray-500">{seller.email}</p>
-        </div>
       </div>
 
       {/* Products by Category */}
