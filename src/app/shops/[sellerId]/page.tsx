@@ -65,7 +65,7 @@ export default function SellerShopPage() {
   return (
     <div className="pt-28 pb-10">
       {/* Banner */}
-      <div className="w-full h-40 md:h-60 bg-cover bg-center" style={{ backgroundImage: `url('/banner4.jpg')` }} />
+      <div className="w-full h-40 md:h-60 bg-cover bg-center" style={{ backgroundImage: `url('/banner3.jpg')` }} />
 
       {/* Shop Header */}
       <div className="px-6 flex items-center gap-6 mb-8 -mt-10">

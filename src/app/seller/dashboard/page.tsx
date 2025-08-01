@@ -12,18 +12,30 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { ShieldCheck, Store } from 'lucide-react';
+import { Edit2 } from 'react-feather'; 
 
-interface Seller {
+export interface Seller {
   _id: string;
   name: string;
   email: string;
-  shop?: {
+  image?: string;
+  logo?: string;
+  banner?: string;
+  role: 'seller';
+  shopName?: string;
+  isVerified: boolean;
+  followers: {
+    userId: string;
+    followedAt?: Date;
+  }[];
+  shop: {
     isActive: boolean;
-    activatedAt?: string;
-    expiresAt: string;
+    activatedAt?: Date;
+    expiresAt?: Date;
     amountPaid?: number;
     transactionId?: string;
   };
+  createdAt: Date;
 }
 
 interface ChartPoint {
@@ -56,6 +68,11 @@ export default function SellerDashboard() {
   const [withdrawAmount, setWithdrawAmount] = useState<number>(0);
 
   const [activatingShop, setActivatingShop] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editShopName, setEditShopName] = useState(seller?.name || '');
+  const [editImage, setEditImage] = useState(seller?.image || '');
+  const [editBanner, setEditBanner] = useState(seller?.banner || '');
+
 
   useEffect(() => {
     const storedUser = localStorage.getItem('sellerUser');
@@ -103,7 +120,7 @@ export default function SellerDashboard() {
           shop: {
             isActive: true,
             expiresAt: data.shopExpiry,
-            activatedAt: new Date().toISOString(),
+            activatedAt: new Date(),
             amountPaid: 1300,
             transactionId: data.transactionId || 'TEST-ID',
           },
@@ -154,31 +171,44 @@ export default function SellerDashboard() {
       </h1>
 
       {/* Shop Status */}
-      <div className="mb-6 p-4 rounded-lg border bg-white shadow flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-700">
-            <Store className="w-5 h-5 text-orange-500" />
-            Seller Shop
-          </h2>
-{seller?.shop?.expiresAt ? (
-  <p className="text-green-600 text-sm mt-1">
-    Your shop is active until{' '}
-    <strong>{new Date(seller.shop.expiresAt).toLocaleDateString()}</strong>.
-  </p>
-) : (
-  <p className="text-red-600 text-sm mt-1">You don&apos;t have an active shop.</p>
-)}
-        </div>
-        {!isShopActive && (
-          <button
-            onClick={activateShop}
-            disabled={activatingShop}
-            className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded"
-          >
-            {activatingShop ? 'Activating...' : 'Activate Shop (Ksh 1300)'}
-          </button>
-        )}
-      </div>
+<div className="mb-6 p-4 rounded-lg border bg-white shadow flex items-center justify-between">
+  <div>
+    <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-700">
+      <Store className="w-5 h-5 text-orange-500" />
+      Seller Shop
+    </h2>
+    {seller?.shop?.expiresAt ? (
+      <p className="text-green-600 text-sm mt-1">
+        Your shop is active until{' '}
+        <strong>{new Date(seller.shop.expiresAt).toLocaleDateString()}</strong>.
+      </p>
+    ) : (
+      <p className="text-red-600 text-sm mt-1">You don't have an active shop.</p>
+    )}
+  </div>
+  <div className="flex items-center gap-3">
+    {!isShopActive && (
+      <button
+        onClick={activateShop}
+        disabled={activatingShop}
+        className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded"
+      >
+        {activatingShop ? 'Activating...' : 'Activate Shop (Ksh 1300)'}
+      </button>
+    )}
+    <button
+      onClick={() => {
+        setEditShopName(seller?.shopName || '');
+        setEditImage(seller?.image || '');
+        setEditBanner(seller?.banner || '');
+        setShowEditModal(true);
+      }}
+      className="text-sm text-orange-600 hover:underline flex items-center gap-1"
+    >
+      <Edit2 size={16} /> Edit Shop
+    </button>
+  </div>
+</div>
 
       {/* Year Selector */}
       <div className="mb-4">
@@ -278,6 +308,61 @@ export default function SellerDashboard() {
           )}
         </>
       )}
+{showEditModal && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
+    <div className="bg-white p-6 rounded-xl w-full max-w-md relative">
+      <button
+        onClick={() => setShowEditModal(false)}
+        className="absolute top-2 right-4 text-gray-500 text-2xl font-bold"
+      >
+        ×
+      </button>
+      <h2 className="text-xl font-semibold text-gray-800 mb-4">Edit Shop Info</h2>
+
+      <label className="block mb-1 text-sm font-medium text-gray-600">Shop Name</label>
+      <input
+        type="text"
+        value={editShopName}
+        onChange={(e) => setEditShopName(e.target.value)}
+        className="w-full border px-3 py-2 rounded mb-4"
+      />
+
+      <label className="block mb-1 text-sm font-medium text-gray-600">Profile Image URL</label>
+      <input
+        type="text"
+        value={editImage}
+        onChange={(e) => setEditImage(e.target.value)}
+        className="w-full border px-3 py-2 rounded mb-4"
+      />
+
+      <label className="block mb-1 text-sm font-medium text-gray-600">Banner Image URL</label>
+      <input
+        type="text"
+        value={editBanner}
+        onChange={(e) => setEditBanner(e.target.value)}
+        className="w-full border px-3 py-2 rounded mb-4"
+      />
+
+      <button
+        onClick={() => {
+          const updated = {
+            ...seller,
+            shopName: editShopName,
+            image: editImage,
+            bannerImage: editBanner,
+          };
+          setSeller(updated as Seller);
+          localStorage.setItem('sellerUser', JSON.stringify(updated));
+          setShowEditModal(false);
+          toast.success('Shop info updated locally!');
+        }}
+        className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded"
+      >
+        Save Changes
+      </button>
+    </div>
+  </div>
+)}
 
       {/* Withdrawal Modal */}
       {showWithdrawModal && (
