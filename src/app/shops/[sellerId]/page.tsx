@@ -12,7 +12,6 @@ interface Seller {
   email: string;
   image?: string;
   shopName?: string;
-  followers: number;
 }
 
 export default function SellerShopPage() {
@@ -64,13 +63,16 @@ export default function SellerShopPage() {
   }
 
   return (
-    <div className="px-6 pt-28 pb-10">
+    <div className="pt-28 pb-10">
+      {/* Banner */}
+      <div className="w-full h-40 md:h-60 bg-cover bg-center" style={{ backgroundImage: `url('/banner4.jpg')` }} />
+
       {/* Shop Header */}
-      <div className="flex items-center gap-6 mb-8 border-b pb-6">
+      <div className="px-6 flex items-center gap-6 mb-8 -mt-10">
         <img
           src={seller.image || '/default-avatar.png'}
           alt={seller.name}
-          className="w-20 h-20 rounded-full object-cover border"
+          className="w-20 h-20 rounded-full object-cover border-4 border-white bg-white"
         />
         <div>
           <h1 className="text-2xl font-bold text-gray-800">
@@ -81,37 +83,39 @@ export default function SellerShopPage() {
       </div>
 
       {/* Products by Category */}
-      {sortedCategories.length === 0 ? (
-        <p className="text-gray-500">No products found.</p>
-      ) : (
-        sortedCategories.map((category) => {
-          const productsInCategory = groupedByCategory[category];
-          const displayedProducts = productsInCategory.slice(0, 12); // Show only 12
+      <div className="px-6">
+        {sortedCategories.length === 0 ? (
+          <p className="text-gray-500">No products found.</p>
+        ) : (
+          sortedCategories.map((category) => {
+            const productsInCategory = groupedByCategory[category];
+            const displayedProducts = productsInCategory.slice(0, 12); // Show only 12
 
-          return (
-            <div key={category} className="mb-10 relative">
-              <div className="absolute -top-4 left-4 right-4 bg-orange-500 text-white px-4 py-2 text-sm font-semibold rounded-md shadow-lg z-10 flex justify-between items-center">
-                <span>{category}</span>
-                {productsInCategory.length > 1 && (
-                  <Link
-                    href={`/shops/${sellerId}/category/${encodeURIComponent(category)}`}
-                    className="text-sm text-white hover:underline"
-                  >
-                    See All →
-                  </Link>
-                )}
-              </div>
-                  <div className="pt-8">
-                    <div className="flex gap-4 overflow-x-auto pb-2">
-                      {displayedProducts.map((product) => (
-                        <ProductCard key={product._id} product={product} />
-                      ))}
-                    </div>
+            return (
+              <div key={category} className="mb-10 relative">
+                <div className="absolute -top-4 left-4 right-4 bg-orange-500 text-white px-4 py-2 text-sm font-semibold rounded-md shadow-lg z-10 flex justify-between items-center">
+                  <span>{category}</span>
+                  {productsInCategory.length > 1 && (
+                    <Link
+                      href={`/shops/${sellerId}/category/${encodeURIComponent(category)}`}
+                      className="text-sm text-white hover:underline"
+                    >
+                      See All →
+                    </Link>
+                  )}
+                </div>
+                <div className="pt-10">
+                  <div className="flex gap-4 overflow-x-auto pb-2">
+                    {displayedProducts.map((product) => (
+                      <ProductCard key={product._id} product={product} />
+                    ))}
                   </div>
-            </div>
-          );
-        })
-      )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }
