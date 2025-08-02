@@ -33,7 +33,7 @@ export default function SearchResults() {
   }, [query]);
 
   return (
-    <div className="pt-24 px-4 min-h-screen bg-red-100">
+    <div className="pt-24 px-4 min-h-screen bg-white">
       <h1 className="text-2xl font-semibold mb-6 text-center">
         Search Results for <span className="text-orange-600">&quot;{query}&quot;</span>
       </h1>

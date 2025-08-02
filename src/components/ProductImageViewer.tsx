@@ -133,23 +133,23 @@ const ProductImageViewer = ({
 
       {/* Modal View */}
       {zoomedImage && (
-        <div className="fixed inset-0 bg-white bg-opacity-90 z-50 flex flex-col items-center justify-center">
+        <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex flex-col items-center justify-center">
           <button
-            className="absolute top-4 right-4 text-orange-500 z-50"
+            className="absolute top-4 right-4 text-white z-50"
             onClick={() => setZoomedImage(null)}
           >
             <X size={28} />
           </button>
 
           <button
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-orange-500 z-40"
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white z-40"
             onClick={prevImage}
           >
             <ChevronLeft size={36} />
           </button>
 
           <button
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-orange-500 z-40"
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white z-40"
             onClick={nextImage}
           >
             <ChevronRight size={36} />
@@ -214,7 +214,7 @@ const ProductImageViewer = ({
               </div>
             ))}
           </div>
-          <div className="absolute bottom-4 text-orange-500 text-sm">
+          <div className="absolute bottom-4 text-white text-sm">
             {currentIndex + 1} / {images.length}
           </div>
         </div>
