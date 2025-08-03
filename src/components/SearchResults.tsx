@@ -17,6 +17,7 @@ export default function SearchResults() {
   const [filtered, setFiltered] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [category, setCategory] = useState('');
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [sort, setSort] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
@@ -30,7 +31,11 @@ export default function SearchResults() {
         try {
           const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
           const data = await res.json();
-          setResults(data.products || []);
+          const products = data.products || [];
+          setResults(products);
+
+          const categories = [...new Set(products.map((p: Product) => p.category).filter(Boolean))];
+          setAvailableCategories(categories as string[]);
         } catch (err) {
           console.error('Search error:', err);
         } finally {
@@ -45,16 +50,18 @@ export default function SearchResults() {
   useEffect(() => {
     let filteredData = [...results];
 
-    if (category) {
-      filteredData = filteredData.filter(p => p.category?.toLowerCase() === category.toLowerCase());
+    if (category && category !== 'All') {
+      filteredData = filteredData.filter(
+        (p) => p.category?.toLowerCase() === category.toLowerCase()
+      );
     }
 
     if (minPrice) {
-      filteredData = filteredData.filter(p => p.price >= parseFloat(minPrice));
+      filteredData = filteredData.filter((p) => p.price >= parseFloat(minPrice));
     }
 
     if (maxPrice) {
-      filteredData = filteredData.filter(p => p.price <= parseFloat(maxPrice));
+      filteredData = filteredData.filter((p) => p.price <= parseFloat(maxPrice));
     }
 
     if (sort === 'price-asc') {
@@ -74,40 +81,42 @@ export default function SearchResults() {
 
   return (
     <div className="pt-24 px-4 min-h-screen bg-white">
-      {/* Breadcrumb */}
       <nav className="text-sm text-gray-600 mb-4">
-        <span>Home</span> &gt; <span>All Products</span> &gt; <span className="text-orange-600 font-medium">{query}</span>
+        <span>Home</span> &gt; <span>All Products</span> &gt;{' '}
+        <span className="text-gray-600 font-medium">{query}</span>
       </nav>
-
-      <h1 className="text-2xl font-semibold mb-6 text-center">
-        Search Results for <span className="text-orange-600">&quot;{query}&quot;</span>
-      </h1>
 
       {/* Filters */}
       <div className="flex flex-wrap justify-center gap-4 mb-6">
-        <input
-          type="text"
-          placeholder="Category"
+        <select
           value={category}
-          onChange={e => setCategory(e.target.value)}
+          onChange={(e) => setCategory(e.target.value)}
           className="border p-2 rounded-md w-40"
-        />
+        >
+          <option value="">All Categories</option>
+          {availableCategories.map((cat, idx) => (
+            <option key={idx} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
+
         <input
           type="number"
           placeholder="Min Price"
           value={minPrice}
-          onChange={e => setMinPrice(e.target.value)}
+          onChange={(e) => setMinPrice(e.target.value)}
           className="border p-2 rounded-md w-32"
         />
         <input
           type="number"
           placeholder="Max Price"
           value={maxPrice}
-          onChange={e => setMaxPrice(e.target.value)}
+          onChange={(e) => setMaxPrice(e.target.value)}
           className="border p-2 rounded-md w-32"
         />
         <select
-          onChange={e => setSort(e.target.value)}
+          onChange={(e) => setSort(e.target.value)}
           className="border p-2 rounded-md w-40"
         >
           <option value="">Sort</option>
@@ -117,7 +126,7 @@ export default function SearchResults() {
         </select>
       </div>
 
-      {/* Loader / No Results / Display */}
+      {/* Loader / Results */}
       {loading ? (
         <Loader />
       ) : filtered.length === 0 ? (
@@ -127,8 +136,11 @@ export default function SearchResults() {
       ) : (
         <>
           <div className="flex flex-wrap gap-4 justify-center">
-            {displayedItems.map(product => (
-              <div key={product._id} className="w-[48%] sm:w-[48%] md:w-[31%] lg:w-[23%] xl:w-[18%]">
+            {displayedItems.map((product) => (
+              <div
+                key={product._id}
+                className="w-[48%] sm:w-[48%] md:w-[31%] lg:w-[23%] xl:w-[18%]"
+              >
                 <ProductCard product={product} />
               </div>
             ))}
@@ -137,15 +149,17 @@ export default function SearchResults() {
           {/* Pagination */}
           <div className="flex justify-center items-center gap-4 mt-8">
             <button
-              onClick={() => setPage(p => Math.max(p - 1, 1))}
+              onClick={() => setPage((p) => Math.max(p - 1, 1))}
               disabled={page === 1}
               className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-50"
             >
               Previous
             </button>
-            <span>Page {page} of {totalPages}</span>
+            <span>
+              Page {page} of {totalPages}
+            </span>
             <button
-              onClick={() => setPage(p => Math.min(p + 1, totalPages))}
+              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
               disabled={page === totalPages}
               className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-50"
             >
@@ -154,10 +168,12 @@ export default function SearchResults() {
           </div>
         </>
       )}
-      <SponsoredProducts/>
-      <RecentlyViewed/>
-      <TopPicksForYou/>
-      <SuggestedForYou/>
+
+      {/* Extras */}
+      <SponsoredProducts />
+      <RecentlyViewed />
+      <TopPicksForYou />
+      <SuggestedForYou />
     </div>
   );
 }

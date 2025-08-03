@@ -80,7 +80,7 @@ export default function SellerOrdersPage() {
 
       const json = await res.json();
       if (res.ok && json.success) {
-        toast.success('Item marked as delivered! ✅');
+        toast.success('Item marked as delivered!');
         setOrders((prev) =>
           prev.map((order) =>
             order._id === orderId
@@ -132,6 +132,7 @@ export default function SellerOrdersPage() {
         <p>No orders found.</p>
       ) : (
         <>
+        
           <div className="space-y-6">
             {paginatedOrders.map((order) => {
               const visibleItems = filteredItems(order.items);
@@ -146,6 +147,7 @@ export default function SellerOrdersPage() {
                       Date: {new Date(order.createdAt).toLocaleDateString()}
                     </p>
                   </div>
+
                   <div className="text-sm text-gray-700">
                     Customer: {order.customerInfo.firstName} {order.customerInfo.lastName}
                   </div>
@@ -186,10 +188,12 @@ export default function SellerOrdersPage() {
                       </div>
                     ))}
                   </div>
-<div className="mt-3 text-right font-bold text-orange-600">
-  Subtotal: Ksh{' '}
-  {visibleItems.reduce((sum, item) => sum + item.price * item.quantity, 0).toLocaleString()}
-</div>
+
+                  <div className="mt-3 text-right font-bold text-orange-600">
+                    Subtotal: Ksh{' '}
+                    {visibleItems.reduce((sum, item) => sum + item.price * item.quantity, 0).toLocaleString()}
+                  </div>
+
                   {/* View Delivery Info Button */}
                   <div className="mt-2 text-right">
                     <button

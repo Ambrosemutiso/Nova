@@ -75,7 +75,7 @@ export default function LogisticsOrdersPage() {
 
       const json = await res.json();
       if (res.ok && json.success) {
-        toast.success('Item marked as delivered ✅');
+        toast.success('Item marked as delivered');
         setOrders((prev) =>
           prev.map((order) =>
             order._id === orderId
@@ -120,7 +120,7 @@ export default function LogisticsOrdersPage() {
   return (
     <div className="px-6 pt-28 pb-10">
       <ToastContainer />
-      <h1 className="text-2xl font-bold text-blue-700 mb-4">Logistics Dashboard – All Orders</h1>
+      <h1 className="text-2xl font-bold text-orange-500 mb-4">Logistics Dashboard – All Orders</h1>
 
       <div className="mb-4 flex gap-2 flex-wrap items-center">
         {['All', 'Pending', 'Delivered'].map((status) => (
@@ -128,7 +128,7 @@ export default function LogisticsOrdersPage() {
             key={status}
             onClick={() => setStatusFilter(status as any)}
             className={`px-3 py-1 rounded ${
-              statusFilter === status ? 'bg-blue-500 text-white' : 'bg-gray-200'
+              statusFilter === status ? 'bg-orange-500 text-white' : 'bg-gray-200'
             }`}
           >
             {status}

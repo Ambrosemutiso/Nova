@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
-import LogisticsOrder from '@/app/models/orders';
+import Order from '@/app/models/orders';
 import { PipelineStage } from 'mongoose';
 
 export async function GET(req: NextRequest) {
@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
       { $limit: limit }
     );
 
-    const orders = await LogisticsOrder.aggregate(pipeline);
+    const orders = await Order.aggregate(pipeline);
 
     // Count pipeline
     const countPipeline: PipelineStage[] = [
@@ -103,7 +103,7 @@ export async function GET(req: NextRequest) {
 
     countPipeline.push({ $count: 'total' });
 
-    const countResult = await LogisticsOrder.aggregate(countPipeline);
+    const countResult = await Order.aggregate(countPipeline);
     const total = countResult[0]?.total || 0;
 
     return NextResponse.json({
