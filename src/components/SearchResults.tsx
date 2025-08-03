@@ -4,33 +4,32 @@ import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import ProductCard from '@/components/ProductCard';
 import { Product } from '@/app/types/product';
-import { Player } from '@lottiefiles/react-lottie-player';
 import Loader from '@/components/Loader';
-import Link from 'next/link';
+import RecentlyViewed from './RecentlyViewed';
+import TopPicksForYou from './TopPicksForYou';
+import SuggestedForYou from './SuggestedForYou';
+import SponsoredProducts from './SponsoredProducts';
 
 export default function SearchResults() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q') || '';
   const [results, setResults] = useState<Product[]>([]);
-  const [filteredResults, setFilteredResults] = useState<Product[]>([]);
+  const [filtered, setFiltered] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
-
-  // Filters
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [category, setCategory] = useState('');
+  const [sort, setSort] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
-  const [sortOption, setSortOption] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const PRODUCTS_PER_PAGE = 12;
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 8;
 
   useEffect(() => {
     if (query.trim()) {
       const fetchResults = async () => {
         setLoading(true);
         try {
-          const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-          const data = await response.json();
+          const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+          const data = await res.json();
           setResults(data.products || []);
         } catch (err) {
           console.error('Search error:', err);
@@ -43,108 +42,92 @@ export default function SearchResults() {
     }
   }, [query]);
 
-  // Filter, Sort, and Paginate
   useEffect(() => {
-    let filtered = [...results];
+    let filteredData = [...results];
 
-    // Category filter
-    if (selectedCategory) {
-      filtered = filtered.filter((p) => p.category === selectedCategory);
+    if (category) {
+      filteredData = filteredData.filter(p => p.category?.toLowerCase() === category.toLowerCase());
     }
 
-    // Price filter
-    if (minPrice) filtered = filtered.filter((p) => p.price >= Number(minPrice));
-    if (maxPrice) filtered = filtered.filter((p) => p.price <= Number(maxPrice));
-
-    // Sort
-    if (sortOption === 'lowToHigh') {
-      filtered.sort((a, b) => a.price - b.price);
-    } else if (sortOption === 'highToLow') {
-      filtered.sort((a, b) => b.price - a.price);
-    } else if (sortOption === 'newest') {
-      filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    if (minPrice) {
+      filteredData = filteredData.filter(p => p.price >= parseFloat(minPrice));
     }
 
-    setFilteredResults(filtered);
-    setCurrentPage(1); // reset to page 1 on filter/sort change
-  }, [results, selectedCategory, minPrice, maxPrice, sortOption]);
+    if (maxPrice) {
+      filteredData = filteredData.filter(p => p.price <= parseFloat(maxPrice));
+    }
 
-  const categories = [...new Set(results.map((p) => p.category))];
-  const totalPages = Math.ceil(filteredResults.length / PRODUCTS_PER_PAGE);
-  const paginated = filteredResults.slice((currentPage - 1) * PRODUCTS_PER_PAGE, currentPage * PRODUCTS_PER_PAGE);
+    if (sort === 'price-asc') {
+      filteredData.sort((a, b) => a.price - b.price);
+    } else if (sort === 'price-desc') {
+      filteredData.sort((a, b) => b.price - a.price);
+    } else if (sort === 'name') {
+      filteredData.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    setFiltered(filteredData);
+    setPage(1);
+  }, [results, category, sort, minPrice, maxPrice]);
+
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const displayedItems = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
   return (
     <div className="pt-24 px-4 min-h-screen bg-white">
       {/* Breadcrumb */}
       <nav className="text-sm text-gray-600 mb-4">
-        <Link href="/" className="hover:underline">Home</Link> &gt;{' '}
-        <Link href="/products" className="hover:underline">All Products</Link> &gt;{' '}
-        <span className="text-orange-600 font-medium">{query}</span>
+        <span>Home</span> &gt; <span>All Products</span> &gt; <span className="text-orange-600 font-medium">{query}</span>
       </nav>
 
+      <h1 className="text-2xl font-semibold mb-6 text-center">
+        Search Results for <span className="text-orange-600">&quot;{query}&quot;</span>
+      </h1>
+
       {/* Filters */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
-        {/* Category */}
+      <div className="flex flex-wrap justify-center gap-4 mb-6">
+        <input
+          type="text"
+          placeholder="Category"
+          value={category}
+          onChange={e => setCategory(e.target.value)}
+          className="border p-2 rounded-md w-40"
+        />
+        <input
+          type="number"
+          placeholder="Min Price"
+          value={minPrice}
+          onChange={e => setMinPrice(e.target.value)}
+          className="border p-2 rounded-md w-32"
+        />
+        <input
+          type="number"
+          placeholder="Max Price"
+          value={maxPrice}
+          onChange={e => setMaxPrice(e.target.value)}
+          className="border p-2 rounded-md w-32"
+        />
         <select
-          className="border border-gray-300 rounded px-4 py-2"
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
+          onChange={e => setSort(e.target.value)}
+          className="border p-2 rounded-md w-40"
         >
-          <option value="">All Categories</option>
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>{cat}</option>
-          ))}
-        </select>
-
-        {/* Price Range */}
-        <div className="flex items-center gap-2">
-          <input
-            type="number"
-            placeholder="Min Price"
-            value={minPrice}
-            onChange={(e) => setMinPrice(e.target.value)}
-            className="border rounded px-2 py-1 w-24"
-          />
-          <span>-</span>
-          <input
-            type="number"
-            placeholder="Max Price"
-            value={maxPrice}
-            onChange={(e) => setMaxPrice(e.target.value)}
-            className="border rounded px-2 py-1 w-24"
-          />
-        </div>
-
-        {/* Sort */}
-        <select
-          className="border border-gray-300 rounded px-4 py-2"
-          value={sortOption}
-          onChange={(e) => setSortOption(e.target.value)}
-        >
-          <option value="">Sort By</option>
-          <option value="lowToHigh">Price: Low to High</option>
-          <option value="highToLow">Price: High to Low</option>
-          <option value="newest">Newest</option>
+          <option value="">Sort</option>
+          <option value="price-asc">Price: Low to High</option>
+          <option value="price-desc">Price: High to Low</option>
+          <option value="name">Name</option>
         </select>
       </div>
 
-      {/* Results */}
+      {/* Loader / No Results / Display */}
       {loading ? (
         <Loader />
-      ) : paginated.length === 0 ? (
-        <div className="text-center text-gray-500 mt-10 flex flex-col items-center">
-          <Player
-            autoplay
-            loop
-            src="/lottie/Animation - 1749150445624.lottie"
-            style={{ height: '300px', width: '300px' }}
-          />
-          <p className="mt-4 text-lg">No products found for &quot;{query}&quot;.</p>
+      ) : filtered.length === 0 ? (
+        <div className="text-center text-gray-500 mt-10">
+          No products found for &quot;{query}&quot;.
         </div>
       ) : (
         <>
           <div className="flex flex-wrap gap-4 justify-center">
-            {paginated.map((product) => (
+            {displayedItems.map(product => (
               <div key={product._id} className="w-[48%] sm:w-[48%] md:w-[31%] lg:w-[23%] xl:w-[18%]">
                 <ProductCard product={product} />
               </div>
@@ -152,23 +135,29 @@ export default function SearchResults() {
           </div>
 
           {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-center mt-8 gap-2">
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`px-3 py-1 rounded border ${
-                    currentPage === i + 1 ? 'bg-orange-600 text-white' : 'bg-white text-gray-800'
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
-          )}
+          <div className="flex justify-center items-center gap-4 mt-8">
+            <button
+              onClick={() => setPage(p => Math.max(p - 1, 1))}
+              disabled={page === 1}
+              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <span>Page {page} of {totalPages}</span>
+            <button
+              onClick={() => setPage(p => Math.min(p + 1, totalPages))}
+              disabled={page === totalPages}
+              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
         </>
       )}
+      <SponsoredProducts/>
+      <RecentlyViewed/>
+      <TopPicksForYou/>
+      <SuggestedForYou/>
     </div>
   );
 }

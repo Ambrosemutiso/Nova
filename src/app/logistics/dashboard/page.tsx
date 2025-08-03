@@ -29,10 +29,13 @@ interface Order {
   createdAt: string;
 }
 
-export default function SellerOrdersPage() {
+export default function LogisticsOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<'All' | 'Pending' | 'Delivered'>('All');
+  const [itemNameFilter, setItemNameFilter] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
@@ -41,17 +44,9 @@ export default function SellerOrdersPage() {
   const pageSize = 5;
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('sellerUser');
-    if (!storedUser) return;
-
-    const seller = JSON.parse(storedUser);
     setLoading(true);
 
-    fetch('/api/seller/orders', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sellerId: seller._id }),
-    })
+    fetch('/api/logistics/orders')
       .then((res) => res.json())
       .then((data) => {
         setOrders(data.orders || []);
@@ -72,7 +67,7 @@ export default function SellerOrdersPage() {
 
   const markItemDelivered = async (orderId: string, itemName: string) => {
     try {
-      const res = await fetch('/api/seller/update-item-status', {
+      const res = await fetch('/api/logistics/update-item-status', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderId, itemName, newStatus: 'Delivered' }),
@@ -80,7 +75,7 @@ export default function SellerOrdersPage() {
 
       const json = await res.json();
       if (res.ok && json.success) {
-        toast.success('Item marked as delivered! ✅');
+        toast.success('Item marked as delivered ✅');
         setOrders((prev) =>
           prev.map((order) =>
             order._id === orderId
@@ -94,65 +89,102 @@ export default function SellerOrdersPage() {
           )
         );
       } else {
-        toast.error(json.message || 'Failed to update item status');
+        toast.error(json.message || 'Failed to update status');
       }
     } catch (err) {
-      console.error('Update error:', err);
+      console.error('Error marking delivery:', err);
       toast.error('Something went wrong');
     }
   };
 
-  const filteredItems = (items: OrderItem[]) =>
-    statusFilter === 'All' ? items : items.filter((item) => item.status === statusFilter);
+  const filteredItems = (items: OrderItem[]) => {
+    let filtered = statusFilter === 'All' ? items : items.filter((item) => item.status === statusFilter);
+    if (itemNameFilter.trim()) {
+      filtered = filtered.filter((item) => item.name.toLowerCase().includes(itemNameFilter.toLowerCase()));
+    }
+    return filtered;
+  };
 
-  const paginatedOrders = orders.slice((page - 1) * pageSize, page * pageSize);
+  const filteredOrders = orders
+    .filter((order) => {
+      const orderDate = new Date(order.createdAt);
+      const isWithinRange =
+        (!startDate || new Date(startDate) <= orderDate) &&
+        (!endDate || orderDate <= new Date(endDate));
+      return isWithinRange;
+    })
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const paginatedOrders = filteredOrders.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <div className="px-6 pt-28 pb-10">
       <ToastContainer />
-      <h1 className="text-2xl font-bold text-orange-600 mb-4">Seller Orders</h1>
+      <h1 className="text-2xl font-bold text-blue-700 mb-4">Logistics Dashboard – All Orders</h1>
 
-      <div className="mb-4 flex gap-2">
+      <div className="mb-4 flex gap-2 flex-wrap items-center">
         {['All', 'Pending', 'Delivered'].map((status) => (
           <button
             key={status}
             onClick={() => setStatusFilter(status as any)}
             className={`px-3 py-1 rounded ${
-              statusFilter === status ? 'bg-orange-500 text-white' : 'bg-gray-200'
+              statusFilter === status ? 'bg-blue-500 text-white' : 'bg-gray-200'
             }`}
           >
             {status}
           </button>
         ))}
+
+        <input
+          type="text"
+          placeholder="Filter by item name"
+          value={itemNameFilter}
+          onChange={(e) => setItemNameFilter(e.target.value)}
+          className="border px-2 py-1 rounded"
+        />
+
+        <input
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          className="border px-2 py-1 rounded"
+        />
+        <span>-</span>
+        <input
+          type="date"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+          className="border px-2 py-1 rounded"
+        />
       </div>
 
       {loading ? (
         <p>Loading orders...</p>
-      ) : orders.length === 0 ? (
+      ) : filteredOrders.length === 0 ? (
         <p>No orders found.</p>
       ) : (
         <>
           <div className="space-y-6">
             {paginatedOrders.map((order) => {
-              const visibleItems = filteredItems(order.items);
+              const visibleItems = filteredItems(order.items).sort((a, b) => a.name.localeCompare(b.name));
               if (visibleItems.length === 0) return null;
 
               return (
-                <div key={order._id} className="bg-white p-4 rounded shadow border border-gray-100">
+                <div key={order._id} className="bg-white p-4 rounded shadow border">
                   <div className="mb-2">
                     <h2 className="text-lg font-semibold">Order #{order._id.slice(-6)}</h2>
-                    <p className="text-sm text-gray-500">Status: {order.status}</p>
                     <p className="text-sm text-gray-500">
-                      Date: {new Date(order.createdAt).toLocaleDateString()}
+                      Status: {order.status} | Date: {new Date(order.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                   <div className="text-sm text-gray-700">
                     Customer: {order.customerInfo.firstName} {order.customerInfo.lastName}
                   </div>
+
                   <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
                     {visibleItems.map((item, i) => (
                       <div key={i} className="flex items-center gap-3 border p-2 rounded">
-                        {item.images?.length > 0 ? (
+                        {item.images?.[0] ? (
                           <CldImage
                             src={getPublicId(item.images[0])}
                             alt={item.name}
@@ -162,7 +194,7 @@ export default function SellerOrdersPage() {
                             className="w-44 h-44 object-cover rounded"
                           />
                         ) : (
-                          <div className="w-44 h-44 bg-gray-200 text-gray-500 flex items-center justify-center rounded">
+                          <div className="w-44 h-44 bg-gray-200 flex items-center justify-center text-gray-500 rounded">
                             No image
                           </div>
                         )}
@@ -171,8 +203,7 @@ export default function SellerOrdersPage() {
                           <p className="text-sm">Qty: {item.quantity}</p>
                           <p className="text-sm">Ksh {item.price}</p>
                           <p className="text-xs text-gray-500">
-                            Status:{' '}
-                            <span className="font-semibold">{item.status || 'Pending'}</span>
+                            Status: <span className="font-semibold">{item.status || 'Pending'}</span>
                           </p>
                           {item.status !== 'Delivered' && (
                             <button
@@ -186,11 +217,14 @@ export default function SellerOrdersPage() {
                       </div>
                     ))}
                   </div>
-<div className="mt-3 text-right font-bold text-orange-600">
-  Subtotal: Ksh{' '}
-  {visibleItems.reduce((sum, item) => sum + item.price * item.quantity, 0).toLocaleString()}
-</div>
-                  {/* View Delivery Info Button */}
+
+                  <div className="mt-3 text-right font-bold text-orange-600">
+                    Subtotal: Ksh{' '}
+                    {visibleItems
+                      .reduce((sum, item) => sum + item.price * item.quantity, 0)
+                      .toLocaleString()}
+                  </div>
+
                   <div className="mt-2 text-right">
                     <button
                       onClick={() => {
@@ -207,7 +241,6 @@ export default function SellerOrdersPage() {
             })}
           </div>
 
-          {/* Pagination */}
           <div className="mt-8 flex justify-between items-center">
             <button
               onClick={() => setPage((p) => Math.max(p - 1, 1))}
@@ -216,9 +249,7 @@ export default function SellerOrdersPage() {
             >
               Previous
             </button>
-            <span className="text-sm">
-              Page {page} of {totalPages}
-            </span>
+            <span className="text-sm">Page {page} of {totalPages}</span>
             <button
               onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
               disabled={page === totalPages}
@@ -230,7 +261,6 @@ export default function SellerOrdersPage() {
         </>
       )}
 
-      {/* Modal for Delivery Info */}
       {showDeliveryModal && selectedDeliveryOrder && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center">
           <div className="bg-white w-full max-w-md p-6 rounded shadow-lg relative">
@@ -240,32 +270,17 @@ export default function SellerOrdersPage() {
             >
               ✕
             </button>
-            <h2 className="text-lg font-semibold mb-4 text-orange-600">Delivery Information</h2>
-            <p>
-              <strong>Name:</strong> {selectedDeliveryOrder.customerInfo.firstName}{' '}
-              {selectedDeliveryOrder.customerInfo.lastName}
-            </p>
-            <p>
-              <strong>Phone:</strong> {selectedDeliveryOrder.customerInfo.phone}
-            </p>
-            <p>
-              <strong>Email:</strong> {selectedDeliveryOrder.customerInfo.email}
-            </p>
-            <p>
-              <strong>Address:</strong>{' '}
-              {selectedDeliveryOrder.customerInfo.address || 'N/A'}
-            </p>
-            <p>
-              <strong>City:</strong> {selectedDeliveryOrder.customerInfo.city || 'N/A'}
-            </p>
-            <p>
-              <strong>Instructions:</strong>{' '}
-              {selectedDeliveryOrder.customerInfo.deliveryInstructions || 'None'}
-            </p>
+            <h2 className="text-lg font-semibold mb-4 text-gray-800">Delivery Info</h2>
+            <p><strong>Name:</strong> {selectedDeliveryOrder.customerInfo.firstName} {selectedDeliveryOrder.customerInfo.lastName}</p>
+            <p><strong>Phone:</strong> {selectedDeliveryOrder.customerInfo.phone}</p>
+            <p><strong>Email:</strong> {selectedDeliveryOrder.customerInfo.email}</p>
+            <p><strong>Address:</strong> {selectedDeliveryOrder.customerInfo.address || 'N/A'}</p>
+            <p><strong>City:</strong> {selectedDeliveryOrder.customerInfo.city || 'N/A'}</p>
+            <p><strong>Instructions:</strong> {selectedDeliveryOrder.customerInfo.deliveryInstructions || 'None'}</p>
             <div className="mt-4 text-right">
               <button
                 onClick={() => setShowDeliveryModal(false)}
-                className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded"
+                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
               >
                 Close
               </button>
