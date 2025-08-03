@@ -1,125 +1,23 @@
+// /api/logistics/orders/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
 import Order from '@/app/models/orders';
-import { PipelineStage } from 'mongoose';
 
 export async function GET(req: NextRequest) {
   try {
     await dbConnect();
 
     const { searchParams } = new URL(req.url);
+    const status = searchParams.get('status'); // Optional query filter: ?status=Pending
 
-    const status = searchParams.get('status') || undefined;
-    const sellerId = searchParams.get('sellerId') || undefined;
-    const search = searchParams.get('search')?.toLowerCase() || undefined;
-    const fromDate = searchParams.get('fromDate') || undefined;
-    const toDate = searchParams.get('toDate') || undefined;
+    // Fetch all orders if no status is specified
+    const orders = status
+      ? await Order.find({ 'items.status': status }).lean()
+      : await Order.find({}).lean();
 
-    const page = parseInt(searchParams.get('page') || '1', 10);
-    const limit = parseInt(searchParams.get('limit') || '10', 10);
-
-    const query: Record<string, any> = {};
-    if (status) query.status = status;
-    if (sellerId) query.sellerId = sellerId;
-
-    if (fromDate || toDate) {
-      query.createdAt = {};
-      if (fromDate) query.createdAt.$gte = new Date(fromDate);
-      if (toDate) query.createdAt.$lte = new Date(toDate);
-    }
-
-    // 🛠 Wrap $or inside $match
-    const matchSearch: PipelineStage.Match | null = search
-      ? {
-          $match: {
-            $or: [
-              { 'user.name': { $regex: search, $options: 'i' } },
-              { 'items.name': { $regex: search, $options: 'i' } }
-            ]
-          }
-        }
-      : null;
-
-    const pipeline: PipelineStage[] = [
-      { $match: query },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'userId',
-          foreignField: '_id',
-          as: 'user'
-        }
-      },
-      { $unwind: '$user' },
-      {
-        $lookup: {
-          from: 'sellers',
-          localField: 'sellerId',
-          foreignField: '_id',
-          as: 'seller'
-        }
-      },
-      { $unwind: '$seller' }
-    ];
-
-    if (matchSearch) {
-      pipeline.push(matchSearch);
-    }
-
-    pipeline.push(
-      { $sort: { createdAt: -1 } },
-      { $skip: (page - 1) * limit },
-      { $limit: limit }
-    );
-
-    const orders = await Order.aggregate(pipeline);
-
-    // Count pipeline
-    const countPipeline: PipelineStage[] = [
-      { $match: query },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'userId',
-          foreignField: '_id',
-          as: 'user'
-        }
-      },
-      { $unwind: '$user' },
-      {
-        $lookup: {
-          from: 'sellers',
-          localField: 'sellerId',
-          foreignField: '_id',
-          as: 'seller'
-        }
-      },
-      { $unwind: '$seller' }
-    ];
-
-    if (matchSearch) {
-      countPipeline.push(matchSearch);
-    }
-
-    countPipeline.push({ $count: 'total' });
-
-    const countResult = await Order.aggregate(countPipeline);
-    const total = countResult[0]?.total || 0;
-
-    return NextResponse.json({
-      success: true,
-      orders,
-      pagination: {
-        total,
-        page,
-        pages: Math.ceil(total / limit)
-      }
-    });
+    return NextResponse.json({ orders }, { status: 200 });
   } catch (error) {
-    console.error('❌ Error fetching logistics orders:', error);
-    return NextResponse.json(
-      { success: false, message: 'Failed to fetch orders' },
-      { status: 500 }
-    );
+    console.error('Error fetching logistics orders:', error);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

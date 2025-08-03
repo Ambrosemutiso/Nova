@@ -270,7 +270,7 @@ export default function LogisticsOrdersPage() {
             >
               ✕
             </button>
-            <h2 className="text-lg font-semibold mb-4 text-gray-800">Delivery Info</h2>
+            <h2 className="text-lg font-semibold mb-4 text-orange-500">Delivery Info</h2>
             <p><strong>Name:</strong> {selectedDeliveryOrder.customerInfo.firstName} {selectedDeliveryOrder.customerInfo.lastName}</p>
             <p><strong>Phone:</strong> {selectedDeliveryOrder.customerInfo.phone}</p>
             <p><strong>Email:</strong> {selectedDeliveryOrder.customerInfo.email}</p>
@@ -280,7 +280,7 @@ export default function LogisticsOrdersPage() {
             <div className="mt-4 text-right">
               <button
                 onClick={() => setShowDeliveryModal(false)}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded"
               >
                 Close
               </button>

@@ -1,37 +1,39 @@
-import { NextResponse } from 'next/server';
-import {dbConnect} from '@/lib/dbConnect';
-import Order from '@/app/models/orders'; 
+import { dbConnect } from '@/lib/dbConnect';
+import Order from '@/app/models/orders';
+import { NextApiRequest, NextApiResponse } from 'next';
 
-export async function PATCH(req: Request) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  await dbConnect();
+
+  if (req.method !== 'PUT') {
+    return res.status(405).json({ message: 'Method not allowed' });
+  }
+
+  const { orderId, itemId, newStatus } = req.body;
+
+  if (!orderId || !itemId || !newStatus) {
+    return res.status(400).json({ message: 'Missing required fields' });
+  }
+
   try {
-    const body = await req.json();
-    const { orderId, itemId, newStatus } = body;
-
-    if (!orderId || !itemId || !newStatus) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
-
-    await dbConnect();
-
-    const order = await Order.findOne({ _id: orderId });
+    const order = await Order.findById(orderId);
 
     if (!order) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+      return res.status(404).json({ message: 'Order not found' });
     }
 
-    const itemIndex = order.items.findIndex((item: any) => item._id.toString() === itemId);
+    const item = order.items.id(itemId);
 
-    if (itemIndex === -1) {
-      return NextResponse.json({ error: 'Item not found in order' }, { status: 404 });
+    if (!item) {
+      return res.status(404).json({ message: 'Item not found in order' });
     }
 
-    order.items[itemIndex].status = newStatus;
-
+    item.status = newStatus;
     await order.save();
 
-    return NextResponse.json({ success: true, message: 'Item status updated successfully' });
+    return res.status(200).json({ message: 'Item status updated successfully', order });
   } catch (error) {
-    console.error('Update item status error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Error updating item status:', error);
+    return res.status(500).json({ message: 'Server error' });
   }
 }
