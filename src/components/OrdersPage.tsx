@@ -84,7 +84,7 @@ const generateReceipt = async (order: OrderType, adminName = "Cate Ruguru, senio
   y += 7;
 
   doc.setFontSize(11);
-  doc.text(`Order ID: ${order._id}`, 10, y);
+  doc.text(`Order ID: #${order._id.slice(-6)}`, 10, y);
   doc.text(`Date: ${new Date(order.createdAt).toLocaleString()}`, 10, y += 7);
   doc.text(`Receipt: ${order.paymentInfo?.receipt || '-'}`, 10, y += 7);
   doc.text(`Phone: ${order.paymentInfo?.phone || '-'}`, 10, y += 7);
@@ -144,7 +144,7 @@ const generateReceipt = async (order: OrderType, adminName = "Cate Ruguru, senio
   doc.text('Contact: info@NovaXpress.co.ke | Ronald Ngala Street, NRG Plaza', 105, 285, { align: 'center' });
   doc.text(`Served By: ${adminName}`, 105, 290, { align: 'center' });
 
-  doc.save(`Nova-receipt-${order._id}.pdf`);
+  doc.save(`Nova-receipt-${order._id.slice(-6)}.pdf`);
 };
 
 
@@ -254,7 +254,7 @@ const generateReceipt = async (order: OrderType, adminName = "Cate Ruguru, senio
                 <button onClick={() => setShowModal(false)} className="absolute top-2 right-2 text-gray-600 text-xl">✕</button>
                 <h2 className="text-lg font-semibold mb-4">Order Preview</h2>
                 <div className="space-y-2">
-                  <p><strong>ID:</strong> {selectedOrder._id}</p>
+                  <p><strong>Order ID:</strong> {selectedOrder._id.slice(-6)}</p>
                   <p><strong>Date:</strong> {new Date(selectedOrder.createdAt).toLocaleString()}</p>
                   <p><strong>Amount:</strong> Ksh {selectedOrder.paymentInfo?.amount?.toFixed(2)}</p>
                   <p><strong>Receipt:</strong> {selectedOrder.paymentInfo?.receipt || '-'}</p>
@@ -301,7 +301,7 @@ const generateReceipt = async (order: OrderType, adminName = "Cate Ruguru, senio
                 <div className="mt-6 text-right space-x-2">
                   {selectedOrder.status === 'Pending' && (
                     <button
-                      onClick={() => cancelOrder(selectedOrder._id)}
+                      onClick={() => cancelOrder(selectedOrder._id.slice(-6))}
                       className="px-4 py-2 bg-red-500 text-white rounded"
                     >
                       Cancel Order

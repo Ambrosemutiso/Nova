@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { CldImage } from 'next-cloudinary';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 
 interface OrderItem {
   name: string;
@@ -119,7 +119,6 @@ export default function LogisticsOrdersPage() {
 
   return (
     <div className="px-6 pt-28 pb-10">
-      <ToastContainer />
       <h1 className="text-2xl font-bold text-orange-500 mb-4">Logistics Dashboard – All Orders</h1>
 
       <div className="mb-4 flex gap-2 flex-wrap items-center">
@@ -178,7 +177,7 @@ export default function LogisticsOrdersPage() {
                     </p>
                   </div>
                   <div className="text-sm text-gray-700">
-                    Customer: {order.customerInfo.firstName} {order.customerInfo.lastName}
+                    Customer: {order.customerInfo.firstName} {order.customerInfo.lastName} | {order.customerInfo.phone}
                   </div>
 
                   <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -10,9 +10,17 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  Legend
 } from 'recharts';
 import { ShieldCheck, Store } from 'lucide-react';
 import { Edit2 } from 'react-feather'; 
+
+const COLORS = ['#f97316', '#16a34a', '#dc2626', '#eab308', '#3b82f6'];
 
 export interface Seller {
   _id: string;
@@ -270,24 +278,82 @@ export default function SellerDashboard() {
             </div>
           </div>
 
-          {/* Revenue Chart */}
-          <div className="bg-white p-6 rounded-xl shadow-md mb-8">
-            <h2 className="text-lg font-semibold mb-4 text-gray-700">
-              Revenue Overview ({year})
-            </h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={metrics?.chartData || []}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis tickFormatter={(val) => `Ksh ${val / 1000}k`} />
-                <Tooltip formatter={(val: number) => `Ksh ${val.toLocaleString()}`} />
-                <Line type="monotone" dataKey="revenue" stroke="#f97316" strokeWidth={3} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Line Chart */}
+        <div className="bg-white p-6 rounded-xl shadow-md">
+          <h2 className="text-lg font-semibold mb-4 text-gray-700">
+            Revenue Overview ({year})
+          </h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={metrics?.chartData || []}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis tickFormatter={(val) => `Ksh ${val / 1000}k`} />
+              <Tooltip formatter={(val: number) => `Ksh ${val.toLocaleString()}`} />
+              <Line type="monotone" dataKey="revenue" stroke="#f97316" strokeWidth={3} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
 
+        {/* Bar Chart */}
+        <div className="bg-white p-6 rounded-xl shadow-md">
+          <h2 className="text-lg font-semibold mb-4 text-gray-700">
+            Order Status
+          </h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={[{
+              name: 'Orders',
+              Delivered: metrics?.deliveredOrders || 0,
+              Cancelled: metrics?.cancelledOrders || 0,
+              Pending: metrics?.pendingOrders || 0,
+              Paid: metrics?.paidOrders || 0,
+            }]}> 
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="Delivered" fill="#16a34a" />
+              <Bar dataKey="Cancelled" fill="#dc2626" />
+              <Bar dataKey="Pending" fill="#eab308" />
+              <Bar dataKey="Paid" fill="#3b82f6" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Pie Chart */}
+        <div className="bg-white p-6 rounded-xl shadow-md">
+          <h2 className="text-lg font-semibold mb-4 text-gray-700">
+            Orders Distribution
+          </h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                dataKey="value"
+                data={[
+                  { name: 'Delivered', value: metrics?.deliveredOrders || 0 },
+                  { name: 'Cancelled', value: metrics?.cancelledOrders || 0 },
+                  { name: 'Pending', value: metrics?.pendingOrders || 0 },
+                  { name: 'Paid', value: metrics?.paidOrders || 0 }
+                ]}
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                label
+              >
+                {COLORS.map((color, index) => (
+                  <Cell key={`cell-${index}`} fill={color} />
+                ))}
+              </Pie>
+              <Legend />
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
           {/* Actions */}
-          <div className="flex flex-wrap gap-4">
+          <div className="mt-7 flex flex-wrap gap-4">
             <a href="/seller/products/add" className="action-btn bg-orange-600">
               ➕ Add Product
             </a>

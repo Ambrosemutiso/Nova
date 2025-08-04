@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { CldImage } from 'next-cloudinary';
-import { toast, ToastContainer } from 'react-toastify';
 
 interface OrderItem {
   name: string;
@@ -70,37 +69,16 @@ export default function SellerOrdersPage() {
     return match ? match[1] : url;
   };
 
-  const markItemDelivered = async (orderId: string, itemName: string) => {
-    try {
-      const res = await fetch('/api/seller/update-item-status', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId, itemName, newStatus: 'Delivered' }),
-      });
+  function maskEmail(email: string) {
+  const [name, domain] = email.split('@');
+  const maskedName = name.slice(0, 2) + '***';
+  return `${maskedName}@${domain}`;
+}
 
-      const json = await res.json();
-      if (res.ok && json.success) {
-        toast.success('Item marked as delivered!');
-        setOrders((prev) =>
-          prev.map((order) =>
-            order._id === orderId
-              ? {
-                  ...order,
-                  items: order.items.map((item) =>
-                    item.name === itemName ? { ...item, status: 'Delivered' } : item
-                  ),
-                }
-              : order
-          )
-        );
-      } else {
-        toast.error(json.message || 'Failed to update item status');
-      }
-    } catch (err) {
-      console.error('Update error:', err);
-      toast.error('Something went wrong');
-    }
-  };
+function maskPhone(phone: string) {
+  if (phone.length !== 10) return phone; 
+  return phone.slice(0, 4) + '***' + phone.slice(-3);
+}
 
   const filteredItems = (items: OrderItem[]) =>
     statusFilter === 'All' ? items : items.filter((item) => item.status === statusFilter);
@@ -109,7 +87,6 @@ export default function SellerOrdersPage() {
 
   return (
     <div className="px-6 pt-28 pb-10">
-      <ToastContainer />
       <h1 className="text-2xl font-bold text-orange-600 mb-4">Seller Orders</h1>
 
       <div className="mb-4 flex gap-2">
@@ -149,7 +126,7 @@ export default function SellerOrdersPage() {
                   </div>
 
                   <div className="text-sm text-gray-700">
-                    Customer: {order.customerInfo.firstName} {order.customerInfo.lastName}
+                    Customer: {order.customerInfo.firstName} {order.customerInfo.lastName} | {maskPhone(order.customerInfo.phone)}
                   </div>
                   <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
                     {visibleItems.map((item, i) => (
@@ -176,14 +153,6 @@ export default function SellerOrdersPage() {
                             Status:{' '}
                             <span className="font-semibold">{item.status || 'Pending'}</span>
                           </p>
-                          {item.status !== 'Delivered' && (
-                            <button
-                              onClick={() => markItemDelivered(order._id, item.name)}
-                              className="mt-2 text-sm bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
-                            >
-                              Mark as Delivered
-                            </button>
-                          )}
                         </div>
                       </div>
                     ))}
@@ -249,12 +218,14 @@ export default function SellerOrdersPage() {
               <strong>Name:</strong> {selectedDeliveryOrder.customerInfo.firstName}{' '}
               {selectedDeliveryOrder.customerInfo.lastName}
             </p>
+
             <p>
-              <strong>Phone:</strong> {selectedDeliveryOrder.customerInfo.phone}
+              <strong>Phone:</strong> {maskPhone(selectedDeliveryOrder.customerInfo.phone)}
             </p>
             <p>
-              <strong>Email:</strong> {selectedDeliveryOrder.customerInfo.email}
+              <strong>Email:</strong> {maskEmail(selectedDeliveryOrder.customerInfo.email)}
             </p>
+
             <p>
               <strong>Address:</strong>{' '}
               {selectedDeliveryOrder.customerInfo.address || 'N/A'}
