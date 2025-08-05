@@ -24,6 +24,7 @@ const categories: Category[] = [
   { name: 'Sofas',    image: '/Menu/Sofas.jpg' },
   { name: 'Health',  image: '/Menu/Health.jpg' },
   { name: 'Beauty',image: '/Menu/Beauty.jpg' },
+  { name: 'Jewelry',image: '/Menu/Jewelry.jpg' },
   { name: 'Women',    image: '/Menu/Women.jpg' },
   { name: 'Kids',      image: '/Menu/Kids.jpg' },
   { name: 'Skincare',    image: '/Menu/Skincare.jpg' },

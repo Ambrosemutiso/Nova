@@ -13,6 +13,7 @@ import Household from '@/components/categories/Household/page';
 import Kids from '@/components/categories/Kids/page';
 import Machines from '@/components/categories/Machines/page';
 import Women from '@/components/categories/Women/page';
+import Jewelry from '@/components/categories/Jewelry/page';
 import Men from '@/components/categories/Men/page';
 import Skincare from '@/components/categories/Skincare/page';
 import Health from '@/components/categories/Health/page';
@@ -61,6 +62,8 @@ const renderCategory = (title: string, Component: React.FC) => (
       return renderCategory('Beauty', Beauty);
     case 'Women':
       return renderCategory('Women', Women);
+    case 'Jewelry':
+      return renderCategory('Jewelry', Jewelry);  
     case 'Kids':
       return renderCategory('Kids', Kids);
       case 'Gaming':
@@ -98,6 +101,7 @@ const renderCategory = (title: string, Component: React.FC) => (
           {renderCategory('Health', Health)}
           {renderCategory('Beauty', Beauty)}
           {renderCategory('Women', Women)}
+          {renderCategory('Jewelry', Jewelry)}
           {renderCategory('Kids', Kids)}
           {renderCategory('Gaming', Gaming)}
           {renderCategory('Skincare', Skincare)}

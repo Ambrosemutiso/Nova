@@ -54,23 +54,35 @@ export async function POST(req: NextRequest) {
     const seller = await Seller.findById(sellerId).select('followers');
     const totalFollowers = seller?.followers?.length || 0;
 
-    // Build chart data
-    const chartData = Array.from({ length: 12 }, (_, i) => ({
-      month: new Date(2000, i).toLocaleString('default', { month: 'short' }),
-      revenue: 0,
-    }));
+const chartData = Array.from({ length: 12 }, (_, i) => ({
+  month: new Date(2000, i).toLocaleString('default', { month: 'short' }),
+  revenue: 0,
+  activeProducts: new Set<string>(), // temporarily store product names
+}));
 
-    for (const order of orders) {
-      for (const item of order.items) {
-        if (
-          sellerProductNames.includes(item.name) &&
-          item.status === 'Delivered'
-        ) {
-          const month = new Date(order.createdAt).getMonth();
-          chartData[month].revenue += item.price * item.quantity;
-        }
+for (const order of orders) {
+  const month = new Date(order.createdAt).getMonth();
+
+  for (const item of order.items) {
+    if (sellerProductNames.includes(item.name)) {
+      // Track revenue
+      if (item.status === 'Delivered') {
+        chartData[month].revenue += item.price * item.quantity;
       }
+
+      // Track active products by name
+      chartData[month].activeProducts.add(item.name);
     }
+  }
+}
+
+// Convert activeProducts from Set to count
+const formattedChartData = chartData.map((data) => ({
+  month: data.month,
+  revenue: data.revenue,
+  activeProducts: data.activeProducts.size,
+}));
+
 
     return NextResponse.json({
       totalOrders,
@@ -82,7 +94,7 @@ export async function POST(req: NextRequest) {
       cancelledOrders,
       pendingOrders,
       paidOrders,
-      chartData,
+      chartData: formattedChartData,
     });
   } catch (error) {
     console.error('Dashboard error:', error);

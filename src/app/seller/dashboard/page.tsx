@@ -49,6 +49,7 @@ export interface Seller {
 interface ChartPoint {
   month: string;
   revenue: number;
+  activeProducts: number;
 }
 
 interface Metrics {
@@ -286,15 +287,62 @@ export default function SellerDashboard() {
             Revenue Overview ({year})
           </h2>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={metrics?.chartData || []}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis tickFormatter={(val) => `Ksh ${val / 1000}k`} />
-              <Tooltip formatter={(val: number) => `Ksh ${val.toLocaleString()}`} />
-              <Line type="monotone" dataKey="revenue" stroke="#f97316" strokeWidth={3} />
-            </LineChart>
+<LineChart data={metrics?.chartData || []}>
+  <CartesianGrid strokeDasharray="3 3" />
+  <XAxis dataKey="month" />
+  <YAxis />
+  <Tooltip />
+  <Legend />
+  <Line type="monotone" dataKey="revenue" stroke="#f97316" strokeWidth={3} name="Revenue" />
+  <Line type="monotone" dataKey="activeProducts" stroke="#3b82f6" strokeWidth={3} name="Active Products" />
+</LineChart>
+
           </ResponsiveContainer>
         </div>
+
+        <div className="bg-white p-6 rounded-xl shadow-md">
+  <h2 className="text-lg font-semibold mb-4 text-gray-700">
+    Active Products per Month
+  </h2>
+  <ResponsiveContainer width="100%" height={300}>
+    <BarChart data={metrics?.chartData || []}>
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="month" />
+      <YAxis />
+      <Tooltip />
+      <Legend />
+      <Bar dataKey="activeProducts" fill="#3b82f6" name="Active Products" />
+    </BarChart>
+  </ResponsiveContainer>
+</div>
+
+<div className="bg-white p-6 rounded-xl shadow-md">
+  <h2 className="text-lg font-semibold mb-4 text-gray-700">
+    Active Products Distribution ({year})
+  </h2>
+  <ResponsiveContainer width="100%" height={300}>
+    <PieChart>
+      <Pie
+        data={(metrics?.chartData || []).map(item => ({
+          name: item.month,
+          value: item.activeProducts,
+        }))}
+        dataKey="value"
+        cx="50%"
+        cy="50%"
+        outerRadius={100}
+        label
+      >
+        {(metrics?.chartData || []).map((_, index) => (
+          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+        ))}
+      </Pie>
+      <Tooltip />
+      <Legend />
+    </PieChart>
+  </ResponsiveContainer>
+</div>
+
 
         {/* Bar Chart */}
         <div className="bg-white p-6 rounded-xl shadow-md">
