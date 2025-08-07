@@ -73,7 +73,7 @@ const AdminAuth = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 shadow rounded bg-white">
+    <div className="max-w-md mx-auto mt-10 p-6 shadow rounded bg-white px-4 pt-28 pb-10">
       <h2 className="text-2xl font-semibold mb-4 text-center">
         {isSignup ? 'Admin Sign Up' : 'Admin Login'}
       </h2>
