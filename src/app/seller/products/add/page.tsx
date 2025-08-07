@@ -64,8 +64,11 @@ const countyTownMap: Record<County, string[]> = {
 };
 
 const productCategories = [
-          'Electronics','Systems','Fashion','Gaming','Phones','Laptops','Computers','Household','Kitchen','Sofas','Health',
-          'Beauty','Women','Kids','Skincare','Men','Books','Machines','Spares','Motors','Liquor','Sports','Robotics',
+          'Electronics','Systems','Fashion','Gaming',
+          'Phones','Laptops','Computers','Household',
+          'Kitchen','Sofas','Health','Beauty','Women',
+          'Jewelry','Kids','Skincare','Men','Books',
+          'Machines','Spares','Motors','Liquor','Sports','Robotics',
         ];
 export default function AddProduct() {
   const { user } = useAuth();

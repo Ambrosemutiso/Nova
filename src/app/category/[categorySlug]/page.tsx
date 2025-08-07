@@ -140,7 +140,7 @@ export default function CategoryPage() {
                         <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
                         <span>Products</span>
                         <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
-                        <span className="text-orange-700 font-medium">{safeCategory}</span>
+                        <span className="text-gray-500 font-medium">{safeCategory}</span>
                         </nav>
                       </div>
       <div className="w-full h-40 rounded-md mb-6 overflow-hidden relative">

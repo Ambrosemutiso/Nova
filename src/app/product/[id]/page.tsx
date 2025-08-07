@@ -119,9 +119,9 @@ return (
     <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
     <span>Products</span>
     <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
-    <span className="text-orange-700 font-medium">{product.category}</span>
+    <span className="text-gray-500 font-medium">{product.category}</span>
     <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
-    <span className="text-orange-700 font-medium">{product.name}</span>
+    <span className="text-gray-500 font-medium">{product.name}</span>
   </nav>
 </div>
 
