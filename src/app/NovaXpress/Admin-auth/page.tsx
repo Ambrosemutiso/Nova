@@ -21,13 +21,15 @@ const AdminAuth = () => {
   const [captcha, setCaptcha] = useState(false);
   const [attempts, setAttempts] = useState(0);
 
-  const siteKey = "6LfBrZ0rAAAAAINtwsatuY144mxtjKYX6YDd3sMf" 
+  const siteKey = "6LfBrZ0rAAAAAINtwsatuY144mxtjKYX6YDd3sMf"; 
 
   const handleChange = (e: any) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const toggleForm = () => setIsSignup(!isSignup);
+  const toggleForm = () => {
+    setIsSignup(!isSignup);
+  };
 
   const handleCaptcha = () => setCaptcha(true);
 
@@ -139,16 +141,22 @@ const AdminAuth = () => {
             />
           </>
         )}
-
+        
         <ReCAPTCHA sitekey={siteKey} onChange={handleCaptcha} />
 
         <button
           type="submit"
-          className="w-full bg-orange-600 text-white py-2 rounded hover:bg-blue-700"
+          className="w-full bg-orange-600 text-white py-2 rounded hover:bg-orange-700"
         >
           {isSignup ? 'Sign Up' : 'Login'}
         </button>
       </form>
+      <p className="text-center mt-4 text-sm">
+        {isSignup ? 'Already have an account?' : 'Don’t have an account?'}{' '}
+        <button className="text-orange-600 underline" onClick={toggleForm}>
+          {isSignup ? 'Login' : 'Sign Up'}
+        </button>
+      </p>
     </div>
   );
 };
