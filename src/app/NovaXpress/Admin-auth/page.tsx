@@ -58,7 +58,7 @@ const AdminAuth = () => {
     toast.success(data.message);
 
     if (!isSignup) {
-      router.push('/admin/dashboard');
+      router.push('/NovaXpress/dashboard');
     } else {
       setIsSignup(false);
       setForm({
@@ -140,7 +140,7 @@ const AdminAuth = () => {
           </>
         )}
 
-        <ReCAPTCHA sitekey="6Letip0rAAAAANcWf-Y8KpNuO74lZojk2KzKmgks" onChange={handleCaptcha} />
+        <ReCAPTCHA sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY} onChange={handleCaptcha} />
 
         <button
           type="submit"
