@@ -139,8 +139,8 @@ const AdminAuth = () => {
             />
           </>
         )}
-
-        <ReCAPTCHA sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY} onChange={handleCaptcha} />
+        
+        <ReCAPTCHA sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!} onChange={handleCaptcha} />
 
         <button
           type="submit"
