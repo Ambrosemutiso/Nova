@@ -1,12 +1,91 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Users, Store, Package, Wallet, LogOut } from "lucide-react";
+import { toast } from "react-toastify";
+
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+}
+
+interface Seller {
+  _id: string;
+  name: string;
+  email: string;
+  shopName: string;
+}
+
+interface Product {
+  _id: string;
+  title: string;
+  price: number;
+}
+
+interface Withdrawal {
+  _id: string;
+  sellerId: string;
+  amount: number;
+  status: string; // pending | approved
+}
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("users");
+  const [users, setUsers] = useState<User[]>([]);
+  const [sellers, setSellers] = useState<Seller[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [usersRes, sellersRes, productsRes, withdrawalsRes] =
+          await Promise.all([
+            fetch("/api/users"),
+            fetch("/api/sellers"),
+            fetch("/api/products/all"),
+            fetch("/api/withdrawalrequest"),
+          ]);
+
+        setUsers(await usersRes.json());
+        setSellers(await sellersRes.json());
+        setProducts(await productsRes.json());
+        setWithdrawals(await withdrawalsRes.json());
+      } catch (err) {
+        toast.error("Failed to load dashboard data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Approve withdrawal
+  const approveWithdrawal = async (id: string) => {
+    try {
+      const res = await fetch(
+        `/api/withdrawals/approve/${id}`,
+        { method: "POST" }
+      );
+      if (!res.ok) throw new Error("Approval failed");
+
+      toast.success("Withdrawal approved ✅");
+
+      setWithdrawals((prev) =>
+        prev.map((w) => (w._id === id ? { ...w, status: "approved" } : w))
+      );
+    } catch (err) {
+      toast.error("Error approving withdrawal");
+    }
+  };
 
   const renderContent = () => {
+    if (loading) return <p>Loading...</p>;
+
     switch (activeTab) {
       case "users":
         return (
@@ -21,11 +100,13 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td className="border p-2">1</td>
-                  <td className="border p-2">John Doe</td>
-                  <td className="border p-2">john@example.com</td>
-                </tr>
+                {users.map((u) => (
+                  <tr key={u._id}>
+                    <td className="border p-2">{u._id}</td>
+                    <td className="border p-2">{u.name}</td>
+                    <td className="border p-2">{u.email}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -34,10 +115,26 @@ export default function DashboardPage() {
         return (
           <div>
             <h2 className="text-xl font-semibold mb-4">Sellers</h2>
-            <ul className="space-y-2">
-              <li className="border p-2 rounded">Seller A</li>
-              <li className="border p-2 rounded">Seller B</li>
-            </ul>
+            <table className="w-full border">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border p-2">ID</th>
+                  <th className="border p-2">Name</th>
+                  <th className="border p-2">Shop</th>
+                  <th className="border p-2">Email</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sellers.map((s) => (
+                  <tr key={s._id}>
+                    <td className="border p-2">{s._id}</td>
+                    <td className="border p-2">{s.name}</td>
+                    <td className="border p-2">{s.shopName}</td>
+                    <td className="border p-2">{s.email}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         );
       case "products":
@@ -45,8 +142,15 @@ export default function DashboardPage() {
           <div>
             <h2 className="text-xl font-semibold mb-4">Products</h2>
             <div className="grid grid-cols-2 gap-4">
-              <div className="border p-4 rounded shadow">Product 1</div>
-              <div className="border p-4 rounded shadow">Product 2</div>
+              {products.map((p) => (
+                <div
+                  key={p._id}
+                  className="border p-4 rounded shadow bg-white"
+                >
+                  <h3 className="font-semibold">{p.title}</h3>
+                  <p className="text-sm">Price: ${p.price}</p>
+                </div>
+              ))}
             </div>
           </div>
         );
@@ -55,18 +159,25 @@ export default function DashboardPage() {
           <div>
             <h2 className="text-xl font-semibold mb-4">Withdrawal Requests</h2>
             <div className="space-y-4">
-              <div className="flex justify-between items-center border p-4 rounded shadow">
-                <span>Seller A - KES 5,000</span>
-                <button className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-                  Approve
-                </button>
-              </div>
-              <div className="flex justify-between items-center border p-4 rounded shadow">
-                <span>Seller B - KES 3,000</span>
-                <button className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-                  Approve
-                </button>
-              </div>
+              {withdrawals.map((w) => (
+                <div
+                  key={w._id}
+                  className="flex justify-between items-center border p-4 rounded shadow bg-white"
+                >
+                  <span>
+                    Seller: {w.sellerId} – Amount: KES {w.amount} – Status:{" "}
+                    {w.status}
+                  </span>
+                  {w.status === "pending" && (
+                    <button
+                      onClick={() => approveWithdrawal(w._id)}
+                      className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                    >
+                      Approve
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         );
@@ -124,7 +235,7 @@ export default function DashboardPage() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-6">{renderContent()}</main>
+      <main className="flex-1 p-6 bg-gray-50">{renderContent()}</main>
     </div>
   );
 }
