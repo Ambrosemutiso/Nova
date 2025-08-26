@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Users, Store, Package, Wallet, LogOut } from "lucide-react";
 import { toast } from "react-toastify";
+import { Product } from "@/app/types/product";
 
 interface User {
   _id: string;
@@ -15,12 +16,6 @@ interface Seller {
   name: string;
   email: string;
   shopName: string;
-}
-
-interface Product {
-  _id: string;
-  title: string;
-  price: number;
 }
 
 interface Withdrawal {
@@ -38,6 +33,16 @@ export default function DashboardPage() {
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // search + sorting state for products
+  const [search, setSearch] = useState("");
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof Product | null;
+    direction: "asc" | "desc";
+  }>({
+    key: null,
+    direction: "asc",
+  });
+
   // Fetch dashboard data
   useEffect(() => {
     const fetchData = async () => {
@@ -46,8 +51,8 @@ export default function DashboardPage() {
           await Promise.all([
             fetch("/api/users"),
             fetch("/api/sellers"),
-            fetch("/api/products/all"),
-            fetch("/api/withdrawalrequest"),
+            fetch("/api/products/admin"),
+            fetch("/api/withdraw"),
           ]);
 
         setUsers(await usersRes.json());
@@ -67,10 +72,7 @@ export default function DashboardPage() {
   // Approve withdrawal
   const approveWithdrawal = async (id: string) => {
     try {
-      const res = await fetch(
-        `/api/withdrawals/approve/${id}`,
-        { method: "POST" }
-      );
+      const res = await fetch(`/api/withdrawal/${id}`, { method: "POST" });
       if (!res.ok) throw new Error("Approval failed");
 
       toast.success("Withdrawal approved ✅");
@@ -82,6 +84,29 @@ export default function DashboardPage() {
       toast.error("Error approving withdrawal");
     }
   };
+
+  // Sorting handler
+  const handleSort = (key: keyof Product) => {
+    let direction: "asc" | "desc" = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  // Sorted + filtered products
+  const sortedProducts = [...products].sort((a, b) => {
+    if (!sortConfig.key) return 0;
+    const valueA = a[sortConfig.key] ?? "";
+    const valueB = b[sortConfig.key] ?? "";
+    if (valueA < valueB) return sortConfig.direction === "asc" ? -1 : 1;
+    if (valueA > valueB) return sortConfig.direction === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const filteredProducts = sortedProducts.filter((p) =>
+    Object.values(p).join(" ").toLowerCase().includes(search.toLowerCase())
+  );
 
   const renderContent = () => {
     if (loading) return <p>Loading...</p>;
@@ -141,16 +166,70 @@ export default function DashboardPage() {
         return (
           <div>
             <h2 className="text-xl font-semibold mb-4">Products</h2>
-            <div className="grid grid-cols-2 gap-4">
-              {products.map((p) => (
-                <div
-                  key={p._id}
-                  className="border p-4 rounded shadow bg-white"
-                >
-                  <h3 className="font-semibold">{p.title}</h3>
-                  <p className="text-sm">Price: ${p.price}</p>
-                </div>
-              ))}
+
+            {/* Search */}
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="border px-3 py-2 mb-4 w-full rounded-md"
+            />
+
+            <div className="overflow-x-auto">
+              <table className="w-full border rounded-lg bg-white shadow">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th
+                      className="border p-2 cursor-pointer"
+                      onClick={() => handleSort("name")}
+                    >
+                      Name
+                    </th>
+                    <th
+                      className="border p-2 cursor-pointer"
+                      onClick={() => handleSort("brand")}
+                    >
+                      Brand
+                    </th>
+                    <th
+                      className="border p-2 cursor-pointer"
+                      onClick={() => handleSort("price")}
+                    >
+                      Price
+                    </th>
+                    <th
+                      className="border p-2 cursor-pointer"
+                      onClick={() => handleSort("county")}
+                    >
+                      Location
+                    </th>
+                    <th
+                      className="border p-2 cursor-pointer"
+                      onClick={() => handleSort("createdAt")}
+                    >
+                      Created At
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredProducts.map((p) => (
+                    <tr key={p._id} className="hover:bg-gray-50">
+                      <td className="border p-2">{p.name}</td>
+                      <td className="border p-2">{p.brand || "—"}</td>
+                      <td className="border p-2">
+                        KES {p.calculatedPrice ?? p.price}
+                      </td>
+                      <td className="border p-2">
+                        {p.county}, {p.town}
+                      </td>
+                      <td className="border p-2">
+                        {new Date(p.createdAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         );
@@ -228,7 +307,7 @@ export default function DashboardPage() {
           </button>
         </nav>
         <div className="p-4 border-t border-gray-700">
-          <button className="flex items-center gap-2 w-full p-2 rounded hover:bg-red-600 bg-red-500 text-white">
+          <button className="flex items-center gap-2 w-full p-2 rounded hover:bg-orange-600 bg-orange-500 text-white">
             <LogOut size={18} /> Logout
           </button>
         </div>
