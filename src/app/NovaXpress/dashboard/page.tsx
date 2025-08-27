@@ -25,6 +25,26 @@ interface Withdrawal {
   status: string; // pending | approved
 }
 
+// ✅ New Report type
+interface Report {
+  _id: string;
+  productId: {
+    _id: string;
+    name: string;
+    sellerId: {
+      _id: string;
+      name?: string;
+      email?: string;
+      shopName?: string;
+    };
+  };
+  userId: string;
+  reason: string;
+  message?: string;
+  screenshot?: string;
+  createdAt: string;
+}
+
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("users");
   const [users, setUsers] = useState<User[]>([]);
@@ -32,6 +52,7 @@ export default function DashboardPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reports, setReports] = useState<Report[]>([]); // ✅ typed now
 
   // search + sorting state for products
   const [search, setSearch] = useState("");
@@ -47,13 +68,17 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [usersRes, sellersRes, productsRes, withdrawalsRes] =
-          await Promise.all([
-            fetch("/api/users"),
-            fetch("/api/sellers"),
-            fetch("/api/products/admin"),
-            fetch("/api/withdraw"),
-          ]);
+const [usersRes, sellersRes, productsRes, withdrawalsRes, reportsRes] =
+  await Promise.all([
+    fetch("/api/users"),
+    fetch("/api/sellers"),
+    fetch("/api/products/admin"),
+    fetch("/api/withdrawal"),
+    fetch("/api/reports"), // 👈 new
+  ]);
+
+setReports(await reportsRes.json());
+
 
         setUsers(await usersRes.json());
         setSellers(await sellersRes.json());
@@ -145,7 +170,6 @@ export default function DashboardPage() {
                 <tr className="bg-gray-100">
                   <th className="border p-2">ID</th>
                   <th className="border p-2">Name</th>
-                  <th className="border p-2">Shop</th>
                   <th className="border p-2">Email</th>
                 </tr>
               </thead>
@@ -154,7 +178,6 @@ export default function DashboardPage() {
                   <tr key={s._id}>
                     <td className="border p-2">{s._id}</td>
                     <td className="border p-2">{s.name}</td>
-                    <td className="border p-2">{s.shopName}</td>
                     <td className="border p-2">{s.email}</td>
                   </tr>
                 ))}
@@ -233,33 +256,101 @@ export default function DashboardPage() {
             </div>
           </div>
         );
-      case "withdrawals":
+case "withdrawals":
+  return (
+    <div>
+      <h2 className="text-xl font-semibold mb-4">Withdrawal Requests</h2>
+      <div className="space-y-4">
+        {withdrawals && withdrawals.length > 0 ? (
+          withdrawals.map((w: {
+            _id: string;
+            sellerId:
+              | string
+              | {
+                  _id: string;
+                  name?: string;
+                  email?: string;
+                };
+            amount: number;
+            status: string;
+          }) => (
+            <div
+              key={w._id}
+              className="flex justify-between items-center border p-4 rounded shadow bg-white"
+            >
+              <span>
+                Seller:{" "}
+                {typeof w.sellerId === "object"
+                  ? w.sellerId.name ??
+                    w.sellerId.email ??
+                    w.sellerId._id
+                  : w.sellerId}
+                {" – "}Amount: KES {w.amount}{" – "}Status: {w.status}
+              </span>
+
+              {w.status === "pending" && (
+                <button
+                  onClick={() => approveWithdrawal(w._id)}
+                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                >
+                  Approve
+                </button>
+              )}
+            </div>
+          ))
+        ) : (
+          <p className="text-gray-500">No withdrawal requests yet.</p>
+        )}
+      </div>
+    </div>
+  );
+ case "reports":
         return (
           <div>
-            <h2 className="text-xl font-semibold mb-4">Withdrawal Requests</h2>
+            <h2 className="text-xl font-semibold mb-4">Reported Products</h2>
             <div className="space-y-4">
-              {withdrawals.map((w) => (
-                <div
-                  key={w._id}
-                  className="flex justify-between items-center border p-4 rounded shadow bg-white"
-                >
-                  <span>
-                    Seller: {w.sellerId} – Amount: KES {w.amount} – Status:{" "}
-                    {w.status}
-                  </span>
-                  {w.status === "pending" && (
+              {reports.length > 0 ? (
+                reports.map((r) => (
+                  <div
+                    key={r._id}
+                    className="border p-4 rounded shadow bg-white flex justify-between items-center"
+                  >
+                    <span>
+                      <strong>{r.productId.name}</strong> — Reported for:{" "}
+                      {r.reason}
+                      <br />
+                      Seller:{" "}
+                      {r.productId.sellerId.name ||
+                        r.productId.sellerId.shopName}{" "}
+                      ({r.productId.sellerId.email})
+                    </span>
                     <button
-                      onClick={() => approveWithdrawal(w._id)}
-                      className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                      onClick={async () => {
+                        const res = await fetch(
+                          `/api/reports/${r._id}/notify`,
+                          {
+                            method: "POST",
+                          }
+                        );
+                        if (res.ok) {
+                          toast.success("Seller notified & product flagged");
+                        } else {
+                          toast.error("Failed to notify seller");
+                        }
+                      }}
+                      className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
                     >
-                      Approve
+                      Notify Seller
                     </button>
-                  )}
-                </div>
-              ))}
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500">No reports yet.</p>
+              )}
             </div>
           </div>
         );
+
       default:
         return <div>Select a section</div>;
     }
@@ -305,6 +396,15 @@ export default function DashboardPage() {
           >
             <Wallet size={18} /> Withdrawals
           </button>
+          <button
+  onClick={() => setActiveTab("reports")}
+  className={`flex items-center gap-2 p-2 w-full text-left rounded hover:bg-gray-700 ${
+    activeTab === "reports" ? "bg-gray-700" : ""
+  }`}
+>
+  🚨 Reports
+</button>
+
         </nav>
         <div className="p-4 border-t border-gray-700">
           <button className="flex items-center gap-2 w-full p-2 rounded hover:bg-orange-600 bg-orange-500 text-white">
