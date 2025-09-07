@@ -2,10 +2,10 @@
 
 import dynamic from 'next/dynamic';
 
-const WishlistPage = dynamic(() => import('@/components/WishlistPage'), {
+const MyVouchersPage = dynamic(() => import('@/components/Vouchers'), {
   ssr: false,
 });
 
 export default function Page() {
-  return <WishlistPage />;
+  return <MyVouchersPage />;
 }

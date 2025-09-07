@@ -29,6 +29,7 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
     { label: 'Home', icon: <FiHome />, route: '/' },
     { label: 'Wishlist', icon: <FiHeart />, route: '/wishlist' },
     { label: 'My Orders', icon: <FiPackage />, route: '/orders' },
+    { label: 'My Vouchers', icon: <FiGift />, route: '/vouchers' },
     { label: 'Phones & Tablets', icon: <FiSmartphone />, route: '/category/Phones' },
     { label: 'Computing', icon: <FiMonitor />, route: '/category/Laptops' },
     { label: 'Electronics', icon: <FiTv />, route: '/category/Electronics' },
