@@ -47,13 +47,12 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-40 flex">
-      {/* Backdrop */}
+
       <div
         onClick={onClose}
         className="fixed inset-0 bg-black bg-opacity-30"
       />
 
-      {/* Sidebar Drawer */}
       <div className="relative w-72 bg-white dark:bg-gray-900 shadow-lg h-full transform transition-transform duration-300 translate-x-0 overflow-y-auto">
         <button
           className="absolute top-4 right-4 text-gray-700 dark:text-gray-200"
@@ -61,23 +60,18 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
         >
           ✕
         </button>
-
+        
         <div className="p-6 pt-14">
-          {/* Logo Section */}
-<div className="flex items-center justify-center mb-6 space-x-2">
-  
-  <h2
-    onClick={() => {
-      router.push('/');
-      onClose();
-    }}
-    className="cursor-pointer font-bold text-black text-xl"
-  >
-    NOVAXPRESS
-  </h2>
-  <FiSend className="text-orange-500 text-xl" />
-</div>
-
+          <div className="flex items-center justify-center mb-6 space-x-2">
+            <h2 onClick={() => {
+              router.push('/');
+              onClose();
+            }}
+            className="cursor-pointer font-bold text-black text-xl">
+              NOVAXPRESS
+              </h2>
+              <FiSend className="text-orange-500 text-xl" />
+              </div>
           <ul className="space-y-4">
             {categories.map(({ label, icon, route }, index) => (
               <li
@@ -102,6 +96,7 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
               </span>
               <button onClick={() => setFontSize(f => Math.min(f + 0.1, 2))} className="px-2 py-1 bg-orange-500 text-white rounded">+</button>
             </div>
+
             <div className="flex items-center justify-between text-sm">
               <span className="flex items-center text-gray-600 dark:text-gray-300">
                 <FiZoomOut className="mr-2" /> Zoom Out

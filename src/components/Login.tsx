@@ -24,7 +24,7 @@ export default function LoginModal({
     try {
       const user = await signInWithGoogle(role);
       if (user) {
-        login(user); // ✅ context login
+        login(user); 
 
         toast.success('Signed in successfully');
         onClose();

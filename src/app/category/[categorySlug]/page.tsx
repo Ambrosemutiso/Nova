@@ -2,12 +2,12 @@
 
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import { CldImage } from 'next-cloudinary';
 import { useCart } from '@/app/context/CartContext';
 import { addToWishlist, isInWishlist } from '@/lib/wishlist';
 import type { Product } from '@/app/types/product';
 import { ChevronRight } from 'lucide-react';
+import Image from "next/image";
 
 const LIMIT = 12;
 
@@ -19,9 +19,22 @@ const categoryBannerMap: Record<string, string> = {
 const fetchProducts = async (
   categorySlug: string,
   page: number,
-  sort: string
-): Promise<{ total: number; products: Product[] }> => {
-  const res = await fetch(`/api/products/category/${categorySlug}?page=${page}&limit=${LIMIT}&sort=${sort}`);
+  sort: string,
+  brand: string,
+  minPrice: string,
+  maxPrice: string
+): Promise<{ total: number; products: Product[]; brands: string[] }> => {
+  const query = new URLSearchParams({
+    page: String(page),
+    limit: String(LIMIT),
+    sort,
+  });
+
+  if (brand) query.append('brand', brand);
+  if (minPrice) query.append('minPrice', minPrice);
+  if (maxPrice) query.append('maxPrice', maxPrice);
+
+  const res = await fetch(`/api/products/category/${categorySlug}?${query.toString()}`);
   if (!res.ok) throw new Error('Failed to fetch products');
   return res.json();
 };
@@ -44,8 +57,12 @@ export default function CategoryPage() {
 
   const page = parseInt(searchParams.get('page') || '1');
   const sort = searchParams.get('sort') || 'name-asc';
+  const brand = searchParams.get('brand') || '';
+  const minPrice = searchParams.get('minPrice') || '';
+  const maxPrice = searchParams.get('maxPrice') || '';
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [brands, setBrands] = useState<string[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -53,22 +70,37 @@ export default function CategoryPage() {
 
   useEffect(() => {
     setLoading(true);
-    fetchProducts(safeCategory, page, sort)
-      .then(({ products, total }) => {
+    fetchProducts(safeCategory, page, sort, brand, minPrice, maxPrice)
+      .then(({ products, total, brands }) => {
         const lastPage = Math.ceil(total / LIMIT);
         if (page > lastPage && lastPage > 0) {
           router.push(`/category/${safeCategory}?page=${lastPage}&sort=${sort}`);
         } else {
           setProducts(products);
           setTotal(total);
+          setBrands(brands || []);
         }
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [safeCategory, page, sort, router]);
+  }, [safeCategory, page, sort, brand, minPrice, maxPrice, router]);
 
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    router.push(`/category/${safeCategory}?page=1&sort=${e.target.value}`);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('sort', e.target.value);
+    params.set('page', '1');
+    router.push(`/category/${safeCategory}?${params.toString()}`);
+  };
+
+  const handleFilterChange = (filter: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) {
+      params.set(filter, value);
+    } else {
+      params.delete(filter);
+    }
+    params.set('page', '1');
+    router.push(`/category/${safeCategory}?${params.toString()}`);
   };
 
   const handleAddToCart = (product: Product) => {
@@ -131,27 +163,63 @@ export default function CategoryPage() {
 
   return (
     <div className="md:px-8 lg:px-16 max-w-6xl mx-auto px-4 pt-28 pb-10">
-                  {/* Breadcrumb */}
-                    <div className="mb-6 overflow-x-auto">
-                      <nav className="flex items-center text-sm text-gray-500 whitespace-nowrap flex-nowrap gap-1 px-1">
-                        <span>Home</span>
-                        <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
-                        <span>Shop</span>
-                        <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
-                        <span>Products</span>
-                        <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
-                        <span className="text-gray-500 font-medium">{safeCategory}</span>
-                        </nav>
-                      </div>
-      <div className="w-full h-40 rounded-md mb-6 overflow-hidden relative">
-        <Image src={bannerSrc} alt={`${safeCategory} banner`} fill className="object-cover" />
+      {/* Breadcrumb */}
+      <div className="mb-6 overflow-x-auto">
+        <nav className="flex items-center text-sm text-gray-500 whitespace-nowrap flex-nowrap gap-1 px-1">
+          <span>Home</span>
+          <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
+          <span>Shop</span>
+          <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
+          <span>Products</span>
+          <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
+          <span className="text-gray-500 font-medium">{safeCategory}</span>
+        </nav>
       </div>
 
-      <div className="flex justify-end mb-4">
+<div className="w-full h-40 rounded-md mb-6 overflow-hidden relative">
+  <Image
+    src={bannerSrc}
+    alt={`${safeCategory} banner`}
+    fill
+    className="object-cover"
+  />
+</div>   
+      {/* Filters */}
+      <div className="flex flex-wrap gap-4 mb-6 items-center">
+        {/* Dynamic Brands */}
+        <select
+          value={brand}
+          onChange={(e) => handleFilterChange('brand', e.target.value)}
+          className="border border-gray-300 px-3 py-2 rounded-md text-sm"
+        >
+          <option value="">All Brands</option>
+          {brands.map((b) => (
+            <option key={b} value={b}>
+              {b}
+            </option>
+          ))}
+        </select>
+
+        <input
+          type="number"
+          placeholder="Min Price"
+          value={minPrice}
+          onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+          className="border border-gray-300 px-3 py-2 rounded-md text-sm w-32"
+        />
+
+        <input
+          type="number"
+          placeholder="Max Price"
+          value={maxPrice}
+          onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+          className="border border-gray-300 px-3 py-2 rounded-md text-sm w-32"
+        />
+
         <select
           value={sort}
           onChange={handleSortChange}
-          className="border border-gray-300 px-3 py-2 rounded-md text-sm"
+          className="border border-gray-300 px-3 py-2 rounded-md text-sm ml-auto"
         >
           <option value="name-asc">Name (A–Z)</option>
           <option value="name-desc">Name (Z–A)</option>
@@ -160,6 +228,7 @@ export default function CategoryPage() {
         </select>
       </div>
 
+      {/* Products Grid */}
       {loading ? (
         <div className="text-center py-12 text-gray-600">Loading products...</div>
       ) : (
@@ -237,11 +306,12 @@ export default function CategoryPage() {
         </div>
       )}
 
+      {/* Pagination */}
       <div className="flex justify-center gap-2">
         {Array.from({ length: totalPages }, (_, i) => (
           <a
             key={i}
-            href={`?page=${i + 1}&sort=${sort}`}
+            href={`?page=${i + 1}&sort=${sort}&brand=${brand}&minPrice=${minPrice}&maxPrice=${maxPrice}`}
             className={`px-3 py-1 border rounded-md ${
               page === i + 1 ? 'bg-orange-500 text-white' : 'bg-white text-gray-700'
             }`}
