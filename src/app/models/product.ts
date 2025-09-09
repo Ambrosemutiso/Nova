@@ -17,7 +17,7 @@ const productSchema = new Schema(
     price: { type: Number, required: true },
     oldPrice: { type: Number, default: null },
     calculatedPrice: {
-      type: Schema.Types.Mixed, // Can be number or string
+      type: Schema.Types.Mixed, 
       required: true,
     },
     county: { type: String, required: true },
