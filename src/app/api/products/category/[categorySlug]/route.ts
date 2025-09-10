@@ -1,14 +1,14 @@
-// /api/products/category/[categorySlug]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
 import Product from '@/app/models/product';
 import Review from '@/app/models/review';
 
 export async function GET(
-  req: NextRequest,
+  req: NextRequest, 
   context: { params: Promise<{ categorySlug: string }> }
 ) {
   try {
+
     const { categorySlug } = await context.params;
     const { searchParams } = new URL(req.url);
 
@@ -33,7 +33,6 @@ export async function GET(
 
     const categoryRegex = new RegExp(`^${categorySlug}$`, 'i');
 
-    // ✅ Build filters dynamically
     const filters: any = { category: categoryRegex };
     if (brand) filters.brand = brand;
     if (minPrice > 0) filters.calculatedPrice = { ...filters.calculatedPrice, $gte: minPrice };
@@ -42,7 +41,7 @@ export async function GET(
     const [total, products, brands] = await Promise.all([
       Product.countDocuments(filters),
       Product.find(filters).sort(sortOption).skip(skip).limit(limit),
-      Product.distinct('brand', { category: categoryRegex }), // ✅ all brands in this category
+      Product.distinct('brand', { category: categoryRegex }), 
     ]);
 
     const productIds = products.map((p) => p._id);
@@ -73,6 +72,7 @@ export async function GET(
         averageRating: 0,
         reviewCount: 0,
       };
+      
       return {
         ...product.toObject(),
         rating: review.averageRating,

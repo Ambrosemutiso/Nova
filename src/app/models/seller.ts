@@ -1,29 +1,47 @@
 import mongoose from 'mongoose';
 
+const settingsSchema = new mongoose.Schema({
+  currency: { type: String, default: 'USD' },
+  country: { type: String, default: 'US' },
+  language: { type: String, default: 'en' },
+}, { _id: false });
+
 const sellerSchema = new mongoose.Schema({
   name: { type: String },
   email: { type: String, unique: true },
-  image: { type: String }, // You can still keep this if needed for profile
-  logo: { type: String }, // NEW: logo for shop header
-  banner: { type: String }, // NEW: banner image for shop header
-  role: { type: String, enum: ['seller'], default: 'seller' },
+  image: { type: String }, 
+  logo: { type: String }, 
+  banner: { type: String }, 
+  role: { 
+    type: String, 
+    enum: ['seller'],
+    default:'seller'},
   shopName: { type: String },
-  isVerified: { type: Boolean, default: false }, // NEW: verification badge
+  isVerified: { 
+    type: Boolean, 
+    default: false }, 
   followers: [
-    {
-      userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-      followedAt: { type: Date },
-    }
-  ],
+    {userId: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'User' }, 
+      followedAt: { 
+        type: Date },
+      }],
   shop: {
-    isActive: { type: Boolean, default: false },
+    isActive: { 
+      type: Boolean, 
+      default: false },
     activatedAt: { type: Date },
     expiresAt: { type: Date },
     amountPaid: { type: Number },
     transactionId: { type: String }
   },
+
+  settings: { type: settingsSchema, default: () => ({}) },
+
   createdAt: { type: Date, default: Date.now },
 });
 
 const Seller = mongoose.models.Seller || mongoose.model('Seller', sellerSchema);
+
 export default Seller;
