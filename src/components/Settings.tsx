@@ -8,6 +8,8 @@ interface Settings {
   currency: string;
   language: string;
   timezone: string;
+  zoom: number;       // new
+  theme: string;      // new
 }
 
 interface ApiResponse {
@@ -21,6 +23,8 @@ export default function SettingsPage() {
     currency: '',
     language: '',
     timezone: '',
+    zoom: 100,
+    theme: 'system',
   });
   const [role, setRole] = useState<'user' | 'seller' | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,23 +32,16 @@ export default function SettingsPage() {
 
   const router = useRouter();
 
-  // ✅ Token comes from localStorage
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-
-  // Fetch existing settings
+  // ✅ No token usage anymore
   useEffect(() => {
-    if (!token) return;
-
     async function fetchSettings() {
       try {
-        const res = await fetch(`/api/settings`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(`/api/settings`);
         if (!res.ok) throw new Error('Failed to fetch settings');
         const data: ApiResponse = await res.json();
 
         setRole(data.role);
-        setSettings(data.settings);
+        setSettings({ ...settings, ...data.settings });
       } catch (error) {
         console.error(error);
       } finally {
@@ -53,17 +50,16 @@ export default function SettingsPage() {
     }
 
     fetchSettings();
-  }, [token]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Save updated settings
   const handleSave = async () => {
-    if (!token) return;
-
     try {
       setSaving(true);
       const res = await fetch(`/api/settings`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ settings }),
       });
       if (!res.ok) throw new Error('Failed to update settings');
@@ -135,7 +131,7 @@ export default function SettingsPage() {
       </label>
 
       {/* Timezone */}
-      <label className="block mb-4">
+      <label className="block mb-3">
         <span className="text-gray-700">Timezone</span>
         <input
           type="text"
@@ -144,6 +140,54 @@ export default function SettingsPage() {
           placeholder="e.g., Africa/Nairobi"
           className="w-full mt-1 p-2 border rounded-md"
         />
+      </label>
+
+      {/* Zoom */}
+      <label className="block mb-3">
+        <span className="text-gray-700">Zoom</span>
+        <div className="flex items-center gap-2 mt-1">
+          <button
+            type="button"
+            className="px-3 py-1 border rounded-md"
+            onClick={() =>
+              setSettings((prev) => ({ ...prev, zoom: Math.max(50, prev.zoom - 10) }))
+            }
+          >
+            -
+          </button>
+          <input
+            type="number"
+            value={settings.zoom}
+            onChange={(e) => setSettings({ ...settings, zoom: Number(e.target.value) })}
+            className="w-20 p-2 border rounded-md text-center"
+            min={50}
+            max={200}
+          />
+          <button
+            type="button"
+            className="px-3 py-1 border rounded-md"
+            onClick={() =>
+              setSettings((prev) => ({ ...prev, zoom: Math.min(200, prev.zoom + 10) }))
+            }
+          >
+            +
+          </button>
+          <span className="ml-2 text-sm text-gray-500">%</span>
+        </div>
+      </label>
+
+      {/* Theme */}
+      <label className="block mb-4">
+        <span className="text-gray-700">Theme</span>
+        <select
+          value={settings.theme}
+          onChange={(e) => setSettings({ ...settings, theme: e.target.value })}
+          className="w-full mt-1 p-2 border rounded-md"
+        >
+          <option value="system">System Default</option>
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+        </select>
       </label>
 
       <button

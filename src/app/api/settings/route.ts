@@ -1,36 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
-import {dbConnect} from '@/lib/dbConnect';
+import { dbConnect } from '@/lib/dbConnect';
 import User from '@/app/models/user';
 import Seller from '@/app/models/seller';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret';
-
-// ✅ Verify JWT
-function verifyToken(req: NextRequest) {
-  const authHeader = req.headers.get('authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
-  try {
-    const token = authHeader.split(' ')[1];
-    return jwt.verify(token, JWT_SECRET) as { id: string; role: string };
-  } catch {
-    return null;
-  }
-}
 
 // ✅ GET settings
 export async function GET(req: NextRequest) {
   await dbConnect();
-  const decoded = verifyToken(req);
-  if (!decoded) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { searchParams } = new URL(req.url);
+  const userId = searchParams.get('userId');
+  const role = searchParams.get('role'); // 'user' or 'seller'
+
+  if (!userId || !role) {
+    return NextResponse.json({ error: 'userId and role are required' }, { status: 400 });
   }
 
   let account;
-  if (decoded.role === 'seller') {
-    account = await Seller.findById(decoded.id).select('settings');
+  if (role === 'seller') {
+    account = await Seller.findById(userId).select('settings');
   } else {
-    account = await User.findById(decoded.id).select('settings');
+    account = await User.findById(userId).select('settings');
   }
 
   if (!account) {
@@ -38,7 +27,7 @@ export async function GET(req: NextRequest) {
   }
 
   return NextResponse.json({
-    role: decoded.role,
+    role,
     settings: account.settings,
   });
 }
@@ -46,28 +35,24 @@ export async function GET(req: NextRequest) {
 // ✅ PATCH settings
 export async function PATCH(req: NextRequest) {
   await dbConnect();
-  const decoded = verifyToken(req);
-  if (!decoded) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
 
   const body = await req.json();
-  const { settings } = body;
+  const { userId, role, settings } = body;
 
-  if (!settings) {
-    return NextResponse.json({ error: 'Settings are required' }, { status: 400 });
+  if (!userId || !role || !settings) {
+    return NextResponse.json({ error: 'userId, role and settings are required' }, { status: 400 });
   }
 
   let account;
-  if (decoded.role === 'seller') {
+  if (role === 'seller') {
     account = await Seller.findByIdAndUpdate(
-      decoded.id,
+      userId,
       { $set: { settings } },
       { new: true, runValidators: true }
     ).select('settings');
   } else {
     account = await User.findByIdAndUpdate(
-      decoded.id,
+      userId,
       { $set: { settings } },
       { new: true, runValidators: true }
     ).select('settings');
