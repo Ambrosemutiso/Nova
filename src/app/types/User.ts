@@ -4,4 +4,7 @@ export interface User {
   email: string;
   image: string;
   role: 'buyer' | 'seller';
+  country: string;
+  currency: string;
+  phoneNumber: string;
 }

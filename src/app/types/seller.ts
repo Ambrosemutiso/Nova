@@ -6,6 +6,9 @@ export interface Seller {
   logo?: string;
   banner?: string;
   role: 'seller';
+  country: string;
+  currency: string;
+  phoneNumber: string;
   shopName?: string;
   isVerified: boolean;
   followers: {

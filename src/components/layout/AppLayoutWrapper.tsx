@@ -9,6 +9,7 @@ import { CartProvider } from '@/app/context/CartContext';
 import { AuthProvider } from '@/app/context/AuthContext';
 import { ToastContainer } from 'react-toastify';
 import { ThemeProvider } from 'next-themes';
+import { LanguageProvider } from '@/app/context/LanguageContext';
 
 export default function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
@@ -33,6 +34,7 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
   }
 
   return (
+    <LanguageProvider>
     <ThemeProvider attribute="class" defaultTheme="light">
       <AuthProvider>
         <CartProvider>
@@ -47,5 +49,6 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
         </CartProvider>
       </AuthProvider>
     </ThemeProvider>
+    </LanguageProvider>
   );
 }
