@@ -2,18 +2,19 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes';
 import {
   FiHome, FiSmartphone, FiMonitor, FiHeart, FiUser,
   FiTv, FiWatch, FiGift, FiTruck, FiBook, FiTool, 
   FiGrid, FiZoomIn, FiZoomOut, FiPackage, FiLayout, 
-  FiLoader, FiSend, FiSun, FiMoon
+  FiLoader, FiSend, FiSun, FiMoon, FiGlobe
 } from 'react-icons/fi';
 
 export default function Sidebar({ onClose }: { onClose: () => void }) {
-  const router = useRouter();
-
   const [fontSize, setFontSize] = useState<number>(() => parseFloat(localStorage.getItem('fontSize') || '1'));
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => (localStorage.getItem('theme') as 'light' | 'dark') || 'light');
+  const [language, setLanguage] = useState<string>(() => localStorage.getItem('language') || 'en');
+  const { theme, setTheme } = useTheme();
+  const router = useRouter();
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -23,21 +24,14 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
   }, []);
 
   useEffect(() => {
-    document.documentElement.style.setProperty('--zoom', fontSize.toString());
     document.documentElement.style.fontSize = `${fontSize * 100}%`;
     localStorage.setItem('fontSize', fontSize.toString());
   }, [fontSize]);
 
   useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => setTheme(t => (t === 'light' ? 'dark' : 'light'));
+    localStorage.setItem('language', language);
+    // optional: you could also trigger an i18n library change here
+  }, [language]);
 
   const categories = [
     { label: 'Home', icon: <FiHome />, route: '/' },
@@ -62,7 +56,10 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-40 flex">
 
-      <div onClick={onClose} className="fixed inset-0 bg-black bg-opacity-30" />
+      <div
+        onClick={onClose}
+        className="fixed inset-0 bg-black bg-opacity-30"
+      />
 
       <div className="relative w-72 bg-white dark:bg-gray-900 shadow-lg h-full transform transition-transform duration-300 translate-x-0 overflow-y-auto">
         <button
@@ -74,13 +71,11 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
         
         <div className="p-6 pt-14">
           <div className="flex items-center justify-center mb-6 space-x-2">
-            <h2
-              onClick={() => {
-                router.push('/');
-                onClose();
-              }}
-              className="cursor-pointer font-bold text-black text-xl"
-            >
+            <h2 onClick={() => {
+              router.push('/');
+              onClose();
+            }}
+            className="cursor-pointer font-bold text-black text-xl">
               NOVAXPRESS
             </h2>
             <FiSend className="text-orange-500 text-xl" />
@@ -102,10 +97,10 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
             ))}
           </ul>
 
+          {/* ⚙ Settings Section */}
           <div className="mt-8 space-y-4 border-t pt-4">
             <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200">Settings</h3>
-
-            {/* Zoom Controls */}
+            
             <div className="flex items-center justify-between text-sm">
               <span className="flex items-center text-gray-600 dark:text-gray-300">
                 <FiZoomIn className="mr-2" /> Zoom In
@@ -115,6 +110,7 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
                 className="px-2 py-1 bg-orange-500 text-white rounded"
               >+</button>
             </div>
+
             <div className="flex items-center justify-between text-sm">
               <span className="flex items-center text-gray-600 dark:text-gray-300">
                 <FiZoomOut className="mr-2" /> Zoom Out
@@ -125,19 +121,35 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
               >-</button>
             </div>
 
-            {/* Theme Toggle */}
-            <div className="flex items-center justify-between text-sm mt-4">
+            <div className="flex items-center justify-between text-sm">
               <span className="flex items-center text-gray-600 dark:text-gray-300">
-                {theme === 'light' ? <FiSun className="mr-2" /> : <FiMoon className="mr-2" />}
-                Theme
+                {theme === 'light' ? <FiSun className="mr-2" /> : <FiMoon className="mr-2" />} Theme
               </span>
               <button
-                onClick={toggleTheme}
+                onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
                 className="px-2 py-1 bg-orange-500 text-white rounded"
               >
                 {theme === 'light' ? 'Dark' : 'Light'}
               </button>
             </div>
+
+            <div className="flex items-center justify-between text-sm">
+              <span className="flex items-center text-gray-600 dark:text-gray-300">
+                <FiGlobe className="mr-2" /> Language
+              </span>
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="px-2 py-1 border rounded bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200"
+              >
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+                <option value="es">Español</option>
+                <option value="de">Deutsch</option>
+                <option value="sw">Kiswahili</option>
+              </select>
+            </div>
+
           </div>
         </div>
       </div>

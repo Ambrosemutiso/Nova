@@ -7,7 +7,7 @@ import LoginWrapper from '@/components/LoginWrapper';
 import CartNotification from '@/app/cart/CartNotification';
 import { CartProvider } from '@/app/context/CartContext';
 import { AuthProvider } from '@/app/context/AuthContext';
-import { toast, ToastContainer } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import { ThemeProvider } from 'next-themes';
 
 export default function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
@@ -16,6 +16,12 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
   useEffect(() => {
     const timeout = setTimeout(() => setLoading(false), 1000); 
     return () => clearTimeout(timeout);
+  }, []);
+
+  // ✅ Apply saved zoom on load
+  useEffect(() => {
+    const savedZoom = parseFloat(localStorage.getItem('fontSize') || '1');
+    document.documentElement.style.fontSize = `${savedZoom * 100}%`;
   }, []);
 
   if (loading) {
@@ -37,7 +43,7 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
           </main>
           <BackToTopButton />
           <LoginWrapper />
-          <ToastContainer/>
+          <ToastContainer />
         </CartProvider>
       </AuthProvider>
     </ThemeProvider>

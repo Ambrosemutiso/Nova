@@ -7,14 +7,14 @@ export async function POST(req: Request) {
   await dbConnect();
 
   try {
-    const { _id, name, email, image, role } = await req.json(); // ✅ include _id
+    const { _id, name, email, image, role, phoneNumber, country, currency } = await req.json(); // ✅ include _id
 
     // Check if user already exists by email
     let user = await User.findOne({ email });
 
     // If not, create new user with _id
     if (!user) {
-      user = await User.create({ _id, name, email, image, role });
+      user = await User.create({ _id, name, email, image, role, phoneNumber, country, currency });
     }
 
     return NextResponse.json({ success: true, user });

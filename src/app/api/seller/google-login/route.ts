@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
     await dbConnect();
 
     const body = await req.json();
-    const { name, email, image, role } = body;
+    const { name, email, image, role, phoneNumber, country, currency } = body;
 
     if (!email) {
       return NextResponse.json({ success: false, message: 'Email is required' }, { status: 400 });
@@ -21,6 +21,9 @@ export async function POST(req: NextRequest) {
         email,
         image,
         role: role || 'seller',
+        phoneNumber,
+        country,
+        currency,
       });
     }
 

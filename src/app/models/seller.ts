@@ -7,11 +7,14 @@ const settingsSchema = new mongoose.Schema({
 }, { _id: false });
 
 const sellerSchema = new mongoose.Schema({
-  name: { type: String },
-  email: { type: String, unique: true },
+  name: { type: String, required: true},
+  email: { type: String, unique: true, required: true},
   image: { type: String }, 
   logo: { type: String }, 
   banner: { type: String }, 
+  phoneNumber: { type: String, unique: true, required: true},
+  country: { type: String },
+  currency: { type: String },
   role: { 
     type: String, 
     enum: ['seller'],
