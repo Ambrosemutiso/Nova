@@ -6,12 +6,14 @@ import {
   FiHome, FiSmartphone, FiMonitor, FiHeart, FiUser,
   FiTv, FiWatch, FiGift, FiTruck, FiBook, FiTool, 
   FiGrid, FiZoomIn, FiZoomOut, FiPackage, FiLayout, 
-  FiLoader, FiSend
+  FiLoader, FiSend, FiSun, FiMoon
 } from 'react-icons/fi';
 
 export default function Sidebar({ onClose }: { onClose: () => void }) {
-  const [fontSize, setFontSize] = useState<number>(() => parseFloat(localStorage.getItem('fontSize') || '1'));
   const router = useRouter();
+
+  const [fontSize, setFontSize] = useState<number>(() => parseFloat(localStorage.getItem('fontSize') || '1'));
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => (localStorage.getItem('theme') as 'light' | 'dark') || 'light');
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -22,8 +24,20 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
 
   useEffect(() => {
     document.documentElement.style.setProperty('--zoom', fontSize.toString());
+    document.documentElement.style.fontSize = `${fontSize * 100}%`;
     localStorage.setItem('fontSize', fontSize.toString());
   }, [fontSize]);
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(t => (t === 'light' ? 'dark' : 'light'));
 
   const categories = [
     { label: 'Home', icon: <FiHome />, route: '/' },
@@ -48,10 +62,7 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-40 flex">
 
-      <div
-        onClick={onClose}
-        className="fixed inset-0 bg-black bg-opacity-30"
-      />
+      <div onClick={onClose} className="fixed inset-0 bg-black bg-opacity-30" />
 
       <div className="relative w-72 bg-white dark:bg-gray-900 shadow-lg h-full transform transition-transform duration-300 translate-x-0 overflow-y-auto">
         <button
@@ -63,15 +74,18 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
         
         <div className="p-6 pt-14">
           <div className="flex items-center justify-center mb-6 space-x-2">
-            <h2 onClick={() => {
-              router.push('/');
-              onClose();
-            }}
-            className="cursor-pointer font-bold text-black text-xl">
+            <h2
+              onClick={() => {
+                router.push('/');
+                onClose();
+              }}
+              className="cursor-pointer font-bold text-black text-xl"
+            >
               NOVAXPRESS
-              </h2>
-              <FiSend className="text-orange-500 text-xl" />
-              </div>
+            </h2>
+            <FiSend className="text-orange-500 text-xl" />
+          </div>
+
           <ul className="space-y-4">
             {categories.map(({ label, icon, route }, index) => (
               <li
@@ -90,28 +104,40 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
 
           <div className="mt-8 space-y-4 border-t pt-4">
             <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200">Settings</h3>
+
+            {/* Zoom Controls */}
             <div className="flex items-center justify-between text-sm">
               <span className="flex items-center text-gray-600 dark:text-gray-300">
                 <FiZoomIn className="mr-2" /> Zoom In
               </span>
-              <button onClick={() => setFontSize(f => Math.min(f + 0.1, 2))} className="px-2 py-1 bg-orange-500 text-white rounded">+</button>
+              <button
+                onClick={() => setFontSize(f => Math.min(f + 0.1, 2))}
+                className="px-2 py-1 bg-orange-500 text-white rounded"
+              >+</button>
             </div>
-
             <div className="flex items-center justify-between text-sm">
               <span className="flex items-center text-gray-600 dark:text-gray-300">
                 <FiZoomOut className="mr-2" /> Zoom Out
               </span>
-              <button onClick={() => setFontSize(f => Math.max(f - 0.1, 0.5))} className="px-2 py-1 bg-orange-500 text-white rounded">-</button>
+              <button
+                onClick={() => setFontSize(f => Math.max(f - 0.1, 0.5))}
+                className="px-2 py-1 bg-orange-500 text-white rounded"
+              >-</button>
             </div>
-          </div>
 
-          <div className="mt-8">
-            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2">Update Profile</h3>
-            <form onSubmit={(e) => { e.preventDefault(); alert('Profile updated!'); }} className="space-y-3">
-              <input type="text" placeholder="Full Name" className="w-full px-3 py-2 border rounded dark:bg-gray-800 dark:text-white" />
-              <input type="email" placeholder="Email" className="w-full px-3 py-2 border rounded dark:bg-gray-800 dark:text-white" />
-              <button type="submit" className="w-full bg-orange-500 text-white py-2 rounded">Update</button>
-            </form>
+            {/* Theme Toggle */}
+            <div className="flex items-center justify-between text-sm mt-4">
+              <span className="flex items-center text-gray-600 dark:text-gray-300">
+                {theme === 'light' ? <FiSun className="mr-2" /> : <FiMoon className="mr-2" />}
+                Theme
+              </span>
+              <button
+                onClick={toggleTheme}
+                className="px-2 py-1 bg-orange-500 text-white rounded"
+              >
+                {theme === 'light' ? 'Dark' : 'Light'}
+              </button>
+            </div>
           </div>
         </div>
       </div>

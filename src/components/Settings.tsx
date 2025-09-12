@@ -8,8 +8,8 @@ interface Settings {
   currency: string;
   language: string;
   timezone: string;
-  zoom: number;       // new
-  theme: string;      // new
+  zoom: number;
+  theme: string;
 }
 
 interface ApiResponse {
@@ -26,13 +26,13 @@ export default function SettingsPage() {
     zoom: 100,
     theme: 'system',
   });
+
   const [role, setRole] = useState<'user' | 'seller' | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   const router = useRouter();
 
-  // ✅ No token usage anymore
   useEffect(() => {
     async function fetchSettings() {
       try {
@@ -50,10 +50,9 @@ export default function SettingsPage() {
     }
 
     fetchSettings();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, []);
 
-  // Save updated settings
   const handleSave = async () => {
     try {
       setSaving(true);
@@ -84,7 +83,6 @@ export default function SettingsPage() {
         {role === 'seller' ? 'Seller Settings' : 'User Settings'}
       </h2>
 
-      {/* Country */}
       <label className="block mb-3">
         <span className="text-gray-700">Country</span>
         <select
@@ -99,14 +97,13 @@ export default function SettingsPage() {
         </select>
       </label>
 
-      {/* Currency */}
       <label className="block mb-3">
         <span className="text-gray-700">Currency</span>
         <select
           value={settings.currency}
           onChange={(e) => setSettings({ ...settings, currency: e.target.value })}
-          className="w-full mt-1 p-2 border rounded-md"
-        >
+          className="w-full mt-1 p-2 border rounded-md">
+
           <option value="">Select Currency</option>
           <option value="KES">KES (Kenyan Shilling)</option>
           <option value="UGX">UGX (Ugandan Shilling)</option>
@@ -115,7 +112,6 @@ export default function SettingsPage() {
         </select>
       </label>
 
-      {/* Language */}
       <label className="block mb-3">
         <span className="text-gray-700">Language</span>
         <select
@@ -142,7 +138,6 @@ export default function SettingsPage() {
         />
       </label>
 
-      {/* Zoom */}
       <label className="block mb-3">
         <span className="text-gray-700">Zoom</span>
         <div className="flex items-center gap-2 mt-1">
@@ -176,7 +171,6 @@ export default function SettingsPage() {
         </div>
       </label>
 
-      {/* Theme */}
       <label className="block mb-4">
         <span className="text-gray-700">Theme</span>
         <select
