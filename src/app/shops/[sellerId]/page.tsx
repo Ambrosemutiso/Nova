@@ -1,41 +1,83 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import ProductCard from '@/components/ProductCard';
+import { useAuth } from '@/app/context/AuthContext';
+import { toast, ToastContainer } from 'react-toastify';
 import type { Product } from '@/app/types/product';
-
-interface Seller {
-  _id: string;
-  name: string;
-  email: string;
-  image?: string;
-  shopName?: string;
-}
+import type { Seller } from '@/app/types/seller';
 
 export default function SellerShopPage() {
   const { sellerId } = useParams();
+  const { user } = useAuth();
+
   const [seller, setSeller] = useState<Seller | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isFollowing, setIsFollowing] = useState(false);
+
+  const fetchData = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/shops/${sellerId}`);
+      const data = await res.json();
+
+      if (data.error) {
+        setSeller(null);
+      } else {
+        setSeller(data.seller);
+        setProducts(data.products);
+
+        if (user) {
+          const userIsFollowing = data.seller.followers?.some(
+            (f: { userId: string }) => f.userId === user._id
+          );
+          setIsFollowing(userIsFollowing);
+        }
+      }
+      setLoading(false);
+    } catch (err) {
+      console.error('Failed to fetch shop', err);
+      setLoading(false);
+    }
+  }, [sellerId, user]);
 
   useEffect(() => {
-    if (!sellerId) return;
+    fetchData();
+  }, [fetchData]);
 
-    fetch(`/api/shops/${sellerId}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.error) {
-          setSeller(null);
-        } else {
-          setSeller(data.seller);
-          setProducts(data.products);
-        }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, [sellerId]);
+  const handleFollowAction = async (action: 'follow' | 'unfollow') => {
+    if (!user) {
+      toast.error(`Please log in to ${action} sellers`);
+      return;
+    }
+
+    if (user._id === sellerId) {
+      return toast.error('You cannot follow yourself.');
+    }
+
+    try {
+      const res = await fetch('/api/follow-seller', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sellerId, userId: user._id, action }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        toast.success(data.message || `${action}ed seller`);
+        setIsFollowing(action === 'follow');
+        fetchData();
+      } else {
+        toast.error(data.message || `Failed to ${action}`);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('An error occurred.');
+    }
+  };
 
   const groupedByCategory = products.reduce<Record<string, Product[]>>((acc, product) => {
     const cat = product.category || 'Uncategorized';
@@ -64,16 +106,39 @@ export default function SellerShopPage() {
 
   return (
     <div className="pt-28 pb-10">
+      <ToastContainer/>
       {/* Banner */}
-      <div className="w-full h-40 md:h-60 bg-cover bg-center" style={{ backgroundImage: `url('/banner3.jpg')` }} />
+      <div
+        className="w-full h-40 md:h-60 bg-cover bg-center"
+        style={{ backgroundImage: `url('/banner3.jpg')` }}
+      />
 
       {/* Shop Header */}
-      <div className="px-6 flex items-center gap-6 mb-8 -mt-10">
-        <img
-          src={seller.image || '/default-avatar.png'}
-          alt={seller.name}
-          className="w-20 h-20 rounded-full object-cover border-4 border-white bg-white"
-        />
+      <div className="px-6 flex justify-between items-start gap-6 mb-8 -mt-10">
+        <div className="flex items-center gap-4">
+          <img
+            src={seller.image || '/default-avatar.png'}
+            alt={seller.name}
+            className="w-20 h-20 rounded-full object-cover border-4 border-white bg-white"
+          />
+          <div>
+            <h1 className="text-lg font-semibold">{seller.shopName || seller.name}</h1>
+            <p className="text-sm text-gray-500">
+              {seller.followers?.length || 0} Followers
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() =>
+            handleFollowAction(isFollowing ? 'unfollow' : 'follow')
+          }
+          className={`px-4 py-2 rounded-md font-medium ${
+            isFollowing ? 'bg-gray-300 text-gray-800' : 'bg-orange-500 text-white'
+          }`}
+        >
+          {isFollowing ? 'Following' : 'Follow'}
+        </button>
       </div>
 
       {/* Products by Category */}
@@ -83,7 +148,7 @@ export default function SellerShopPage() {
         ) : (
           sortedCategories.map((category) => {
             const productsInCategory = groupedByCategory[category];
-            const displayedProducts = productsInCategory.slice(0, 12); // Show only 12
+            const displayedProducts = productsInCategory.slice(0, 12);
 
             return (
               <div key={category} className="mb-10 relative">

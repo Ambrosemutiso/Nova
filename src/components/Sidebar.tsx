@@ -30,7 +30,6 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
 
   useEffect(() => {
     localStorage.setItem('language', language);
-    // optional: you could also trigger an i18n library change here
   }, [language]);
 
   const categories = [
@@ -80,7 +79,7 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
             </h2>
             <FiSend className="text-orange-500 text-xl" />
           </div>
-
+          
           <ul className="space-y-4">
             {categories.map(({ label, icon, route }, index) => (
               <li
@@ -97,7 +96,6 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
             ))}
           </ul>
 
-          {/* ⚙ Settings Section */}
           <div className="mt-8 space-y-4 border-t pt-4">
             <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200">Settings</h3>
             
@@ -149,7 +147,6 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
                 <option value="sw">Kiswahili</option>
               </select>
             </div>
-
           </div>
         </div>
       </div>
