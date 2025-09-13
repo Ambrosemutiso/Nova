@@ -47,7 +47,7 @@ export default function SellerShopPage() {
     fetchData();
   }, [fetchData]);
 
-  const handleFollowAction = async (action: 'Follow' | 'Following') => {
+  const handleFollowAction = async (action: 'follow' | 'unfollow') => {
     if (!user) {
       toast.error(`Please log in to ${action} sellers`);
       return;
@@ -68,7 +68,7 @@ export default function SellerShopPage() {
 
       if (res.ok && data.success) {
         toast.success(data.message || `${action}ed seller`);
-        setIsFollowing(action === 'Follow');
+        setIsFollowing(action === 'follow');
         fetchData();
       } else {
         toast.error(data.message || `Failed to ${action}`);
@@ -107,41 +107,39 @@ export default function SellerShopPage() {
   return (
     <div className="pt-28 pb-10">
       <ToastContainer/>
-{/* Banner */}
-<div
-  className="w-full h-40 md:h-60 bg-cover bg-center"
-  style={{ backgroundImage: `url('/banner3.jpg')` }}
-/>
-
-{/* Seller info block BELOW banner */}
-<div className="px-6 -mt-10">
-  <div className="bg-white rounded-xl shadow-md p-4 flex justify-between items-center">
-    <div className="flex items-center gap-4">
-      <img
-        src={seller.image || '/default-avatar.png'}
-        alt={seller.name}
-        className="w-20 h-20 rounded-full object-cover border-4 border-white bg-white"
+      {/* Banner */}
+      <div
+        className="w-full h-40 md:h-60 bg-cover bg-center"
+        style={{ backgroundImage: `url('/banner3.jpg')` }}
       />
-      <div>
-        <h1 className="text-lg font-semibold">{seller.shopName || seller.name}</h1>
-        <p className="text-sm text-gray-500">
-          {seller.followers?.length || 0} Followers
-        </p>
-      </div>
-    </div>
 
-    <button
-      onClick={() =>
-        handleFollowAction(isFollowing ? 'Following' : 'Follow')
-      }
-      className={`px-4 py-2 rounded-md text-white ${
-        isFollowing ? 'bg-gray-400' : 'bg-orange-500'
-      }`}
-    >
-      {isFollowing ? 'Following' : 'Follow'}
-    </button>
-  </div>
-</div>
+      {/* Shop Header */}
+      <div className="px-6 flex justify-between items-start gap-6 mb-8 -mt-10">
+        <div className="flex items-center gap-4">
+          <img
+            src={seller.image || '/default-avatar.png'}
+            alt={seller.name}
+            className="w-20 h-20 rounded-full object-cover border-4 border-white bg-white"
+          />
+          <div>
+            <h1 className="text-lg font-semibold">{seller.shopName || seller.name}</h1>
+            <p className="text-sm text-gray-500">
+              {seller.followers?.length || 0} Followers
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() =>
+            handleFollowAction(isFollowing ? 'unfollow' : 'follow')
+          }
+          className={`px-4 py-2 rounded-md font-medium ${
+            isFollowing ? 'bg-gray-300 text-gray-800' : 'bg-orange-500 text-white'
+          }`}
+        >
+          {isFollowing ? 'Following' : 'Follow'}
+        </button>
+      </div>
 
       {/* Products by Category */}
       <div className="px-6">
