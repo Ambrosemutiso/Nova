@@ -61,7 +61,7 @@ export default function ProductReviewSection({
   const averageRating =
     reviews.reduce((sum, r) => sum + r.rating, 0) / (reviews.length || 1);
 
-  const handleFollowAction = async (action: 'follow' | 'unfollow') => {
+  const handleFollowAction = async (action: 'Follow' | 'Following') => {
     if (!user) {
       toast.error(`Please log in to ${action} sellers`);
       return showLoginModal();
@@ -82,7 +82,7 @@ export default function ProductReviewSection({
 
       if (res.ok && data.success) {
         toast.success(data.message || `${action}ed seller`);
-        setIsFollowing(action === 'follow');
+        setIsFollowing(action === 'Follow');
         fetchData();
       } else {
         toast.error(data.message || `Failed to ${action}`);
@@ -218,12 +218,12 @@ export default function ProductReviewSection({
       {user && (
         <>
           <button
-            onClick={() => handleFollowAction(isFollowing ? 'unfollow' : 'follow')}
+            onClick={() => handleFollowAction(isFollowing ? 'Following' : 'Follow')}
             className={`px-4 py-1 rounded text-sm ${
               isFollowing ? 'bg-gray-300 text-black' : 'bg-orange-500 text-white'
             }`}
           >
-            {isFollowing ? 'Unfollow' : 'Follow'}
+            {isFollowing ? 'Following' : 'Follow'}
           </button>
 
           <button
