@@ -122,8 +122,8 @@ export default function SellerShopPage() {
             className="w-20 h-20 rounded-full object-cover border-4 border-white bg-white"
           />
           <div>
-            <h1 className="text-lg font-semibold">{seller.shopName || seller.name}</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="text-lg font-semibold text-orange-600">{seller.shopName || seller.name}</h1>
+            <p className="text-sm text-orange-500">
               {seller.followers?.length || 0} Followers
             </p>
           </div>

@@ -178,14 +178,9 @@ export default function SellerDashboard() {
       <h1 className="text-3xl font-bold text-orange-600 mb-4">
         Welcome, {seller?.name || 'Loading...'}
       </h1>
-
-      {/* Shop Status */}
-<div className="mb-6 p-4 rounded-lg border bg-white shadow flex items-center justify-between">
-  <div>
-    <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-700">
-      <Store className="w-5 h-5 text-orange-500" />
-      Seller Shop
-    </h2>
+      <div className="mb-6 p-4 rounded-lg border bg-white shadow flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-700"><Store className="w-5 h-5 text-orange-500" />Seller Shop</h2>
     {seller?.shop?.expiresAt ? (
       <p className="text-green-600 text-sm mt-1">
         Your shop is active until{' '}
@@ -218,9 +213,7 @@ export default function SellerDashboard() {
     </button>
   </div>
 </div>
-
-      {/* Year Selector */}
-      <div className="mb-4">
+<div className="mb-4">
         <label className="text-sm font-medium text-gray-700 mr-2">Select Year:</label>
         <select
           value={year}
@@ -235,7 +228,6 @@ export default function SellerDashboard() {
         </select>
       </div>
 
-      {/* Metrics */}
       {loading ? (
         <div className="flex justify-center items-center h-48">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-600"></div>
@@ -279,7 +271,6 @@ export default function SellerDashboard() {
             </div>
           </div>
 
-      {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Line Chart */}
         <div className="bg-white p-6 rounded-xl shadow-md">
@@ -287,23 +278,21 @@ export default function SellerDashboard() {
             Revenue Overview ({year})
           </h2>
           <ResponsiveContainer width="100%" height={300}>
-<LineChart data={metrics?.chartData || []}>
-  <CartesianGrid strokeDasharray="3 3" />
-  <XAxis dataKey="month" />
-  <YAxis />
-  <Tooltip />
-  <Legend />
-  <Line type="monotone" dataKey="revenue" stroke="#f97316" strokeWidth={3} name="Revenue" />
-  <Line type="monotone" dataKey="activeProducts" stroke="#3b82f6" strokeWidth={3} name="Active Products" />
-</LineChart>
-
+            <LineChart data={metrics?.chartData || []}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="revenue" stroke="#f97316" strokeWidth={3} name="Revenue" />
+              <Line type="monotone" dataKey="activeProducts" stroke="#3b82f6" strokeWidth={3} name="Active Products" />
+            </LineChart>
           </ResponsiveContainer>
         </div>
-
         <div className="bg-white p-6 rounded-xl shadow-md">
-  <h2 className="text-lg font-semibold mb-4 text-gray-700">
-    Active Products per Month
-  </h2>
+          <h2 className="text-lg font-semibold mb-4 text-gray-700">
+            Active Products per Month
+            </h2>
   <ResponsiveContainer width="100%" height={300}>
     <BarChart data={metrics?.chartData || []}>
       <CartesianGrid strokeDasharray="3 3" />
