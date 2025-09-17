@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react';
 export default function BannerSlide({ banner }: { banner: any }) {
   const [productIndex, setProductIndex] = useState(0);
 
-  // Auto-cycle 3 items every 3s, for 2 rounds (i.e. 6s), then let the carousel move
   useEffect(() => {
     const interval = setInterval(() => {
       setProductIndex((prev) =>

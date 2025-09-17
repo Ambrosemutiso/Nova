@@ -1,15 +1,35 @@
-//api/seller/shop-subscribe
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
 import Seller from '@/app/models/seller';
 
+const DARAJA_CONSUMER_KEY = process.env.DARAJA_CONSUMER_KEY!;
+const DARAJA_CONSUMER_SECRET = process.env.DARAJA_CONSUMER_SECRET!;
+const DARAJA_PASSKEY = process.env.DARAJA_PASSKEY!;
+const SHORTCODE = process.env.DARAJA_SHORTCODE!; // your paybill/till number
+const CALLBACK_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/api/seller/payment-callback`;
+
+async function getAccessToken() {
+  const res = await fetch(
+    'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials',
+    {
+      headers: {
+        Authorization:
+          'Basic ' +
+          Buffer.from(`${DARAJA_CONSUMER_KEY}:${DARAJA_CONSUMER_SECRET}`).toString('base64'),
+      },
+    }
+  );
+
+  const data = await res.json();
+  return data.access_token;
+}
+
 export async function POST(req: NextRequest) {
   await dbConnect();
+  const { sellerId, phoneNumber, amount = 1300 } = await req.json();
 
-  const { sellerId } = await req.json();
-
-  if (!sellerId) {
-    return NextResponse.json({ error: 'Missing sellerId' }, { status: 400 });
+  if (!sellerId || !phoneNumber) {
+    return NextResponse.json({ error: 'Missing sellerId or phoneNumber' }, { status: 400 });
   }
 
   try {
@@ -18,26 +38,49 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Seller not found' }, { status: 404 });
     }
 
-    const now = new Date();
-    const expiry = new Date();
-    expiry.setFullYear(expiry.getFullYear() + 1); // 1 year subscription
+    const token = await getAccessToken();
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/[-:T.Z]/g, '')
+      .slice(0, 14);
 
-    seller.shop = {
-      isActive: true,
-      activatedAt: now,
-      expiresAt: expiry,
-      amountPaid: 1300,
-      transactionId: 'TRX-' + Math.random().toString(36).substring(2, 10).toUpperCase(),
-    };
+    const password = Buffer.from(`${SHORTCODE}${DARAJA_PASSKEY}${timestamp}`).toString('base64');
 
-    await seller.save();
+    const stkRes = await fetch('https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        BusinessShortCode: SHORTCODE,
+        Password: password,
+        Timestamp: timestamp,
+        TransactionType: 'CustomerPayBillOnline',
+        Amount: amount,
+        PartyA: phoneNumber,
+        PartyB: SHORTCODE,
+        PhoneNumber: phoneNumber,
+        CallBackURL: CALLBACK_URL,
+        AccountReference: seller._id.toString(),
+        TransactionDesc: 'Seller Shop Subscription',
+      }),
+    });
+
+    const stkData = await stkRes.json();
+
+    if (stkData.errorCode) {
+      return NextResponse.json({ error: stkData.errorMessage }, { status: 400 });
+    }
 
     return NextResponse.json({
       success: true,
-      shopExpiry: seller.shop.expiresAt,
+      message: 'STK push initiated. Awaiting user confirmation...',
+      MerchantRequestID: stkData.MerchantRequestID,
+      CheckoutRequestID: stkData.CheckoutRequestID,
     });
-  } catch (error) {
-    console.error('[Activate Shop Error]:', error);
-    return NextResponse.json({ error: 'Failed to activate shop' }, { status: 500 });
+  } catch (err) {
+    console.error('[STK ERROR]:', err);
+    return NextResponse.json({ error: 'Failed to initiate STK' }, { status: 500 });
   }
 }

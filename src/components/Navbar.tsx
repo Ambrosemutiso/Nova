@@ -165,7 +165,6 @@ export default function Navbar() {
             )}
           </button>
 
-          {/* Settings - only visible if logged in */}
           {user && (
             <button
               onClick={() => router.push('/settings')}
@@ -175,7 +174,6 @@ export default function Navbar() {
             </button>
           )}
 
-          {/* Profile dropdown */}
           {user ? (
             <div className="relative" ref={dropdownRef}>
               <Image
@@ -215,9 +213,8 @@ export default function Navbar() {
               Sign In
             </button>
           )}
-        </div> {/* ✅ CLOSES flex items-center gap-4 */}
+        </div> 
 
-        {/* Sidebars and Login */}
         {showSidebar &&
           (isSeller ? (
             <SellerSidebar onClose={() => setShowSidebar(false)} />
