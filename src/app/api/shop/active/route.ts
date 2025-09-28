@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     const activeSellers = await Seller.find({
       'shop.isActive': true,
       'shop.expiresAt': { $gt: now },
-    }).select('_id name email image shopName');
+    }).select('_id name email image shopName shop.plan');
 
     return NextResponse.json({ sellers: activeSellers });
   } catch (error) {

@@ -15,7 +15,7 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend
+  Legend,
 } from 'recharts';
 import { ShieldCheck, Store } from 'lucide-react';
 import { Edit2 } from 'react-feather';
@@ -113,16 +113,27 @@ export default function SellerDashboard() {
     }
   };
 
+  /**
+   * Upgrade / Activate shop logic
+   * - If seller is Basic and selects Premium, top-up (3000 - 1300)
+   */
   const upgradeShop = async (packageType: 'basic' | 'premium') => {
     if (!seller) return;
     setActivatingShop(true);
 
     try {
-      const amount = packageType === 'basic' ? 1300 : 3000;
+      let amount = packageType === 'basic' ? 1300 : 3000;
+
+      // If upgrading from Basic → Premium, only pay the difference
+      if (packageType === 'premium' && seller.shop?.packageType === 'basic') {
+        const alreadyPaid = seller.shop.amountPaid || 0;
+        amount = 3000 - alreadyPaid;
+      }
+
       const res = await fetch('/api/seller/shop-subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sellerId: seller._id, packageType }),
+        body: JSON.stringify({ sellerId: seller._id, packageType, amount }),
       });
 
       const data = await res.json();
@@ -134,7 +145,9 @@ export default function SellerDashboard() {
             isActive: true,
             expiresAt: data.shopExpiry,
             activatedAt: new Date(),
-            amountPaid: amount,
+            amountPaid: seller.shop?.amountPaid
+              ? seller.shop.amountPaid + amount
+              : amount,
             transactionId: data.transactionId || 'TEST-ID',
             packageType,
           },
@@ -191,23 +204,51 @@ export default function SellerDashboard() {
           <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-700">
             <Store className="w-5 h-5 text-orange-500" /> Seller Shop
           </h2>
-          {seller?.shop?.expiresAt ? (
+
+          {isShopActive ? (
             <p className="text-green-600 text-sm mt-1">
               Your shop is active until{' '}
-              <strong>{new Date(seller.shop.expiresAt).toLocaleDateString()}</strong> (
-              {seller.shop.packageType?.toUpperCase() || 'Unspecified'} Package)
+              <strong>{new Date(seller!.shop.expiresAt!).toLocaleDateString()}</strong>{' '}
+              (
+              <span className="font-bold">
+                {seller?.shop?.packageType?.toUpperCase() || 'Unspecified'}
+              </span>{' '}
+              Package)
             </p>
           ) : (
-            <p className="text-red-600 text-sm mt-1">You don't have an active shop.</p>
+            <p className="text-red-600 text-sm mt-1">
+              You don&apos;t have an active shop.
+            </p>
           )}
         </div>
+
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowUpgradeModal(true)}
-            className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded"
-          >
-            Upgrade Shop
-          </button>
+          {/* Badge + Upgrade button logic */}
+          {seller?.shop?.packageType === 'premium' && isShopActive ? (
+            <span className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-white font-semibold px-3 py-1 rounded-full shadow-md flex items-center gap-1">
+              🌟 Premium Seller
+            </span>
+          ) : seller?.shop?.packageType === 'basic' && isShopActive ? (
+            <>
+              <span className="bg-blue-100 text-blue-700 font-medium px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
+                🛍️ Basic Seller
+              </span>
+              <button
+                onClick={() => setShowUpgradeModal(true)}
+                className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded"
+              >
+                Upgrade Shop
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setShowUpgradeModal(true)}
+              className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded"
+            >
+              Activate Shop
+            </button>
+          )}
+
           <button
             onClick={() => {
               setEditShopName(seller?.shopName || '');
@@ -222,7 +263,7 @@ export default function SellerDashboard() {
         </div>
       </div>
 
-      {/* UPGRADE MODAL */}
+      {/* Upgrade Modal */}
       {showUpgradeModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-xl w-full max-w-md relative">
@@ -232,11 +273,15 @@ export default function SellerDashboard() {
             >
               ×
             </button>
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Upgrade Shop</h2>
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              Upgrade Shop
+            </h2>
 
             <div className="space-y-4">
               <div className="border rounded-lg p-4">
-                <h3 className="text-lg font-semibold text-orange-600">Basic Package</h3>
+                <h3 className="text-lg font-semibold text-orange-600">
+                  Basic Package
+                </h3>
                 <p className="text-gray-600 text-sm">Ksh 1300 / year</p>
                 <button
                   onClick={() => upgradeShop('basic')}
@@ -248,8 +293,14 @@ export default function SellerDashboard() {
               </div>
 
               <div className="border rounded-lg p-4">
-                <h3 className="text-lg font-semibold text-blue-600">Premium Package</h3>
-                <p className="text-gray-600 text-sm">Ksh 3000 / year</p>
+                <h3 className="text-lg font-semibold text-blue-600">
+                  Premium Package
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  {seller?.shop?.packageType === 'basic'
+                    ? 'Top-up Ksh 1700 to upgrade'
+                    : 'Ksh 3000 / year'}
+                </p>
                 <button
                   onClick={() => upgradeShop('premium')}
                   disabled={activatingShop}
@@ -263,16 +314,15 @@ export default function SellerDashboard() {
         </div>
       )}
 
-      {/* Keep your analytics cards & charts below (unchanged) */}
-      {/* ... rest of your analytics and chart code ... */}
-            <div className="mb-4">
+      {/* Year Selector */}
+      <div className="mb-4">
         <label className="text-sm font-medium text-gray-700 mr-2">Select Year:</label>
         <select
           value={year}
           onChange={(e) => setYear(Number(e.target.value))}
           className="border rounded px-3 py-1"
         >
-          {[2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map((yr) => (
+          {[2020, 2021, 2022, 2023, 2024, 2025, 2026].map((yr) => (
             <option key={yr} value={yr}>
               {yr}
             </option>
@@ -280,6 +330,7 @@ export default function SellerDashboard() {
         </select>
       </div>
 
+      {/* Spinner or Metrics */}
       {loading ? (
         <div className="flex justify-center items-center h-48">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-600"></div>
@@ -439,28 +490,10 @@ export default function SellerDashboard() {
           </ResponsiveContainer>
         </div>
       </div>
-
-          <div className="mt-7 flex flex-wrap gap-4">
-            <a href="/seller/products/add" className="action-btn bg-orange-600">
-              ➕ Add Product
-            </a>
-            <a href="/seller/orders" className="action-btn bg-blue-600">
-              📦 View Orders
-            </a>
-            <a href="/seller/inventory" className="action-btn bg-green-600">
-              📊 Manage Inventory
-            </a>
-          </div>
-
-          {seller && (
-            <div className="mt-8 bg-white p-4 rounded-xl shadow">
-              <p className="text-sm text-gray-600 font-medium">Email:</p>
-              <p className="text-lg text-orange-500">{seller.email}</p>
-            </div>
-          )}
         </>
       )}
-      {showEditModal && (
+
+            {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
         <div className="bg-white p-6 rounded-xl w-full max-w-md relative">
         <button onClick={() => setShowEditModal(false)} className="absolute top-2 right-4 text-gray-500 text-2xl font-bold">×</button>
@@ -508,6 +541,7 @@ export default function SellerDashboard() {
   </div>
 )}
 
+      {/* Withdraw Modal */}
       {showWithdrawModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-xl w-full max-w-md relative">
@@ -556,6 +590,7 @@ export default function SellerDashboard() {
     </div>
   );
 }
+
 function MetricCard({
   label,
   value,
@@ -574,3 +609,4 @@ function MetricCard({
     </div>
   );
 }
+
