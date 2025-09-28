@@ -18,7 +18,7 @@ import {
   Legend
 } from 'recharts';
 import { ShieldCheck, Store } from 'lucide-react';
-import { Edit2 } from 'react-feather'; 
+import { Edit2 } from 'react-feather';
 
 const COLORS = ['#f97316', '#16a34a', '#dc2626', '#eab308', '#3b82f6'];
 
@@ -29,6 +29,7 @@ export interface Seller {
   image?: string;
   logo?: string;
   banner?: string;
+  phoneNumber?: string;
   role: 'seller';
   shopName?: string;
   isVerified: boolean;
@@ -42,6 +43,7 @@ export interface Seller {
     expiresAt?: Date;
     amountPaid?: number;
     transactionId?: string;
+    packageType?: 'basic' | 'premium';
   };
   createdAt: Date;
 }
@@ -82,6 +84,7 @@ export default function SellerDashboard() {
   const [editImage, setEditImage] = useState(seller?.image || '');
   const [editBanner, setEditBanner] = useState(seller?.banner || '');
 
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('sellerUser');
@@ -110,37 +113,40 @@ export default function SellerDashboard() {
     }
   };
 
-  const activateShop = async () => {
+  const upgradeShop = async (packageType: 'basic' | 'premium') => {
     if (!seller) return;
     setActivatingShop(true);
 
     try {
+      const amount = packageType === 'basic' ? 1300 : 3000;
       const res = await fetch('/api/seller/shop-subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sellerId: seller._id }),
+        body: JSON.stringify({ sellerId: seller._id, packageType }),
       });
 
       const data = await res.json();
       if (data.success) {
-        toast.success('Shop activated!');
+        toast.success(`Shop upgraded to ${packageType} package!`);
         const updated: Seller = {
           ...seller,
           shop: {
             isActive: true,
             expiresAt: data.shopExpiry,
             activatedAt: new Date(),
-            amountPaid: 1300,
+            amountPaid: amount,
             transactionId: data.transactionId || 'TEST-ID',
+            packageType,
           },
         };
         setSeller(updated);
         localStorage.setItem('sellerUser', JSON.stringify(updated));
+        setShowUpgradeModal(false);
       } else {
-        toast.error(data.error || 'Failed to activate shop');
+        toast.error(data.error || 'Failed to upgrade shop');
       }
     } catch (error) {
-      toast.error('Activation failed');
+      toast.error('Upgrade failed');
     } finally {
       setActivatingShop(false);
     }
@@ -154,7 +160,7 @@ export default function SellerDashboard() {
       body: JSON.stringify({
         sellerId: seller._id,
         amount: withdrawAmount,
-        phoneNumber: withdrawPhone,
+        phoneNumber: seller.phoneNumber,
         method: withdrawMethod,
       }),
     });
@@ -178,42 +184,88 @@ export default function SellerDashboard() {
       <h1 className="text-3xl font-bold text-orange-600 mb-4">
         Welcome, {seller?.name || 'Loading...'}
       </h1>
+
+      {/* Shop Info Section */}
       <div className="mb-6 p-4 rounded-lg border bg-white shadow flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-700"><Store className="w-5 h-5 text-orange-500" />Seller Shop</h2>
-    {seller?.shop?.expiresAt ? (
-      <p className="text-green-600 text-sm mt-1">
-        Your shop is active until{' '}
-        <strong>{new Date(seller.shop.expiresAt).toLocaleDateString()}</strong>.
-      </p>
-    ) : (
-      <p className="text-red-600 text-sm mt-1">You don't have an active shop.</p>
-    )}
-  </div>
-  <div className="flex items-center gap-3">
-    {!isShopActive && (
-      <button
-        onClick={activateShop}
-        disabled={activatingShop}
-        className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded"
-      >
-        {activatingShop ? 'Activating...' : 'Activate Shop (Ksh 1300)'}
-      </button>
-    )}
-    <button
-      onClick={() => {
-        setEditShopName(seller?.shopName || '');
-        setEditImage(seller?.image || '');
-        setEditBanner(seller?.banner || '');
-        setShowEditModal(true);
-      }}
-      className="text-sm text-orange-600 hover:underline flex items-center gap-1"
-    >
-      <Edit2 size={16} /> Edit Shop
-    </button>
-  </div>
-</div>
-<div className="mb-4">
+          <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-700">
+            <Store className="w-5 h-5 text-orange-500" /> Seller Shop
+          </h2>
+          {seller?.shop?.expiresAt ? (
+            <p className="text-green-600 text-sm mt-1">
+              Your shop is active until{' '}
+              <strong>{new Date(seller.shop.expiresAt).toLocaleDateString()}</strong> (
+              {seller.shop.packageType?.toUpperCase() || 'Unspecified'} Package)
+            </p>
+          ) : (
+            <p className="text-red-600 text-sm mt-1">You don't have an active shop.</p>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowUpgradeModal(true)}
+            className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded"
+          >
+            Upgrade Shop
+          </button>
+          <button
+            onClick={() => {
+              setEditShopName(seller?.shopName || '');
+              setEditImage(seller?.image || '');
+              setEditBanner(seller?.banner || '');
+              setShowEditModal(true);
+            }}
+            className="text-sm text-orange-600 hover:underline flex items-center gap-1"
+          >
+            <Edit2 size={16} /> Edit Shop
+          </button>
+        </div>
+      </div>
+
+      {/* UPGRADE MODAL */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-xl w-full max-w-md relative">
+            <button
+              onClick={() => setShowUpgradeModal(false)}
+              className="absolute top-2 right-4 text-gray-500 text-2xl font-bold"
+            >
+              ×
+            </button>
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Upgrade Shop</h2>
+
+            <div className="space-y-4">
+              <div className="border rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-orange-600">Basic Package</h3>
+                <p className="text-gray-600 text-sm">Ksh 1300 / year</p>
+                <button
+                  onClick={() => upgradeShop('basic')}
+                  disabled={activatingShop}
+                  className="mt-2 w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded"
+                >
+                  {activatingShop ? 'Processing...' : 'Choose Basic'}
+                </button>
+              </div>
+
+              <div className="border rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-blue-600">Premium Package</h3>
+                <p className="text-gray-600 text-sm">Ksh 3000 / year</p>
+                <button
+                  onClick={() => upgradeShop('premium')}
+                  disabled={activatingShop}
+                  className="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
+                >
+                  {activatingShop ? 'Processing...' : 'Choose Premium'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Keep your analytics cards & charts below (unchanged) */}
+      {/* ... rest of your analytics and chart code ... */}
+            <div className="mb-4">
         <label className="text-sm font-medium text-gray-700 mr-2">Select Year:</label>
         <select
           value={year}
@@ -332,8 +384,6 @@ export default function SellerDashboard() {
   </ResponsiveContainer>
 </div>
 
-
-        {/* Bar Chart */}
         <div className="bg-white p-6 rounded-xl shadow-md">
           <h2 className="text-lg font-semibold mb-4 text-gray-700">
             Order Status
@@ -389,7 +439,7 @@ export default function SellerDashboard() {
           </ResponsiveContainer>
         </div>
       </div>
-          {/* Actions */}
+
           <div className="mt-7 flex flex-wrap gap-4">
             <a href="/seller/products/add" className="action-btn bg-orange-600">
               ➕ Add Product
@@ -402,7 +452,6 @@ export default function SellerDashboard() {
             </a>
           </div>
 
-          {/* Seller Info */}
           {seller && (
             <div className="mt-8 bg-white p-4 rounded-xl shadow">
               <p className="text-sm text-gray-600 font-medium">Email:</p>
@@ -411,17 +460,11 @@ export default function SellerDashboard() {
           )}
         </>
       )}
-{showEditModal && (
-  <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
-    <div className="bg-white p-6 rounded-xl w-full max-w-md relative">
-      <button
-        onClick={() => setShowEditModal(false)}
-        className="absolute top-2 right-4 text-gray-500 text-2xl font-bold"
-      >
-        ×
-      </button>
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
+        <div className="bg-white p-6 rounded-xl w-full max-w-md relative">
+        <button onClick={() => setShowEditModal(false)} className="absolute top-2 right-4 text-gray-500 text-2xl font-bold">×</button>
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Edit Shop Info</h2>
-
       <label className="block mb-1 text-sm font-medium text-gray-600">Shop Name</label>
       <input
         type="text"
@@ -429,7 +472,6 @@ export default function SellerDashboard() {
         onChange={(e) => setEditShopName(e.target.value)}
         className="w-full border px-3 py-2 rounded mb-4"
       />
-
       <label className="block mb-1 text-sm font-medium text-gray-600">Profile Image URL</label>
       <input
         type="text"
@@ -437,7 +479,6 @@ export default function SellerDashboard() {
         onChange={(e) => setEditImage(e.target.value)}
         className="w-full border px-3 py-2 rounded mb-4"
       />
-
       <label className="block mb-1 text-sm font-medium text-gray-600">Banner Image URL</label>
       <input
         type="text"
@@ -460,14 +501,13 @@ export default function SellerDashboard() {
           toast.success('Shop info updated locally!');
         }}
         className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded"
-      >
+        >
         Save Changes
       </button>
     </div>
   </div>
 )}
 
-      {/* Withdrawal Modal */}
       {showWithdrawModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-xl w-full max-w-md relative">
@@ -516,7 +556,6 @@ export default function SellerDashboard() {
     </div>
   );
 }
-
 function MetricCard({
   label,
   value,

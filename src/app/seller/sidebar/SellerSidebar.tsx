@@ -12,7 +12,7 @@ export default function SellerSidebar({ onClose }: Props) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // Start animation after mount
+    
     setIsVisible(true);
   }, []);
 
@@ -20,12 +20,11 @@ export default function SellerSidebar({ onClose }: Props) {
     setIsVisible(false);
     setTimeout(() => {
       onClose();
-    }, 300); // Match transition duration
+    }, 300); 
   };
 
   return (
     <>
-      {/* Backdrop */}
       <div
         className={`fixed inset-0 bg-black bg-opacity-30 transition-opacity duration-300 z-40 ${
           isVisible ? 'opacity-100' : 'opacity-0'
@@ -33,7 +32,6 @@ export default function SellerSidebar({ onClose }: Props) {
         onClick={handleClose}
       />
 
-      {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 h-full w-64 bg-white shadow-md p-4 z-50 transform transition-transform duration-300 ${
           isVisible ? 'translate-x-0' : '-translate-x-full'

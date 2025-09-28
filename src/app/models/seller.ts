@@ -30,15 +30,20 @@ const sellerSchema = new mongoose.Schema({
       followedAt: { 
         type: Date },
       }],
-  shop: {
-    isActive: { 
-      type: Boolean, 
-      default: false },
-    activatedAt: { type: Date },
-    expiresAt: { type: Date },
-    amountPaid: { type: Number },
-    transactionId: { type: String }
-  },
+shop: {
+  isActive: { type: Boolean, default: false },
+  activatedAt: { type: Date },
+  expiresAt: { type: Date },
+  amountPaid: { type: Number },
+  transactionId: { type: String },
+
+  // Plan is auto-determined by amountPaid
+  plan: {
+    type: String,
+    enum: ['basic', 'premium'],
+    default: 'basic'
+  }
+},
 
   settings: { type: settingsSchema, default: () => ({}) },
 
