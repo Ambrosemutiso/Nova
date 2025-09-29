@@ -36,50 +36,40 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.dbConnect = dbConnect;
 var dotenv = require("dotenv");
 dotenv.config();
 var mongoose_1 = require("mongoose");
-var dbConnect_1 = require("../lib/dbConnect");
-var seller_1 = require("../models/seller");
-var Seller = seller_1.default;
-function injectTestShopData() {
+var MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) {
+    throw new Error('❌ MongoDB URI not defined in environment variables');
+}
+var isConnected = false;
+function dbConnect() {
     return __awaiter(this, void 0, void 0, function () {
-        var today, oneYearLater, sellers, updates, _i, sellers_1, seller;
+        var db, err_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, (0, dbConnect_1.dbConnect)()];
-                case 1:
-                    _a.sent();
-                    today = new Date();
-                    oneYearLater = new Date(today);
-                    oneYearLater.setFullYear(today.getFullYear() + 1);
-                    return [4 /*yield*/, Seller.find({})];
-                case 2:
-                    sellers = _a.sent();
-                    updates = [];
-                    for (_i = 0, sellers_1 = sellers; _i < sellers_1.length; _i++) {
-                        seller = sellers_1[_i];
-                        seller.shop = {
-                            isActive: true,
-                            activatedAt: today,
-                            expiresAt: oneYearLater,
-                            amountPaid: 1300,
-                            transactionId: "TEST-".concat(Math.floor(Math.random() * 1000000)),
-                        };
-                        updates.push(seller.save());
-                        console.log("\u2705 Updated seller shop for: ".concat(seller.name));
+                case 0:
+                    if (isConnected) {
+                        console.log('✅ MongoDB: Already connected');
+                        return [2 /*return*/];
                     }
-                    return [4 /*yield*/, Promise.all(updates)];
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    return [4 /*yield*/, mongoose_1.default.connect(MONGODB_URI)];
+                case 2:
+                    db = _a.sent();
+                    isConnected = true;
+                    console.log('✅ MongoDB: Connected successfully');
+                    return [2 /*return*/, db];
                 case 3:
-                    _a.sent();
-                    console.log('✅ All seller shops updated.');
-                    mongoose_1.default.connection.close();
-                    return [2 /*return*/];
+                    err_1 = _a.sent();
+                    console.error('❌ MongoDB: Connection error', err_1);
+                    throw new Error('Failed to connect to MongoDB');
+                case 4: return [2 /*return*/];
             }
         });
     });
 }
-injectTestShopData().catch(function (err) {
-    console.error('❌ Failed:', err);
-    mongoose_1.default.connection.close();
-});

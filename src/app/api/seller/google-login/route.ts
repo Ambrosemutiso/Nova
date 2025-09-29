@@ -7,24 +7,41 @@ export async function POST(req: NextRequest) {
     await dbConnect();
 
     const body = await req.json();
-    const { name, email, image, role, phoneNumber, country, currency } = body;
+    const { name, email, image, role, phoneNumber, country, currency, plan } = body;
 
     if (!email) {
-      return NextResponse.json({ success: false, message: 'Email is required' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: 'Email is required' },
+        { status: 400 }
+      );
     }
 
     let seller = await Seller.findOne({ email });
 
     if (!seller) {
+      // Create a new seller (phoneNumber optional, plan defaults to unknown)
       seller = await Seller.create({
         name,
         email,
         image,
         role: role || 'seller',
-        phoneNumber,
-        country,
-        currency,
+        phoneNumber: phoneNumber || null, // allow null if not provided
+        country: country || null,
+        currency: currency || null,
+        plan: plan || 'unknown',
       });
+    } else {
+      // Ensure existing sellers always have a plan
+      if (!seller.plan) {
+        seller.plan = 'unknown';
+      }
+
+      // If phoneNumber was not saved before but now provided, update it
+      if (!seller.phoneNumber && phoneNumber) {
+        seller.phoneNumber = phoneNumber;
+      }
+
+      await seller.save();
     }
 
     return NextResponse.json({ success: true, user: seller });
