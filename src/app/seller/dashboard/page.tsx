@@ -113,10 +113,6 @@ export default function SellerDashboard() {
     }
   };
 
-  /**
-   * Upgrade / Activate shop logic
-   * - If seller is Basic and selects Premium, top-up (3000 - 1300)
-   */
   const upgradeShop = async (packageType: 'basic' | 'premium') => {
     if (!seller) return;
     setActivatingShop(true);
