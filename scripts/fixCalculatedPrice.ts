@@ -1,45 +1,46 @@
-import * as dotenv from 'dotenv';
+import * as dotenv from "dotenv";
 dotenv.config();
 
-import mongoose, { Model } from 'mongoose';
-import { dbConnect } from '@/lib/dbConnect';
-import SellerType from '../src/app/models/seller';
+import mongoose from "mongoose";
+import { dbConnect } from "@/lib/dbConnect";
 
-const Seller = SellerType as Model<any>;
-
-async function backfillShopPlans() {
+async function fixPhoneNumberIndex() {
   await dbConnect();
 
-  const sellers = await Seller.find({});
-
-  const updates = [];
-
-  for (const seller of sellers) {
-    if (!seller.shop) continue;
-
-    // Default plan
-    let plan = 'unknown';
-
-    if (seller.shop.amountPaid === 1300) {
-      plan = 'basic';
-    } else if (seller.shop.amountPaid === 3000) {
-      plan = 'premium';
-    }
-
-    // Only update if plan is missing or incorrect
-    if (!seller.shop.plan || seller.shop.plan === 'unknown') {
-      seller.shop.plan = plan;
-      updates.push(seller.save());
-      console.log(`✅ Updated seller ${seller.name} → plan: ${plan}`);
-    }
+  // Assert that db is not undefined after connection
+  const db = mongoose.connection.db;
+  if (!db) {
+    throw new Error("Database connection not established.");
   }
 
-  await Promise.all(updates);
-  console.log('✅ All seller shop plans updated.');
+  const collection = db.collection("sellers");
+
+  console.log("🔍 Checking indexes on sellers collection...");
+  const indexes = await collection.indexes();
+  console.log("Current indexes:", indexes);
+
+  // Drop old index if exists
+  const hasPhoneIndex = indexes.find((idx) => idx.name === "phoneNumber_1");
+  if (hasPhoneIndex) {
+    console.log("⚠️ Dropping old phoneNumber_1 index...");
+    await collection.dropIndex("phoneNumber_1");
+    console.log("✅ Dropped old index");
+  } else {
+    console.log("ℹ️ No old phoneNumber_1 index found, skipping drop");
+  }
+
+  // Recreate sparse + unique index
+  console.log("🔧 Creating sparse unique index for phoneNumber...");
+  await collection.createIndex(
+    { phoneNumber: 1 },
+    { unique: true, sparse: true }
+  );
+  console.log("✅ New sparse+unique phoneNumber index created.");
+
   mongoose.connection.close();
 }
 
-backfillShopPlans().catch((err) => {
-  console.error('❌ Failed:', err);
+fixPhoneNumberIndex().catch((err) => {
+  console.error("❌ Failed:", err);
   mongoose.connection.close();
 });

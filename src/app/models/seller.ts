@@ -15,7 +15,12 @@ const sellerSchema = new mongoose.Schema({
   image: { type: String },
   logo: { type: String },
   banner: { type: String },
-  phoneNumber: { type: String, unique: true, required: false },
+phoneNumber: {
+  type: String,
+  unique: true,    // ensure uniqueness
+  sparse: true,    // allow multiple null/undefined
+  default: null,   // default explicitly to null
+},
   country: { type: String },
   currency: { type: String },
   role: {

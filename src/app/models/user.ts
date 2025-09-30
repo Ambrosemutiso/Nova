@@ -6,7 +6,12 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   image: String,
   role: { type: String, enum: ['buyer', 'seller'], default: 'buyer' },
-  phoneNumber: { type: String, required: false},
+  phoneNumber: {
+  type: String,
+  unique: true,    // ensure uniqueness
+  sparse: true,    // allow multiple null/undefined
+  default: null,   // default explicitly to null
+},
   country: { type: String },
   currency: { type: String },
 }, { timestamps: true });

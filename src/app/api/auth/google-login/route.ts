@@ -19,17 +19,22 @@ export async function POST(req: Request) {
     let user = await User.findOne({ email });
 
     if (!user) {
-      // Create user with phoneNumber only if provided
-      user = await User.create({
+      const newUserData: any = {
         _id,
         name,
         email,
         image,
         role,
-        phoneNumber: phoneNumber || null, // ✅ allow null for now
         country: country || null,
         currency: currency || null,
-      });
+      };
+
+      // ✅ Only set phoneNumber if provided
+      if (phoneNumber) {
+        newUserData.phoneNumber = phoneNumber;
+      }
+
+      user = await User.create(newUserData);
     }
 
     // If phoneNumber is missing, tell frontend to show phone modal

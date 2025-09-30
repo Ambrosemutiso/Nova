@@ -1,3 +1,4 @@
+// app/api/auth/add-phone/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
 import User from '@/app/models/user';
@@ -16,10 +17,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // update User collection
+    // ✅ Prevent duplicate phone numbers
+    const existingPhone = await User.findOne({ phoneNumber });
+    if (existingPhone) {
+      return NextResponse.json(
+        { error: 'Phone number already in use' },
+        { status: 409 }
+      );
+    }
+
+    // ✅ Update user with phone number
     const user = await User.findOneAndUpdate(
       { email },
-      { phoneNumber },
+      { $set: { phoneNumber } },
       { new: true }
     );
 
@@ -27,17 +37,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // update Seller collection if role is seller
+    // ✅ If role is seller, also update Seller collection
     if (role === 'seller') {
       await Seller.findOneAndUpdate(
         { email },
-        { phoneNumber },
+        { $set: { phoneNumber } },
         { new: true }
       );
     }
 
     return NextResponse.json({ success: true, user });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating phone number:', error);
     return NextResponse.json(
       { error: 'Failed to update phone number' },
