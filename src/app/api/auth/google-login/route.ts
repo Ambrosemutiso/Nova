@@ -27,26 +27,25 @@ export async function POST(req: Request) {
         role,
         country: country || null,
         currency: currency || null,
+        phoneNumber: phoneNumber || null, // can be null at creation
+        isPhoneVerified: false, // always false at creation
       };
-
-      // ✅ Only set phoneNumber if provided
-      if (phoneNumber) {
-        newUserData.phoneNumber = phoneNumber;
-      }
 
       user = await User.create(newUserData);
     }
 
-    // If phoneNumber is missing, tell frontend to show phone modal
-    if (!user.phoneNumber) {
+    // ✅ Existing users: if they don't have a phone number or it’s not verified
+    if (!user.phoneNumber || !user.isPhoneVerified) {
       return NextResponse.json({
         success: true,
         user,
-        needsPhoneNumber: true,
+        needsPhoneNumber: true, // frontend shows phone modal
       });
     }
 
+    // ✅ Fully onboarded user
     return NextResponse.json({ success: true, user, needsPhoneNumber: false });
+
   } catch (error) {
     console.error('MongoDB save error:', error);
     return NextResponse.json(

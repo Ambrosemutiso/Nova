@@ -1,7 +1,7 @@
 import { createServer } from 'http';
 import next from 'next';
 import { Server } from 'socket.io';
-import { dbConnect } from './lib/dbConnect'; // ✅ Import your db connection
+import { dbConnect } from './lib/dbConnect';
 import dotenv from 'dotenv';
 import Message from './app/models/message';
 
@@ -13,7 +13,7 @@ const handle = app.getRequestHandler();
 
 app.prepare().then(async () => {
   try {
-    await dbConnect(); // ✅ Use your custom connection logic
+    await dbConnect(); 
   } catch (err) {
     console.error('❌ MongoDB connection failed. Server not started.');
     process.exit(1);

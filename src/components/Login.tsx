@@ -1,4 +1,5 @@
 'use client';
+
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { signInWithGoogle } from '@/lib/authUtils';
@@ -15,10 +16,13 @@ export default function LoginModal({
   const [role, setRole] = useState<'buyer' | 'seller' | null>(defaultRole);
   const { login } = useAuth();
 
-  // phone prompt state
+  // phone/otp state
   const [showPhonePrompt, setShowPhonePrompt] = useState(false);
   const [pendingUser, setPendingUser] = useState<any>(null);
   const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleGoogleSignIn = async () => {
     if (!role) {
@@ -30,14 +34,11 @@ export default function LoginModal({
       const user = await signInWithGoogle(role);
 
       if (user) {
-        if (!user.phoneNumber) {
-          // hold user in state and ask for phone
+        if (user.needsPhoneNumber || !user.isPhoneVerified) {
           setPendingUser(user);
           setShowPhonePrompt(true);
           return;
         }
-
-        // if phone number already exists
         finishLogin(user);
       }
     } catch (error) {
@@ -46,7 +47,71 @@ export default function LoginModal({
     }
   };
 
-  const finishLogin = async (user: any) => {
+  const handleSendOtp = async () => {
+    if (!phone.trim()) {
+      toast.error('Please enter a valid phone number');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await fetch('/api/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber: phone, role }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || 'Failed to send OTP');
+
+      toast.success('OTP sent to your phone');
+      setOtpSent(true);
+    } catch (err: any) {
+      console.error('Send OTP failed:', err);
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otp.trim()) {
+      toast.error('Please enter the OTP');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await fetch('/api/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber: phone, otp, role }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || 'OTP verification failed');
+
+      toast.success('Phone verified successfully');
+
+      if (pendingUser) {
+        const updatedUser = {
+          ...pendingUser,
+          phoneNumber: phone,
+          isPhoneVerified: true,
+          needsPhoneNumber: false,
+        };
+        setShowPhonePrompt(false);
+        finishLogin(updatedUser);
+      }
+    } catch (err: any) {
+      console.error('Verify OTP failed:', err);
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const finishLogin = (user: any) => {
     login(user);
     toast.success('Signed in successfully');
     onClose();
@@ -55,33 +120,6 @@ export default function LoginModal({
       window.location.href = '/';
     } else {
       window.location.href = '/seller/dashboard';
-    }
-  };
-
-  const handleSavePhone = async () => {
-    if (!phone.trim()) {
-      toast.error('Please enter a valid phone number');
-      return;
-    }
-
-    try {
-      // call your backend to update phone number
-      await fetch('/api/auth/add-phone', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: pendingUser.email,
-          phoneNumber: phone,
-          role,
-        }),
-      });
-
-      pendingUser.phoneNumber = phone; // update locally
-      setShowPhonePrompt(false);
-      finishLogin(pendingUser);
-    } catch (err) {
-      console.error('Error saving phone:', err);
-      toast.error('Failed to save phone number');
     }
   };
 
@@ -143,29 +181,47 @@ export default function LoginModal({
         </button>
       </div>
 
-      {/* phone number popup */}
+      {/* phone number + OTP modal */}
       {showPhonePrompt && (
         <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-80">
-            <h3 className="text-lg font-semibold mb-2">
-              We didn’t get your phone number 📱
-            </h3>
-            <p className="text-sm text-gray-500 mb-4">
-              Please add it now to continue.
-            </p>
+          <div className="bg-white rounded-lg shadow-lg p-6 w-80 space-y-4">
+            <h3 className="text-lg font-semibold">Verify your phone 📱</h3>
+
             <input
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+254712345678"
-              className="border border-gray-300 rounded w-full px-3 py-2 mb-4"
+              className="border border-gray-300 rounded w-full px-3 py-2"
+              disabled={otpSent}
             />
-            <button
-              onClick={handleSavePhone}
-              className="w-full bg-green-600 text-white py-2 rounded-full hover:bg-green-700"
-            >
-              Save & Continue
-            </button>
+
+            {!otpSent ? (
+              <button
+                onClick={handleSendOtp}
+                disabled={loading}
+                className="w-full bg-green-600 text-white py-2 rounded-full hover:bg-green-700 disabled:opacity-50"
+              >
+                {loading ? 'Sending...' : 'Send OTP'}
+              </button>
+            ) : (
+              <>
+                <input
+                  type="text"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  placeholder="Enter OTP"
+                  className="border border-gray-300 rounded w-full px-3 py-2"
+                />
+                <button
+                  onClick={handleVerifyOtp}
+                  disabled={loading}
+                  className="w-full bg-green-600 text-white py-2 rounded-full hover:bg-green-700 disabled:opacity-50"
+                >
+                  {loading ? 'Verifying...' : 'Verify OTP'}
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
