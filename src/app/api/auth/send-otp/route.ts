@@ -31,7 +31,7 @@ export async function POST(req: Request) {
 
     // Send OTP via Twilio
     await client.messages.create({
-      body: `Your verification code is ${otp}`,
+      body: `Dear customer, Your NovaXpress verification code is ${otp}. The passcode is only valid for five minutes. Do not share your account passcode. Enjoy convinience at your fingertips`,
       from: process.env.TWILIO_PHONE_NUMBER!,
       to: phoneNumber,
     });

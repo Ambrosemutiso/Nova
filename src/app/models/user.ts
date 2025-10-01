@@ -7,8 +7,6 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: ['buyer', 'seller'], default: 'buyer' },
   phoneNumber: {
   type: String,
-  unique: true,    // ensure uniqueness
-  sparse: true,    // allow multiple null/undefined
   default: null,   // default explicitly to null
 },
   country: { type: String },

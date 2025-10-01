@@ -55,7 +55,7 @@ export default function LoginModal({
 
     try {
       setLoading(true);
-      const res = await fetch('/api/send-otp', {
+      const res = await fetch('/api/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phoneNumber: phone, role }),
@@ -82,7 +82,7 @@ export default function LoginModal({
 
     try {
       setLoading(true);
-      const res = await fetch('/api/verify-otp', {
+      const res = await fetch('/api/auth/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phoneNumber: phone, otp, role }),
@@ -185,7 +185,7 @@ export default function LoginModal({
       {showPhonePrompt && (
         <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-80 space-y-4">
-            <h3 className="text-lg font-semibold">Verify your phone 📱</h3>
+            <h3 className="text-lg font-semibold">Verify your phone </h3>
 
             <input
               type="tel"
@@ -200,7 +200,7 @@ export default function LoginModal({
               <button
                 onClick={handleSendOtp}
                 disabled={loading}
-                className="w-full bg-green-600 text-white py-2 rounded-full hover:bg-green-700 disabled:opacity-50"
+                className="w-full bg-orange-600 text-white py-2 rounded-full hover:bg-orange-700 disabled:opacity-50"
               >
                 {loading ? 'Sending...' : 'Send OTP'}
               </button>
@@ -216,7 +216,7 @@ export default function LoginModal({
                 <button
                   onClick={handleVerifyOtp}
                   disabled={loading}
-                  className="w-full bg-green-600 text-white py-2 rounded-full hover:bg-green-700 disabled:opacity-50"
+                  className="w-full bg-orange-600 text-white py-2 rounded-full hover:bg-orange-700 disabled:opacity-50"
                 >
                   {loading ? 'Verifying...' : 'Verify OTP'}
                 </button>

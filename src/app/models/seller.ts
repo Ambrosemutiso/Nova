@@ -17,8 +17,6 @@ const sellerSchema = new mongoose.Schema({
   banner: { type: String },
 phoneNumber: {
   type: String,
-  unique: true,    // ensure uniqueness
-  sparse: true,    // allow multiple null/undefined
   default: null,   // default explicitly to null
 },
   country: { type: String },
