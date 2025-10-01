@@ -36,53 +36,40 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.dbConnect = dbConnect;
 var dotenv = require("dotenv");
 dotenv.config();
 var mongoose_1 = require("mongoose");
-var dbConnect_1 = require("../lib/dbConnect");
-function fixPhoneNumberIndex() {
+var MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) {
+    throw new Error('❌ MongoDB URI not defined in environment variables');
+}
+var isConnected = false;
+function dbConnect() {
     return __awaiter(this, void 0, void 0, function () {
-        var db, collection, indexes, hasPhoneIndex;
+        var db, err_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, (0, dbConnect_1.dbConnect)()];
-                case 1:
-                    _a.sent();
-                    db = mongoose_1.default.connection.db;
-                    if (!db) {
-                        throw new Error("Database connection not established.");
+                case 0:
+                    if (isConnected) {
+                        console.log('✅ MongoDB: Already connected');
+                        return [2 /*return*/];
                     }
-                    collection = db.collection("sellers");
-                    console.log("🔍 Checking indexes on sellers collection...");
-                    return [4 /*yield*/, collection.indexes()];
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    return [4 /*yield*/, mongoose_1.default.connect(MONGODB_URI)];
                 case 2:
-                    indexes = _a.sent();
-                    console.log("Current indexes:", indexes);
-                    hasPhoneIndex = indexes.find(function (idx) { return idx.name === "phoneNumber_1"; });
-                    if (!hasPhoneIndex) return [3 /*break*/, 4];
-                    console.log("⚠️ Dropping old phoneNumber_1 index...");
-                    return [4 /*yield*/, collection.dropIndex("phoneNumber_1")];
+                    db = _a.sent();
+                    isConnected = true;
+                    console.log('✅ MongoDB: Connected successfully');
+                    return [2 /*return*/, db];
                 case 3:
-                    _a.sent();
-                    console.log("✅ Dropped old index");
-                    return [3 /*break*/, 5];
-                case 4:
-                    console.log("ℹ️ No old phoneNumber_1 index found, skipping drop");
-                    _a.label = 5;
-                case 5:
-                    // Recreate sparse + unique index
-                    console.log("🔧 Creating sparse unique index for phoneNumber...");
-                    return [4 /*yield*/, collection.createIndex({ phoneNumber: 1 }, { unique: true, sparse: true })];
-                case 6:
-                    _a.sent();
-                    console.log("✅ New sparse+unique phoneNumber index created.");
-                    mongoose_1.default.connection.close();
-                    return [2 /*return*/];
+                    err_1 = _a.sent();
+                    console.error('❌ MongoDB: Connection error', err_1);
+                    throw new Error('Failed to connect to MongoDB');
+                case 4: return [2 /*return*/];
             }
         });
     });
 }
-fixPhoneNumberIndex().catch(function (err) {
-    console.error("❌ Failed:", err);
-    mongoose_1.default.connection.close();
-});

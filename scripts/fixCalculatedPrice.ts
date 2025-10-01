@@ -13,9 +13,9 @@ async function fixPhoneNumberIndex() {
     throw new Error("Database connection not established.");
   }
 
-  const collection = db.collection("sellers");
+  const collection = db.collection("users");
 
-  console.log("🔍 Checking indexes on sellers collection...");
+  console.log("🔍 Checking indexes on users collection...");
   const indexes = await collection.indexes();
   console.log("Current indexes:", indexes);
 
