@@ -52,8 +52,8 @@ phoneNumber: {
     // Auto-flagged plan by amount paid
     plan: {
       type: String,
-      enum: ['basic', 'premium', 'unknown'],
-      default: 'unknown',
+      enum: ['basic', 'premium', 'free'],
+      default: 'free',
     },
   },
 

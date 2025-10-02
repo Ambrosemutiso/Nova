@@ -74,11 +74,11 @@ const handleLoginResult = async (result: any, role: 'buyer' | 'seller') => {
     name: user.displayName,
     email: user.email,
     image: user.photoURL,
-    phoneNumber: null, // always null at signup
+    phoneNumber: null, 
     country,
     currency,
     role,
-    isPhoneVerified: false, // ✅ force verification flow
+    isPhoneVerified: false, 
   };
 
   // ---- 🔥 Save to Firestore ----

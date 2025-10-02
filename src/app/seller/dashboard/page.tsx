@@ -17,7 +17,7 @@ import {
   Cell,
   Legend,
 } from 'recharts';
-import { ShieldCheck, Store } from 'lucide-react';
+import { ShieldCheck, Store, CheckCircle, XCircle } from 'lucide-react';
 import { Edit2 } from 'react-feather';
 
 const COLORS = ['#f97316', '#16a34a', '#dc2626', '#eab308', '#3b82f6'];
@@ -43,7 +43,7 @@ export interface Seller {
     expiresAt?: Date;
     amountPaid?: number;
     transactionId?: string;
-    packageType?: 'basic' | 'premium';
+    packageType?: 'free' | 'basic' | 'premium';
   };
   createdAt: Date;
 }
@@ -259,56 +259,183 @@ export default function SellerDashboard() {
         </div>
       </div>
 
-      {/* Upgrade Modal */}
-      {showUpgradeModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-xl w-full max-w-md relative">
-            <button
-              onClick={() => setShowUpgradeModal(false)}
-              className="absolute top-2 right-4 text-gray-500 text-2xl font-bold"
-            >
-              ×
-            </button>
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">
-              Upgrade Shop
-            </h2>
+{/* --- Upgraded Upgrade Modal --- */}
+{showUpgradeModal && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center px-4">
+    <div className="bg-white p-6 rounded-2xl w-full max-w-3xl relative shadow-xl">
+      <button
+        onClick={() => setShowUpgradeModal(false)}
+        className="absolute top-2 right-4 text-gray-500 text-2xl font-bold"
+      >
+        ×
+      </button>
 
-            <div className="space-y-4">
-              <div className="border rounded-lg p-4">
-                <h3 className="text-lg font-semibold text-orange-600">
-                  Basic Package
-                </h3>
-                <p className="text-gray-600 text-sm">Ksh 1300 / year</p>
-                <button
-                  onClick={() => upgradeShop('basic')}
-                  disabled={activatingShop}
-                  className="mt-2 w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded"
-                >
-                  {activatingShop ? 'Processing...' : 'Choose Basic'}
-                </button>
-              </div>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+        Upgrade Your Shop Plan
+      </h2>
 
-              <div className="border rounded-lg p-4">
-                <h3 className="text-lg font-semibold text-blue-600">
-                  Premium Package
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  {seller?.shop?.packageType === 'basic'
-                    ? 'Top-up Ksh 1700 to upgrade'
-                    : 'Ksh 3000 / year'}
-                </p>
-                <button
-                  onClick={() => upgradeShop('premium')}
-                  disabled={activatingShop}
-                  className="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
-                >
-                  {activatingShop ? 'Processing...' : 'Choose Premium'}
-                </button>
-              </div>
-            </div>
-          </div>
+      {/* 3 Plan Dots */}
+      <div className="flex justify-center gap-6 mb-6">
+        {/* Free Dot */}
+        <div
+          className={`h-4 w-4 rounded-full ${
+            seller?.shop?.packageType === "free"
+              ? "bg-gray-500 animate-ping"
+              : "bg-gray-300"
+          }`}
+        />
+        {/* Basic Dot */}
+        <div
+          className={`h-4 w-4 rounded-full ${
+            seller?.shop?.packageType === "basic"
+              ? "bg-orange-500 animate-ping"
+              : "bg-orange-300"
+          }`}
+        />
+        {/* Premium Dot */}
+        <div
+          className={`h-4 w-4 rounded-full ${
+            seller?.shop?.packageType === "premium"
+              ? "bg-yellow-500 animate-ping"
+              : "bg-yellow-300"
+          }`}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Free Plan */}
+        <div className="border rounded-xl p-6 bg-gray-50 hover:shadow-md transition relative">
+          {seller?.shop?.packageType === "free" && (
+            <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gray-400 text-white px-3 py-1 rounded-full text-xs font-bold shadow">
+              Current Plan
+            </span>
+          )}
+          <h3 className="text-xl font-semibold text-gray-700">Free Plan</h3>
+          <p className="text-gray-600 mb-2">Ksh 0 / year</p>
+          <ul className="space-y-2 text-sm text-gray-700 mb-4">
+            <li className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-green-500" /> Add up to 5 Products
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-green-500" /> Receive max 5 Orders
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-green-500" /> Limited Analytics
+            </li>
+            <li className="flex items-center gap-2">
+              <XCircle size={16} className="text-red-500" /> No Product Ads Boost
+            </li>
+            <li className="flex items-center gap-2">
+              <XCircle size={16} className="text-red-500" /> No Front Shop
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-green-500" /> Withdrawals capped at Ksh 1000
+            </li>
+          </ul>
+          <button
+            disabled
+            className="w-full bg-gray-400 text-white py-2 rounded cursor-not-allowed"
+          >
+            Free
+          </button>
         </div>
-      )}
+
+        {/* Basic Plan */}
+        <div className="border rounded-xl p-6 hover:shadow-md transition relative">
+          {seller?.shop?.packageType === "basic" && (
+            <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow">
+              Current Plan
+            </span>
+          )}
+          <h3 className="text-xl font-semibold text-orange-600">Basic Plan</h3>
+          <p className="text-gray-600 mb-2">Ksh 1300 / year</p>
+          <ul className="space-y-2 text-sm text-gray-700 mb-4">
+            <li className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-green-500" /> Add up to 100 Products
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-green-500" /> Receive up to 100 Orders
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-green-500" /> Standard Visibility
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-green-500" /> Access to Orders
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-green-500" /> Shop Visibility
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-green-500" /> Product Ads Boost
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-green-500" /> Withdrawal Limits
+            </li>
+          </ul>
+          <button
+            onClick={() => upgradeShop("basic")}
+            disabled={activatingShop}
+            className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded"
+          >
+            {activatingShop ? "Processing..." : "Choose Basic"}
+          </button>
+        </div>
+
+        {/* Premium Plan */}
+        <div className="border-2 border-yellow-400 rounded-xl p-6 bg-yellow-50 hover:shadow-lg transition relative">
+          {seller?.shop?.packageType === "premium" && (
+            <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-white px-3 py-1 rounded-full text-xs font-bold shadow">
+              Current Plan
+            </span>
+          )}
+          <span className="absolute -top-3 left-1/4 bg-yellow-400 text-white px-3 py-1 rounded-full text-xs font-bold shadow">
+            Recommended
+          </span>
+          <h3 className="text-xl font-semibold text-blue-600">Premium Plan</h3>
+          <p className="text-gray-600 mb-2">
+            {seller?.shop?.packageType === "basic"
+              ? "Top-up Ksh 1700 to upgrade"
+              : "Ksh 3000 / year"}
+          </p>
+          <ul className="space-y-2 text-sm text-gray-700 mb-4">
+            <li className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-green-500" /> All Basic Features
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-green-500" /> Premium Badge
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-green-500" /> Higher Visibility
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-green-500" /> Unlimited Withdrawals
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-green-500" /> Unlimited Orders
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-green-500" /> Unlimited Products
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-green-500" /> Verified Badge
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-green-500" /> Product Ads 10x Boost
+            </li>
+          </ul>
+          <button
+            onClick={() => upgradeShop("premium")}
+            disabled={activatingShop}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
+          >
+            {activatingShop ? "Processing..." : "Choose Premium"}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
 
       {/* Year Selector */}
       <div className="mb-4">
@@ -537,52 +664,86 @@ export default function SellerDashboard() {
   </div>
 )}
 
-      {/* Withdraw Modal */}
-      {showWithdrawModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-xl w-full max-w-md relative">
-            <button
-              onClick={() => setShowWithdrawModal(false)}
-              className="absolute top-2 right-4 text-gray-500 text-2xl font-bold"
-            >
-              ×
-            </button>
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Withdraw Funds</h2>
-            <label className="block mb-2 text-sm text-orange-600">Phone Number</label>
-            <input
-              type="text"
-              value={withdrawPhone}
-              onChange={(e) => setWithdrawPhone(e.target.value)}
-              className="w-full border px-3 py-2 rounded mb-4"
-              placeholder="Enter phone number"
-            />
-            <label className="block mb-2 text-sm text-orange-600">Amount</label>
-            <input
-              type="number"
-              value={withdrawAmount}
-              onChange={(e) => setWithdrawAmount(Number(e.target.value))}
-              className="w-full border px-3 py-2 rounded mb-4"
-              placeholder="Enter amount"
-            />
-            <label className="block mb-2 text-sm text-orange-600">Withdraw Method</label>
-            <select
-              value={withdrawMethod}
-              onChange={(e) => setWithdrawMethod(e.target.value as 'mpesa' | 'airtel')}
-              className="w-full border px-3 py-2 rounded mb-4"
-            >
-              <option value="">Select Method</option>
-              <option value="mpesa">M-Pesa</option>
-              <option value="airtel">Airtel Money</option>
-            </select>
-            <button
-              onClick={handleWithdraw}
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded"
-            >
-              Submit Withdrawal
-            </button>
-          </div>
-        </div>
-      )}
+{/* Withdraw Modal */}
+{showWithdrawModal && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
+    <div className="bg-white p-6 rounded-xl w-full max-w-md relative">
+      <button
+        onClick={() => setShowWithdrawModal(false)}
+        className="absolute top-2 right-4 text-gray-500 text-2xl font-bold"
+      >
+        ×
+      </button>
+
+      <h2 className="text-xl font-semibold text-gray-800 mb-4">Withdraw Funds</h2>
+
+      {/* Phone Number */}
+      <label className="block mb-2 text-sm text-orange-600">Phone Number</label>
+      <input
+        type="text"
+        value={withdrawPhone}
+        onChange={(e) => setWithdrawPhone(e.target.value)}
+        className="w-full border px-3 py-2 rounded mb-4"
+        placeholder="Enter phone number"
+      />
+
+      {/* Amount */}
+      <label className="block mb-2 text-sm text-orange-600">Amount</label>
+      <input
+        type="number"
+        value={withdrawAmount}
+        onChange={(e) => setWithdrawAmount(Number(e.target.value))}
+        className="w-full border px-3 py-2 rounded mb-4"
+        placeholder="Enter amount"
+      />
+
+      {/* Withdraw Method with logos */}
+      <label className="block mb-2 text-sm text-orange-600">Withdraw Method</label>
+      <div className="flex items-center gap-4 mb-4">
+        <button
+          onClick={() => setWithdrawMethod('mpesa')}
+          className={`flex-1 flex items-center gap-2 border px-3 py-2 rounded-lg transition ${
+            withdrawMethod === 'mpesa'
+              ? 'border-green-500 bg-green-50'
+              : 'hover:border-green-400'
+          }`}
+        >
+          <img
+            src="/mpesa.png" // place your M-Pesa logo in public/
+            alt="M-Pesa"
+            className="h-6"
+          />
+          <span className="font-medium text-gray-700">M-Pesa</span>
+        </button>
+
+        <button
+          onClick={() => setWithdrawMethod('airtel')}
+          className={`flex-1 flex items-center gap-2 border px-3 py-2 rounded-lg transition ${
+            withdrawMethod === 'airtel'
+              ? 'border-red-500 bg-red-50'
+              : 'hover:border-red-400'
+          }`}
+        >
+          <img
+            src="/airtel.png" // place your Airtel logo in public/
+            alt="Airtel"
+            className="h-6"
+          />
+          <span className="font-medium text-gray-700">Airtel Money</span>
+        </button>
+      </div>
+
+      {/* Submit */}
+      <button
+        onClick={handleWithdraw}
+        disabled={!withdrawMethod || !withdrawAmount || !withdrawPhone}
+        className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded disabled:opacity-50"
+      >
+        Submit Withdrawal
+      </button>
+    </div>
+  </div>
+)}
     </div>
   );
 }
