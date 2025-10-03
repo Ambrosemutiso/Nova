@@ -83,6 +83,11 @@ export default function SellerDashboard() {
   const [editShopName, setEditShopName] = useState(seller?.name || '');
   const [editImage, setEditImage] = useState(seller?.image || '');
   const [editBanner, setEditBanner] = useState(seller?.banner || '');
+const [showPaymentModal, setShowPaymentModal] = useState(false);
+const [selectedPlan, setSelectedPlan] = useState<"basic" | "premium" | null>(null);
+const [paymentPhone, setPaymentPhone] = useState("");
+const [paymentMethod, setPaymentMethod] = useState<"mpesa" | "airtel" | "">("");
+
 
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
@@ -113,53 +118,57 @@ export default function SellerDashboard() {
     }
   };
 
-  const upgradeShop = async (packageType: 'basic' | 'premium') => {
-    if (!seller) return;
+// Open payment modal when choosing a plan
+const openPaymentModal = (plan: "basic" | "premium") => {
+  setSelectedPlan(plan);
+  setPaymentMethod("");
+  setPaymentPhone("");
+  setShowPaymentModal(true);
+};
+
+const handleConfirmPayment = async () => {
+  if (!selectedPlan || !paymentMethod || !paymentPhone) {
+    toast.error("Please fill all details");
+    return;
+  }
+
+  try {
     setActivatingShop(true);
 
-    try {
-      let amount = packageType === 'basic' ? 1300 : 3000;
-
-      // If upgrading from Basic → Premium, only pay the difference
-      if (packageType === 'premium' && seller.shop?.packageType === 'basic') {
-        const alreadyPaid = seller.shop.amountPaid || 0;
-        amount = 3000 - alreadyPaid;
-      }
-
-      const res = await fetch('/api/seller/shop-subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sellerId: seller._id, packageType, amount }),
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        toast.success(`Shop upgraded to ${packageType} package!`);
-        const updated: Seller = {
-          ...seller,
-          shop: {
-            isActive: true,
-            expiresAt: data.shopExpiry,
-            activatedAt: new Date(),
-            amountPaid: seller.shop?.amountPaid
-              ? seller.shop.amountPaid + amount
-              : amount,
-            transactionId: data.transactionId || 'TEST-ID',
-            packageType,
-          },
-        };
-        setSeller(updated);
-        localStorage.setItem('sellerUser', JSON.stringify(updated));
-        setShowUpgradeModal(false);
-      } else {
-        toast.error(data.error || 'Failed to upgrade shop');
-      }
-    } catch (error) {
-      toast.error('Upgrade failed');
-    } finally {
-      setActivatingShop(false);
+    let amount = selectedPlan === "basic" ? 1300 : 3000;
+    if (selectedPlan === "premium" && seller?.shop?.packageType === "basic") {
+      const alreadyPaid = seller.shop?.amountPaid || 0;
+      amount = 3000 - alreadyPaid;
     }
-  };
+
+    // Call backend API to trigger push payment
+    const res = await fetch("/api/seller/payment/initiate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sellerId: seller?._id,
+        plan: selectedPlan,
+        method: paymentMethod,
+        phone: paymentPhone,
+        amount,
+      }),
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      toast.success("Payment request sent! Please complete on your phone.");
+      setShowPaymentModal(false);
+    } else {
+      toast.error(data.error || "Payment initiation failed");
+    }
+  } catch (err) {
+    console.error(err);
+    toast.error("Error initiating payment");
+  } finally {
+    setActivatingShop(false);
+  }
+};
+
 
   const handleWithdraw = async () => {
     if (!seller) return;
@@ -219,7 +228,6 @@ export default function SellerDashboard() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Badge + Upgrade button logic */}
           {seller?.shop?.packageType === 'premium' && isShopActive ? (
             <span className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-white font-semibold px-3 py-1 rounded-full shadow-md flex items-center gap-1">
               🌟 Premium Seller
@@ -259,7 +267,6 @@ export default function SellerDashboard() {
         </div>
       </div>
 
-{/* --- Upgraded Upgrade Modal --- */}
 {showUpgradeModal && (
   <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center px-4">
     <div className="bg-white p-6 rounded-2xl w-full max-w-3xl relative shadow-xl">
@@ -274,9 +281,7 @@ export default function SellerDashboard() {
         Upgrade Your Shop Plan
       </h2>
 
-      {/* 3 Plan Dots */}
       <div className="flex justify-center gap-6 mb-6">
-        {/* Free Dot */}
         <div
           className={`h-4 w-4 rounded-full ${
             seller?.shop?.packageType === "free"
@@ -284,7 +289,6 @@ export default function SellerDashboard() {
               : "bg-gray-300"
           }`}
         />
-        {/* Basic Dot */}
         <div
           className={`h-4 w-4 rounded-full ${
             seller?.shop?.packageType === "basic"
@@ -292,7 +296,6 @@ export default function SellerDashboard() {
               : "bg-orange-300"
           }`}
         />
-        {/* Premium Dot */}
         <div
           className={`h-4 w-4 rounded-full ${
             seller?.shop?.packageType === "premium"
@@ -301,7 +304,6 @@ export default function SellerDashboard() {
           }`}
         />
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Free Plan */}
         <div className="border rounded-xl p-6 bg-gray-50 hover:shadow-md transition relative">
@@ -372,13 +374,13 @@ export default function SellerDashboard() {
               <CheckCircle size={16} className="text-green-500" /> Withdrawal Limits
             </li>
           </ul>
-          <button
-            onClick={() => upgradeShop("basic")}
-            disabled={activatingShop}
-            className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded"
-          >
-            {activatingShop ? "Processing..." : "Choose Basic"}
-          </button>
+<button
+  onClick={() => openPaymentModal("basic")}
+  disabled={activatingShop}
+  className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded"
+>
+  {activatingShop ? "Processing..." : "Choose Basic"}
+</button>
         </div>
 
         {/* Premium Plan */}
@@ -423,18 +425,100 @@ export default function SellerDashboard() {
               <CheckCircle size={16} className="text-green-500" /> Product Ads 10x Boost
             </li>
           </ul>
-          <button
-            onClick={() => upgradeShop("premium")}
-            disabled={activatingShop}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
-          >
-            {activatingShop ? "Processing..." : "Choose Premium"}
-          </button>
+
+<button
+  onClick={() => openPaymentModal("premium")}
+  disabled={activatingShop}
+  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
+>
+  {activatingShop ? "Processing..." : "Choose Premium"}
+</button>
+
         </div>
       </div>
     </div>
   </div>
 )}
+
+{showPaymentModal && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
+    <div className="bg-white p-6 rounded-xl w-full max-w-md relative">
+      <button
+        onClick={() => setShowPaymentModal(false)}
+        className="absolute top-2 right-4 text-gray-500 text-2xl font-bold"
+      >
+        ×
+      </button>
+
+      <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">
+        {selectedPlan === "basic" ? "Basic Plan" : "Premium Plan"}
+      </h2>
+
+      {/* Fixed Amount */}
+      <p className="text-center text-lg font-semibold text-orange-600 mb-4">
+        Amount: {selectedPlan === "basic" ? "Ksh 1300" : "Ksh 3000"}
+      </p>
+
+      {/* Phone Number */}
+      <label className="block mb-2 text-sm text-orange-600">Phone Number</label>
+      <input
+        type="text"
+        value={paymentPhone}
+        onChange={(e) => setPaymentPhone(e.target.value)}
+        className="w-full border px-3 py-2 rounded mb-4"
+        placeholder="Enter Mpesa/Airtel number"
+      />
+
+      {/* Payment Method with Logos */}
+      <label className="block mb-2 text-sm text-orange-600">Payment Method</label>
+      <div className="flex items-center gap-4 mb-4">
+        {/* Mpesa Option */}
+        <button
+          onClick={() => setPaymentMethod("mpesa")}
+          className={`flex-1 flex items-center gap-2 border px-3 py-2 rounded-lg transition ${
+            paymentMethod === "mpesa"
+              ? "border-green-500 bg-green-50"
+              : "hover:border-green-400"
+          }`}
+        >
+          <img
+            src="/mpesa.png" // make sure you place mpesa.png in /public folder
+            alt="M-Pesa"
+            className="h-6"
+          />
+          <span className="font-medium text-gray-700">M-Pesa</span>
+        </button>
+
+        {/* Airtel Option */}
+        <button
+          onClick={() => setPaymentMethod("airtel")}
+          className={`flex-1 flex items-center gap-2 border px-3 py-2 rounded-lg transition ${
+            paymentMethod === "airtel"
+              ? "border-red-500 bg-red-50"
+              : "hover:border-red-400"
+          }`}
+        >
+          <img
+            src="/airtel.png" // place airtel.png in /public folder
+            alt="Airtel"
+            className="h-6"
+          />
+          <span className="font-medium text-gray-700">Airtel Money</span>
+        </button>
+      </div>
+
+      {/* Confirm Button */}
+      <button
+        onClick={handleConfirmPayment}
+        disabled={activatingShop}
+        className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded"
+      >
+        {activatingShop ? "Processing..." : "Confirm & Pay"}
+      </button>
+    </div>
+  </div>
+)}
+
 
 
       {/* Year Selector */}
