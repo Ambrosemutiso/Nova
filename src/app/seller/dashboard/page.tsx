@@ -198,7 +198,7 @@ const handleConfirmPayment = async () => {
     new Date(seller.shop.expiresAt) > new Date();
 
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto pt-28 pb-10">
+    <div className="md:ml-64 p-4 md:p-6 max-w-6xl mx-auto pt-28 pb-10">
       <h1 className="text-3xl font-bold text-orange-600 mb-4">
         Welcome, {seller?.name || 'Loading...'}
       </h1>

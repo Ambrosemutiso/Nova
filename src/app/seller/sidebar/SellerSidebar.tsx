@@ -1,96 +1,106 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { FiX } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
+import {
+  FiHome,
+  FiBox,
+  FiBarChart2,
+  FiShoppingBag,
+  FiPlusCircle,
+  FiDollarSign,
+  FiAward,
+} from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import { useAuth } from '@/app/context/AuthContext';
 
 interface Props {
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 export default function SellerSidebar({ onClose }: Props) {
   const router = useRouter();
-  const [isVisible, setIsVisible] = useState(false);
+  const { user } = useAuth();
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    
-    setIsVisible(true);
+    const checkScreen = () => setIsMobile(window.innerWidth < 768);
+    checkScreen();
+    window.addEventListener('resize', checkScreen);
+    return () => window.removeEventListener('resize', checkScreen);
   }, []);
 
-  const handleClose = () => {
-    setIsVisible(false);
-    setTimeout(() => {
-      onClose();
-    }, 300); 
-  };
+  const menuItems = [
+    { label: 'Dashboard', icon: <FiHome size={18} />, path: '/seller/dashboard' },
+    { label: 'Add Product', icon: <FiPlusCircle size={18} />, path: '/seller/products/add' },
+    { label: 'Inventory', icon: <FiBox size={18} />, path: '/seller/inventory' },
+    { label: 'Orders', icon: <FiShoppingBag size={18} />, path: '/seller/orders' },
+    { label: 'Analytics', icon: <FiBarChart2 size={18} />, path: '/seller/analytics' },
+    { label: 'Finance', icon: <FiDollarSign size={18} />, path: '/seller/finance' },
+    { label: 'Awards', icon: <FiAward size={18} />, path: '/seller/awards' },
+  ];
 
   return (
-    <>
-      <div
-        className={`fixed inset-0 bg-black bg-opacity-30 transition-opacity duration-300 z-40 ${
-          isVisible ? 'opacity-100' : 'opacity-0'
-        }`}
-        onClick={handleClose}
-      />
-
-      <aside
-        className={`fixed top-0 left-0 h-full w-64 bg-white shadow-md p-4 z-50 transform transition-transform duration-300 ${
-          isVisible ? 'translate-x-0' : '-translate-x-full'
-        }`}
+    <AnimatePresence>
+      <motion.aside
+        initial={{ x: -300 }}
+        animate={{ x: 0 }}
+        exit={{ x: -300 }}
+        transition={{ duration: 0.3 }}
+        className="fixed top-[64px] left-0 h-[calc(100vh-64px)] w-64 bg-gradient-to-b from-orange-500 to-orange-600 text-white shadow-xl flex flex-col z-40"
       >
-        <div className="flex justify-end mb-4">
-          <button onClick={handleClose} className="text-gray-500 hover:text-red-500">
-            <FiX size={24} />
-          </button>
+        {/* Header (mobile only) */}
+        {isMobile && (
+          <div className="flex justify-between items-center p-4 border-b border-orange-400">
+            <h2 className="text-lg font-bold">Seller Panel</h2>
+            <button onClick={onClose} className="text-white hover:text-red-200 transition text-xl">
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* Profile Section */}
+        <div className="p-5 border-b border-orange-400 text-center">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.4 }}
+            className="w-20 h-20 mx-auto rounded-full overflow-hidden border-2 border-white shadow-md"
+          >
+            <Image
+              src={user?.image || '/avatar.png'}
+              alt={user?.name || 'Seller'}
+              width={80}
+              height={80}
+              className="object-cover w-full h-full"
+            />
+          </motion.div>
+          <p className="mt-3 text-sm font-semibold">{user?.name || 'Seller Account'}</p>
+          <p className="text-xs text-orange-200">{user ? 'Active' : 'Guest Mode'}</p>
         </div>
 
-        <nav className="flex flex-col gap-4">
-        <button
-            onClick={() => {
-              router.push('/seller/dashboard');
-              handleClose();
-            }}
-            className="text-left text-gray-700 hover:text-orange-500"
-          >
-            Dashboard
-          </button>
-          <button
-            onClick={() => {
-              router.push('/seller/products/add');
-              handleClose();
-            }}
-            className="text-left text-gray-700 hover:text-orange-500"
-          >
-            Add Product
-          </button>
-          <button
-            onClick={() => {
-              router.push('/seller/inventory');
-              handleClose();
-            }}
-            className="text-left text-gray-700 hover:text-orange-500"
-          >
-            inventory
-          </button>
-          <button
-            onClick={() => {
-              router.push('/seller/orders');
-              handleClose();
-            }}
-            className="text-left text-gray-700 hover:text-orange-500"
-          >
-            Orders
-          </button>
-          <button
-            onClick={() => {
-              router.push('/seller/analytics');
-              handleClose();
-            }}
-            className="text-left text-gray-700 hover:text-orange-500"
-          >
-            Analytics
-          </button>
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto mt-3">
+          {menuItems.map((item, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                router.push(item.path);
+                if (isMobile && onClose) onClose();
+              }}
+              className="flex items-center gap-3 w-full px-5 py-3 text-left text-white hover:bg-orange-700 transition-all duration-200"
+            >
+              <span>{item.icon}</span>
+              <span className="font-medium">{item.label}</span>
+            </button>
+          ))}
         </nav>
-      </aside>
-    </>
+
+        {/* Footer */}
+        <div className="p-4 text-center border-t border-orange-400 text-xs text-orange-100">
+          © {new Date().getFullYear()} YourShop. All rights reserved.
+        </div>
+      </motion.aside>
+    </AnimatePresence>
   );
 }

@@ -67,7 +67,7 @@ export default function InventoryPage() {
   };
 
   return (
-    <div className="pt-24 px-4">
+    <div className="md:ml-64 pt-24 px-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-orange-600">My Inventory</h1>
         <Link

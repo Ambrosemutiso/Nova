@@ -86,7 +86,7 @@ function maskPhone(phone: string) {
   const paginatedOrders = orders.slice((page - 1) * pageSize, page * pageSize);
 
   return (
-    <div className="px-6 pt-28 pb-10">
+    <div className="md:ml-64 px-6 pt-28 pb-10">
       <h1 className="text-2xl font-bold text-orange-600 mb-4">Seller Orders</h1>
 
       <div className="mb-4 flex gap-2">
