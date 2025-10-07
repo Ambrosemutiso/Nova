@@ -6,6 +6,16 @@ import Notification from '@/app/models/notification';
 import Seller from '@/app/models/seller';
 import type { Follower } from '@/app/types/follower';
 
+// 🔹 Define plan product limits
+const PLAN_LIMITS: Record<string, number> = {
+  free: 3,
+  basic: 50,
+  premium: 500,
+};
+
+/* --------------------------------------------
+   🟢 POST: Create a New Product
+-------------------------------------------- */
 export async function POST(request: NextRequest) {
   await dbConnect();
 
@@ -35,7 +45,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Handle image uploads
+    // 🔹 Fetch seller from DB
+    const seller = await Seller.findById(sellerId);
+    if (!seller) {
+      return NextResponse.json({ error: 'Seller not found' }, { status: 404 });
+    }
+
+    // 🔹 Determine seller plan and limit
+    const planType = seller.shop?.plan || 'free';
+    const planLimit = PLAN_LIMITS[planType] || PLAN_LIMITS.free;
+
+    // 🔹 Count seller's existing products
+    const currentProductCount = await Product.countDocuments({ sellerId });
+
+    if (currentProductCount >= planLimit) {
+      return NextResponse.json(
+        {
+          error: `You’ve reached your ${planType.toUpperCase()} plan limit of ${planLimit} products. Upgrade to add more.`,
+        },
+        { status: 403 }
+      );
+    }
+
+    // 🔹 Handle image uploads
     const images: string[] = [];
     const files = formData.getAll('images') as Blob[];
 
@@ -47,7 +79,7 @@ export async function POST(request: NextRequest) {
           folder: 'products',
         });
 
-        // Remove version from URL
+        // Remove version number from Cloudinary URL
         const cleanedUrl = result.secure_url.replace(/\/v\d+\//, '/');
         images.push(cleanedUrl);
       } catch (err) {
@@ -56,6 +88,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // 🔹 Create new product
     const newProduct = new Product({
       name,
       price,
@@ -81,18 +114,17 @@ export async function POST(request: NextRequest) {
 
     await newProduct.save();
 
-    // 🔔 Send notifications to followers of the seller
+    // 🔔 Notify followers
     try {
-      const seller = await Seller.findById(sellerId).populate('followers.userId', 'name');
+      const sellerWithFollowers = await Seller.findById(sellerId).populate('followers.userId', 'name');
 
-      if (seller?.followers?.length) {
-const notifications = seller.followers.map((follower: Follower) => ({
-  type: 'new_product',
-  sender: seller._id,
-  recipient: follower.userId._id,
-  message: `🛒 ${seller.shopName || seller.name} just added a new product: ${name}`,
-}));
-
+      if (sellerWithFollowers?.followers?.length) {
+        const notifications = sellerWithFollowers.followers.map((follower: Follower) => ({
+          type: 'new_product',
+          sender: sellerWithFollowers._id,
+          recipient: follower.userId._id,
+          message: `🛒 ${sellerWithFollowers.shopName || sellerWithFollowers.name} just added a new product: ${name}`,
+        }));
 
         await Notification.insertMany(notifications);
       }
@@ -101,11 +133,50 @@ const notifications = seller.followers.map((follower: Follower) => ({
     }
 
     return NextResponse.json(
-      { message: 'Product created successfully', product: newProduct },
+      { message: '✅ Product created successfully', product: newProduct },
       { status: 201 }
     );
   } catch (error) {
     console.error('❌ Error creating product:', error);
     return NextResponse.json({ error: 'Failed to create product' }, { status: 500 });
+  }
+}
+
+/* --------------------------------------------
+   🟣 GET: Fetch Seller Product Stats
+-------------------------------------------- */
+export async function GET(request: NextRequest) {
+  await dbConnect();
+
+  const { searchParams } = new URL(request.url);
+  const sellerId = searchParams.get('sellerId');
+
+  if (!sellerId) {
+    return NextResponse.json({ error: 'Missing sellerId' }, { status: 400 });
+  }
+
+  try {
+    const seller = await Seller.findById(sellerId);
+    if (!seller) {
+      return NextResponse.json({ error: 'Seller not found' }, { status: 404 });
+    }
+
+    const planType = seller.shop?.plan || 'free';
+    const planLimit = PLAN_LIMITS[planType] || PLAN_LIMITS.free;
+
+    const productCount = await Product.countDocuments({ sellerId });
+    const remainingSlots = Math.max(planLimit - productCount, 0);
+
+    return NextResponse.json({
+      sellerId,
+      planType,
+      planLimit,
+      productCount,
+      remainingSlots,
+      message: `You’ve added ${productCount} of ${planLimit} products (${remainingSlots} remaining).`,
+    });
+  } catch (error) {
+    console.error('❌ Error fetching product stats:', error);
+    return NextResponse.json({ error: 'Failed to fetch product stats' }, { status: 500 });
   }
 }

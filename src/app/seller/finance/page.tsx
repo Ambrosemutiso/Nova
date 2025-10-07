@@ -17,41 +17,162 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
-  BarChart,
-  Bar,
   Legend,
   PieChart,
   Pie,
   Cell,
 } from 'recharts';
 
+// ✅ Seller interface
+export interface Seller {
+  _id: string;
+  name: string;
+  email: string;
+  image?: string;
+  logo?: string;
+  banner?: string;
+  phoneNumber?: string;
+  role: 'seller';
+  shopName?: string;
+  isVerified: boolean;
+  followers: { userId: string; followedAt?: Date }[];
+  shop: {
+    isActive: boolean;
+    activatedAt?: Date;
+    expiresAt?: Date;
+    amountPaid?: number;
+    transactionId?: string;
+    packageType?: 'free' | 'basic' | 'premium';
+  };
+  createdAt: Date;
+}
+
+interface Summary {
+  totalSales: number;
+  netEarnings: number;
+  pendingPayouts: number;
+  platformFees: number;
+}
+
+interface Transaction {
+  date: string;
+  orderId: string;
+  buyer: string;
+  amount: number;
+  status: string;
+  method: string;
+}
+
 export default function FinancePage() {
-  const [summary, setSummary] = useState({
+  const [summary, setSummary] = useState<Summary>({
     totalSales: 0,
     netEarnings: 0,
     pendingPayouts: 0,
     platformFees: 0,
   });
 
-  const [chartData, setChartData] = useState([
-    { month: 'Jan', sales: 30000, payouts: 20000 },
-    { month: 'Feb', sales: 40000, payouts: 25000 },
-    { month: 'Mar', sales: 38000, payouts: 27000 },
-    { month: 'Apr', sales: 45000, payouts: 30000 },
-    { month: 'May', sales: 50000, payouts: 35000 },
-  ]);
+  const [chartData, setChartData] = useState<
+    { month: string; sales: number; payouts: number }[]
+  >([]);
 
-  const [transactions, setTransactions] = useState([
-    { date: '2025-09-29', orderId: '#ORD1234', buyer: 'John Doe', amount: 2500, status: 'Completed', method: 'M-Pesa' },
-    { date: '2025-09-25', orderId: '#ORD1231', buyer: 'Jane Smith', amount: 3400, status: 'Pending', method: 'Airtel Money' },
-  ]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // ✅ Read seller object from localStorage
+  const getSellerId = (): string | null => {
+    if (typeof window === 'undefined') return null;
+
+    try {
+      const sellerData = localStorage.getItem('sellerUser');
+      if (sellerData) {
+        const seller: Seller = JSON.parse(sellerData);
+        return seller._id || null;
+      }
+
+      // fallback to old method if only sellerId was saved
+      return localStorage.getItem('sellerId');
+    } catch {
+      return null;
+    }
+  };
+
+  // ✅ Fetch metrics from unified endpoint
   useEffect(() => {
-    // Later: fetch data from /api/finance/summary and /api/finance/chart-data
+    const fetchMetrics = async () => {
+      const sellerId = getSellerId();
+
+      if (!sellerId) {
+        setError('No seller ID found. Please log in again.');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const res = await fetch('/api/seller/metrics', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sellerId }),
+        });
+
+        if (!res.ok) throw new Error('Failed to fetch seller metrics.');
+
+        const data = await res.json();
+
+        setSummary({
+          totalSales: data.summary?.totalSales || 0,
+          netEarnings: data.summary?.netEarnings || 0,
+          pendingPayouts: data.summary?.pendingPayouts || 0,
+          platformFees: data.summary?.platformFees || 0,
+        });
+
+        setChartData(data.chart || []);
+        setTransactions(data.transactions || []);
+      } catch (err: any) {
+        console.error('Metrics fetch error:', err);
+        setError(err.message || 'An unexpected error occurred.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMetrics();
   }, []);
 
   const colors = ['#F97316', '#FB923C', '#FED7AA'];
 
+  // 🔸 Loading state
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 1.2 }}
+          className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full"
+        ></motion.div>
+      </div>
+    );
+  }
+
+  // 🔸 Error state
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen text-center">
+        <p className="text-red-600 font-medium text-lg mb-4">{error}</p>
+        <button
+          onClick={() => location.reload()}
+          className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  // 🔸 Main Page
   return (
     <div className="md:ml-64 p-6 md:p-10 bg-gray-50 min-h-screen pt-10 pb-10">
       <motion.h1
@@ -64,28 +185,28 @@ export default function FinancePage() {
       </motion.h1>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-10 ">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
         <FinanceCard
           title="Total Sales"
-          value={`KES ${summary.totalSales.toLocaleString() || '120,000'}`}
+          value={`KES ${summary.totalSales.toLocaleString()}`}
           icon={<FiBarChart2 size={22} />}
           gradient="from-orange-500 to-orange-600"
         />
         <FinanceCard
           title="Net Earnings"
-          value={`KES ${summary.netEarnings.toLocaleString() || '98,000'}`}
+          value={`KES ${summary.netEarnings.toLocaleString()}`}
           icon={<FiDollarSign size={22} />}
           gradient="from-green-500 to-emerald-600"
         />
         <FinanceCard
           title="Pending Payouts"
-          value={`KES ${summary.pendingPayouts.toLocaleString() || '27,000'}`}
+          value={`KES ${summary.pendingPayouts.toLocaleString()}`}
           icon={<FiClock size={22} />}
           gradient="from-yellow-500 to-amber-600"
         />
         <FinanceCard
           title="Platform Fees Paid"
-          value={`KES ${summary.platformFees.toLocaleString() || '8,500'}`}
+          value={`KES ${summary.platformFees.toLocaleString()}`}
           icon={<FiTrendingUp size={22} />}
           gradient="from-blue-500 to-sky-600"
         />
@@ -94,7 +215,9 @@ export default function FinancePage() {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
         <div className="bg-white p-5 rounded-2xl shadow-md">
-          <h2 className="text-lg font-semibold text-gray-700 mb-4">Sales vs Payouts</h2>
+          <h2 className="text-lg font-semibold text-gray-700 mb-4">
+            Sales vs Payouts
+          </h2>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -109,7 +232,9 @@ export default function FinancePage() {
         </div>
 
         <div className="bg-white p-5 rounded-2xl shadow-md">
-          <h2 className="text-lg font-semibold text-gray-700 mb-4">Payment Method Breakdown</h2>
+          <h2 className="text-lg font-semibold text-gray-700 mb-4">
+            Payment Method Breakdown
+          </h2>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -139,7 +264,9 @@ export default function FinancePage() {
       {/* Transactions Table */}
       <div className="bg-white p-5 rounded-2xl shadow-md mb-10 overflow-x-auto">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-gray-700">Recent Transactions</h2>
+          <h2 className="text-lg font-semibold text-gray-700">
+            Recent Transactions
+          </h2>
           <button className="flex items-center gap-2 text-orange-600 hover:text-orange-700 transition">
             <FiDownloadCloud /> Download CSV
           </button>
@@ -157,30 +284,50 @@ export default function FinancePage() {
             </tr>
           </thead>
           <tbody>
-            {transactions.map((txn, i) => (
-              <tr
-                key={i}
-                className="border-b border-gray-100 hover:bg-gray-50 transition"
-              >
-                <td className="py-3 px-4 text-sm">{txn.date}</td>
-                <td className="py-3 px-4 text-sm text-orange-600 font-medium">{txn.orderId}</td>
-                <td className="py-3 px-4 text-sm">{txn.buyer}</td>
-                <td className="py-3 px-4 text-sm">KES {txn.amount.toLocaleString()}</td>
-                <td className={`py-3 px-4 text-sm font-medium ${
-                  txn.status === 'Completed' ? 'text-green-600' : 'text-yellow-600'
-                }`}>
-                  {txn.status}
+            {transactions.length > 0 ? (
+              transactions.map((txn, i) => (
+                <tr
+                  key={i}
+                  className="border-b border-gray-100 hover:bg-gray-50 transition"
+                >
+                  <td className="py-3 px-4 text-sm">
+                    {new Date(txn.date).toLocaleDateString()}
+                  </td>
+                  <td className="py-3 px-4 text-sm text-orange-600 font-medium">
+                    {txn.orderId}
+                  </td>
+                  <td className="py-3 px-4 text-sm">{txn.buyer}</td>
+                  <td className="py-3 px-4 text-sm">
+                    KES {txn.amount.toLocaleString()}
+                  </td>
+                  <td
+                    className={`py-3 px-4 text-sm font-medium ${
+                      txn.status === 'Completed'
+                        ? 'text-green-600'
+                        : 'text-yellow-600'
+                    }`}
+                  >
+                    {txn.status}
+                  </td>
+                  <td className="py-3 px-4 text-sm">{txn.method}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={6} className="text-center py-6 text-gray-500">
+                  No transactions found.
                 </td>
-                <td className="py-3 px-4 text-sm">{txn.method}</td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
 
       {/* Payout Section */}
       <div className="bg-white p-6 rounded-2xl shadow-md">
-        <h2 className="text-lg font-semibold text-gray-700 mb-3">Request a Payout</h2>
+        <h2 className="text-lg font-semibold text-gray-700 mb-3">
+          Request a Payout
+        </h2>
         <p className="text-sm text-gray-500 mb-5">
           Your available balance will be sent to your preferred payment method.
         </p>
@@ -193,8 +340,18 @@ export default function FinancePage() {
   );
 }
 
-/* --- Reusable Finance Card Component --- */
-const FinanceCard = ({ title, value, icon, gradient }: any) => (
+/* --- Reusable Finance Card --- */
+const FinanceCard = ({
+  title,
+  value,
+  icon,
+  gradient,
+}: {
+  title: string;
+  value: string;
+  icon: JSX.Element;
+  gradient: string;
+}) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}

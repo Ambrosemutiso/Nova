@@ -97,8 +97,14 @@ export default function SellerSidebar({ onClose }: Props) {
         </nav>
 
         {/* Footer */}
-        <div className="p-4 text-center border-t border-orange-400 text-xs text-orange-100">
-          © {new Date().getFullYear()} YourShop. All rights reserved.
+        <div className="p-4 border-t border-orange-400 text-center text-xs text-orange-100">
+          {/* ✅ System Status */}
+          <div className="flex justify-center items-center gap-2 mb-2">
+            <span className="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse"></span>
+            <span className="font-medium text-green-100">All Good</span>
+          </div>
+
+          <p>© {new Date().getFullYear()} YourShop. All rights reserved.</p>
         </div>
       </motion.aside>
     </AnimatePresence>

@@ -28,12 +28,12 @@ export async function POST(req: NextRequest) {
         phoneNumber: phoneNumber || null, // allow null if not provided
         country: country || null,
         currency: currency || null,
-        plan: plan || 'unknown',
+        plan: plan || 'free',
       });
     } else {
       // Ensure existing sellers always have a plan
       if (!seller.plan) {
-        seller.plan = 'unknown';
+        seller.plan = 'free';
       }
 
       // If phoneNumber was not saved before but now provided, update it

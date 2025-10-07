@@ -19,6 +19,7 @@ import {
 } from 'recharts';
 import { ShieldCheck, Store, CheckCircle, XCircle } from 'lucide-react';
 import { Edit2 } from 'react-feather';
+import SystemStatus from '@/components/SystemStatus';
 
 const COLORS = ['#f97316', '#16a34a', '#dc2626', '#eab308', '#3b82f6'];
 
@@ -202,6 +203,7 @@ const handleConfirmPayment = async () => {
       <h1 className="text-3xl font-bold text-orange-600 mb-4">
         Welcome, {seller?.name || 'Loading...'}
       </h1>
+      <SystemStatus/>
 
       {/* Shop Info Section */}
       <div className="mb-6 p-4 rounded-lg border bg-white shadow flex items-center justify-between">
@@ -253,17 +255,20 @@ const handleConfirmPayment = async () => {
             </button>
           )}
 
-          <button
-            onClick={() => {
-              setEditShopName(seller?.shopName || '');
-              setEditImage(seller?.image || '');
-              setEditBanner(seller?.banner || '');
-              setShowEditModal(true);
-            }}
-            className="text-sm text-orange-600 hover:underline flex items-center gap-1"
-          >
-            <Edit2 size={16} /> Edit Shop
-          </button>
+{(seller?.shop?.packageType === 'basic' || seller?.shop?.packageType === 'premium') && (
+  <button
+    onClick={() => {
+      setEditShopName(seller?.shopName || '');
+      setEditImage(seller?.image || '');
+      setEditBanner(seller?.banner || '');
+      setShowEditModal(true);
+    }}
+    className="text-sm text-orange-600 hover:underline flex items-center gap-1"
+  >
+    <Edit2 size={16} /> Edit Shop
+  </button>
+)}
+
         </div>
       </div>
 

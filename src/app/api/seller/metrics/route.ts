@@ -17,6 +17,7 @@ export async function POST(req: NextRequest) {
   const endDate = new Date(`${selectedYear + 1}-01-01`);
 
   try {
+    // ===== Seller & Product Info =====
     const activeProducts = await Product.countDocuments({
       sellerId,
       quantity: { $gt: 0 },
@@ -30,60 +31,64 @@ export async function POST(req: NextRequest) {
       createdAt: { $gte: startDate, $lt: endDate },
     });
 
+    const seller = await Seller.findById(sellerId).select('followers');
+    const totalFollowers = seller?.followers?.length || 0;
+
+    // ===== Order Metrics =====
     const totalOrders = orders.length;
     const totalRevenue = orders.reduce((acc, order) => acc + (order.paidAmount || 0), 0);
-
     const deliveredOrders = orders.filter((o) => o.status === 'Delivered').length;
     const cancelledOrders = orders.filter((o) => o.status === 'Cancelled').length;
     const pendingOrders = orders.filter((o) => o.status === 'Pending').length;
     const paidOrders = orders.filter((o) => o.status === 'Paid').length;
 
+    // ===== Finance Metrics =====
     let subtotalRevenue = 0;
-
     for (const order of orders) {
       for (const item of order.items) {
-        if (
-          sellerProductNames.includes(item.name) &&
-          item.status === 'Delivered'
-        ) {
+        if (sellerProductNames.includes(item.name) && item.status === 'Delivered') {
           subtotalRevenue += item.price * item.quantity;
         }
       }
     }
 
-    const seller = await Seller.findById(sellerId).select('followers');
-    const totalFollowers = seller?.followers?.length || 0;
+    // Example fee and payout logic
+    const platformFeeRate = 0.05;
+    const platformFees = subtotalRevenue * platformFeeRate;
+    const netEarnings = subtotalRevenue - platformFees;
+    const pendingPayouts = orders
+      .filter((o) => o.status === 'Pending')
+      .reduce((acc, o) => acc + (o.paidAmount || 0), 0);
 
-const chartData = Array.from({ length: 12 }, (_, i) => ({
-  month: new Date(2000, i).toLocaleString('default', { month: 'short' }),
-  revenue: 0,
-  activeProducts: new Set<string>(), // temporarily store product names
-}));
+    // ===== Monthly Chart Data =====
+    const chartData = Array.from({ length: 12 }, (_, i) => ({
+      month: new Date(2000, i).toLocaleString('default', { month: 'short' }),
+      revenue: 0,
+      activeProducts: new Set<string>(),
+      payouts: 0,
+    }));
 
-for (const order of orders) {
-  const month = new Date(order.createdAt).getMonth();
-
-  for (const item of order.items) {
-    if (sellerProductNames.includes(item.name)) {
-      // Track revenue
-      if (item.status === 'Delivered') {
-        chartData[month].revenue += item.price * item.quantity;
+    for (const order of orders) {
+      const month = new Date(order.createdAt).getMonth();
+      for (const item of order.items) {
+        if (sellerProductNames.includes(item.name)) {
+          if (item.status === 'Delivered') {
+            chartData[month].revenue += item.price * item.quantity;
+            chartData[month].payouts += item.price * item.quantity * (1 - platformFeeRate);
+          }
+          chartData[month].activeProducts.add(item.name);
+        }
       }
-
-      // Track active products by name
-      chartData[month].activeProducts.add(item.name);
     }
-  }
-}
 
-// Convert activeProducts from Set to count
-const formattedChartData = chartData.map((data) => ({
-  month: data.month,
-  revenue: data.revenue,
-  activeProducts: data.activeProducts.size,
-}));
+    const formattedChartData = chartData.map((data) => ({
+      month: data.month,
+      sales: data.revenue,
+      payouts: data.payouts,
+      activeProducts: data.activeProducts.size,
+    }));
 
-
+    // ===== Response =====
     return NextResponse.json({
       totalOrders,
       totalRevenue,
@@ -94,10 +99,13 @@ const formattedChartData = chartData.map((data) => ({
       cancelledOrders,
       pendingOrders,
       paidOrders,
+      platformFees,
+      netEarnings,
+      pendingPayouts,
       chartData: formattedChartData,
     });
   } catch (error) {
-    console.error('Dashboard error:', error);
+    console.error('Metrics error:', error);
     return NextResponse.json({ error: 'Failed to load metrics' }, { status: 500 });
   }
 }
