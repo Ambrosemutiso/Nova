@@ -57,8 +57,8 @@ export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () =>
                 Sell on NovaXpress
               </button>
             </li>
-            <li><a href="/logistics/login">Become a Logistics Partner</a></li>
-            <li><a href="/affiliate/programs/marketing">Join Affiliate Program</a></li>
+            <li><a href="/logistics/auth/login">Become a Logistics Partner</a></li>
+            <li><a href="/affiliate/auth/login">Join Affiliate Program</a></li>
           </ul>
         </div>
 

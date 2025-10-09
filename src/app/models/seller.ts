@@ -15,7 +15,7 @@ const sellerSchema = new mongoose.Schema({
   image: { type: String },
   logo: { type: String },
   banner: { type: String },
-phoneNumber: {
+  phoneNumber: {
   type: String,
   default: null,   // default explicitly to null
 },
