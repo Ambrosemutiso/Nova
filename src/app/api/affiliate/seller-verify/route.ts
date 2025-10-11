@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
       );
 
     // ✅ Find the seller by shopName
-    const seller = await Seller.findOne({ shopName });
+    const seller = await Seller.findOne({ name });
     if (!seller)
       return NextResponse.json(
         { success: false, message: 'Seller not found' },
@@ -97,7 +97,6 @@ export async function POST(req: NextRequest) {
       affiliateId,
       sellerId: seller._id,
       name: seller.name,
-      shopName,
       plan: seller.shop.plan,
       commission,
       status: 'Pending',

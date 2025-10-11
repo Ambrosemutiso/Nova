@@ -11,8 +11,8 @@ const referralSchema = new mongoose.Schema({
     ref: 'Seller',
     required: true,
   },
-  name: { type: String }, // Seller’s name
-  shopName: { type: String }, // Seller’s shop
+  name: { type: String }, 
+  shopName: { type: String }, 
   plan: {
     type: String,
     enum: ['basic', 'premium', 'free'],
@@ -20,17 +20,15 @@ const referralSchema = new mongoose.Schema({
   },
   commission: { type: Number, required: true },
 
-  // 👇 Status flags for payout tracking
   status: {
     type: String,
     enum: ['Pending', 'Paid', 'Rejected'],
     default: 'Pending',
   },
 
-  // 👇 Optional audit fields
   date: { type: Date, default: Date.now },
   paidAt: { type: Date },
-  verifiedBy: { type: String }, // optional admin user who approved payout
+  verifiedBy: { type: String }, 
 });
 
 const Referral =

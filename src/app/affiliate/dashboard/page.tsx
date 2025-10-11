@@ -61,7 +61,7 @@ export default function AffiliatePage() {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
 
   // Verify Modal fields
-  const [shopName, setShopName] = useState('');
+  const [name, setName] = useState('');
   const [transactionId, setTransactionId] = useState('');
   const [plan, setPlan] = useState<'Basic' | 'Premium'>('Basic');
 
@@ -110,7 +110,7 @@ export default function AffiliatePage() {
 
   // 🟢 Verify seller and reward
 const handleVerifySubmit = async () => {
-  if (!shopName.trim() || !transactionId.trim()) {
+  if (!name.trim() || !transactionId.trim()) {
     toast.error('Please fill all fields.');
     return;
   }
@@ -128,7 +128,7 @@ const handleVerifySubmit = async () => {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`, // ✅ send token
       },
-      body: JSON.stringify({ shopName, transactionId, plan }),
+      body: JSON.stringify({ name, transactionId, plan }),
     });
 
     const data = await res.json();
@@ -144,7 +144,7 @@ const handleVerifySubmit = async () => {
     toast.error('Verification failed. Try again.');
   } finally {
     setShowVerifyModal(false);
-    setShopName('');
+    setName('');
     setTransactionId('');
   }
 };
@@ -400,8 +400,8 @@ const handleVerifySubmit = async () => {
               </label>
               <input
                 type="text"
-                value={shopName}
-                onChange={(e) => setShopName(e.target.value)}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="w-full border px-3 py-2 rounded mb-4"
                 placeholder="Enter seller shop name"
               />
@@ -445,7 +445,7 @@ const handleVerifySubmit = async () => {
 
               <button
                 onClick={handleVerifySubmit}
-                disabled={!shopName || !transactionId}
+                disabled={!name || !transactionId}
                 className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded disabled:opacity-50"
               >
                 Verify & Reward
