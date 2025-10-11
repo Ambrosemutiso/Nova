@@ -10,9 +10,10 @@ const SECRET_KEY = process.env.JWT_SECRET || 'secret_ecom';
 export async function POST(req: NextRequest) {
   try {
     await dbConnect();
-    const { shopName, transactionId } = await req.json();
 
-    if (!shopName || !transactionId) {
+    const { name, transactionId } = await req.json();
+
+    if (!name || !transactionId) {
       return NextResponse.json(
         { success: false, message: 'Missing required fields' },
         { status: 400 }
@@ -21,7 +22,9 @@ export async function POST(req: NextRequest) {
 
     // ✅ Authenticate affiliate using Bearer token
     const authHeader = req.headers.get('authorization');
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+    const token = authHeader?.startsWith('Bearer ')
+      ? authHeader.split(' ')[1]
+      : null;
 
     if (!token)
       return NextResponse.json(
@@ -47,7 +50,7 @@ export async function POST(req: NextRequest) {
         { status: 404 }
       );
 
-    // ✅ Find the seller by shopName
+    // ✅ Find seller by their name
     const seller = await Seller.findOne({ name });
     if (!seller)
       return NextResponse.json(
@@ -56,17 +59,19 @@ export async function POST(req: NextRequest) {
       );
 
     // ✅ Validate transactionId
-    if (!seller.shop.transactionId)
+    if (!seller.shop?.transactionId) {
       return NextResponse.json(
         { success: false, message: 'Seller has no recorded transaction ID' },
         { status: 400 }
       );
+    }
 
-    if (seller.shop.transactionId !== transactionId)
+    if (seller.shop.transactionId !== transactionId) {
       return NextResponse.json(
         { success: false, message: 'Invalid transaction ID' },
         { status: 400 }
       );
+    }
 
     // ✅ Check if already verified
     if (seller.isVerified) {

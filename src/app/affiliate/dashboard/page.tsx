@@ -41,6 +41,11 @@ interface Summary {
   conversionRate: number;
 }
 
+interface InsightsData {
+  plans: { name: string; value: number }[];
+  withdrawMethods: { name: string; value: number }[];
+}
+
 export default function AffiliatePage() {
   const [summary, setSummary] = useState<Summary>({
     totalEarnings: 0,
@@ -52,6 +57,11 @@ export default function AffiliatePage() {
   const [chartData, setChartData] = useState<
     { month: string; earnings: number; referrals: number }[]
   >([]);
+
+  const [insights, setInsights] = useState<InsightsData>({
+    plans: [],
+    withdrawMethods: [],
+  });
 
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,35 +82,76 @@ export default function AffiliatePage() {
     ''
   );
 
-  const referralLink = 'https://yourplatform.com/register?ref=AFF12345';
-  const colors = ['#2563EB', '#60A5FA'];
+  const referralLink = 'https://NovaXpress.com/seller/register?ref=AFF1TJ79';
+  const planColors = ['#2563EB', '#60A5FA'];
+  const withdrawColors = ['#10B981', '#EF4444'];
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [summaryRes, referralsRes] = await Promise.all([
-          fetch('/api/affiliate/summary'),
-          fetch('/api/affiliate/refferals'),
-        ]);
+  // 🔹 Fetch Affiliate Data
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem('affiliateToken');
+      if (!token) return;
 
-        const summaryData = await summaryRes.json();
-        const referralsData = await referralsRes.json();
+      const [summaryRes, referralsRes, insightsRes] = await Promise.all([
+        fetch('/api/affiliate/summary', {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch('/api/affiliate/refferals', {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch('/api/affiliate/insights', {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
 
-        if (summaryData.success) setSummary(summaryData.data);
-        if (referralsData.success) {
-          setReferrals(referralsData.data);
-          setChartData(referralsData.chart || []);
-        }
-      } catch (error) {
-        console.error('Error fetching affiliate data:', error);
-        toast.error('Failed to load affiliate data.');
-      } finally {
-        setLoading(false);
+      const summaryData = await summaryRes.json();
+      const referralsData = await referralsRes.json();
+      const insightsData = await insightsRes.json();
+
+      if (summaryData.success) setSummary(summaryData.data);
+      if (referralsData.success) {
+        setReferrals(referralsData.data);
+        setChartData(referralsData.chart || []);
       }
-    };
 
-    fetchData();
-  }, []);
+      // ✅ Dynamic insight chart values
+      if (insightsData.success) {
+        const planChart = insightsData.data.planBreakdown.map((item: any) => ({
+          name:
+            item.plan === 'basic'
+              ? 'Basic Plan'
+              : item.plan === 'premium'
+              ? 'Premium Plan'
+              : 'Other',
+          value: item.count || 0,
+        }));
+
+        const withdrawChart = insightsData.data.withdrawBreakdown.map((item: any) => ({
+          name:
+            item.method === 'mpesa'
+              ? 'M-Pesa'
+              : item.method === 'airtel'
+              ? 'Airtel Money'
+              : 'Other',
+          value: item.count || 0,
+        }));
+
+        setInsights({
+          plans: planChart,
+          withdrawMethods: withdrawChart,
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching affiliate data:', error);
+      toast.error('Failed to load affiliate data.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, []);
 
   // 🟠 Copy referral link
   const handleCopyLink = () => {
@@ -108,59 +159,67 @@ export default function AffiliatePage() {
     toast.success('Referral link copied!');
   };
 
-  // 🟢 Verify seller and reward
-const handleVerifySubmit = async () => {
-  if (!name.trim() || !transactionId.trim()) {
-    toast.error('Please fill all fields.');
-    return;
-  }
-
-  const token = localStorage.getItem('affiliateToken'); // <-- get from localStorage
-  if (!token) {
-    toast.error('You must be logged in.');
-    return;
-  }
-
-  try {
-    const res = await fetch('/api/affiliate/seller-verify', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`, // ✅ send token
-      },
-      body: JSON.stringify({ name, transactionId, plan }),
-    });
-
-    const data = await res.json();
-
-    if (data.success) {
-      toast.success(`Seller verified! KES ${data.referral.commission} awarded.`);
-      setReferrals((prev) => [data.referral, ...prev]);
-    } else {
-      toast.error(data.message || 'Verification failed.');
+  // 🟢 Verify seller & award commission
+  const handleVerifySubmit = async () => {
+    if (!name.trim() || !transactionId.trim()) {
+      toast.error('Please fill all fields.');
+      return;
     }
-  } catch (error) {
-    console.error('Verify error:', error);
-    toast.error('Verification failed. Try again.');
-  } finally {
-    setShowVerifyModal(false);
-    setName('');
-    setTransactionId('');
-  }
-};
 
+    const token = localStorage.getItem('affiliateToken');
+    if (!token) {
+      toast.error('You must be logged in.');
+      return;
+    }
 
-  // 🟣 Handle withdrawals
+    try {
+      const res = await fetch('/api/affiliate/seller-verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name, transactionId, plan }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        toast.success(`Seller verified! KES ${data.referral.commission} awarded.`);
+        setReferrals((prev) => [data.referral, ...prev]);
+      } else {
+        toast.error(data.message || 'Verification failed.');
+      }
+    } catch (error) {
+      console.error('Verify error:', error);
+      toast.error('Verification failed. Try again.');
+    } finally {
+      setShowVerifyModal(false);
+      setName('');
+      setTransactionId('');
+    }
+  };
+
+  // 🟣 Handle Withdraw
   const handleWithdraw = async () => {
     if (!withdrawPhone || !withdrawAmount || !withdrawMethod) {
       toast.error('Please fill all withdrawal fields.');
       return;
     }
 
+    const token = localStorage.getItem('affiliateToken');
+    if (!token) {
+      toast.error('You must be logged in to withdraw.');
+      return;
+    }
+
     try {
-      const res = await fetch('/api/withdrawals', {
+      const res = await fetch('/api/affiliate/withdraw', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           phone: withdrawPhone,
           amount: withdrawAmount,
@@ -185,6 +244,7 @@ const handleVerifySubmit = async () => {
       setShowWithdrawModal(false);
     }
   };
+
 
   if (loading) {
     return (
@@ -237,54 +297,109 @@ const handleVerifySubmit = async () => {
         />
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
-        <div className="bg-white p-5 rounded-2xl shadow-md">
-          <h2 className="text-lg font-semibold text-gray-700 mb-4">
-            Earnings vs Referrals
-          </h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="earnings" stroke="#2563EB" />
-              <Line type="monotone" dataKey="referrals" stroke="#10B981" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+      {/* Unified Affiliate Insights Section */}
+ {/* 🔹 Unified Affiliate Insights Section */}
+<motion.div
+  initial={{ opacity: 0, y: 30 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.6 }}
+  className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10"
+>
+  {/* Earnings vs Referrals */}
+  <div className="bg-white p-5 rounded-2xl shadow-md">
+    <h2 className="text-lg font-semibold text-gray-700 mb-4">
+      Earnings vs Referrals
+    </h2>
+    <ResponsiveContainer width="100%" height={300}>
+      <LineChart data={chartData}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="month" />
+        <YAxis />
+        <Tooltip />
+        <Legend />
+        <Line type="monotone" dataKey="earnings" stroke="#2563EB" />
+        <Line type="monotone" dataKey="referrals" stroke="#10B981" />
+      </LineChart>
+    </ResponsiveContainer>
+  </div>
 
-        {/* Plan Breakdown */}
-        <div className="bg-white p-5 rounded-2xl shadow-md">
-          <h2 className="text-lg font-semibold text-gray-700 mb-4">
-            Plan Type Breakdown
-          </h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={[
-                  { name: 'Basic Plan', value: 65 },
-                  { name: 'Premium Plan', value: 35 },
-                ]}
-                cx="50%"
-                cy="50%"
-                outerRadius={90}
-                fill="#8884d8"
-                dataKey="value"
-                label
-              >
-                {colors.map((color, index) => (
-                  <Cell key={`cell-${index}`} fill={color} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
+  {/* 🧠 Affiliate Insights */}
+  <motion.div
+    initial={{ opacity: 0, scale: 0.95 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ duration: 0.5 }}
+    className="bg-white p-5 rounded-2xl shadow-md flex flex-col lg:flex-row items-center justify-around gap-6"
+  >
+    {/* Plan Breakdown */}
+    <div className="w-full lg:w-1/2">
+      <h2 className="text-lg font-semibold text-gray-700 mb-3 text-center">
+        Plan Type Breakdown
+      </h2>
+      {insights.plans.length === 0 ? (
+        <div className="flex justify-center items-center h-[250px]">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 1.2 }}
+            className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"
+          ></motion.div>
         </div>
-      </div>
+      ) : (
+        <ResponsiveContainer width="100%" height={250}>
+          <PieChart>
+            <Pie
+              data={insights.plans}
+              cx="50%"
+              cy="50%"
+              outerRadius={80}
+              dataKey="value"
+              label={({ name, value }) => `${name}: ${value}`}
+            >
+              {insights.plans.map((_, i) => (
+                <Cell key={i} fill={planColors[i % planColors.length]} />
+              ))}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        </ResponsiveContainer>
+      )}
+    </div>
+
+    {/* Withdraw Breakdown */}
+    <div className="w-full lg:w-1/2">
+      <h2 className="text-lg font-semibold text-gray-700 mb-3 text-center">
+        Withdrawal Methods
+      </h2>
+      {insights.withdrawMethods.length === 0 ? (
+        <div className="flex justify-center items-center h-[250px]">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 1.2 }}
+            className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full"
+          ></motion.div>
+        </div>
+      ) : (
+        <ResponsiveContainer width="100%" height={250}>
+          <PieChart>
+            <Pie
+              data={insights.withdrawMethods}
+              cx="50%"
+              cy="50%"
+              outerRadius={80}
+              dataKey="value"
+              label={({ name, value }) => `${name}: ${value}`}
+            >
+              {insights.withdrawMethods.map((_, i) => (
+                <Cell key={i} fill={withdrawColors[i % withdrawColors.length]} />
+              ))}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        </ResponsiveContainer>
+      )}
+    </div>
+  </motion.div>
+</motion.div>
+
 
       {/* Referral Link Section */}
       <div className="bg-white p-5 rounded-2xl shadow-md mb-10 flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -567,3 +682,8 @@ const AffiliateCard = ({
     <div className="text-3xl opacity-80">{icon}</div>
   </motion.div>
 );
+
+
+
+
+

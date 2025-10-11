@@ -38,7 +38,7 @@ export function middleware(req: NextRequest) {
     if (!affiliateToken) {
       // Redirect pages; block APIs
       if (pathname.startsWith('/affiliate/dashboard')) {
-        return NextResponse.redirect(new URL('/affiliate/login', req.url));
+        return NextResponse.redirect(new URL('/affiliate/auth/login', req.url));
       }
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -48,7 +48,7 @@ export function middleware(req: NextRequest) {
       return NextResponse.next();
     } catch {
       if (pathname.startsWith('/affiliate/dashboard')) {
-        return NextResponse.redirect(new URL('/affiliate/login', req.url));
+        return NextResponse.redirect(new URL('/affiliate/auth/login', req.url));
       }
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
