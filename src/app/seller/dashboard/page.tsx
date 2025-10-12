@@ -45,7 +45,7 @@ export interface Seller {
     expiresAt?: Date;
     amountPaid?: number;
     transactionId?: string;
-    packageType?: 'free' | 'basic' | 'premium';
+    plan?: 'free' | 'basic' | 'premium';
   };
   createdAt: Date;
 }
@@ -85,10 +85,10 @@ export default function SellerDashboard() {
   const [editShopName, setEditShopName] = useState(seller?.name || '');
   const [editImage, setEditImage] = useState(seller?.image || '');
   const [editBanner, setEditBanner] = useState(seller?.banner || '');
-const [showPaymentModal, setShowPaymentModal] = useState(false);
-const [selectedPlan, setSelectedPlan] = useState<"basic" | "premium" | null>(null);
-const [paymentPhone, setPaymentPhone] = useState("");
-const [paymentMethod, setPaymentMethod] = useState<"mpesa" | "airtel" | "">("");
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<"basic" | "premium" | null>(null);
+  const [paymentPhone, setPaymentPhone] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"mpesa" | "airtel" | "">("");
 
 
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -120,7 +120,6 @@ const [paymentMethod, setPaymentMethod] = useState<"mpesa" | "airtel" | "">("");
     }
   };
 
-// Open payment modal when choosing a plan
 const openPaymentModal = (plan: "basic" | "premium") => {
   setSelectedPlan(plan);
   setPaymentMethod("");
@@ -138,12 +137,11 @@ const handleConfirmPayment = async () => {
     setActivatingShop(true);
 
     let amount = selectedPlan === "basic" ? 1300 : 3000;
-    if (selectedPlan === "premium" && seller?.shop?.packageType === "basic") {
+    if (selectedPlan === "premium" && seller?.shop?.plan === "basic") {
       const alreadyPaid = seller.shop?.amountPaid || 0;
       amount = 3000 - alreadyPaid;
     }
 
-    // Call backend API to trigger push payment
     const res = await fetch("/api/seller/payment/initiate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -206,7 +204,6 @@ const handleConfirmPayment = async () => {
       </h1>
       <SystemStatus/>
 
-      {/* Shop Info Section */}
       <div className="mb-6 p-4 rounded-lg border bg-white shadow flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-700">
@@ -219,7 +216,7 @@ const handleConfirmPayment = async () => {
               <strong>{new Date(seller!.shop.expiresAt!).toLocaleDateString()}</strong>{' '}
               (
               <span className="font-bold">
-                {seller?.shop?.packageType?.toUpperCase() || 'Unspecified'}
+                {seller?.shop?.plan?.toUpperCase() || 'Unspecified'}
               </span>{' '}
               Package)
             </p>
@@ -231,11 +228,11 @@ const handleConfirmPayment = async () => {
         </div>
 
         <div className="flex items-center gap-3">
-          {seller?.shop?.packageType === 'premium' && isShopActive ? (
+          {seller?.shop?.plan === 'premium' && isShopActive ? (
             <span className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-white font-semibold px-3 py-1 rounded-full shadow-md flex items-center gap-1">
               🌟 Premium Seller
             </span>
-          ) : seller?.shop?.packageType === 'basic' && isShopActive ? (
+          ) : seller?.shop?.plan === 'basic' && isShopActive ? (
             <>
               <span className="bg-blue-100 text-blue-700 font-medium px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
                 🛍️ Basic Seller
@@ -256,7 +253,7 @@ const handleConfirmPayment = async () => {
             </button>
           )}
 
-{(seller?.shop?.packageType === 'basic' || seller?.shop?.packageType === 'premium') && (
+{(seller?.shop?.plan === 'basic' || seller?.shop?.plan === 'premium') && (
   <button
     onClick={() => {
       setEditShopName(seller?.shopName || '');
@@ -269,9 +266,8 @@ const handleConfirmPayment = async () => {
     <Edit2 size={16} /> Edit Shop
   </button>
 )}
-
-        </div>
-      </div>
+  </div>
+</div>
 
 {showUpgradeModal && (
   <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center px-4">
@@ -290,30 +286,30 @@ const handleConfirmPayment = async () => {
       <div className="flex justify-center gap-6 mb-6">
         <div
           className={`h-4 w-4 rounded-full ${
-            seller?.shop?.packageType === "free"
+            seller?.shop?.plan === "free"
               ? "bg-gray-500 animate-ping"
               : "bg-gray-300"
           }`}
         />
         <div
           className={`h-4 w-4 rounded-full ${
-            seller?.shop?.packageType === "basic"
+            seller?.shop?.plan === "basic"
               ? "bg-orange-500 animate-ping"
               : "bg-orange-300"
           }`}
         />
         <div
           className={`h-4 w-4 rounded-full ${
-            seller?.shop?.packageType === "premium"
+            seller?.shop?.plan === "premium"
               ? "bg-yellow-500 animate-ping"
               : "bg-yellow-300"
           }`}
         />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Free Plan */}
+
         <div className="border rounded-xl p-6 bg-gray-50 hover:shadow-md transition relative">
-          {seller?.shop?.packageType === "free" && (
+          {seller?.shop?.plan === "free" && (
             <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gray-400 text-white px-3 py-1 rounded-full text-xs font-bold shadow">
               Current Plan
             </span>
@@ -348,9 +344,8 @@ const handleConfirmPayment = async () => {
           </button>
         </div>
 
-        {/* Basic Plan */}
         <div className="border rounded-xl p-6 hover:shadow-md transition relative">
-          {seller?.shop?.packageType === "basic" && (
+          {seller?.shop?.plan === "basic" && (
             <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow">
               Current Plan
             </span>
@@ -389,9 +384,8 @@ const handleConfirmPayment = async () => {
 </button>
         </div>
 
-        {/* Premium Plan */}
         <div className="border-2 border-yellow-400 rounded-xl p-6 bg-yellow-50 hover:shadow-lg transition relative">
-          {seller?.shop?.packageType === "premium" && (
+          {seller?.shop?.plan === "premium" && (
             <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-white px-3 py-1 rounded-full text-xs font-bold shadow">
               Current Plan
             </span>
@@ -401,7 +395,7 @@ const handleConfirmPayment = async () => {
           </span>
           <h3 className="text-xl font-semibold text-blue-600">Premium Plan</h3>
           <p className="text-gray-600 mb-2">
-            {seller?.shop?.packageType === "basic"
+            {seller?.shop?.plan === "basic"
               ? "Top-up Ksh 1700 to upgrade"
               : "Ksh 3000 / year"}
           </p>
@@ -431,15 +425,12 @@ const handleConfirmPayment = async () => {
               <CheckCircle size={16} className="text-green-500" /> Product Ads 10x Boost
             </li>
           </ul>
-
-<button
-  onClick={() => openPaymentModal("premium")}
-  disabled={activatingShop}
-  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
->
-  {activatingShop ? "Processing..." : "Choose Premium"}
-</button>
-
+          <button 
+          onClick={() => openPaymentModal("premium")}
+          disabled={activatingShop}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
+          {activatingShop ? "Processing..." : "Choose Premium"}
+          </button>
         </div>
       </div>
     </div>
@@ -460,12 +451,10 @@ const handleConfirmPayment = async () => {
         {selectedPlan === "basic" ? "Basic Plan" : "Premium Plan"}
       </h2>
 
-      {/* Fixed Amount */}
       <p className="text-center text-lg font-semibold text-orange-600 mb-4">
         Amount: {selectedPlan === "basic" ? "Ksh 1300" : "Ksh 3000"}
       </p>
 
-      {/* Phone Number */}
       <label className="block mb-2 text-sm text-orange-600">Phone Number</label>
       <input
         type="text"
@@ -475,10 +464,9 @@ const handleConfirmPayment = async () => {
         placeholder="Enter Mpesa/Airtel number"
       />
 
-      {/* Payment Method with Logos */}
       <label className="block mb-2 text-sm text-orange-600">Payment Method</label>
       <div className="flex items-center gap-4 mb-4">
-        {/* Mpesa Option */}
+
         <button
           onClick={() => setPaymentMethod("mpesa")}
           className={`flex-1 flex items-center gap-2 border px-3 py-2 rounded-lg transition ${
@@ -488,14 +476,13 @@ const handleConfirmPayment = async () => {
           }`}
         >
           <img
-            src="/mpesa.png" // make sure you place mpesa.png in /public folder
+            src="/mpesa.png" 
             alt="M-Pesa"
             className="h-6"
           />
           <span className="font-medium text-gray-700">M-Pesa</span>
         </button>
 
-        {/* Airtel Option */}
         <button
           onClick={() => setPaymentMethod("airtel")}
           className={`flex-1 flex items-center gap-2 border px-3 py-2 rounded-lg transition ${
@@ -505,7 +492,7 @@ const handleConfirmPayment = async () => {
           }`}
         >
           <img
-            src="/airtel.png" // place airtel.png in /public folder
+            src="/airtel.png" 
             alt="Airtel"
             className="h-6"
           />
@@ -513,7 +500,6 @@ const handleConfirmPayment = async () => {
         </button>
       </div>
 
-      {/* Confirm Button */}
       <button
         onClick={handleConfirmPayment}
         disabled={activatingShop}
@@ -525,9 +511,6 @@ const handleConfirmPayment = async () => {
   </div>
 )}
 
-
-
-      {/* Year Selector */}
       <div className="mb-4">
         <label className="text-sm font-medium text-gray-700 mr-2">Select Year:</label>
         <select
@@ -543,7 +526,6 @@ const handleConfirmPayment = async () => {
         </select>
       </div>
 
-      {/* Spinner or Metrics */}
       {loading ? (
         <div className="flex justify-center items-center h-48">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-600"></div>
@@ -588,7 +570,6 @@ const handleConfirmPayment = async () => {
           </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Line Chart */}
         <div className="bg-white p-6 rounded-xl shadow-md">
           <h2 className="text-lg font-semibold mb-4 text-gray-700">
             Revenue Overview ({year})
@@ -673,7 +654,6 @@ const handleConfirmPayment = async () => {
           </ResponsiveContainer>
         </div>
 
-        {/* Pie Chart */}
         <div className="bg-white p-6 rounded-xl shadow-md">
           <h2 className="text-lg font-semibold mb-4 text-gray-700">
             Orders Distribution
@@ -706,7 +686,7 @@ const handleConfirmPayment = async () => {
         </>
       )}
 
-            {showEditModal && (
+    {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
         <div className="bg-white p-6 rounded-xl w-full max-w-md relative">
         <button onClick={() => setShowEditModal(false)} className="absolute top-2 right-4 text-gray-500 text-2xl font-bold">×</button>
@@ -754,7 +734,6 @@ const handleConfirmPayment = async () => {
   </div>
 )}
 
-{/* Withdraw Modal */}
 {showWithdrawModal && (
   <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
     <div className="bg-white p-6 rounded-xl w-full max-w-md relative">
@@ -767,7 +746,6 @@ const handleConfirmPayment = async () => {
 
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Withdraw Funds</h2>
 
-      {/* Phone Number */}
       <label className="block mb-2 text-sm text-gray-700">Phone Number</label>
       <input
         type="text"
@@ -777,7 +755,6 @@ const handleConfirmPayment = async () => {
         placeholder="Enter phone number"
       />
 
-      {/* Amount */}
       <label className="block mb-2 text-sm text-gray-700">Amount</label>
       <input
         type="number"
@@ -787,7 +764,6 @@ const handleConfirmPayment = async () => {
         placeholder="Enter amount"
       />
 
-      {/* Withdraw Method with logos */}
       <label className="block mb-2 text-sm text-gray-700">Withdraw Method</label>
       <div className="flex items-center gap-4 mb-4">
         <button
@@ -799,7 +775,7 @@ const handleConfirmPayment = async () => {
           }`}
         >
           <img
-            src="/mpesa.png" // place your M-Pesa logo in public/
+            src="/mpesa.png" 
             alt="M-Pesa"
             className="h-6"
           />
@@ -815,7 +791,7 @@ const handleConfirmPayment = async () => {
           }`}
         >
           <img
-            src="/airtel.png" // place your Airtel logo in public/
+            src="/airtel.png" 
             alt="Airtel"
             className="h-6"
           />
