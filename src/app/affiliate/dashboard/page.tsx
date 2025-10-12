@@ -22,7 +22,10 @@ import {
   PieChart,
   Pie,
   Cell,
+  BarChart,
+  Bar,
 } from 'recharts';
+
 import { toast } from 'react-toastify';
 
 interface Referral {
@@ -57,12 +60,10 @@ export default function AffiliatePage() {
   const [chartData, setChartData] = useState<
     { month: string; earnings: number; referrals: number }[]
   >([]);
-
   const [insights, setInsights] = useState<InsightsData>({
     plans: [],
     withdrawMethods: [],
   });
-
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -86,61 +87,59 @@ export default function AffiliatePage() {
   const planColors = ['#2563EB', '#60A5FA'];
   const withdrawColors = ['#10B981', '#EF4444'];
 
-  // 🔹 Fetch Affiliate Data
+// 🔹 Fetch Affiliate Data
 useEffect(() => {
   const fetchData = async () => {
     try {
       const token = localStorage.getItem('affiliateToken');
       if (!token) return;
 
-      const [summaryRes, referralsRes, insightsRes] = await Promise.all([
+      const [summaryRes, referralsRes] = await Promise.all([
         fetch('/api/affiliate/summary', {
           headers: { Authorization: `Bearer ${token}` },
         }),
         fetch('/api/affiliate/refferals', {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('/api/affiliate/insights', {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
       ]);
 
       const summaryData = await summaryRes.json();
       const referralsData = await referralsRes.json();
-      const insightsData = await insightsRes.json();
 
-      if (summaryData.success) setSummary(summaryData.data);
-      if (referralsData.success) {
-        setReferrals(referralsData.data);
-        setChartData(referralsData.chart || []);
+      // ✅ Summary
+      if (summaryData.success) {
+        setSummary(summaryData.data);
       }
 
-      // ✅ Dynamic insight chart values
-      if (insightsData.success) {
-        const planChart = insightsData.data.planBreakdown.map((item: any) => ({
-          name:
-            item.plan === 'basic'
-              ? 'Basic Plan'
-              : item.plan === 'premium'
-              ? 'Premium Plan'
-              : 'Other',
-          value: item.count || 0,
-        }));
+      // ✅ Referrals Breakdown
+      if (referralsData.success) {
+        console.log('Affiliate Breakdown Data:', referralsData.breakdown);
 
-        const withdrawChart = insightsData.data.withdrawBreakdown.map((item: any) => ({
-          name:
-            item.method === 'mpesa'
-              ? 'M-Pesa'
-              : item.method === 'airtel'
-              ? 'Airtel Money'
-              : 'Other',
-          value: item.count || 0,
-        }));
+        setReferrals(referralsData.data || []);
+        setChartData(referralsData.chart || []);
 
-        setInsights({
-          plans: planChart,
-          withdrawMethods: withdrawChart,
-        });
+        // 🔸 Capitalize first letter for each plan name
+        const plans =
+          referralsData.breakdown?.plans?.length > 0
+            ? referralsData.breakdown.plans.map((p: any) => ({
+                name:
+                  p.name.charAt(0).toUpperCase() + p.name.slice(1).toLowerCase(),
+                value: p.value,
+              }))
+            : [{ name: 'No Data', value: 1 }];
+
+        // 🔸 Format withdrawal methods (MPESA / AIRTEL)
+        const withdrawMethods =
+          referralsData.breakdown?.withdrawMethods?.length > 0
+            ? referralsData.breakdown.withdrawMethods.map((m: any) => ({
+                name: m.name.toUpperCase(),
+                value: m.value,
+              }))
+            : [{ name: 'No Data', value: 1 }];
+
+        setInsights({ plans, withdrawMethods });
+      } else {
+        toast.error(referralsData.message || 'Failed to load referral data.');
       }
     } catch (error) {
       console.error('Error fetching affiliate data:', error);
@@ -245,7 +244,7 @@ useEffect(() => {
     }
   };
 
-
+  // Loader
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -253,7 +252,7 @@ useEffect(() => {
           animate={{ rotate: 360 }}
           transition={{ repeat: Infinity, duration: 1.2 }}
           className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full"
-        ></motion.div>
+        />
       </div>
     );
   }
@@ -298,108 +297,49 @@ useEffect(() => {
       </div>
 
       {/* Unified Affiliate Insights Section */}
- {/* 🔹 Unified Affiliate Insights Section */}
-<motion.div
-  initial={{ opacity: 0, y: 30 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.6 }}
-  className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10"
->
-  {/* Earnings vs Referrals */}
-  <div className="bg-white p-5 rounded-2xl shadow-md">
-    <h2 className="text-lg font-semibold text-gray-700 mb-4">
-      Earnings vs Referrals
-    </h2>
-    <ResponsiveContainer width="100%" height={300}>
-      <LineChart data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="month" />
-        <YAxis />
-        <Tooltip />
-        <Legend />
-        <Line type="monotone" dataKey="earnings" stroke="#2563EB" />
-        <Line type="monotone" dataKey="referrals" stroke="#10B981" />
-      </LineChart>
-    </ResponsiveContainer>
-  </div>
-
-  {/* 🧠 Affiliate Insights */}
-  <motion.div
-    initial={{ opacity: 0, scale: 0.95 }}
-    animate={{ opacity: 1, scale: 1 }}
-    transition={{ duration: 0.5 }}
-    className="bg-white p-5 rounded-2xl shadow-md flex flex-col lg:flex-row items-center justify-around gap-6"
-  >
-    {/* Plan Breakdown */}
-    <div className="w-full lg:w-1/2">
-      <h2 className="text-lg font-semibold text-gray-700 mb-3 text-center">
-        Plan Type Breakdown
-      </h2>
-      {insights.plans.length === 0 ? (
-        <div className="flex justify-center items-center h-[250px]">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 1.2 }}
-            className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"
-          ></motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10"
+      >
+        {/* Earnings vs Referrals */}
+        <div className="bg-white p-5 rounded-2xl shadow-md">
+          <h2 className="text-lg font-semibold text-gray-700 mb-4">
+            Earnings vs Referrals
+          </h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="earnings" stroke="#2563EB" />
+              <Line type="monotone" dataKey="referrals" stroke="#10B981" />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
-      ) : (
-        <ResponsiveContainer width="100%" height={250}>
-          <PieChart>
-            <Pie
-              data={insights.plans}
-              cx="50%"
-              cy="50%"
-              outerRadius={80}
-              dataKey="value"
-              label={({ name, value }) => `${name}: ${value}`}
-            >
-              {insights.plans.map((_, i) => (
-                <Cell key={i} fill={planColors[i % planColors.length]} />
-              ))}
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        </ResponsiveContainer>
-      )}
-    </div>
 
-    {/* Withdraw Breakdown */}
-    <div className="w-full lg:w-1/2">
-      <h2 className="text-lg font-semibold text-gray-700 mb-3 text-center">
-        Withdrawal Methods
-      </h2>
-      {insights.withdrawMethods.length === 0 ? (
-        <div className="flex justify-center items-center h-[250px]">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 1.2 }}
-            className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full"
-          ></motion.div>
-        </div>
-      ) : (
-        <ResponsiveContainer width="100%" height={250}>
-          <PieChart>
-            <Pie
-              data={insights.withdrawMethods}
-              cx="50%"
-              cy="50%"
-              outerRadius={80}
-              dataKey="value"
-              label={({ name, value }) => `${name}: ${value}`}
-            >
-              {insights.withdrawMethods.map((_, i) => (
-                <Cell key={i} fill={withdrawColors[i % withdrawColors.length]} />
-              ))}
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        </ResponsiveContainer>
-      )}
-    </div>
-  </motion.div>
-</motion.div>
-
+        {/* Affiliate Insights */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="bg-white p-5 rounded-2xl shadow-md flex flex-col lg:flex-row items-center justify-around gap-6"
+        >
+          <PieDisplay
+            title="Plan Type Breakdown"
+            data={insights.plans}
+            colors={planColors}
+          />
+          <PieDisplay
+            title="Withdrawal Methods"
+            data={insights.withdrawMethods}
+            colors={withdrawColors}
+          />
+        </motion.div>
+      </motion.div>
 
       {/* Referral Link Section */}
       <div className="bg-white p-5 rounded-2xl shadow-md mb-10 flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -682,8 +622,70 @@ const AffiliateCard = ({
     <div className="text-3xl opacity-80">{icon}</div>
   </motion.div>
 );
+// 🟢 Pie Display Component with Percentage Tooltips
+const PieDisplay = ({
+  title,
+  data,
+  colors,
+}: {
+  title: string;
+  data: { name: string; value: number }[];
+  colors: string[];
+}) => {
+  // Calculate total for percentage computation
+  const total = data.reduce((sum, d) => sum + d.value, 0);
 
+  return (
+    <div className="w-full lg:w-1/2">
+      <h2 className="text-lg font-semibold text-gray-700 mb-3 text-center">
+        {title}
+      </h2>
 
+      {data.length === 0 || total === 0 ? (
+        <div className="flex justify-center items-center h-[250px]">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 1.2 }}
+            className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"
+          />
+        </div>
+      ) : (
+        <ResponsiveContainer width="100%" height={250}>
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              outerRadius={85}
+              dataKey="value"
+              label={({ name, value }) => {
+                const percent = ((value / total) * 100).toFixed(1);
+                return `${name} (${percent}%)`;
+              }}
+            >
+              {data.map((_, i) => (
+                <Cell key={i} fill={colors[i % colors.length]} />
+              ))}
+            </Pie>
 
-
-
+            {/* Custom Tooltip showing name + percent */}
+            <Tooltip
+              formatter={(value: number, name: string) => {
+                const percent = ((value / total) * 100).toFixed(1);
+                return [`${value} (${percent}%)`, name];
+              }}
+              contentStyle={{
+                backgroundColor: '#fff',
+                borderRadius: '8px',
+                border: '1px solid #e5e7eb',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+              }}
+              labelStyle={{ fontWeight: 600, color: '#111827' }}
+              itemStyle={{ color: '#374151' }}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+      )}
+    </div>
+  );
+};

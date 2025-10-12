@@ -20,6 +20,7 @@ import {
 import { ShieldCheck, Store, CheckCircle, XCircle } from 'lucide-react';
 import { Edit2 } from 'react-feather';
 import SystemStatus from '@/components/SystemStatus';
+import { MetricCard } from '@/components/MetricCards';
 
 const COLORS = ['#f97316', '#16a34a', '#dc2626', '#eab308', '#3b82f6'];
 
@@ -767,7 +768,7 @@ const handleConfirmPayment = async () => {
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Withdraw Funds</h2>
 
       {/* Phone Number */}
-      <label className="block mb-2 text-sm text-orange-600">Phone Number</label>
+      <label className="block mb-2 text-sm text-gray-700">Phone Number</label>
       <input
         type="text"
         value={withdrawPhone}
@@ -777,7 +778,7 @@ const handleConfirmPayment = async () => {
       />
 
       {/* Amount */}
-      <label className="block mb-2 text-sm text-orange-600">Amount</label>
+      <label className="block mb-2 text-sm text-gray-700">Amount</label>
       <input
         type="number"
         value={withdrawAmount}
@@ -787,7 +788,7 @@ const handleConfirmPayment = async () => {
       />
 
       {/* Withdraw Method with logos */}
-      <label className="block mb-2 text-sm text-orange-600">Withdraw Method</label>
+      <label className="block mb-2 text-sm text-gray-700">Withdraw Method</label>
       <div className="flex items-center gap-4 mb-4">
         <button
           onClick={() => setWithdrawMethod('mpesa')}
@@ -836,23 +837,3 @@ const handleConfirmPayment = async () => {
     </div>
   );
 }
-
-function MetricCard({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: number | undefined;
-  color: string;
-}) {
-  return (
-    <div className="bg-white p-6 rounded-xl shadow-md text-center">
-      <h3 className="text-lg font-medium text-gray-600">{label}</h3>
-      <p className={`text-3xl font-bold text-${color}-600`}>
-        {value !== undefined ? value : '--'}
-      </p>
-    </div>
-  );
-}
-
