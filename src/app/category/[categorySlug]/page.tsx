@@ -111,6 +111,8 @@ export default function CategoryPage() {
       county: product.county,
       model: product.model,
       brand: product.brand,
+      town: product.town,
+      weight: product.weight,
       calculatedPrice: product.calculatedPrice,
       quantity: 1,
       sellerId: product.sellerId,

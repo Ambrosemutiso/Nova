@@ -12,7 +12,7 @@ const productSchema = new Schema(
     boxContents: { type: [String], default: [] }, 
     warranty: { type: String },
     dimensions: { type: String },
-    weight: { type: String },
+    weight: { type: Number },
     category: { type: String, required: true },
     price: { type: Number, required: true },
     oldPrice: { type: Number, default: null },

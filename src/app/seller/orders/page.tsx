@@ -21,7 +21,7 @@ interface Order {
     lastName: string;
     email: string;
     phone: string;
-    address?: string;
+    town?: string;
     city?: string;
     deliveryInstructions?: string;
   };
@@ -36,6 +36,10 @@ export default function SellerOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<'All' | 'Pending' | 'Delivered'>('All');
+  const [cityFilter, setCityFilter] = useState<string>('All');
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showLabelModal, setShowLabelModal] = useState(false);
@@ -77,10 +81,31 @@ export default function SellerOrdersPage() {
     return phone.slice(0, 4) + '***' + phone.slice(-3);
   };
 
-  const filteredItems = (items: OrderItem[]) =>
-    statusFilter === 'All' ? items : items.filter((item) => item.status === statusFilter);
+  // ✅ Combined filtering logic (status, city, date, search)
+  const filteredOrders = orders.filter((order) => {
+    const orderDate = new Date(order.createdAt);
 
-  const paginatedOrders = orders.slice((page - 1) * pageSize, page * pageSize);
+    const matchesStatus =
+      statusFilter === 'All' || order.status.toLowerCase() === statusFilter.toLowerCase();
+
+    const matchesCity =
+      cityFilter === 'All' ||
+      order.customerInfo.city?.toLowerCase() === cityFilter.toLowerCase();
+
+    const matchesSearch =
+      searchTerm === '' ||
+      order.customerInfo.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.customerInfo.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.customerInfo.phone.includes(searchTerm);
+
+    const matchesDate =
+      (!startDate || orderDate >= new Date(startDate)) &&
+      (!endDate || orderDate <= new Date(endDate));
+
+    return matchesStatus && matchesCity && matchesSearch && matchesDate;
+  });
+
+  const paginatedOrders = filteredOrders.slice((page - 1) * pageSize, page * pageSize);
 
   const generateTrackingNumber = () => {
     const randomPart = Math.floor(100000000 + Math.random() * 900000000);
@@ -107,7 +132,7 @@ export default function SellerOrdersPage() {
 
   const handleViewLabel = async (order: Order) => {
     const trackingNumber = await getOrCreateTrackingNumber(order);
-    const qrData = await QRCode.toDataURL(`https://novaxpress.com/track/${trackingNumber}`);
+    const qrData = await QRCode.toDataURL(`https://novake.vercel.app/orders?tracking=${trackingNumber}`);
 
     const canvas = document.createElement('canvas');
     JsBarcode(canvas, trackingNumber, { format: 'CODE128', width: 2, height: 50 });
@@ -123,15 +148,12 @@ export default function SellerOrdersPage() {
     if (!selectedLabelOrder || !qrSrc || !barcodeSrc) return;
 
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a6' });
-
-    // Header
     pdf.setFillColor(255, 128, 0);
     pdf.rect(0, 0, 105, 15, 'F');
     pdf.setTextColor(255, 255, 255);
     pdf.setFontSize(14);
     pdf.text('NovaXpress Delivery', 10, 10);
 
-    // Label Info
     pdf.setTextColor(0, 0, 0);
     pdf.setFontSize(11);
     pdf.text(`Tracking: ${selectedLabelOrder.trackingNumber}`, 10, 25);
@@ -139,50 +161,95 @@ export default function SellerOrdersPage() {
     pdf.text(`Customer: ${selectedLabelOrder.customerInfo.firstName} ${selectedLabelOrder.customerInfo.lastName}`, 10, 37);
     pdf.text(`Phone: ${selectedLabelOrder.customerInfo.phone}`, 10, 43);
     pdf.text(`City: ${selectedLabelOrder.customerInfo.city || 'N/A'}`, 10, 49);
-    pdf.text(`Address: ${selectedLabelOrder.customerInfo.address || 'N/A'}`, 10, 55);
+    pdf.text(`Address: ${selectedLabelOrder.customerInfo.town || 'N/A'}`, 10, 55);
     pdf.text(`Total: Ksh ${selectedLabelOrder.totalAmount}`, 10, 61);
 
-    // Barcode + QR
     pdf.addImage(barcodeSrc, 'PNG', 10, 67, 70, 15);
     pdf.addImage(qrSrc, 'PNG', 85, 20, 18, 18);
-
-    // Footer
     pdf.setFontSize(9);
     pdf.setTextColor(120);
     pdf.text('Thank you for selling with NovaXpress', 10, 90);
-
     pdf.save(`Label_${selectedLabelOrder._id.slice(-6)}.pdf`);
   };
+
+  // ✅ Extract available cities dynamically
+  const cities = Array.from(new Set(orders.map((o) => o.customerInfo.city).filter(Boolean)));
 
   return (
     <div className="md:ml-64 px-6 pt-28 pb-10">
       <h1 className="text-2xl font-bold text-orange-600 mb-4">Seller Orders</h1>
 
-      {/* Filter Buttons */}
-      <div className="mb-4 flex gap-2">
-        {['All', 'Pending', 'Delivered'].map((status) => (
-          <button
-            key={status}
-            onClick={() => setStatusFilter(status as any)}
-            className={`px-3 py-1 rounded ${
-              statusFilter === status ? 'bg-orange-500 text-white' : 'bg-gray-200'
-            }`}
-          >
-            {status}
-          </button>
-        ))}
+      {/* Filters Row (non-intrusive) */}
+      <div className="mb-6 flex flex-wrap gap-3 items-center">
+        {/* Status Filter */}
+        <div className="flex gap-2">
+          {['All', 'Pending', 'Delivered'].map((status) => (
+            <button
+              key={status}
+              onClick={() => setStatusFilter(status as any)}
+              className={`px-3 py-1 rounded ${
+                statusFilter === status ? 'bg-orange-500 text-white' : 'bg-gray-200'
+              }`}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
+
+        {/* City Filter */}
+        <select
+          value={cityFilter}
+          onChange={(e) => setCityFilter(e.target.value)}
+          className="border border-gray-300 rounded px-2 py-1 text-sm"
+        >
+          <option value="All">All Cities</option>
+          {cities.map((city) => (
+            <option key={city} value={city!}>
+              {city}
+            </option>
+          ))}
+        </select>
+
+        {/* Search Filter */}
+        <input
+          type="text"
+          placeholder="Search name or phone"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="border border-gray-300 rounded px-2 py-1 text-sm"
+        />
+
+        {/* Date Range */}
+        <div className="flex gap-2">
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="border border-gray-300 rounded px-2 py-1 text-sm"
+          />
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="border border-gray-300 rounded px-2 py-1 text-sm"
+          />
+        </div>
       </div>
 
-      {/* Orders Display */}
+      {/* Orders Display (untouched layout) */}
       {loading ? (
         <p>Loading orders...</p>
-      ) : orders.length === 0 ? (
+      ) : filteredOrders.length === 0 ? (
         <p>No orders found.</p>
       ) : (
         <>
           <div className="space-y-6">
             {paginatedOrders.map((order) => {
-              const visibleItems = filteredItems(order.items);
+              const visibleItems =
+                statusFilter === 'All'
+                  ? order.items
+                  : order.items.filter((item) => item.status === statusFilter);
+
               if (visibleItems.length === 0) return null;
 
               return (
@@ -259,11 +326,11 @@ export default function SellerOrdersPage() {
               Previous
             </button>
             <span className="text-sm">
-              Page {page} of {totalPages}
+              Page {page} of {Math.ceil(filteredOrders.length / pageSize)}
             </span>
             <button
-              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-              disabled={page === totalPages}
+              onClick={() => setPage((p) => Math.min(p + 1, Math.ceil(filteredOrders.length / pageSize)))}
+              disabled={page === Math.ceil(filteredOrders.length / pageSize)}
               className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
             >
               Next
@@ -272,7 +339,7 @@ export default function SellerOrdersPage() {
         </>
       )}
 
-      {/* Label Modal */}
+      {/* Label Modal (unchanged) */}
       {showLabelModal && selectedLabelOrder && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 relative">
@@ -289,7 +356,7 @@ export default function SellerOrdersPage() {
               <p><strong>Order ID:</strong> {selectedLabelOrder._id.slice(-6)}</p>
               <p><strong>Customer:</strong> {selectedLabelOrder.customerInfo.firstName} {selectedLabelOrder.customerInfo.lastName}</p>
               <p><strong>Phone:</strong> {selectedLabelOrder.customerInfo.phone}</p>
-              <p><strong>Address:</strong> {selectedLabelOrder.customerInfo.address || 'N/A'}</p>
+              <p><strong>Address:</strong> {selectedLabelOrder.customerInfo.town || 'N/A'}</p>
               <p><strong>City:</strong> {selectedLabelOrder.customerInfo.city || 'N/A'}</p>
               <p><strong>Total:</strong> Ksh {selectedLabelOrder.totalAmount}</p>
 

@@ -19,28 +19,72 @@ export default function CartPage() {
   const [county, setCounty] = useState<County | ''>('');
   const [showModal, setShowModal] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [deliveryFee, setDeliveryFee] = useState<number>(0);
   const router = useRouter();
 
-  const countyDeliveryFees: Record<County, number> = {
-    Nairobi: 300,
-    Mombasa: 350,
-    Kisumu: 250,
-    Nakuru: 200,
+  // 📍 Fetch distance between seller town and buyer county using Google Maps API
+  const getDistanceInKm = async (originTown: string, destinationTown: string) => {
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${originTown}&destinations=${destinationTown}&region=ke&key=YOUR_GOOGLE_MAPS_API_KEY`
+      );
+      const data = await response.json();
+      if (data.rows[0].elements[0].status === "OK") {
+        const distanceMeters = data.rows[0].elements[0].distance.value;
+        return distanceMeters / 1000; // Convert to km
+      } else {
+        console.error('Distance Matrix API error:', data);
+        return 0;
+      }
+    } catch (error) {
+      console.error('Error fetching distance:', error);
+      return 0;
+    }
   };
 
-  const handleCountyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setCounty(e.target.value as County);
+  // ⚖️ Calculate delivery fee using distance and weight
+  const calculateDeliveryFee = (distanceKm: number, weight: number) => {
+    const baseFee = 150;
+    const ratePerKm = 5;
+    let weightMultiplier = 1;
+
+    if (weight > 2 && weight <= 10) weightMultiplier = 1.5;
+    else if (weight > 10 && weight <= 30) weightMultiplier = 2;
+    else if (weight > 30) weightMultiplier = 3;
+
+    return Math.round(baseFee + distanceKm * ratePerKm * weightMultiplier);
   };
 
-  const deliveryFee = county ? countyDeliveryFees[county] : 200;
+  // 🧮 Auto-calculate delivery fee when county or cart changes
+  useEffect(() => {
+    const fetchDeliveryFee = async () => {
+      if (!county || cartItems.length === 0) {
+        setDeliveryFee(0);
+        return;
+      }
+
+      let totalFee = 0;
+
+      for (const item of cartItems) {
+        const distanceKm = await getDistanceInKm(item.town || item.county, county);
+        const itemFee = calculateDeliveryFee(distanceKm, item.weight || 1);
+        totalFee += itemFee;
+      }
+
+      setDeliveryFee(totalFee);
+    };
+
+    fetchDeliveryFee();
+  }, [county, cartItems]);
+
   const subtotal = cartItems.reduce((sum, item) => sum + item.calculatedPrice * item.quantity, 0);
   const total = subtotal + deliveryFee;
 
-const getPublicId = (url?: string) => {
-  if (!url || typeof url !== 'string') return '';
-  const match = url.match(/\/upload\/(?:v\d+\/)?([^\.]+)/);
-  return match ? match[1] : url;
-};
+  const getPublicId = (url?: string) => {
+    if (!url || typeof url !== 'string') return '';
+    const match = url.match(/\/upload\/(?:v\d+\/)?([^\.]+)/);
+    return match ? match[1] : url;
+  };
 
   const handleCheckout = async () => {
     setLoading(true);
@@ -67,19 +111,17 @@ const getPublicId = (url?: string) => {
     setSelectedItemId(null);
   };
 
-
   useEffect(() => {
-  const timer = setTimeout(() => setLoading(false), 3000);
-  return () => clearTimeout(timer);
-}, []);
-
+    const timer = setTimeout(() => setLoading(false), 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (loading)
     return (
-  <div className="flex items-center justify-center min-h-screen bg-white">
-    <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
-  </div>
-);
+      <div className="flex items-center justify-center min-h-screen bg-white">
+        <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
+      </div>
+    );
 
   if (cartItems.length === 0) {
     return (
@@ -119,100 +161,105 @@ const getPublicId = (url?: string) => {
           </div>
         </div>
       )}
-<div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-  {/* Left: Cart Items */}
-  <div className="md:col-span-2 space-y-6">
-    {cartItems.map(item => (
-      <div key={item.id} className="flex gap-4 border p-4 rounded-lg shadow-sm bg-white">
-        <CldImage
-          src={getPublicId(item.images[0])}
-          alt={item.name}
-          width="80"
-          height="80"
-          className="w-20 h-20 object-cover rounded"
-        />
-        <div className="flex flex-col justify-between w-full">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="font-semibold text-gray-800">{item.name}</p>
-              <p className="text-sm text-gray-500 mt-1">Shipped from <span className="font-medium">{item.county}</span></p>
-              <p className="text-sm text-gray-500 mt-1">Brand: <span className="font-medium">{item.brand}</span></p>
-              <p className="text-sm text-gray-500 mt-1">Model: <span className="font-medium">{item.model}</span></p>
-              <p className="text-orange-600 mt-2 font-bold">Ksh.{item.calculatedPrice.toLocaleString()}</p>
+
+      <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Left: Cart Items */}
+        <div className="md:col-span-2 space-y-6">
+          {cartItems.map(item => (
+            <div key={item.id} className="flex gap-4 border p-4 rounded-lg shadow-sm bg-white">
+              <CldImage
+                src={getPublicId(item.images[0])}
+                alt={item.name}
+                width="80"
+                height="80"
+                className="w-20 h-20 object-cover rounded"
+              />
+              <div className="flex flex-col justify-between w-full">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-semibold text-gray-800">{item.name}</p>
+                    <p className="text-sm text-gray-500 mt-1">Shipped from <span className="font-medium">{item.county}</span></p>
+                    <p className="text-sm text-gray-500 mt-1">Town: <span className="font-medium">{item.town}</span></p>
+                    <p className="text-sm text-gray-500 mt-1">Weight: <span className="font-medium">{item.weight || 1} kg</span></p>
+                    <p className="text-orange-600 mt-2 font-bold">Ksh.{item.calculatedPrice.toLocaleString()}</p>
+                  </div>
+                  <button
+                    onClick={() => confirmRemove(item.id)}
+                    className="text-red-500 text-xl font-bold hover:text-red-700"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div className="flex items-center mt-3 gap-3">
+                  <button
+                    onClick={() => decreaseQuantity(item.id)}
+                    className="bg-orange-200 w-7 h-7 rounded hover:bg-orange-300 text-lg"
+                  >
+                    -
+                  </button>
+                  <span className="font-medium">{item.quantity}</span>
+                  <button
+                    onClick={() => increaseQuantity(item.id)}
+                    className="bg-orange-200 w-7 h-7 rounded hover:bg-orange-300 text-lg"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
             </div>
-            <button
-              onClick={() => confirmRemove(item.id)}
-              className="text-red-500 text-xl font-bold hover:text-red-700"
-            >
-              ×
-            </button>
+          ))}
+        </div>
+
+        {/* Right: Cart Summary */}
+        <div className="bg-white border p-6 rounded-lg shadow-sm h-fit">
+          <h3 className="text-xl font-semibold mb-4">Order Summary</h3>
+
+          <div className="space-y-3">
+            <div className="flex justify-between text-sm">
+              <span>Subtotal</span>
+              <span className="font-medium">Ksh.{subtotal.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span>Delivery Fee</span>
+              <span className="font-medium">
+                {deliveryFee > 0 ? `Ksh.${deliveryFee.toLocaleString()}` : 'Select delivery location'}
+              </span>
+            </div>
+            <div className="flex justify-between font-semibold border-t pt-3">
+              <span>Total</span>
+              <span>Ksh.{total.toLocaleString()}</span>
+            </div>
           </div>
 
-          <div className="flex items-center mt-3 gap-3">
-            <button
-              onClick={() => decreaseQuantity(item.id)}
-              className="bg-orange-200 w-7 h-7 rounded hover:bg-orange-300 text-lg"
+          <div className="mt-4">
+            <select
+              value={county}
+              onChange={(e) => setCounty(e.target.value as County)}
+              className="border border-gray-300 p-2 w-full rounded text-sm"
             >
-              -
-            </button>
-            <span className="font-medium">{item.quantity}</span>
-            <button
-              onClick={() => increaseQuantity(item.id)}
-              className="bg-orange-200 w-7 h-7 rounded hover:bg-orange-300 text-lg"
-            >
-              +
-            </button>
+              <option value="">Select County for Delivery</option>
+              <option value="Nairobi">Nairobi</option>
+              <option value="Mombasa">Mombasa</option>
+              <option value="Kisumu">Kisumu</option>
+              <option value="Nakuru">Nakuru</option>
+            </select>
           </div>
+
+          <button
+            onClick={handleCheckout}
+            disabled={!county}
+            className="mt-5 w-full bg-orange-500 text-white py-2 rounded hover:bg-orange-600 transition disabled:opacity-50"
+          >
+            {loading ? 'Processing...' : 'Proceed to Checkout'}
+          </button>
         </div>
       </div>
-    ))}
-  </div>
 
-  {/* Right: Cart Summary */}
-  <div className="bg-white border p-6 rounded-lg shadow-sm h-fit">
-    <h3 className="text-xl font-semibold mb-4">Order Summary</h3>
-
-    <div className="space-y-3">
-      <div className="flex justify-between text-sm">
-        <span>Subtotal</span>
-        <span className="font-medium">Ksh.{subtotal.toLocaleString()}</span>
-      </div>
-      <div className="flex justify-between text-sm">
-        <span>Delivery Fee</span>
-        <span className="font-medium">Ksh.{deliveryFee.toLocaleString()}</span>
-      </div>
-      <div className="flex justify-between font-semibold border-t pt-3">
-        <span>Total</span>
-        <span>Ksh.{total.toLocaleString()}</span>
-      </div>
-    </div>
-
-    <div className="mt-4">
-      <select
-        value={county}
-        onChange={handleCountyChange}
-        className="border border-gray-300 p-2 w-full rounded text-sm"
-      >
-        <option value="">Select County for Delivery</option>
-        {Object.keys(countyDeliveryFees).map((county) => (
-          <option key={county} value={county}>{county}</option>
-        ))}
-      </select>
-    </div>
-
-    <button
-      onClick={handleCheckout}
-      className="mt-5 w-full bg-orange-500 text-white py-2 rounded hover:bg-orange-600 transition"
-    >
-      {loading ? 'Processing...' : 'Proceed to Checkout'}
-    </button>
-  </div>
-  </div>
       <RecentlyViewed />
-      <SponsoredProducts/>
-      <SuggestedForYou/>
-      <TopPicksForYou/>
-</div>
+      <SponsoredProducts />
+      <SuggestedForYou />
+      <TopPicksForYou />
+    </div>
   );
 }
-

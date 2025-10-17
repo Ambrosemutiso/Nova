@@ -96,6 +96,8 @@ const [showReportModal, setShowReportModal] = useState(false);
       brand: product.brand,
       model: product.model,
       county: product.county,
+      town: product.town,
+      weight: product.weight,
       calculatedPrice: product.calculatedPrice,
       quantity: 1,
       sellerId: product.sellerId,

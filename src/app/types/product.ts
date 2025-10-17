@@ -21,7 +21,7 @@ export interface Product {
   boxContents: string[];
   warranty: string;
   dimensions: string;
-  weight: string;
+  weight: number;
   createdAt: string;
   updatedAt: string;
   averageRating: number;

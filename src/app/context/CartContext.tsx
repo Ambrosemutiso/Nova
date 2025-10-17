@@ -19,7 +19,9 @@ export interface CartItem {
   calculatedPrice: number;
   quantity: number;
   county: string;
+  town: string;
   model: string;
+  weight: number;
   brand: string;
   sellerId: string;
   productId: string;
