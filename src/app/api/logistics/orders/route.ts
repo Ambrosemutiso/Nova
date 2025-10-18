@@ -1,4 +1,3 @@
-// /api/logistics/orders/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
 import Order from '@/app/models/orders';
@@ -8,12 +7,22 @@ export async function GET(req: NextRequest) {
     await dbConnect();
 
     const { searchParams } = new URL(req.url);
-    const status = searchParams.get('status'); // Optional query filter: ?status=Pending
+    const status = searchParams.get('status'); // e.g. ?status=Pending
 
-    // Fetch all orders if no status is specified
-    const orders = status
-      ? await Order.find({ 'items.status': status }).lean()
-      : await Order.find({}).lean();
+    // ✅ Base query: Only include orders with items fulfilled by company
+    const query: any = {
+      'items.fulfillmentMode': 'company',
+    };
+
+    // ✅ Optional filter by item status
+    if (status && status !== 'all') {
+      query['items.status'] = status;
+    }
+
+    // ✅ Fetch filtered orders
+    const orders = await Order.find(query)
+      .sort({ createdAt: -1 })
+      .lean();
 
     return NextResponse.json({ orders }, { status: 200 });
   } catch (error) {

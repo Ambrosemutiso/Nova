@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
     const boxContents = JSON.parse(formData.get('boxContents')?.toString() || '[]');
     const warranty = formData.get('warranty')?.toString();
     const weight = formData.get('weight')?.toString();
+    const fulfillmentMode = formData.get('fulfillmentMode')?.toString();
 
     if (!name || !price || !category || !sellerId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -110,6 +111,7 @@ export async function POST(request: NextRequest) {
       warranty,
       dimensions,
       weight,
+      fulfillmentMode,
     });
 
     await newProduct.save();

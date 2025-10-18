@@ -112,7 +112,7 @@ export default function FinancePage() {
         setLoading(true);
         setError(null);
 
-        const res = await fetch('/api/seller/metrics', {
+        const res = await fetch('/api/seller/finance', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sellerId }),

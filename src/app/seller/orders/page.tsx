@@ -5,6 +5,7 @@ import { CldImage } from 'next-cloudinary';
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
 import JsBarcode from 'jsbarcode';
+import { toast } from 'react-toastify';
 
 interface OrderItem {
   name: string;
@@ -130,6 +131,39 @@ export default function SellerOrdersPage() {
     return newTracking;
   };
 
+    const markItemDelivered = async (orderId: string, itemName: string) => {
+      try {
+        const res = await fetch('/api/seller/update-item-status', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId, itemName, newStatus: 'Delivered' }),
+        });
+  
+        const json = await res.json();
+        if (res.ok && json.success) {
+          toast.success('Item marked as delivered');
+          setOrders((prev) =>
+            prev.map((order) =>
+              order._id === orderId
+                ? {
+                    ...order,
+                    items: order.items.map((item) =>
+                      item.name === itemName ? { ...item, status: 'Delivered' } : item
+                    ),
+                  }
+                : order
+            )
+          );
+        } else {
+          toast.error(json.message || 'Failed to update status');
+        }
+      } catch (err) {
+        console.error('Error marking delivery:', err);
+        toast.error('Something went wrong');
+      }
+    };
+  
+
   const handleViewLabel = async (order: Order) => {
     const trackingNumber = await getOrCreateTrackingNumber(order);
     const qrData = await QRCode.toDataURL(`https://novake.vercel.app/orders?tracking=${trackingNumber}`);
@@ -144,33 +178,76 @@ export default function SellerOrdersPage() {
     setShowLabelModal(true);
   };
 
-  const handleDownloadLabelPDF = () => {
-    if (!selectedLabelOrder || !qrSrc || !barcodeSrc) return;
+const handleDownloadLabelPDF = () => {
+  if (!selectedLabelOrder || !qrSrc || !barcodeSrc) return;
 
-    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a6' });
-    pdf.setFillColor(255, 128, 0);
-    pdf.rect(0, 0, 105, 15, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(14);
-    pdf.text('NovaXpress Delivery', 10, 10);
+  const seller = JSON.parse(localStorage.getItem('sellerUser') || '{}');
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a6' });
 
-    pdf.setTextColor(0, 0, 0);
-    pdf.setFontSize(11);
-    pdf.text(`Tracking: ${selectedLabelOrder.trackingNumber}`, 10, 25);
-    pdf.text(`Order ID: ${selectedLabelOrder._id.slice(-6)}`, 10, 31);
-    pdf.text(`Customer: ${selectedLabelOrder.customerInfo.firstName} ${selectedLabelOrder.customerInfo.lastName}`, 10, 37);
-    pdf.text(`Phone: ${selectedLabelOrder.customerInfo.phone}`, 10, 43);
-    pdf.text(`City: ${selectedLabelOrder.customerInfo.city || 'N/A'}`, 10, 49);
-    pdf.text(`Address: ${selectedLabelOrder.customerInfo.town || 'N/A'}`, 10, 55);
-    pdf.text(`Total: Ksh ${selectedLabelOrder.totalAmount}`, 10, 61);
+  // Header bar
+  pdf.setFillColor(255, 128, 0);
+  pdf.rect(0, 0, 105, 15, 'F');
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(14);
+  pdf.text('NovaXpress Delivery Label', 10, 10);
 
-    pdf.addImage(barcodeSrc, 'PNG', 10, 67, 70, 15);
-    pdf.addImage(qrSrc, 'PNG', 85, 20, 18, 18);
-    pdf.setFontSize(9);
-    pdf.setTextColor(120);
-    pdf.text('Thank you for selling with NovaXpress', 10, 90);
-    pdf.save(`Label_${selectedLabelOrder._id.slice(-6)}.pdf`);
-  };
+  // Seller details
+  pdf.setTextColor(0, 0, 0);
+  pdf.setFontSize(10);
+  pdf.text('Seller Details:', 10, 22);
+  pdf.setFontSize(9);
+  pdf.text(`Name: ${seller.name || 'N/A'}`, 10, 27);
+  pdf.text(`Shop: ${seller.shopName || 'N/A'}`, 10, 32);
+  pdf.text(`Phone: ${seller.phone || 'N/A'}`, 10, 37);
+  pdf.text(`City: ${seller.city || 'N/A'}`, 10, 42);
+
+  // Buyer details
+  const buyerY = 49;
+  pdf.setFontSize(10);
+  pdf.text('Buyer Details:', 10, buyerY);
+  pdf.setFontSize(9);
+  pdf.text(`Name: ${selectedLabelOrder.customerInfo.firstName} ${selectedLabelOrder.customerInfo.lastName}`, 10, buyerY + 5);
+  pdf.text(`Phone: ${selectedLabelOrder.customerInfo.phone}`, 10, buyerY + 10);
+  pdf.text(`City: ${selectedLabelOrder.customerInfo.city || 'N/A'}`, 10, buyerY + 15);
+  pdf.text(`Address: ${selectedLabelOrder.customerInfo.town || 'N/A'}`, 10, buyerY + 20);
+
+  // Order details table
+  const tableY = buyerY + 27;
+  const tableData = selectedLabelOrder.items.map(item => [
+    item.name,
+    item.quantity.toString(),
+    `Ksh ${item.price.toLocaleString()}`,
+    `Ksh ${(item.price * item.quantity).toLocaleString()}`
+  ]);
+
+  (pdf as any).autoTable({
+    startY: tableY,
+    head: [['Item', 'Qty', 'Price', 'Subtotal']],
+    body: tableData,
+    theme: 'grid',
+    styles: { fontSize: 8, cellPadding: 1.5 },
+    headStyles: { fillColor: [255, 128, 0] },
+  });
+
+  const afterTableY = (pdf as any).lastAutoTable.finalY + 5;
+
+  // Tracking details
+  pdf.setFontSize(10);
+  pdf.text(`Tracking: ${selectedLabelOrder.trackingNumber}`, 10, afterTableY);
+  pdf.text(`Order ID: ${selectedLabelOrder._id.slice(-6)}`, 10, afterTableY + 5);
+  pdf.text(`Total: Ksh ${selectedLabelOrder.totalAmount.toLocaleString()}`, 10, afterTableY + 10);
+
+  // Barcode and QR
+  pdf.addImage(barcodeSrc, 'PNG', 10, afterTableY + 15, 70, 15);
+  pdf.addImage(qrSrc, 'PNG', 85, afterTableY + 15, 18, 18);
+
+  // Footer
+  pdf.setFontSize(8);
+  pdf.setTextColor(120);
+  pdf.text('Thank you for using NovaXpress 🚚', 10, afterTableY + 36);
+
+  pdf.save(`NovaXpress_Label_${selectedLabelOrder._id.slice(-6)}.pdf`);
+};
 
   // ✅ Extract available cities dynamically
   const cities = Array.from(new Set(orders.map((o) => o.customerInfo.city).filter(Boolean)));
@@ -292,6 +369,14 @@ export default function SellerOrdersPage() {
                             Status:{' '}
                             <span className="font-semibold">{item.status || 'Pending'}</span>
                           </p>
+                          {item.status !== 'Delivered' && (
+                            <button
+                              onClick={() => markItemDelivered(order._id, item.name)}
+                              className="mt-2 text-sm bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
+                            >
+                              Mark as Delivered
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -338,44 +423,72 @@ export default function SellerOrdersPage() {
           </div>
         </>
       )}
+// Updated Modal
+{showLabelModal && selectedLabelOrder && (
+  <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
+    <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 relative">
+      <button
+        className="absolute top-2 right-3 text-gray-500 text-lg"
+        onClick={() => setShowLabelModal(false)}
+      >
+        ✕
+      </button>
 
-      {/* Label Modal (unchanged) */}
-      {showLabelModal && selectedLabelOrder && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 relative">
-            <button
-              className="absolute top-2 right-3 text-gray-500 text-lg"
-              onClick={() => setShowLabelModal(false)}
-            >
-              ✕
-            </button>
+      <h2 className="text-lg font-semibold mb-3 text-orange-600 text-center">
+        NovaXpress Delivery Label
+      </h2>
 
-            <h2 className="text-lg font-semibold mb-3 text-orange-600">NovaXpress Shipping Label</h2>
-            <div className="border p-4 rounded-lg bg-gray-50 space-y-2 text-sm text-gray-700">
-              <p><strong>Tracking:</strong> {selectedLabelOrder.trackingNumber}</p>
-              <p><strong>Order ID:</strong> {selectedLabelOrder._id.slice(-6)}</p>
-              <p><strong>Customer:</strong> {selectedLabelOrder.customerInfo.firstName} {selectedLabelOrder.customerInfo.lastName}</p>
-              <p><strong>Phone:</strong> {selectedLabelOrder.customerInfo.phone}</p>
-              <p><strong>Address:</strong> {selectedLabelOrder.customerInfo.town || 'N/A'}</p>
-              <p><strong>City:</strong> {selectedLabelOrder.customerInfo.city || 'N/A'}</p>
-              <p><strong>Total:</strong> Ksh {selectedLabelOrder.totalAmount}</p>
+      <div className="border p-4 rounded-lg bg-gray-50 text-sm text-gray-700 space-y-2">
+        <h3 className="text-orange-600 font-semibold">Seller Details</h3>
+        <p><strong>Name:</strong> {JSON.parse(localStorage.getItem('sellerUser') || '{}').name || 'N/A'}</p>
+        <p><strong>Shop:</strong> {JSON.parse(localStorage.getItem('sellerUser') || '{}').shopName || 'N/A'}</p>
+        <p><strong>Phone:</strong> {JSON.parse(localStorage.getItem('sellerUser') || '{}').phone || 'N/A'}</p>
+        <p><strong>City:</strong> {JSON.parse(localStorage.getItem('sellerUser') || '{}').city || 'N/A'}</p>
 
-              <div className="flex justify-between items-center mt-4 border-t pt-3">
-                {barcodeSrc && <img src={barcodeSrc} alt="Barcode" className="h-12" />}
-                {qrSrc && <img src={qrSrc} alt="QR Code" className="h-20 w-20 rounded-md" />}
-              </div>
-            </div>
+        <h3 className="text-orange-600 font-semibold mt-3">Buyer Details</h3>
+        <p><strong>Name:</strong> {selectedLabelOrder.customerInfo.firstName} {selectedLabelOrder.customerInfo.lastName}</p>
+        <p><strong>Phone:</strong> {selectedLabelOrder.customerInfo.phone}</p>
+        <p><strong>City:</strong> {selectedLabelOrder.customerInfo.city || 'N/A'}</p>
+        <p><strong>Address:</strong> {selectedLabelOrder.customerInfo.town || 'N/A'}</p>
 
-            <div className="text-right mt-4">
-              <button
-                onClick={handleDownloadLabelPDF}
-                className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded"
-              >
-                Download PDF
-              </button>
-            </div>
-          </div>
+        <h3 className="text-orange-600 font-semibold mt-3">Items</h3>
+        <table className="w-full border text-xs">
+          <thead className="bg-orange-100 text-orange-800">
+            <tr>
+              <th className="border px-1 py-1">Item</th>
+              <th className="border px-1 py-1">Qty</th>
+              <th className="border px-1 py-1">Price</th>
+              <th className="border px-1 py-1">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {selectedLabelOrder.items.map((item, i) => (
+              <tr key={i}>
+                <td className="border px-1 py-1">{item.name}</td>
+                <td className="border px-1 py-1 text-center">{item.quantity}</td>
+                <td className="border px-1 py-1 text-right">Ksh {item.price}</td>
+                <td className="border px-1 py-1 text-right">Ksh {item.price * item.quantity}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <div className="flex justify-between items-center mt-4 border-t pt-3">
+          {barcodeSrc && <img src={barcodeSrc} alt="Barcode" className="h-12" />}
+          {qrSrc && <img src={qrSrc} alt="QR Code" className="h-20 w-20 rounded-md" />}
         </div>
+      </div>
+
+      <div className="text-right mt-4">
+        <button
+          onClick={handleDownloadLabelPDF}
+          className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded"
+        >
+          Download PDF
+        </button>
+      </div>
+    </div>
+  </div>
       )}
     </div>
   );

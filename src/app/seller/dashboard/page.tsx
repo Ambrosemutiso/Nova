@@ -17,7 +17,7 @@ import {
   Cell,
   Legend,
 } from 'recharts';
-import { ShieldCheck, Store, CheckCircle, XCircle } from 'lucide-react';
+import { ShieldCheck, Store, CheckCircle, XCircle , Crown, Gem } from 'lucide-react';
 import { Edit2 } from 'react-feather';
 import SystemStatus from '@/components/SystemStatus';
 import { MetricCard } from '@/components/MetricCards';
@@ -228,30 +228,33 @@ const handleConfirmPayment = async () => {
         </div>
 
         <div className="flex items-center gap-3">
-          {seller?.shop?.plan === 'premium' && isShopActive ? (
-            <span className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-white font-semibold px-3 py-1 rounded-full shadow-md flex items-center gap-1">
-              🌟 Premium Seller
-            </span>
-          ) : seller?.shop?.plan === 'basic' && isShopActive ? (
-            <>
-              <span className="bg-blue-100 text-blue-700 font-medium px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
-                🛍️ Basic Seller
-              </span>
-              <button
-                onClick={() => setShowUpgradeModal(true)}
-                className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded"
-              >
-                Upgrade Shop
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={() => setShowUpgradeModal(true)}
-              className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded"
-            >
-              Activate Shop
-            </button>
-          )}
+
+{seller?.shop?.plan === 'premium' && isShopActive ? (
+  <span className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-white font-semibold px-3 py-1 rounded-full shadow-md flex items-center gap-1">
+    <Crown size={16} className="text-white" />
+    Premium
+  </span>
+) : seller?.shop?.plan === 'basic' && isShopActive ? (
+  <>
+    <span className="bg-blue-100 text-blue-700 font-medium px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
+      <Gem size={16} className="text-blue-600" />
+      Basic
+    </span>
+    <button
+      onClick={() => setShowUpgradeModal(true)}
+      className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded"
+    >
+      Upgrade Shop
+    </button>
+  </>
+) : (
+  <button
+    onClick={() => setShowUpgradeModal(true)}
+    className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded"
+  >
+    Activate Shop
+  </button>
+)}
 
 {(seller?.shop?.plan === 'basic' || seller?.shop?.plan === 'premium') && (
   <button

@@ -3,49 +3,51 @@ dotenv.config();
 
 import mongoose from 'mongoose';
 import { dbConnect } from '@/lib/dbConnect';
-import OrderModel from '@/app/models/orders.js';
+import ProductModel from '@/app/models/product';
 
-// Fix type issues for direct script usage
-const Order = OrderModel as any;
+const Product: any = ProductModel;
 
-// Simple tracking number generator
-function generateTrackingNumber() {
-  const randomPart = Math.floor(100000000 + Math.random() * 900000000);
-  return `TRK-${randomPart}`;
-}
-
-async function injectTrackingNumbers() {
+async function fixFulfillmentModes() {
   try {
     await dbConnect();
 
-    console.log('🔍 Fetching orders without tracking numbers...');
-    const ordersWithoutTracking = await Order.find({
-      $or: [{ trackingNumber: { $exists: false } }, { trackingNumber: null }],
+    console.log('🔍 Fetching products with wrong or missing fulfillmentMode...');
+    const productsToFix = await Product.find({
+      $or: [
+        { fulfillmentMode: 'Fulfilled by Seller' }, // 👈 previously wrong value
+        { fulfillmentMode: { $exists: false } },
+        { fulfillmentMode: null },
+        { fulfillmentMode: '' },
+      ],
     });
 
-    if (ordersWithoutTracking.length === 0) {
-      console.log('✅ All orders already have tracking numbers.');
+    if (productsToFix.length === 0) {
+      console.log('✅ All products already have correct fulfillmentMode.');
       mongoose.connection.close();
       return;
     }
 
-    console.log(`🧾 Found ${ordersWithoutTracking.length} orders to update.`);
+    console.log(`🧾 Found ${productsToFix.length} products to update.`);
 
-    for (const order of ordersWithoutTracking) {
-      const trackingNumber = generateTrackingNumber();
-      await Order.updateOne(
-        { _id: order._id },
-        { $set: { trackingNumber } }
-      );
-      console.log(`✅ Order ${order._id} updated with ${trackingNumber}`);
+    for (const product of productsToFix as any[]) {
+      const updates: any = {};
+
+      // fix wrong or missing fulfillmentMode
+      updates.fulfillmentMode = 'seller'; // ✅ correct key
+
+      // add default weight if missing
+      if (!product.weight) updates.weight = '1';
+
+      await Product.updateOne({ _id: product._id }, { $set: updates });
+      console.log(`✅ Product ${product._id} updated →`, updates);
     }
 
-    console.log('🎉 All missing tracking numbers injected successfully!');
+    console.log('🎉 All fulfillmentMode values fixed successfully!');
   } catch (err) {
-    console.error('❌ Failed to inject tracking numbers:', err);
+    console.error('❌ Failed to fix product fields:', err);
   } finally {
     mongoose.connection.close();
   }
 }
 
-injectTrackingNumbers();
+fixFulfillmentModes();

@@ -17,6 +17,7 @@ export interface Product {
   model: string;
   material: string;
   color: string;
+  fulfillmentMode: string;
   keyFeatures: string[]; 
   boxContents: string[];
   warranty: string;

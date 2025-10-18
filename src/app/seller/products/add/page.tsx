@@ -93,6 +93,7 @@ export default function AddProduct() {
   const [uploading, setUploading] = useState(false);
   const [county, setCounty] = useState<County | ''>('');
   const [town, setTown] = useState('');
+  const [fulfillmentMode, setFulfillmentMode] = useState('');
 
   const handleFeatureChange = (index: number, value: string) => {
     const updated = [...keyFeatures];
@@ -142,9 +143,10 @@ const handleCountyChange = (selectedCounty: County | '') => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?._id) return toast.error('You are not logged in');
-    if (!category) return toast.error('Please select a category.');
-    if (imageFiles.length === 0) return toast.error('Please upload at least one image.');
+    if (!user?._id) return toast.error('You are not logged in!');
+    if (!category) return toast.error('Please select a category!');
+    if (!fulfillmentMode) return toast.error('Please select a fulfillment mode!');
+    if (imageFiles.length === 0) return toast.error('Please upload at least one image!');
 
     setUploading(true);
 
@@ -168,6 +170,7 @@ const handleCountyChange = (selectedCounty: County | '') => {
     formData.append('town', town);
     formData.append('quantity', quantity);
     formData.append('sellerId', user._id);
+    formData.append('fulfillmentMode', fulfillmentMode);
     imageFiles.forEach((file) => formData.append('images', file));
 
     try {
@@ -224,7 +227,7 @@ const handleCountyChange = (selectedCounty: County | '') => {
 
         <input type="string" className="w-full border px-4 py-2 rounded" placeholder="Warranty Period" value={warranty} onChange={(e) => setWarranty(e.target.value)} />
         <input type="string" className="w-full border px-4 py-2 rounded" placeholder="Dimensions (L x W x H)" value={dimensions} onChange={(e) => setDimensions(e.target.value)} />
-        <input type="string" className="w-full border px-4 py-2 rounded" placeholder="Weight" value={weight} onChange={(e) => setWeight(e.target.value)} />
+        <input type="number" className="w-full border px-4 py-2 rounded" placeholder="Weight" value={weight} onChange={(e) => setWeight(e.target.value)} />
 
         <select className="w-full border px-4 py-2 rounded" value={category} onChange={(e) => setCategory(e.target.value)} required>
           <option value="">Select Category</option>
@@ -260,6 +263,39 @@ const handleCountyChange = (selectedCounty: County | '') => {
         <input type="number" className="w-full border px-4 py-2 rounded" placeholder="Old Price" value={oldPrice} onChange={(e) => setOldPrice(e.target.value)} required/>
         <input type="number" className="w-full border px-4 py-2 rounded" placeholder="Quantity" value={quantity} onChange={(e) => setQuantity(e.target.value)} required />
         <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="w-full border px-4 py-2 rounded"/>
+ 
+        {/* 🧭 Fulfillment Mode */}
+        <div>
+          <label className="block font-semibold mb-1 text-gray-700">
+            Fulfillment Mode
+          </label>
+          <select
+            value={fulfillmentMode}
+            onChange={(e) => setFulfillmentMode(e.target.value)}
+            className="w-full border px-4 py-2 rounded"
+            required
+          >
+            <option value="">Select Fulfillment Option</option>
+            <option value="company">Fulfilled by Novaxpress</option>
+            <option value="seller">Fulfilled by Seller</option>
+            <option value="thirdparty">Dropshipping / Third-Party</option>
+          </select>
+          {fulfillmentMode === 'company' && (
+            <p className="text-sm text-gray-500 mt-1">
+              Our logistics team will handle pickup, packaging, and delivery.
+            </p>
+          )}
+          {fulfillmentMode === 'seller' && (
+            <p className="text-sm text-gray-500 mt-1">
+              You will be responsible for packaging and delivering to the buyer.
+            </p>
+          )}
+          {fulfillmentMode === 'thirdparty' && (
+            <p className="text-sm text-gray-500 mt-1">
+              Use your preferred courier or dropshipping partner for order fulfillment.
+            </p>
+          )}
+        </div>
         <button disabled={uploading} type="submit" className="bg-orange-600 text-white px-4 py-2 rounded">
           {uploading ? 'Uploading...' : 'Add Product'}
         </button>

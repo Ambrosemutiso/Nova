@@ -36,71 +36,40 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.dbConnect = dbConnect;
 var dotenv = require("dotenv");
 dotenv.config();
 var mongoose_1 = require("mongoose");
-var dbConnect_1 = require("../lib/dbConnect");
-var product_1 = require("../models/product");
-var Product = product_1.default;
-function fixFulfillmentModes() {
+var MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) {
+    throw new Error('❌ MongoDB URI not defined in environment variables');
+}
+var isConnected = false;
+function dbConnect() {
     return __awaiter(this, void 0, void 0, function () {
-        var productsToFix, _i, _a, product, updates, err_1;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
+        var db, err_1;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
                 case 0:
-                    _b.trys.push([0, 7, 8, 9]);
-                    return [4 /*yield*/, (0, dbConnect_1.dbConnect)()];
-                case 1:
-                    _b.sent();
-                    console.log('🔍 Fetching products with wrong or missing fulfillmentMode...');
-                    return [4 /*yield*/, Product.find({
-                            $or: [
-                                { fulfillmentMode: 'Fulfilled by Seller' }, // 👈 previously wrong value
-                                { fulfillmentMode: { $exists: false } },
-                                { fulfillmentMode: null },
-                                { fulfillmentMode: '' },
-                            ],
-                        })];
-                case 2:
-                    productsToFix = _b.sent();
-                    if (productsToFix.length === 0) {
-                        console.log('✅ All products already have correct fulfillmentMode.');
-                        mongoose_1.default.connection.close();
+                    if (isConnected) {
+                        console.log('✅ MongoDB: Already connected');
                         return [2 /*return*/];
                     }
-                    console.log("\uD83E\uDDFE Found ".concat(productsToFix.length, " products to update."));
-                    _i = 0, _a = productsToFix;
-                    _b.label = 3;
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    return [4 /*yield*/, mongoose_1.default.connect(MONGODB_URI)];
+                case 2:
+                    db = _a.sent();
+                    isConnected = true;
+                    console.log('✅ MongoDB: Connected successfully');
+                    return [2 /*return*/, db];
                 case 3:
-                    if (!(_i < _a.length)) return [3 /*break*/, 6];
-                    product = _a[_i];
-                    updates = {};
-                    // fix wrong or missing fulfillmentMode
-                    updates.fulfillmentMode = 'seller'; // ✅ correct key
-                    // add default weight if missing
-                    if (!product.weight)
-                        updates.weight = '1';
-                    return [4 /*yield*/, Product.updateOne({ _id: product._id }, { $set: updates })];
-                case 4:
-                    _b.sent();
-                    console.log("\u2705 Product ".concat(product._id, " updated \u2192"), updates);
-                    _b.label = 5;
-                case 5:
-                    _i++;
-                    return [3 /*break*/, 3];
-                case 6:
-                    console.log('🎉 All fulfillmentMode values fixed successfully!');
-                    return [3 /*break*/, 9];
-                case 7:
-                    err_1 = _b.sent();
-                    console.error('❌ Failed to fix product fields:', err_1);
-                    return [3 /*break*/, 9];
-                case 8:
-                    mongoose_1.default.connection.close();
-                    return [7 /*endfinally*/];
-                case 9: return [2 /*return*/];
+                    err_1 = _a.sent();
+                    console.error('❌ MongoDB: Connection error', err_1);
+                    throw new Error('Failed to connect to MongoDB');
+                case 4: return [2 /*return*/];
             }
         });
     });
 }
-fixFulfillmentModes();
