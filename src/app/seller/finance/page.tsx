@@ -76,7 +76,7 @@ export default function FinancePage() {
     { month: string; sales: number; payouts: number }[]
   >([]);
 
-  const [seller, setSeller] = useState<Seller | null>(null);
+  const [seller] = useState<Seller | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
