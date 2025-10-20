@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { toast } from 'react-toastify';
 import {
   FiBarChart2,
   FiDollarSign,
@@ -75,9 +76,15 @@ export default function FinancePage() {
     { month: string; sales: number; payouts: number }[]
   >([]);
 
+  const [seller, setSeller] = useState<Seller | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawMethod, setWithdrawMethod] = useState<'mpesa' | 'airtel' | ''>('');
+  const [withdrawPhone, setWithdrawPhone] = useState('');
+  const [withdrawAmount, setWithdrawAmount] = useState<number>(0);
+  
 
   // ✅ Read seller object from localStorage
   const getSellerId = (): string | null => {
@@ -141,6 +148,48 @@ export default function FinancePage() {
 
     fetchMetrics();
   }, []);
+
+  
+  
+    const handleWithdraw = async () => {
+      if (!seller) return;
+      const res = await fetch('/api/seller/withdraw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sellerId: seller._id,
+          amount: withdrawAmount,
+          phoneNumber: seller.phoneNumber,
+          method: withdrawMethod,
+        }),
+      });
+  
+      const json = await res.json();
+      if (json.success) {
+        toast.success('Withdrawal request submitted!');
+        setShowWithdrawModal(false);
+      } else {
+        toast.error(json.error || 'Error submitting withdrawal.');
+      }
+    };
+
+  // 🔹 Generate Pie Chart Data Dynamically
+const paymentSummary = transactions.reduce(
+  (acc, txn) => {
+    const method = txn.method || 'Other';
+    acc[method] = (acc[method] || 0) + txn.amount;
+    return acc;
+  },
+  {} as Record<string, number>
+);
+
+const totalPayment = Object.values(paymentSummary).reduce((a, b) => a + b, 0);
+
+const pieData = Object.entries(paymentSummary).map(([name, value]) => ({
+  name,
+  value: totalPayment > 0 ? Math.round((value / totalPayment) * 100) : 0,
+}));
+
 
   const colors = ['#F97316', '#FB923C', '#FED7AA'];
 
@@ -231,35 +280,31 @@ export default function FinancePage() {
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl shadow-md">
-          <h2 className="text-lg font-semibold text-gray-700 mb-4">
-            Payment Method Breakdown
-          </h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={[
-                  { name: 'M-Pesa', value: 70 },
-                  { name: 'Airtel Money', value: 25 },
-                  { name: 'Other', value: 5 },
-                ]}
-                cx="50%"
-                cy="50%"
-                outerRadius={90}
-                fill="#8884d8"
-                dataKey="value"
-                label
-              >
-                {colors.map((color, index) => (
-                  <Cell key={`cell-${index}`} fill={color} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+<div className="bg-white p-5 rounded-2xl shadow-md">
+  <h2 className="text-lg font-semibold text-gray-700 mb-4">
+    Payment Method Breakdown
+  </h2>
+  <ResponsiveContainer width="100%" height={300}>
+    <PieChart>
+      <Pie
+        data={pieData}
+        cx="50%"
+        cy="50%"
+        outerRadius={90}
+        fill="#8884d8"
+        dataKey="value"
+        label
+      >
+        {colors.map((color, index) => (
+          <Cell key={`cell-${index}`} fill={color} />
+        ))}
+      </Pie>
+      <Tooltip />
+      <Legend />
+    </PieChart>
+  </ResponsiveContainer>
+</div>
+</div>
 
       {/* Transactions Table */}
       <div className="bg-white p-5 rounded-2xl shadow-md mb-10 overflow-x-auto">
@@ -294,8 +339,8 @@ export default function FinancePage() {
                     {new Date(txn.date).toLocaleDateString()}
                   </td>
                   <td className="py-3 px-4 text-sm text-orange-600 font-medium">
-                    {txn.orderId}
-                  </td>
+                    #{txn.orderId?.substring(0, 5).toUpperCase()}
+                    </td>
                   <td className="py-3 px-4 text-sm">{txn.buyer}</td>
                   <td className="py-3 px-4 text-sm">
                     KES {txn.amount.toLocaleString()}
@@ -323,6 +368,84 @@ export default function FinancePage() {
         </table>
       </div>
 
+      
+{showWithdrawModal && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
+    <div className="bg-white p-6 rounded-xl w-full max-w-md relative">
+      <button
+        onClick={() => setShowWithdrawModal(false)}
+        className="absolute top-2 right-4 text-gray-500 text-2xl font-bold"
+      >
+        ×
+      </button>
+
+      <h2 className="text-xl font-semibold text-gray-800 mb-4">Withdraw Funds</h2>
+
+      <label className="block mb-2 text-sm text-gray-700">Phone Number</label>
+      <input
+        type="text"
+        value={withdrawPhone}
+        onChange={(e) => setWithdrawPhone(e.target.value)}
+        className="w-full border px-3 py-2 rounded mb-4"
+        placeholder="Enter phone number"
+      />
+
+      <label className="block mb-2 text-sm text-gray-700">Amount</label>
+      <input
+        type="number"
+        value={withdrawAmount}
+        onChange={(e) => setWithdrawAmount(Number(e.target.value))}
+        className="w-full border px-3 py-2 rounded mb-4"
+        placeholder="Enter amount"
+      />
+
+      <label className="block mb-2 text-sm text-gray-700">Withdraw Method</label>
+      <div className="flex items-center gap-4 mb-4">
+        <button
+          onClick={() => setWithdrawMethod('mpesa')}
+          className={`flex-1 flex items-center gap-2 border px-3 py-2 rounded-lg transition ${
+            withdrawMethod === 'mpesa'
+              ? 'border-green-500 bg-green-50'
+              : 'hover:border-green-400'
+          }`}
+        >
+          <img
+            src="/mpesa.png" 
+            alt="M-Pesa"
+            className="h-6"
+          />
+          <span className="font-medium text-gray-700">M-Pesa</span>
+        </button>
+
+        <button
+          onClick={() => setWithdrawMethod('airtel')}
+          className={`flex-1 flex items-center gap-2 border px-3 py-2 rounded-lg transition ${
+            withdrawMethod === 'airtel'
+              ? 'border-red-500 bg-red-50'
+              : 'hover:border-red-400'
+          }`}
+        >
+          <img
+            src="/airtel.png" 
+            alt="Airtel"
+            className="h-6"
+          />
+          <span className="font-medium text-gray-700">Airtel Money</span>
+        </button>
+      </div>
+
+      {/* Submit */}
+      <button
+        onClick={handleWithdraw}
+        disabled={!withdrawMethod || !withdrawAmount || !withdrawPhone}
+        className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded disabled:opacity-50"
+      >
+        Submit Withdrawal
+      </button>
+    </div>
+  </div>
+)}
+
       {/* Payout Section */}
       <div className="bg-white p-6 rounded-2xl shadow-md">
         <h2 className="text-lg font-semibold text-gray-700 mb-3">
@@ -332,8 +455,12 @@ export default function FinancePage() {
           Your available balance will be sent to your preferred payment method.
         </p>
 
-        <button className="bg-orange-600 hover:bg-orange-700 text-white py-2 px-5 rounded-lg font-medium">
-          Request Payout
+        <button 
+        onClick={() => {
+        setShowWithdrawModal(true);
+        }}
+        className="bg-orange-600 hover:bg-orange-700 text-white py-2 px-5 rounded-lg font-medium">
+        Request Payout
         </button>
       </div>
     </div>

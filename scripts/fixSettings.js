@@ -40,60 +40,58 @@ var dotenv = require("dotenv");
 dotenv.config();
 var mongoose_1 = require("mongoose");
 var dbConnect_1 = require("../lib/dbConnect");
-var product_1 = require("../models/product");
-var Product = product_1.default;
-function fixFulfillmentModes() {
+var orders_1 = require("../models/orders");
+var Order = orders_1.default; // ✅ cast to proper Model type
+function fixOrdersFulfillmentMode() {
     return __awaiter(this, void 0, void 0, function () {
-        var productsToFix, _i, _a, product, updates, err_1;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
+        var ordersToFix, _i, ordersToFix_1, order, needsUpdate, _a, _b, item, error_1;
+        return __generator(this, function (_c) {
+            switch (_c.label) {
                 case 0:
-                    _b.trys.push([0, 7, 8, 9]);
+                    _c.trys.push([0, 7, 8, 9]);
                     return [4 /*yield*/, (0, dbConnect_1.dbConnect)()];
                 case 1:
-                    _b.sent();
-                    console.log('🔍 Fetching products with wrong or missing fulfillmentMode...');
-                    return [4 /*yield*/, Product.find({
-                            $or: [
-                                { fulfillmentMode: 'Fulfilled by Seller' }, // 👈 previously wrong value
-                                { fulfillmentMode: { $exists: false } },
-                                { fulfillmentMode: null },
-                                { fulfillmentMode: '' },
-                            ],
+                    _c.sent();
+                    console.log('🔍 Fetching orders with missing fulfillmentMode in items...');
+                    return [4 /*yield*/, Order.find({
+                            'items.fulfillmentMode': { $in: [null, '', undefined] },
                         })];
                 case 2:
-                    productsToFix = _b.sent();
-                    if (productsToFix.length === 0) {
-                        console.log('✅ All products already have correct fulfillmentMode.');
+                    ordersToFix = _c.sent();
+                    if (ordersToFix.length === 0) {
+                        console.log('✅ All orders already have fulfillmentMode set.');
                         mongoose_1.default.connection.close();
                         return [2 /*return*/];
                     }
-                    console.log("\uD83E\uDDFE Found ".concat(productsToFix.length, " products to update."));
-                    _i = 0, _a = productsToFix;
-                    _b.label = 3;
+                    console.log("\uD83E\uDDFE Found ".concat(ordersToFix.length, " orders to update."));
+                    _i = 0, ordersToFix_1 = ordersToFix;
+                    _c.label = 3;
                 case 3:
-                    if (!(_i < _a.length)) return [3 /*break*/, 6];
-                    product = _a[_i];
-                    updates = {};
-                    // fix wrong or missing fulfillmentMode
-                    updates.fulfillmentMode = 'seller'; // ✅ correct key
-                    // add default weight if missing
-                    if (!product.weight)
-                        updates.weight = '1';
-                    return [4 /*yield*/, Product.updateOne({ _id: product._id }, { $set: updates })];
+                    if (!(_i < ordersToFix_1.length)) return [3 /*break*/, 6];
+                    order = ordersToFix_1[_i];
+                    needsUpdate = false;
+                    for (_a = 0, _b = order.items; _a < _b.length; _a++) {
+                        item = _b[_a];
+                        if (!item.fulfillmentMode) {
+                            item.fulfillmentMode = 'seller';
+                            needsUpdate = true;
+                        }
+                    }
+                    if (!needsUpdate) return [3 /*break*/, 5];
+                    return [4 /*yield*/, order.save()];
                 case 4:
-                    _b.sent();
-                    console.log("\u2705 Product ".concat(product._id, " updated \u2192"), updates);
-                    _b.label = 5;
+                    _c.sent();
+                    console.log("\u2705 Order ".concat(order._id, " updated successfully."));
+                    _c.label = 5;
                 case 5:
                     _i++;
                     return [3 /*break*/, 3];
                 case 6:
-                    console.log('🎉 All fulfillmentMode values fixed successfully!');
+                    console.log('🎉 All missing fulfillmentMode fields fixed successfully!');
                     return [3 /*break*/, 9];
                 case 7:
-                    err_1 = _b.sent();
-                    console.error('❌ Failed to fix product fields:', err_1);
+                    error_1 = _c.sent();
+                    console.error('❌ Error fixing fulfillmentMode in orders:', error_1);
                     return [3 /*break*/, 9];
                 case 8:
                     mongoose_1.default.connection.close();
@@ -103,4 +101,4 @@ function fixFulfillmentModes() {
         });
     });
 }
-fixFulfillmentModes();
+fixOrdersFulfillmentMode();

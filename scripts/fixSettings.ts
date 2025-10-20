@@ -3,51 +3,49 @@ dotenv.config();
 
 import mongoose from 'mongoose';
 import { dbConnect } from '@/lib/dbConnect';
-import ProductModel from '@/app/models/product';
+import OrderModel from '@/app/models/orders';
 
-const Product: any = ProductModel;
+const Order = OrderModel as mongoose.Model<any>; // ✅ cast to proper Model type
 
-async function fixFulfillmentModes() {
+async function fixOrdersFulfillmentMode() {
   try {
     await dbConnect();
+    console.log('🔍 Fetching orders with missing fulfillmentMode in items...');
 
-    console.log('🔍 Fetching products with wrong or missing fulfillmentMode...');
-    const productsToFix = await Product.find({
-      $or: [
-        { fulfillmentMode: 'Fulfilled by Seller' }, // 👈 previously wrong value
-        { fulfillmentMode: { $exists: false } },
-        { fulfillmentMode: null },
-        { fulfillmentMode: '' },
-      ],
+    const ordersToFix = await Order.find({
+      'items.fulfillmentMode': { $in: [null, '', undefined] },
     });
 
-    if (productsToFix.length === 0) {
-      console.log('✅ All products already have correct fulfillmentMode.');
+    if (ordersToFix.length === 0) {
+      console.log('✅ All orders already have fulfillmentMode set.');
       mongoose.connection.close();
       return;
     }
 
-    console.log(`🧾 Found ${productsToFix.length} products to update.`);
+    console.log(`🧾 Found ${ordersToFix.length} orders to update.`);
 
-    for (const product of productsToFix as any[]) {
-      const updates: any = {};
+    for (const order of ordersToFix) {
+      let needsUpdate = false;
 
-      // fix wrong or missing fulfillmentMode
-      updates.fulfillmentMode = 'seller'; // ✅ correct key
+      for (const item of order.items) {
+        if (!item.fulfillmentMode) {
+          item.fulfillmentMode = 'seller';
+          needsUpdate = true;
+        }
+      }
 
-      // add default weight if missing
-      if (!product.weight) updates.weight = '1';
-
-      await Product.updateOne({ _id: product._id }, { $set: updates });
-      console.log(`✅ Product ${product._id} updated →`, updates);
+      if (needsUpdate) {
+        await order.save();
+        console.log(`✅ Order ${order._id} updated successfully.`);
+      }
     }
 
-    console.log('🎉 All fulfillmentMode values fixed successfully!');
-  } catch (err) {
-    console.error('❌ Failed to fix product fields:', err);
+    console.log('🎉 All missing fulfillmentMode fields fixed successfully!');
+  } catch (error) {
+    console.error('❌ Error fixing fulfillmentMode in orders:', error);
   } finally {
     mongoose.connection.close();
   }
 }
 
-fixFulfillmentModes();
+fixOrdersFulfillmentMode();

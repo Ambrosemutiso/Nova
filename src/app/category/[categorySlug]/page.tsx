@@ -115,6 +115,7 @@ export default function CategoryPage() {
       weight: product.weight,
       calculatedPrice: product.calculatedPrice,
       quantity: 1,
+      fulfillmentMode: product.fulfillmentMode,
       sellerId: product.sellerId,
       productId: product._id,
     });

@@ -100,6 +100,7 @@ const [showReportModal, setShowReportModal] = useState(false);
       weight: product.weight,
       calculatedPrice: product.calculatedPrice,
       quantity: 1,
+      fulfillmentMode: product.fulfillmentMode,
       sellerId: product.sellerId,
       productId: product._id,
     });

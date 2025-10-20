@@ -22,6 +22,7 @@ export interface CartItem {
   town: string;
   model: string;
   weight: number;
+  fulfillmentMode: string;
   brand: string;
   sellerId: string;
   productId: string;

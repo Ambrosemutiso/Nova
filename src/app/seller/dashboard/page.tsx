@@ -75,11 +75,6 @@ export default function SellerDashboard() {
   const [loading, setLoading] = useState(true);
   const [year, setYear] = useState(new Date().getFullYear());
 
-  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-  const [withdrawMethod, setWithdrawMethod] = useState<'mpesa' | 'airtel' | ''>('');
-  const [withdrawPhone, setWithdrawPhone] = useState('');
-  const [withdrawAmount, setWithdrawAmount] = useState<number>(0);
-
   const [activatingShop, setActivatingShop] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editShopName, setEditShopName] = useState(seller?.name || '');
@@ -168,29 +163,6 @@ const handleConfirmPayment = async () => {
     setActivatingShop(false);
   }
 };
-
-
-  const handleWithdraw = async () => {
-    if (!seller) return;
-    const res = await fetch('/api/seller/withdraw', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sellerId: seller._id,
-        amount: withdrawAmount,
-        phoneNumber: seller.phoneNumber,
-        method: withdrawMethod,
-      }),
-    });
-
-    const json = await res.json();
-    if (json.success) {
-      toast.success('Withdrawal request submitted!');
-      setShowWithdrawModal(false);
-    } else {
-      toast.error(json.error || 'Error submitting withdrawal.');
-    }
-  };
 
   const isShopActive =
     seller?.shop?.isActive &&
@@ -551,22 +523,6 @@ const handleConfirmPayment = async () => {
                 {metrics?.totalFollowers ?? '--'}
               </p>
             </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-md text-center col-span-full md:col-span-2">
-              <h3 className="text-lg font-medium text-gray-600">Subtotal Revenue</h3>
-              <p className="text-3xl font-bold text-orange-600">
-                Ksh {metrics?.subtotalRevenue?.toLocaleString() ?? '--'}
-              </p>
-              <button
-                onClick={() => {
-                  setWithdrawAmount(metrics?.subtotalRevenue || 0);
-                  setShowWithdrawModal(true);
-                }}
-                className="mt-3 bg-orange-500 hover:bg-orange-600 text-white text-sm py-2 px-4 rounded transition"
-              >
-                Withdraw Funds
-              </button>
-            </div>
           </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -729,83 +685,6 @@ const handleConfirmPayment = async () => {
         className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded"
         >
         Save Changes
-      </button>
-    </div>
-  </div>
-)}
-
-{showWithdrawModal && (
-  <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
-    <div className="bg-white p-6 rounded-xl w-full max-w-md relative">
-      <button
-        onClick={() => setShowWithdrawModal(false)}
-        className="absolute top-2 right-4 text-gray-500 text-2xl font-bold"
-      >
-        ×
-      </button>
-
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">Withdraw Funds</h2>
-
-      <label className="block mb-2 text-sm text-gray-700">Phone Number</label>
-      <input
-        type="text"
-        value={withdrawPhone}
-        onChange={(e) => setWithdrawPhone(e.target.value)}
-        className="w-full border px-3 py-2 rounded mb-4"
-        placeholder="Enter phone number"
-      />
-
-      <label className="block mb-2 text-sm text-gray-700">Amount</label>
-      <input
-        type="number"
-        value={withdrawAmount}
-        onChange={(e) => setWithdrawAmount(Number(e.target.value))}
-        className="w-full border px-3 py-2 rounded mb-4"
-        placeholder="Enter amount"
-      />
-
-      <label className="block mb-2 text-sm text-gray-700">Withdraw Method</label>
-      <div className="flex items-center gap-4 mb-4">
-        <button
-          onClick={() => setWithdrawMethod('mpesa')}
-          className={`flex-1 flex items-center gap-2 border px-3 py-2 rounded-lg transition ${
-            withdrawMethod === 'mpesa'
-              ? 'border-green-500 bg-green-50'
-              : 'hover:border-green-400'
-          }`}
-        >
-          <img
-            src="/mpesa.png" 
-            alt="M-Pesa"
-            className="h-6"
-          />
-          <span className="font-medium text-gray-700">M-Pesa</span>
-        </button>
-
-        <button
-          onClick={() => setWithdrawMethod('airtel')}
-          className={`flex-1 flex items-center gap-2 border px-3 py-2 rounded-lg transition ${
-            withdrawMethod === 'airtel'
-              ? 'border-red-500 bg-red-50'
-              : 'hover:border-red-400'
-          }`}
-        >
-          <img
-            src="/airtel.png" 
-            alt="Airtel"
-            className="h-6"
-          />
-          <span className="font-medium text-gray-700">Airtel Money</span>
-        </button>
-      </div>
-
-      {/* Submit */}
-      <button
-        onClick={handleWithdraw}
-        disabled={!withdrawMethod || !withdrawAmount || !withdrawPhone}
-        className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded disabled:opacity-50"
-      >
-        Submit Withdrawal
       </button>
     </div>
   </div>
