@@ -133,7 +133,7 @@ export default function SellerOrdersPage() {
 
     const markItemDelivered = async (orderId: string, itemName: string) => {
       try {
-        const res = await fetch('/api/seller/update-item-status', {
+        const res = await fetch('/api/logistics/update-item-status', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ orderId, itemName, newStatus: 'Delivered' }),
