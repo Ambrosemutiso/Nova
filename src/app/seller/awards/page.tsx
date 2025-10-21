@@ -64,7 +64,7 @@ export default function AwardsPage() {
   useEffect(() => {
     const fetchAwards = async () => {
       try {
-        const sellerId = localStorage.getItem('sellerId'); // Assume sellerId stored on login
+        const sellerId = localStorage.getItem('SellerUser'); // Assume sellerId stored on login
         if (!sellerId) return;
 
         const res = await axios.get<ApiResponse>(

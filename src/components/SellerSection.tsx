@@ -4,10 +4,11 @@ import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/app/context/AuthContext';
 import StarRatingInput from '@/components/ReviewsInput';
 import { toast, ToastContainer } from 'react-toastify';
-import { ShieldCheck } from 'lucide-react';
+import { ShieldCheck, ChevronRight } from 'lucide-react';
 import { Seller } from '@/app/types/seller';
 import { Review } from '@/app/types/review';
 import { Product } from '@/app/types/product';
+import { useRouter } from 'next/navigation';
 
 export default function ProductReviewSection({
   product,
@@ -16,6 +17,7 @@ export default function ProductReviewSection({
   product: Product;
   showLoginModal: () => void;
 }) {
+  const router = useRouter();
   const [seller, setSeller] = useState<Seller | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isFollowing, setIsFollowing] = useState(false);
@@ -94,8 +96,9 @@ export default function ProductReviewSection({
   };
 
   return (
-    <div className="mt-8 border p-4 rounded shadow-sm">
-      <ToastContainer/>
+    <div className="mt-8 border p-4 rounded shadow-sm bg-white">
+      <ToastContainer />
+      {/* Product Reviews */}
       <div className="mb-4">
         <h2 className="text-lg font-bold text-gray-800">Product Rating & Reviews</h2>
         <div className="flex items-center gap-2 mt-1">
@@ -195,51 +198,30 @@ export default function ProductReviewSection({
         </div>
       )}
 
-{/* Seller Footer */}
-{seller && (
-  <div className="mt-8 border-t pt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-    <div>
-      <div className="flex items-center gap-1">
-        <p className="text-sm font-semibold text-gray-700">
-          {seller.name || 'Unknown Seller'} - Official Store
-        </p>
-        {(seller.followers?.length ?? 0) > 0 && (
-          <span title="Verified Seller">
-            <ShieldCheck className="w-4 h-4 text-orange-600" />
-          </span>
-        )}
-      </div>
-      <p className="text-xs text-gray-500">
-        {seller.followers?.length || 0} Followers
-      </p>
-    </div>
+      {/* Seller Info Section with Right Arrow */}
+      {seller && (
+        <div
+          onClick={() => router.push(`/seller/${seller._id}`)}
+          className="mt-8 border-t pt-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 transition-all duration-200 rounded-md px-1"
+        >
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1">
+              <p className="text-sm font-semibold text-gray-700">
+                {seller.name || 'Unknown Seller'} - Official Store
+              </p>
+              {seller.followers?.length ? (
+                <ShieldCheck className="w-4 h-4 text-orange-600" />
+              ) : null}
+            </div>
+            <p className="text-xs text-gray-500">
+              {seller.followers?.length || 0} Followers
+            </p>
+          </div>
 
-    <div className="flex gap-3">
-      {user && (
-        <>
-          <button
-            onClick={() => handleFollowAction(isFollowing ? 'Following' : 'Follow')}
-            className={`px-4 py-1 rounded text-sm ${
-              isFollowing ? 'bg-gray-300 text-black' : 'bg-orange-500 text-white'
-            }`}
-          >
-            {isFollowing ? 'Following' : 'Follow'}
-          </button>
-
-          <button
-            onClick={() => {
-              window.location.href = `/seller/chat/${seller._id}`;
-            }}
-            className="px-4 py-1 bg-orange-500 text-white rounded text-sm hover:bg-orange-600"
-          >
-            💬 Chat with Seller
-          </button>
-        </>
+          {/* Right Arrow */}
+          <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 transition-all" />
+        </div>
       )}
-    </div>
-  </div>
-)}
-
     </div>
   );
 }

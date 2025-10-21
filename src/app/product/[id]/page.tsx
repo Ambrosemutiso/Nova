@@ -114,7 +114,7 @@ const [showReportModal, setShowReportModal] = useState(false);
     );
 return (
   <div className="max-w-6xl mx-auto px-4 pt-28 pb-10"> {/* pt-28 to offset navbar height */}
-<div className="mb-6 overflow-x-auto">
+  <div className="mb-6 overflow-x-auto">
   <nav className="flex items-center text-sm text-gray-500 whitespace-nowrap flex-nowrap gap-1 px-1">
     <span>Home</span>
     <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
@@ -136,85 +136,188 @@ return (
       name={product.name}
     />
 )}
-
 {/* Product Info Section */}
-<div className="px-4 py-5 space-y-4 bg-white rounded-md shadow-sm text-gray-800">
-  <h1 className="text-left text-2xl font-bold text-gray-900">{product.name}</h1>
+<div className="p-6 bg-white rounded-2xl shadow-md text-gray-900 space-y-3">
+  {/* Title */}
+  <h1 className="text-3xl font-bold leading-tight tracking-tight">
+    {product.name}
+  </h1>
 
-  <p className="text-left text-sm font-medium text-blue-600">
-    Brand: <span className="capitalize">{product.brand}</span>
-  </p>
-  
-  <p className="text-left text-sm font-medium text-blue-600">
-    Model: <span className="capitalize">{product.model}</span>
-  </p>
+  {/* Brand + Model */}
+  <div className="flex flex-wrap gap-3 text-sm text-gray-600">
+    {product.brand && (
+      <span className="bg-gray-100 px-2.5 py-1 rounded-full capitalize">
+        🏷 Brand: {product.brand}
+      </span>
+    )}
+    {product.model && (
+      <span className="bg-gray-100 px-2.5 py-1 rounded-full capitalize">
+        ⚙️ Model: {product.model}
+      </span>
+    )}
+  </div>
 
-  <div className="flex items-start gap-3">
-    <span className="text-2xl font-extrabold text-orange-600">
+  {/* Price Section */}
+  <div className="flex flex-wrap items-baseline gap-2 mt-2">
+    <span className="text-3xl font-extrabold text-orange-600">
       Ksh {product.calculatedPrice.toLocaleString()}
     </span>
-    <span className="text-base text-gray-400 line-through">
-      Ksh {product.oldPrice.toLocaleString()}
-    </span>
-    <span className="ml-auto text-sm px-2 py-1 bg-red-100 text-red-600 rounded-md">
-      {Math.round(((product.oldPrice - product.calculatedPrice) / product.oldPrice) * 100)}% OFF
-    </span>
+
+    {product.oldPrice && (
+      <>
+        <span className="text-base text-gray-400 line-through">
+          Ksh {product.oldPrice.toLocaleString()}
+        </span>
+        <span className="text-xs font-semibold px-2 py-1 rounded-full bg-red-50 text-red-500">
+          {Math.round(((product.oldPrice - product.calculatedPrice) / product.oldPrice) * 100)}% OFF
+        </span>
+      </>
+    )}
   </div>
 
-  <p className={`text-left text-sm font-semibold ${product.quantity > 0 ? 'text-green-600' : 'text-red-500'}`}>
-    {product.quantity > 0 ? `${product.quantity} unit${product.quantity > 1 ? 's' : ''} left` : 'Out of stock'}
-  </p>
+  {/* Stock Info */}
+  <div className="flex items-center gap-2 mt-1">
+    <div
+      className={`w-2.5 h-2.5 rounded-full ${
+        product.quantity > 0 ? 'bg-green-500' : 'bg-red-500'
+      }`}
+    />
+    <p
+      className={`text-sm font-medium ${
+        product.quantity > 0 ? 'text-green-700' : 'text-red-500'
+      }`}
+    >
+      {product.quantity > 0
+        ? `${product.quantity} unit${product.quantity > 1 ? 's' : ''} left`
+        : 'Out of stock'}
+    </p>
+  </div>
 
-  <p className="text-left text-sm text-gray-600">
-    + Shipped from <strong>{product.county}</strong>: <span className="text-orange-600 font-semibold">{product.town}</span>
-  </p>
-
+  {/* Shipping Info */}
+  {product.county && (
+    <p className="text-sm text-gray-600">
+      🚚 Shipped from{' '}
+      <span className="font-semibold text-gray-800">{product.county}</span>
+      {product.town && (
+        <>
+          , <span className="text-orange-600 font-semibold">{product.town}</span>
+        </>
+      )}
+    </p>
+  )}
 </div>
-    {/* Product Description */}
-    {product.description && (
-      <div className="mt-10 bg-white shadow rounded-lg p-6">
-        <h2 className="text-xl font-semibold mb-4 border-b pb-2">Product Description</h2>
-        <div
-          className="prose max-w-none text-gray-800"
-          dangerouslySetInnerHTML={{ __html: product.description }}
-        />
+
+{/* Product Description Section */}
+{product.description && (
+  <div className="mt-8 bg-white shadow rounded-lg p-5">
+    <div className="flex justify-between items-center border-b pb-2 mb-3">
+      <h2 className="text-lg md:text-xl font-semibold text-gray-900">
+        Product Description
+      </h2>
+
+      {/* ➡️ Right Arrow for Mobile */}
+      <a
+        href={`/product/${product._id}/description`}
+        className="md:hidden text-orange-600 flex items-center gap-1 text-sm font-medium"
+      >
+        View more
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-4 h-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </a>
+    </div>
+
+    {/* Description Content */}
+    <div
+      className={`prose max-w-none text-gray-700 ${
+        // truncate only on mobile
+        'md:line-clamp-none line-clamp-3'
+      }`}
+      dangerouslySetInnerHTML={{
+        __html: product.description,
+      }}
+    />
+  </div>
+)}
+
+{/* Key Features */}
+{Array.isArray(product.keyFeatures) && product.keyFeatures.length > 0 && (
+  <div className="mt-6 bg-white shadow rounded-lg p-5">
+    <h2 className="text-lg font-semibold text-gray-900 mb-2 border-b pb-1">
+      Key Features
+    </h2>
+    <ul className="list-disc list-inside space-y-1 text-gray-700 text-sm md:text-base">
+      {product.keyFeatures.map((feature, i) => (
+        <li key={i}>{feature}</li>
+      ))}
+    </ul>
+  </div>
+)}
+
+{/* Box Contents */}
+{Array.isArray(product.boxContents) && product.boxContents.length > 0 && (
+  <div className="mt-6 bg-white shadow rounded-lg p-5">
+    <h2 className="text-lg font-semibold text-gray-900 mb-2 border-b pb-1">
+      What&apos;s in the Box
+    </h2>
+    <ul className="list-disc list-inside space-y-1 text-gray-700 text-sm md:text-base">
+      {product.boxContents.map((item, i) => (
+        <li key={i}>{item}</li>
+      ))}
+    </ul>
+  </div>
+)}
+
+{/* Specifications */}
+<div className="mt-6 bg-white shadow rounded-lg p-5">
+  <h2 className="text-lg md:text-xl font-semibold mb-3 border-b pb-2">
+    Specifications
+  </h2>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-gray-700 text-sm md:text-base">
+    {product.brand && (
+      <div>
+        <span className="font-medium">Brand:</span> {product.brand}
       </div>
     )}
-
-{Array.isArray(product.keyFeatures) && (
-  <div className="mt-6 bg-white shadow rounded-lg p-6">
-  <h2 className="text-lg font-semibold text-gray-900 mb-2">Key Features</h2>
-  <ul className="list-disc list-inside space-y-1 text-gray-700 text-sm">
-    {product.keyFeatures.map((feature, i) => (
-      <li key={i}>{feature}</li>
-    ))}
-  </ul>
-</div>
-)}
-
-{Array.isArray(product.boxContents) && (
-  <div className="mt-6 bg-white shadow rounded-lg p-6">
-  <h2 className="text-lg font-semibold text-gray-900 mb-2">What&apos;s in the Box</h2>
-  <ul className="list-disc list-inside space-y-1 text-gray-700 text-sm">
-    {product.boxContents.map((item, i) => (
-      <li key={i}>{item}</li>
-    ))}
-  </ul>
-</div>
-)}
-
-<div className="mt-6 bg-white shadow rounded-lg p-6">
-  <h2 className="text-xl font-semibold mb-4 border-b pb-2">Specifications</h2>
-  <div className="grid grid-cols-2 gap-4 text-gray-700">
-    {product.brand && <div><span className="font-medium">Brand:</span> {product.brand}</div>}
-    {product.model && <div><span className="font-medium">Model:</span> {product.model}</div>}
-    {product.material && <div><span className="font-medium">Main Material:</span> {product.material}</div>}
-    {product.color && <div><span className="font-medium">Color:</span> {product.color}</div>}
-    {product.dimensions && <div><span className="font-medium">Dimensions:</span> {product.dimensions}</div>}
-    {product.weight && <div><span className="font-medium">Weight:</span> {product.weight}</div>}
-    {product.warranty && <div><span className="font-medium">Warranty:</span> {product.warranty}</div>}
+    {product.model && (
+      <div>
+        <span className="font-medium">Model:</span> {product.model}
+      </div>
+    )}
+    {product.material && (
+      <div>
+        <span className="font-medium">Main Material:</span> {product.material}
+      </div>
+    )}
+    {product.color && (
+      <div>
+        <span className="font-medium">Color:</span> {product.color}
+      </div>
+    )}
+    {product.dimensions && (
+      <div>
+        <span className="font-medium">Dimensions:</span> {product.dimensions}
+      </div>
+    )}
+    {product.weight && (
+      <div>
+        <span className="font-medium">Weight:</span> {product.weight}
+      </div>
+    )}
+    {product.warranty && (
+      <div>
+        <span className="font-medium">Warranty:</span> {product.warranty}
+      </div>
+    )}
   </div>
 </div>
+
 
       <SaveToRecentlyViewed id={product._id.toString()} />
       <RecentlyViewed />
