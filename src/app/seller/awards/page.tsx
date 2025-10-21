@@ -1,10 +1,47 @@
 'use client';
+
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { FaMedal, FaTrophy, FaCrown, FaStar, FaGift, FaCheckCircle } from 'react-icons/fa';
+import {
+  FaMedal,
+  FaTrophy,
+  FaCrown,
+  FaStar,
+  FaGift,
+  FaCheckCircle,
+} from 'react-icons/fa';
 import Confetti from 'react-confetti';
+import axios from 'axios';
 
-// ✅ Define badge type
+// ✅ Backend response types
+interface Award {
+  title: string;
+  description: string;
+  badge: string;
+}
+
+interface SellerStats {
+  totalSales: number;
+  totalOrders: number;
+  deliveredCount: number;
+  pendingCount: number;
+  cancelledCount: number;
+  deliveryRate: string;
+  cancelRate: string;
+}
+
+interface SellerInfo {
+  name: string;
+  shopName?: string;
+}
+
+interface ApiResponse {
+  seller: SellerInfo;
+  stats: SellerStats;
+  awards: Award[];
+}
+
+// ✅ Badge structure for UI
 interface Badge {
   name: string;
   icon: JSX.Element;
@@ -15,40 +52,57 @@ interface Badge {
 }
 
 export default function AwardsPage() {
-  const [badges, setBadges] = useState<Badge[]>([
-    { name: 'Top Seller', icon: <FaCrown className="text-yellow-400" />, date: 'Sep 2025', desc: 'Awarded for ranking among the top 5 sellers this month.', type: 'Monthly', reward: 'Ksh 2000' },
-    { name: 'Customer Favorite', icon: <FaStar className="text-amber-400" />, date: 'Aug 2025', desc: 'Earned for maintaining an average rating above 4.8.', type: 'All-Time', reward: 'Free Promotion' },
-    { name: 'Quick Deliverer', icon: <FaTrophy className="text-green-400" />, date: 'Jul 2025', desc: 'Recognized for fast order fulfillment.', type: 'Monthly', reward: 'Ksh 1000' },
-  ]);
-
-  const [progress, setProgress] = useState<number>(80);
+  const [badges, setBadges] = useState<Badge[]>([]);
+  const [progress, setProgress] = useState<number>(0);
   const [showConfetti, setShowConfetti] = useState<boolean>(false);
   const [filter, setFilter] = useState<'All' | 'Monthly' | 'All-Time'>('All');
   const [claimedBadge, setClaimedBadge] = useState<Badge | null>(null);
+  const [sellerStats, setSellerStats] = useState<SellerStats | null>(null);
+  const [sellerInfo, setSellerInfo] = useState<SellerInfo | null>(null);
 
-  // 🎉 Simulate new badge unlock
+  // ✅ Fetch seller awards from backend
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const newBadge: Badge = {
-        name: 'Rising Star',
-        icon: <FaMedal className="text-blue-400" />,
-        date: 'Oct 2025',
-        desc: 'Awarded for consistently improving sales performance.',
-        type: 'All-Time',
-        reward: 'Ksh 1500',
-      };
-      setBadges((prev) => [newBadge, ...prev]);
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 5000);
-    }, 3000);
+    const fetchAwards = async () => {
+      try {
+        const sellerId = localStorage.getItem('sellerId'); // Assume sellerId stored on login
+        if (!sellerId) return;
 
-    return () => clearTimeout(timer);
+        const res = await axios.get<ApiResponse>(
+          `/api/seller/awards?sellerId=${sellerId}`
+        );
+
+        const data = res.data;
+        setSellerInfo(data.seller);
+        setSellerStats(data.stats);
+
+        // Convert backend awards into UI badges
+        const convertedBadges: Badge[] = data.awards.map((award) => ({
+          name: award.title,
+          icon: <FaMedal className="text-orange-500" />,
+          date: new Date().toLocaleDateString('en-GB', {
+            month: 'short',
+            year: 'numeric',
+          }),
+          desc: award.description,
+          type: 'All-Time',
+          reward: 'Ksh 1000',
+        }));
+
+        setBadges(convertedBadges);
+        setProgress(Math.min((data.stats.totalSales / 100000) * 100, 100));
+      } catch (error) {
+        console.error('❌ Error fetching awards:', error);
+      }
+    };
+
+    fetchAwards();
   }, []);
 
   // ✅ Filter logic
-  const filteredBadges = filter === 'All' ? badges : badges.filter((b) => b.type === filter);
+  const filteredBadges =
+    filter === 'All' ? badges : badges.filter((b) => b.type === filter);
 
-  // ✅ Claim reward handler
+  // ✅ Claim reward
   const handleClaimReward = (badge: Badge) => {
     setClaimedBadge(badge);
     setShowConfetti(true);
@@ -57,18 +111,38 @@ export default function AwardsPage() {
 
   return (
     <div className="md:ml-64 p-6 text-gray-800 relative pt-10 pb-10">
-      {/* 🎉 Confetti Animation */}
       {showConfetti && (
-        <Confetti width={typeof window !== 'undefined' ? window.innerWidth : 0} height={typeof window !== 'undefined' ? window.innerHeight : 0} recycle={false} />
+        <Confetti
+          width={typeof window !== 'undefined' ? window.innerWidth : 0}
+          height={typeof window !== 'undefined' ? window.innerHeight : 0}
+          recycle={false}
+        />
       )}
 
-      <h1 className="text-3xl font-bold text-orange-600 mb-6">🏆 Seller Awards & Achievements</h1>
+      <h1 className="text-3xl font-bold text-orange-600 mb-6">
+        🏆 Seller Awards & Achievements
+      </h1>
+
+      {/* Seller Info & Stats */}
+      {sellerStats && (
+        <div className="bg-white p-5 rounded-2xl shadow mb-6">
+          <h2 className="text-lg font-semibold mb-2">
+            {sellerInfo?.shopName || sellerInfo?.name}
+          </h2>
+          <p className="text-sm text-gray-600">
+            Total Sales: <b>Ksh {sellerStats.totalSales.toLocaleString()}</b> |{' '}
+            Orders: <b>{sellerStats.totalOrders}</b> | Delivered:{' '}
+            <b>{sellerStats.deliveredCount}</b> | Delivery Rate:{' '}
+            <b>{sellerStats.deliveryRate}%</b>
+          </p>
+        </div>
+      )}
 
       {/* Progress Tracker */}
       <div className="bg-white p-5 rounded-2xl shadow mb-6">
         <h2 className="text-lg font-semibold mb-2">Next Award Progress</h2>
         <p className="text-sm text-gray-600 mb-3">
-          You're {progress}% toward earning the{' '}
+          You're {progress.toFixed(1)}% toward earning the{' '}
           <span className="font-bold text-orange-600">Gold Seller Badge</span>!
         </p>
         <div className="w-full bg-gray-200 rounded-full h-3">
@@ -118,7 +192,8 @@ export default function AwardsPage() {
 
                 <div className="flex justify-between items-center mt-3">
                   <span className="text-sm text-gray-600 flex items-center gap-1">
-                    <FaGift className="text-orange-500" /> Reward: <b>{badge.reward}</b>
+                    <FaGift className="text-orange-500" /> Reward:{' '}
+                    <b>{badge.reward}</b>
                   </span>
                   <motion.button
                     whileTap={{ scale: 0.95 }}
@@ -132,7 +207,9 @@ export default function AwardsPage() {
             ))}
           </div>
         ) : (
-          <p className="text-center text-gray-500 py-10">No awards found for this category.</p>
+          <p className="text-center text-gray-500 py-10">
+            No awards found for this category.
+          </p>
         )}
       </div>
 
@@ -152,9 +229,12 @@ export default function AwardsPage() {
               className="bg-white p-6 rounded-2xl shadow-xl text-center max-w-sm"
             >
               <FaCheckCircle className="text-green-500 text-5xl mx-auto mb-3" />
-              <h3 className="text-xl font-bold mb-2 text-gray-800">Reward Claimed!</h3>
+              <h3 className="text-xl font-bold mb-2 text-gray-800">
+                Reward Claimed!
+              </h3>
               <p className="text-gray-600 mb-4">
-                You’ve successfully claimed your reward for <b>{claimedBadge.name}</b> — <b>{claimedBadge.reward}</b> 🎉
+                You’ve successfully claimed your reward for{' '}
+                <b>{claimedBadge.name}</b> — <b>{claimedBadge.reward}</b> 🎉
               </p>
               <button
                 onClick={() => setClaimedBadge(null)}
