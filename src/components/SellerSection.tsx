@@ -59,6 +59,7 @@ export default function ProductReviewSection({
     fetchData();
   }, [fetchData]);
 
+  // ✅ Average Rating and Rating Counts
   const averageRating =
     reviews.reduce((sum, r) => sum + r.rating, 0) / (reviews.length || 1);
 
@@ -66,7 +67,30 @@ export default function ProductReviewSection({
     (star) => reviews.filter((r) => r.rating === star).length
   );
 
-  const handleFollowAction = async (action: 'Follow' | 'Unfollow') => {
+  // ✅ Dynamic performance values
+  const verifiedCount = reviews.filter((r) => r.verified).length;
+
+  const getPerformanceLabel = (value: number) => {
+    if (value >= 4.5) return 'Excellent';
+    if (value >= 3.5) return 'Good';
+    if (value >= 2.5) return 'Average';
+    if (value > 0) return 'Poor';
+    return 'No Data';
+  };
+
+  const getSellerScore = () => {
+    const baseScore = 80;
+    const ratingImpact = averageRating * 4;
+    const verifiedImpact = Math.min(verifiedCount * 0.5, 10);
+    return Math.min(100, baseScore + ratingImpact + verifiedImpact);
+  };
+
+  const sellerScore = getSellerScore();
+  const shippingPerformance = getPerformanceLabel(averageRating + 0.3);
+  const qualityPerformance = getPerformanceLabel(averageRating);
+  const customerPerformance = getPerformanceLabel(averageRating - 0.3);
+
+  const handleFollowAction = async (action: 'follow' | 'unfollow') => {
     if (!user) {
       toast.error(`Please log in to ${action.toLowerCase()} sellers`);
       return showLoginModal();
@@ -91,7 +115,7 @@ export default function ProductReviewSection({
 
       if (res.ok && data.success) {
         toast.success(data.message || `${action}ed seller`);
-        setIsFollowing(action === 'Follow');
+        setIsFollowing(action === 'follow');
         fetchData();
       } else {
         toast.error(data.message || `Failed to ${action.toLowerCase()}`);
@@ -113,14 +137,20 @@ export default function ProductReviewSection({
 
       {/* Ratings Overview */}
       <div className="flex flex-col md:flex-row gap-4 p-4 border-b">
-        {/* Average Rating */}
         <div className="flex flex-col items-center justify-center w-full md:w-1/3 bg-white rounded-md">
           <p className="text-3xl font-bold text-yellow-500">
             {averageRating.toFixed(1)}/5
           </p>
           <div className="flex">
             {[...Array(5)].map((_, i) => (
-              <span key={i} className={i < Math.round(averageRating) ? 'text-yellow-500' : 'text-gray-300'}>
+              <span
+                key={i}
+                className={
+                  i < Math.round(averageRating)
+                    ? 'text-yellow-500'
+                    : 'text-gray-300'
+                }
+              >
                 ★
               </span>
             ))}
@@ -132,9 +162,11 @@ export default function ProductReviewSection({
 
         {/* Rating Distribution */}
         <div className="flex-1 flex flex-col justify-center gap-1">
-          {[5, 4, 3, 2, 1].map((star, i) => {
+          {[5, 4, 3, 2, 1].map((star) => {
             const count = ratingCounts[5 - star];
-            const percentage = reviews.length ? (count / reviews.length) * 100 : 0;
+            const percentage = reviews.length
+              ? (count / reviews.length) * 100
+              : 0;
             return (
               <div key={star} className="flex items-center gap-2">
                 <span className="text-sm text-gray-600 w-6">{star}</span>
@@ -183,11 +215,9 @@ export default function ProductReviewSection({
                 <p className="text-gray-500 text-xs">
                   by {review.userId?.name || 'Anonymous'}
                 </p>
-                {review.verified && (
                   <span className="text-green-600 text-xs font-medium flex items-center gap-1">
                     <CheckCircle size={14} /> Verified Purchase
                   </span>
-                )}
               </div>
             </div>
           ))}
@@ -224,7 +254,9 @@ export default function ProductReviewSection({
               const data = await res.json();
 
               if (res.ok) {
-                toast.success(existingReviewId ? 'Review updated!' : 'Review submitted!');
+                toast.success(
+                  existingReviewId ? 'Review updated!' : 'Review submitted!'
+                );
                 setComment('');
                 setRating(0);
                 setExistingReviewId(null);
@@ -258,42 +290,72 @@ export default function ProductReviewSection({
         </div>
       )}
 
-      {/* Seller Info Section */}
+      {/* ✅ Seller Info Section with Dynamic Performance */}
       {seller && (
-        <div
-          onClick={() => router.push(`/seller/${seller._id}`)}
-          className="mt-4 border-t px-4 py-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 transition-all duration-200"
-        >
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-semibold text-gray-700">
-                {seller.name || 'Unknown Seller'} - Official Store
-              </p>
-              {seller.followers?.length ? (
+        <div className="mt-4 border-t px-4 py-4 space-y-3">
+          <div
+            onClick={() => router.push(`/seller/${seller._id}`)}
+            className="flex justify-between items-center cursor-pointer hover:bg-gray-50 transition-all duration-200 rounded-md p-2"
+          >
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold text-gray-700">
+                  {seller.name || 'Unknown Seller'}
+                </p>
                 <ShieldCheck className="w-4 h-4 text-orange-600" />
-              ) : null}
+              </div>
+              <p className="text-xs text-gray-500">
+                {seller.followers?.length || 0} Followers
+              </p>
             </div>
-            <p className="text-xs text-gray-500">
-              {seller.followers?.length || 0} Followers
-            </p>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleFollowAction(isFollowing ? 'unfollow' : 'follow');
+                }}
+                className={`px-3 py-1 text-sm rounded border transition-all ${
+                  isFollowing
+                    ? 'bg-orange-100 border-orange-400 text-orange-600'
+                    : 'bg-orange-500 border-orange-500 text-white hover:bg-orange-600'
+                }`}
+              >
+                {isFollowing ? 'Following' : 'Follow'}
+              </button>
+              <ChevronRight className="w-5 h-5 text-gray-400" />
+            </div>
           </div>
 
-          {/* Follow Button */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleFollowAction(isFollowing ? 'Unfollow' : 'Follow');
-              }}
-              className={`px-3 py-1 text-sm rounded border transition-all ${
-                isFollowing
-                  ? 'bg-orange-100 border-orange-400 text-orange-600'
-                  : 'bg-orange-500 border-orange-500 text-white hover:bg-orange-600'
-              }`}
-            >
-              {isFollowing ? 'Following' : 'Follow'}
-            </button>
-            <ChevronRight className="w-5 h-5 text-gray-400" />
+          <div className="mt-3 border-t pt-3 text-sm text-gray-700">
+            <p className="font-semibold mb-1">Seller Performance</p>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-green-500">🚚</span>
+                <span>
+                  Shipping speed:{' '}
+                  <span className="font-semibold">{shippingPerformance}</span>
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-yellow-500">🛍️</span>
+                <span>
+                  Quality score:{' '}
+                  <span className="font-semibold">{qualityPerformance}</span>
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-blue-500">⭐</span>
+                <span>
+                  Customer rating:{' '}
+                  <span className="font-semibold">{customerPerformance}</span>
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-2 text-xs text-gray-500">
+              {sellerScore.toFixed(0)}% Seller Score
+            </div>
           </div>
         </div>
       )}
