@@ -59,7 +59,6 @@ export default function ProductReviewSection({
     fetchData();
   }, [fetchData]);
 
-  // ✅ Average Rating and Rating Counts
   const averageRating =
     reviews.reduce((sum, r) => sum + r.rating, 0) / (reviews.length || 1);
 
@@ -67,7 +66,6 @@ export default function ProductReviewSection({
     (star) => reviews.filter((r) => r.rating === star).length
   );
 
-  // ✅ Dynamic performance values
   const verifiedCount = reviews.filter((r) => r.verified).length;
 
   const getPerformanceLabel = (value: number) => {
@@ -129,13 +127,10 @@ export default function ProductReviewSection({
   return (
     <div className="mt-8 border rounded-lg bg-white shadow-sm overflow-hidden">
       <ToastContainer />
-
-      {/* Verified Ratings Summary */}
       <div className="border-b bg-gray-50 px-4 py-3 font-semibold text-gray-700 text-sm uppercase">
         Verified Ratings ({reviews.length})
       </div>
 
-      {/* Ratings Overview */}
       <div className="flex flex-col md:flex-row gap-4 p-4 border-b">
         <div className="flex flex-col items-center justify-center w-full md:w-1/3 bg-white rounded-md">
           <p className="text-3xl font-bold text-yellow-500">
@@ -160,7 +155,6 @@ export default function ProductReviewSection({
           </p>
         </div>
 
-        {/* Rating Distribution */}
         <div className="flex-1 flex flex-col justify-center gap-1">
           {[5, 4, 3, 2, 1].map((star) => {
             const count = ratingCounts[5 - star];
@@ -186,7 +180,6 @@ export default function ProductReviewSection({
         </div>
       </div>
 
-      {/* Product Reviews */}
       <div className="bg-gray-50 px-4 py-3 font-semibold text-gray-700 text-sm uppercase">
         Product Reviews ({reviews.length})
       </div>
@@ -228,7 +221,6 @@ export default function ProductReviewSection({
         </p>
       )}
 
-      {/* Add or Update Review */}
       {user && (
         <div className="mt-2 border-t px-4 py-4">
           <h3 className="font-semibold text-orange-500 text-sm mb-2">
@@ -290,7 +282,6 @@ export default function ProductReviewSection({
         </div>
       )}
 
-      {/* ✅ Seller Info Section with Dynamic Performance */}
       {seller && (
         <div className="mt-4 border-t px-4 py-4 space-y-3">
           <div

@@ -595,6 +595,41 @@ useEffect(() => {
           </motion.div>
         )}
       </AnimatePresence>
+      {/* 🚀 Promote Sellers’ Products Section */}
+<motion.div
+  initial={{ opacity: 0, y: 40 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.6 }}
+  className="bg-white p-8 rounded-2xl shadow-md mt-10 text-center border border-orange-100"
+>
+  <h2 className="text-2xl font-bold text-orange-600 mb-3">
+    Promote Sellers’ Products
+  </h2>
+  <p className="text-gray-600 max-w-2xl mx-auto mb-6">
+    We’re building a powerful marketplace feature that lets you promote sellers’ products
+    and earn commissions on every sale you drive. 🎯
+  </p>
+
+  <motion.div
+    animate={{ opacity: [0.5, 1, 0.5] }}
+    transition={{ repeat: Infinity, duration: 1.5 }}
+    className="bg-orange-50 text-orange-700 py-3 px-6 rounded-lg inline-block font-medium border border-orange-200"
+  >
+    🔧 Our IT team is currently working hard to bring this feature live.
+    <br />
+    Stay tuned — it’s coming soon!
+  </motion.div>
+
+  <div className="mt-6 flex justify-center">
+    <button
+      disabled
+      className="bg-orange-600 text-white px-6 py-2 rounded-lg opacity-60 cursor-not-allowed"
+    >
+      Coming Soon
+    </button>
+  </div>
+</motion.div>
+
     </div>
   );
 }

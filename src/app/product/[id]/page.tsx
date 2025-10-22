@@ -212,7 +212,7 @@ return (
   <div className="mt-8 bg-white shadow rounded-lg p-5">
     <div className="flex justify-between items-center border-b pb-2 mb-3">
       <h2 className="text-lg md:text-xl font-semibold text-gray-900">
-        Product Description
+        Description
       </h2>
 
       {/* ➡️ Right Arrow for Mobile */}

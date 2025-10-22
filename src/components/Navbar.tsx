@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
-import { FiMenu, FiShoppingCart, FiPackage, FiSearch, FiBell, FiSettings } from 'react-icons/fi';
+import { FiMenu, FiShoppingCart, FiPackage, FiSearch, FiBell } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/app/context/CartContext';
 import Login from './Login';
@@ -164,15 +164,6 @@ export default function Navbar() {
               </span>
             )}
           </button>
-
-          {user && (
-            <button
-              onClick={() => router.push('/settings')}
-              className="text-2xl text-orange-500"
-            >
-              <FiSettings />
-            </button>
-          )}
 
           {user ? (
             <div className="relative" ref={dropdownRef}>

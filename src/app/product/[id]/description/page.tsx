@@ -1,131 +1,107 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { ChevronLeft } from 'lucide-react';
+import type { Product } from '@/app/types/product';
 
-interface Product {
-  _id: string;
-  description?: string;
-}
-
-interface Props {
-  product?: Product | null;
-}
-
-export default function ProductDescriptionSection({ product }: Props) {
+export default function FullDescriptionPage() {
+  const { id } = useParams();
   const router = useRouter();
-  const [animating, setAnimating] = useState(false);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleReadMore = () => {
-    if (!product?._id) return;
-    setAnimating(true);
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const res = await fetch(`/api/product/${id}`);
+        if (!res.ok) throw new Error('Failed to fetch product');
+        const data = await res.json();
+        setProduct(data.product);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProduct();
+  }, [id]);
 
-    // Delay navigation slightly after animation starts
-    setTimeout(() => {
-      router.push(`/product/${product._id}/full-description`);
-    }, 800);
-  };
-
-  if (!product)
+  if (loading) {
     return (
-      <div className="mt-10 bg-white shadow rounded-lg p-6">
-        <div className="h-6 w-40 bg-gray-200 rounded animate-pulse mb-3" />
-        <div className="space-y-2">
-          <div className="h-3 w-full bg-gray-200 rounded animate-pulse" />
-          <div className="h-3 w-5/6 bg-gray-200 rounded animate-pulse" />
-        </div>
+      <div className="flex items-center justify-center min-h-screen bg-white">
+        <div className="w-10 h-10 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
       </div>
     );
+  }
+
+  if (!product) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen text-gray-700">
+        <p className="text-lg font-medium">Product not found</p>
+        <button
+          onClick={() => router.back()}
+          className="mt-4 px-4 py-2 bg-orange-600 text-white rounded-full hover:bg-orange-700"
+        >
+          Go Back
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="mt-10 bg-white shadow rounded-lg p-6 relative overflow-hidden">
+    <div className="max-w-4xl mx-auto px-4 pt-28 pb-10">
       {/* Header */}
-      <h2 className="text-xl font-semibold mb-4 border-b pb-2">
-        Product Description
-      </h2>
+      <div className="flex items-center justify-between mb-6">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-orange-600 hover:text-orange-700 font-medium"
+        >
+          <ChevronLeft className="w-5 h-5" />
+          Back
+        </button>
+      </div>
 
-      {/* Product Description Preview */}
-      <div
-        className="text-gray-700 text-sm md:text-base leading-relaxed max-h-[6rem] overflow-hidden md:max-h-none"
-        style={{
-          maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
-        }}
-        dangerouslySetInnerHTML={{
-          __html: product.description || '<p>No description available.</p>',
-        }}
-      />
+      {/* Description Section */}
+      <div className="bg-white shadow-md rounded-xl p-6">
+        <h2 className="text-lg md:text-xl font-semibold text-gray-900 border-b pb-2 mb-3">
+          Full Description
+        </h2>
+        <div
+          className="prose max-w-none text-gray-700"
+          dangerouslySetInnerHTML={{
+            __html: product.description || '<p>No description available.</p>',
+          }}
+        />
+      </div>
 
-      {/* Gradient Overlay for Mobile */}
-      <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent md:hidden" />
-
-      {/* Read More Button for Mobile */}
-      {product.description && (
-        <div className="md:hidden mt-4 flex justify-end">
-          <button
-            onClick={handleReadMore}
-            className="flex items-center text-orange-600 font-medium hover:underline transition-all duration-300"
-          >
-            Read More
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-4 h-4 ml-1 transition-transform duration-300"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+      {/* Key Features */}
+      {Array.isArray(product.keyFeatures) && product.keyFeatures.length > 0 && (
+        <div className="mt-6 bg-white shadow-md rounded-xl p-6">
+          <h2 className="text-lg md:text-xl font-semibold text-gray-900 border-b pb-2 mb-3">
+            Key Features
+          </h2>
+          <ul className="list-disc list-inside text-gray-700 space-y-1">
+            {product.keyFeatures.map((feature, i) => (
+              <li key={i}>{feature}</li>
+            ))}
+          </ul>
         </div>
       )}
 
-      {/* Slide-Up Loading Animation */}
-      <AnimatePresence>
-        {animating && (
-          <motion.div
-            key="slide-up"
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{
-              duration: 0.6,
-              ease: [0.25, 0.1, 0.25, 1],
-            }}
-            className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center"
-          >
-            {/* Top drag handle (like modal) */}
-            <div className="absolute top-3 w-16 h-1.5 rounded-full bg-gray-300" />
-
-            {/* Loading content */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.4 }}
-              className="text-orange-600 font-semibold text-lg mt-10"
-            >
-              Loading description...
-            </motion.div>
-
-            {/* Subtle pulsing animation */}
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0.6 }}
-              animate={{
-                scale: [0.95, 1.05, 0.95],
-                opacity: [0.6, 1, 0.6],
-              }}
-              transition={{
-                duration: 1.2,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
-              className="mt-3 text-sm text-gray-500"
-            >
-              Please wait
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Box Contents */}
+      {Array.isArray(product.boxContents) && product.boxContents.length > 0 && (
+        <div className="mt-6 bg-white shadow-md rounded-xl p-6">
+          <h2 className="text-lg md:text-xl font-semibold text-gray-900 border-b pb-2 mb-3">
+            What&apos;s in the Box
+          </h2>
+          <ul className="list-disc list-inside text-gray-700 space-y-1">
+            {product.boxContents.map((item, i) => (
+              <li key={i}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
