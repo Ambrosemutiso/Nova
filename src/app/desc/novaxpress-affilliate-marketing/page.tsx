@@ -79,7 +79,7 @@ export default function AffiliateLanding() {
           transition={{ duration: 0.6 }}
         >
           <Image
-            src="/affiliate-dashboard.png"
+            src="/Affiliate-dashboard.jpg"
             alt="Affiliate dashboard"
             width={600}
             height={400}
@@ -101,6 +101,28 @@ export default function AffiliateLanding() {
             <li>👥 Work with brands and grow your personal influence.</li>
           </ul>
         </motion.div>
+      </section>
+
+            {/* 📈 Growth Section */}
+      <section className="bg-orange-50 py-16 mt-20 relative z-10">
+        <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-3 gap-8 text-center">
+          <div>
+            <h3 className="text-3xl font-bold text-orange-600 mb-2">100,000+</h3>
+            <p className="text-gray-600">Active Affiliates Nationwide</p>
+          </div>
+          <div>
+            <h3 className="text-3xl font-bold text-orange-600 mb-2">KSH.1M+</h3>
+            <p className="text-gray-600">Monthly payments</p>
+          </div>
+          <div>
+            <h3 className="text-3xl font-bold text-orange-600 mb-2">KSH. 100k+</h3>
+            <p className="text-gray-600">Paid Daily</p>
+          </div>
+          <div>
+            <h3 className="text-3xl font-bold text-orange-600 mb-2">24/7</h3>
+            <p className="text-gray-600">Affiliate Support</p>
+          </div>
+        </div>
       </section>
 
       {/* 📈 Steps Section */}

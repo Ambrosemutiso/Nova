@@ -99,7 +99,7 @@ export default function PartnerWithNovaXpress() {
           transition={{ duration: 0.6 }}
         >
           <Image
-            src="/logistics-banner.jpg"
+            src="/Logistics-partner.jpg"
             alt="Logistics partnership"
             width={600}
             height={400}

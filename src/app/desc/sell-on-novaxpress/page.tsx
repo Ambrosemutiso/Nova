@@ -131,7 +131,7 @@ export default function SellOnNovaXpress({
           transition={{ duration: 0.6 }}
         >
           <Image
-            src="/banner8.jpg"
+            src="/Seller-partner.jpg"
             alt="Seller dashboard preview"
             width={600}
             height={400}
