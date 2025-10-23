@@ -49,16 +49,9 @@ export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () =>
         <div>
           <h4 className="font-bold mb-4">Make Money With Us</h4>
           <ul className="space-y-2">
-            <li>
-              <button
-                onClick={onOpenSellerLogin}
-                className="text-left text-gray-500 hover:underline"
-              >
-                Sell on NovaXpress
-              </button>
-            </li>
-            <li><a href="/logistics/auth/login">Become a Logistics Partner</a></li>
-            <li><a href="/affiliate/auth/login">Join Affiliate Program</a></li>
+            <li><a href="/desc/sell-on-novaxpress">Sell on NovaXpress</a></li>
+            <li><a href="/desc/logistics-partner">Become a Logistics Partner</a></li>
+            <li><a href="/desc/novaxpress-affilliate-marketing">Join Affiliate Program</a></li>
           </ul>
         </div>
 
