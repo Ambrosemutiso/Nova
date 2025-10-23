@@ -11,72 +11,165 @@ import TopPicksForYou from '@/components/TopPicksForYou';
 import SuggestedForYou from '@/components/SuggestedForYou';
 import { toast } from 'react-toastify';
 
-type County = 'Nairobi' | 'Mombasa' | 'Kisumu' | 'Nakuru';
+// 🗺️ County → Town mapping (Kenya)
+export const countyTownMap: Record<string, string[]> = {
+  Nairobi: ['Westlands', 'Kasarani', 'Embakasi', 'Langata', 'Dagoretti', 'Starehe', 'Makadara', 'Kibra'],
+  Mombasa: ['Nyali', 'Likoni', 'Kisauni', 'Changamwe', 'Mvita', 'Jomvu'],
+  Kisumu: ['Kisumu Central', 'Kisumu East', 'Kisumu West', 'Muhoroni', 'Nyando', 'Seme'],
+  Nakuru: ['Nakuru Town East', 'Nakuru Town West', 'Naivasha', 'Gilgil', 'Subukia', 'Molo', 'Bahati'],
+  Kiambu: ['Thika', 'Ruiru', 'Juja', 'Limuru', 'Kikuyu', 'Githunguri', 'Kabete'],
+  Machakos: ['Machakos Town', 'Kangundo', 'Mwala', 'Kathiani', 'Mavoko', 'Yatta'],
+  'Murang\'a': ['Murang\'a Town', 'Kandara', 'Kangema', 'Maragua', 'Kiharu', 'Mathioya'],
+  Nyeri: ['Nyeri Town', 'Othaya', 'Tetu', 'Mathira', 'Mukurweini', 'Kieni'],
+  Kirinyaga: ['Kerugoya', 'Kutus', 'Sagana', 'Baricho', 'Mwea'],
+  Meru: ['Meru Town', 'Maua', 'Nkubu', 'Timau', 'Tigania', 'Igembe'],
+  Embu: ['Embu Town', 'Runyenjes', 'Manyatta', 'Siakago'],
+  TharakaNithi: ['Chuka', 'Chogoria', 'Marimanti', 'Kanyanga'],
+  Kitui: ['Kitui Town', 'Mutomo', 'Mwingi', 'Kabati', 'Kwa Vonza'],
+  Makueni: ['Wote', 'Makindu', 'Kibwezi', 'Mtito Andei', 'Emali'],
+  Nyandarua: ['Ol Kalou', 'Engineer', 'Njabini', 'Ndemi', 'Kinangop'],
+  Laikipia: ['Nanyuki', 'Rumuruti', 'Nyahururu', 'Kinamba', 'Doldol'],
+  Turkana: ['Lodwar', 'Kakuma', 'Lokichogio', 'Lorugum'],
+  WestPokot: ['Kapenguria', 'Makutano', 'Chepareria', 'Sigor'],
+  Samburu: ['Maralal', 'Baragoi', 'Wamba'],
+  TransNzoia: ['Kitale', 'Endebess', 'Kiminini', 'Cherangany'],
+  UasinGishu: ['Eldoret', 'Turbo', 'Ziwa', 'Moiben', 'Kesses'],
+  ElgeyoMarakwet: ['Iten', 'Tambach', 'Chebiemit', 'Kapsowar'],
+  Nandi: ['Kapsabet', 'Nandi Hills', 'Mosoriot', 'Kobujoi'],
+  Baringo: ['Kabarnet', 'Eldama Ravine', 'Marigat', 'Mogotio'],
+  Kericho: ['Kericho Town', 'Litein', 'Londiani', 'Kipkelion'],
+  Bomet: ['Bomet Town', 'Sotik', 'Longisa', 'Chepalungu'],
+  Kakamega: ['Kakamega Town', 'Mumias', 'Lugari', 'Malava', 'Matungu'],
+  Bungoma: ['Bungoma Town', 'Webuye', 'Kimilili', 'Chwele', 'Sirisia'],
+  Busia: ['Busia Town', 'Nambale', 'Malaba', 'Butula', 'Funyula'],
+  Siaya: ['Siaya Town', 'Bondo', 'Ugunja', 'Gem', 'Alego Usonga'],
+  HomaBay: ['Homa Bay Town', 'Rongo', 'Mbita', 'Ndhiwa', 'Kabondo'],
+  Migori: ['Migori Town', 'Awendo', 'Rongo', 'Kehancha', 'Isebania'],
+  Kisii: ['Kisii Town', 'Ogembo', 'Nyamache', 'Keroka'],
+  Nyamira: ['Nyamira Town', 'Keroka', 'Ekerenyo', 'Nyansiongo'],
+  Narok: ['Narok Town', 'Kilgoris', 'Ololulung\'a', 'Suswa'],
+  Kajiado: ['Kajiado Town', 'Ngong', 'Kitengela', 'Ongata Rongai', 'Loitokitok'],
+  Kwale: ['Ukunda', 'Msambweni', 'Lunga Lunga', 'Kinango'],
+  Kilifi: ['Kilifi Town', 'Malindi', 'Kaloleni', 'Rabai', 'Mariakani'],
+  TaitaTaveta: ['Voi', 'Taveta', 'Wundanyi', 'Mwatate'],
+  Garissa: ['Garissa Town', 'Modogashe', 'Balambala', 'Dadaab'],
+  Wajir: ['Wajir Town', 'Griftu', 'Habaswein', 'Eldas', 'Buna'],
+  Mandera: ['Mandera Town', 'Elwak', 'Rhamu', 'Lafey'],
+  Marsabit: ['Marsabit Town', 'Moyale', 'Laisamis', 'North Horr'],
+  Isiolo: ['Isiolo Town', 'Kinna', 'Garbatulla', 'Merti'],
+  TanaRiver: ['Hola', 'Garsen', 'Bura', 'Wenje'],
+  Lamu: ['Lamu Town', 'Mpeketoni', 'Hindi', 'Faza'],
+  Vihiga: ['Mbale', 'Luanda', 'Chavakali', 'Hamisi'],
+};
+
+
 
 export default function CartPage() {
   const { cartItems, removeFromCart, increaseQuantity, decreaseQuantity } = useCart();
   const [loading, setLoading] = useState(false);
-  const [county, setCounty] = useState<County | ''>('');
+  const [county, setCounty] = useState<string>('');
+  const [town, setTown] = useState<string>('');
+  const [towns, setTowns] = useState<string[]>([]);
+  const [deliveryFee, setDeliveryFee] = useState<number>(0);
   const [showModal, setShowModal] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  const [deliveryFee, setDeliveryFee] = useState<number>(0);
   const router = useRouter();
 
-  // 📍 Fetch distance between seller town and buyer county using Google Maps API
-  const getDistanceInKm = async (originTown: string, destinationTown: string) => {
-    try {
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${originTown}&destinations=${destinationTown}&region=ke&key=YOUR_GOOGLE_MAPS_API_KEY`
-      );
-      const data = await response.json();
-      if (data.rows[0].elements[0].status === "OK") {
-        const distanceMeters = data.rows[0].elements[0].distance.value;
-        return distanceMeters / 1000; // Convert to km
-      } else {
-        console.error('Distance Matrix API error:', data);
-        return 0;
-      }
-    } catch (error) {
-      console.error('Error fetching distance:', error);
-      return 0;
-    }
-  };
-
-  // ⚖️ Calculate delivery fee using distance and weight
-  const calculateDeliveryFee = (distanceKm: number, weight: number) => {
-    const baseFee = 150;
-    const ratePerKm = 5;
-    let weightMultiplier = 1;
-
-    if (weight > 2 && weight <= 10) weightMultiplier = 1.5;
-    else if (weight > 10 && weight <= 30) weightMultiplier = 2;
-    else if (weight > 30) weightMultiplier = 3;
-
-    return Math.round(baseFee + distanceKm * ratePerKm * weightMultiplier);
-  };
-
-  // 🧮 Auto-calculate delivery fee when county or cart changes
+  // 🎯 Auto update towns when county changes
   useEffect(() => {
-    const fetchDeliveryFee = async () => {
-      if (!county || cartItems.length === 0) {
-        setDeliveryFee(0);
-        return;
-      }
+    if (county && countyTownMap[county]) {
+      setTowns(countyTownMap[county]);
+      setTown('');
+    } else {
+      setTowns([]);
+    }
+  }, [county]);
 
-      let totalFee = 0;
+  // 🧮 Delivery fee calculation logic
+const calculateDeliveryFee = (county: string, town: string, cartItems: any[]) => {
+  if (!county || !town) return 0;
 
-      for (const item of cartItems) {
-        const distanceKm = await getDistanceInKm(item.town || item.county, county);
-        const itemFee = calculateDeliveryFee(distanceKm, item.weight || 1);
-        totalFee += itemFee;
-      }
+  const baseCountyFees: Record<string, number> = {
+    Nairobi: 150,
+    Mombasa: 180,
+    Kisumu: 160,
+    Nakuru: 170,
+    Kiambu: 150,
+    Machakos: 160,
+    'Murang\'a': 160,
+    Nyeri: 170,
+    Kirinyaga: 160,
+    Meru: 180,
+    Embu: 170,
+    TharakaNithi: 180,
+    Kitui: 200,
+    Makueni: 180,
+    Nyandarua: 180,
+    Laikipia: 190,
+    Turkana: 300,
+    WestPokot: 280,
+    Samburu: 250,
+    TransNzoia: 190,
+    UasinGishu: 180,
+    ElgeyoMarakwet: 190,
+    Nandi: 180,
+    Baringo: 190,
+    Kericho: 170,
+    Bomet: 170,
+    Kakamega: 180,
+    Bungoma: 180,
+    Busia: 180,
+    Siaya: 170,
+    HomaBay: 170,
+    Migori: 180,
+    Kisii: 170,
+    Nyamira: 170,
+    Narok: 190,
+    Kajiado: 180,
+    Kwale: 190,
+    Kilifi: 190,
+    TaitaTaveta: 200,
+    Garissa: 250,
+    Wajir: 280,
+    Mandera: 300,
+    Marsabit: 300,
+    Isiolo: 220,
+    TanaRiver: 250,
+    Lamu: 260,
+    Vihiga: 170,
+  };
 
-      setDeliveryFee(totalFee);
-    };
+  let maxFee = 0;
 
-    fetchDeliveryFee();
-  }, [county, cartItems]);
+  cartItems.forEach(item => {
+    const sellerCounty = item.county;
+    const sellerTown = item.town;
 
+    if (sellerCounty === county && sellerTown === town) {
+      maxFee = Math.max(maxFee, 50); // same town
+    } else if (sellerCounty === county && sellerTown !== town) {
+      maxFee = Math.max(maxFee, 120); // same county, different town
+    } else {
+      const randomModifier = Math.random() * 40;
+      const fee = (baseCountyFees[sellerCounty] || 150) + randomModifier;
+      maxFee = Math.max(maxFee, Math.round(fee));
+    }
+  });
+
+  return maxFee;
+};
+
+  // 🧾 Auto-calc delivery fee
+useEffect(() => {
+  if (county && town) {
+    const fee = calculateDeliveryFee(county, town, cartItems);
+    setDeliveryFee(fee);
+  } else {
+    setDeliveryFee(0);
+  }
+}, [county, town, cartItems]);
+
+  // 🧮 Totals
   const subtotal = cartItems.reduce((sum, item) => sum + item.calculatedPrice * item.quantity, 0);
   const total = subtotal + deliveryFee;
 
@@ -87,6 +180,11 @@ export default function CartPage() {
   };
 
   const handleCheckout = async () => {
+    if (!county || !town) {
+      toast.warn('Please select your delivery location first');
+      return;
+    }
+
     setLoading(true);
     try {
       router.push('/checkout');
@@ -111,11 +209,7 @@ export default function CartPage() {
     setSelectedItemId(null);
   };
 
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 2000);
-    return () => clearTimeout(timer);
-  }, []);
-
+  // 🌀 Loading animation
   if (loading)
     return (
       <div className="flex items-center justify-center min-h-screen bg-white">
@@ -123,6 +217,7 @@ export default function CartPage() {
       </div>
     );
 
+  // 🛒 Empty cart
   if (cartItems.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-112px)] pt-20">
@@ -139,11 +234,11 @@ export default function CartPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 pt-28 pb-10 relative">
-      {/* Modal */}
+      {/* Confirm Remove Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-80 text-center shadow-lg">
-            <h3 className="text-lg font-semibold mb-4">Are you sure you want to remove this item?</h3>
+            <h3 className="text-lg font-semibold mb-4">Remove this item?</h3>
             <div className="flex justify-center space-x-4">
               <button
                 onClick={handleConfirmRemove}
@@ -163,7 +258,7 @@ export default function CartPage() {
       )}
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Left: Cart Items */}
+        {/* Cart Items Section */}
         <div className="md:col-span-2 space-y-6">
           {cartItems.map(item => (
             <div key={item.id} className="flex gap-4 border p-4 rounded-lg shadow-sm bg-white">
@@ -178,10 +273,18 @@ export default function CartPage() {
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="font-semibold text-gray-800">{item.name}</p>
-                    <p className="text-sm text-gray-500 mt-1">Shipped from <span className="font-medium">{item.county}</span></p>
-                    <p className="text-sm text-gray-500 mt-1">Town: <span className="font-medium">{item.town}</span></p>
-                    <p className="text-sm text-gray-500 mt-1">Weight: <span className="font-medium">{item.weight || 1} kg</span></p>
-                    <p className="text-orange-600 mt-2 font-bold">Ksh.{item.calculatedPrice.toLocaleString()}</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Shipped from <span className="font-medium">{item.county}</span>
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Town: <span className="font-medium">{item.town}</span>
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Weight: <span className="font-medium">{item.weight || 1} kg</span>
+                    </p>
+                    <p className="text-orange-600 mt-2 font-bold">
+                      Ksh.{item.calculatedPrice.toLocaleString()}
+                    </p>
                   </div>
                   <button
                     onClick={() => confirmRemove(item.id)}
@@ -211,7 +314,7 @@ export default function CartPage() {
           ))}
         </div>
 
-        {/* Right: Cart Summary */}
+        {/* Summary Section */}
         <div className="bg-white border p-6 rounded-lg shadow-sm h-fit">
           <h3 className="text-xl font-semibold mb-4">Order Summary</h3>
 
@@ -223,7 +326,7 @@ export default function CartPage() {
             <div className="flex justify-between text-sm">
               <span>Delivery Fee</span>
               <span className="font-medium">
-                {deliveryFee > 0 ? `Ksh.${deliveryFee.toLocaleString()}` : 'Select delivery location'}
+                {deliveryFee > 0 ? `Ksh.${deliveryFee.toLocaleString()}` : 'Select location'}
               </span>
             </div>
             <div className="flex justify-between font-semibold border-t pt-3">
@@ -232,23 +335,43 @@ export default function CartPage() {
             </div>
           </div>
 
+          {/* County Selection */}
           <div className="mt-4">
             <select
               value={county}
-              onChange={(e) => setCounty(e.target.value as County)}
-              className="border border-gray-300 p-2 w-full rounded text-sm"
+              onChange={(e) => setCounty(e.target.value)}
+              className="border border-gray-300 p-2 w-full rounded text-sm focus:ring-2 focus:ring-orange-400"
             >
-              <option value="">Select County for Delivery</option>
-              <option value="Nairobi">Nairobi</option>
-              <option value="Mombasa">Mombasa</option>
-              <option value="Kisumu">Kisumu</option>
-              <option value="Nakuru">Nakuru</option>
+              <option value="">Select County</option>
+              {Object.keys(countyTownMap).map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
             </select>
           </div>
 
+          {/* Town Selection */}
+          {towns.length > 0 && (
+            <div className="mt-3">
+              <select
+                value={town}
+                onChange={(e) => setTown(e.target.value)}
+                className="border border-gray-300 p-2 w-full rounded text-sm focus:ring-2 focus:ring-orange-400"
+              >
+                <option value="">Select Town</option>
+                {towns.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <button
             onClick={handleCheckout}
-            disabled={!county}
+            disabled={!county || !town}
             className="mt-5 w-full bg-orange-500 text-white py-2 rounded hover:bg-orange-600 transition disabled:opacity-50"
           >
             {loading ? 'Processing...' : 'Proceed to Checkout'}
@@ -256,6 +379,7 @@ export default function CartPage() {
         </div>
       </div>
 
+      {/* Recommended Sections */}
       <RecentlyViewed />
       <SponsoredProducts />
       <SuggestedForYou />
