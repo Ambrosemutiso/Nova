@@ -155,6 +155,11 @@ export default function CartPage() {
     setShowPaymentModal(true);
   };
 
+const getPublicId = (url?: string) => {
+   if (!url || typeof url !== 'string') 
+   return ''; const match = url.match(/\/upload\/(?:v\d+\/)?([^\.]+)/);
+   return match ? match[1] : url; };
+
   const handleConfirmPayment = async () => {
     if (!paymentPhone || !paymentMethod) {
       toast.warn('Please enter phone and select payment method');
@@ -363,13 +368,13 @@ export default function CartPage() {
         <div className="md:col-span-2 space-y-6">
           {cartItems.map((item) => (
             <div key={item.id} className="flex gap-4 border p-4 rounded-lg bg-white shadow-sm">
-              <CldImage
-                src={item.images[0]}
-                alt={item.name}
-                width="80"
-                height="80"
-                className="w-20 h-20 object-cover rounded"
-              />
+              <CldImage 
+              src={getPublicId(item.images[0])} 
+              alt={item.name} 
+              width="80" 
+              height="80" 
+              className="w-20 h-20 object-cover rounded" />
+              
               <div className="flex flex-col justify-between w-full">
                 <div className="flex justify-between items-start">
                   <div>
