@@ -35,7 +35,7 @@ export default function Navbar() {
 
   const promos = [
     '🔥 Flash Sale! Up to 50% off selected products!',
-    '📞 Contact us: +254 700 123 456',
+    '📞 Contact us: +254 798 437 508',
     '🚚 Free delivery for orders above Ksh 2,000!',
     '💳 Secure Payments via M-Pesa & AirtelMoney',
   ];
