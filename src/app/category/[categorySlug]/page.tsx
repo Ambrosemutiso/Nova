@@ -7,7 +7,7 @@ import { useCart } from '@/app/context/CartContext';
 import { addToWishlist, isInWishlist } from '@/lib/wishlist';
 import type { Product } from '@/app/types/product';
 import { ChevronRight } from 'lucide-react';
-import Image from "next/image";
+import Image from 'next/image';
 
 const LIMIT = 12;
 
@@ -94,11 +94,8 @@ export default function CategoryPage() {
 
   const handleFilterChange = (filter: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (value) {
-      params.set(filter, value);
-    } else {
-      params.delete(filter);
-    }
+    if (value) params.set(filter, value);
+    else params.delete(filter);
     params.set('page', '1');
     router.push(`/category/${safeCategory}?${params.toString()}`);
   };
@@ -109,9 +106,9 @@ export default function CategoryPage() {
       name: product.name,
       images: product.images,
       county: product.county,
+      town: product.town,
       model: product.model,
       brand: product.brand,
-      town: product.town,
       weight: product.weight,
       calculatedPrice: product.calculatedPrice,
       quantity: 1,
@@ -148,180 +145,179 @@ export default function CategoryPage() {
   };
 
   const renderStockProgress = (quantity: number = 0) => {
-    const max = 50; 
+    const max = 50;
     const percent = Math.min((quantity / max) * 100, 100);
 
     return (
       <div className="mt-1">
         <div className="text-xs text-gray-500 mb-1">Stock left: {quantity}</div>
         <div className="w-full bg-gray-200 rounded-full h-2">
-          <div
-            className="bg-orange-500 h-2 rounded-full"
-            style={{ width: `${percent}%` }}
-          ></div>
+          <div className="bg-orange-500 h-2 rounded-full" style={{ width: `${percent}%` }}></div>
         </div>
       </div>
     );
   };
 
   return (
-    <div className="md:px-8 lg:px-16 max-w-6xl mx-auto px-4 pt-28 pb-10">
-      {/* Breadcrumb */}
-      <div className="mb-6 overflow-x-auto">
-        <nav className="flex items-center text-sm text-gray-500 whitespace-nowrap flex-nowrap gap-1 px-1">
-          <span>Home</span>
-          <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
-          <span>Shop</span>
-          <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
-          <span>Products</span>
-          <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
-          <span className="text-gray-500 font-medium">{safeCategory}</span>
-        </nav>
-      </div>
+    <div className="relative min-h-screen bg-gradient-to-b from-orange-50 to-white">
+      {/* Optional background pattern */}
+      <div className="absolute inset-0 bg-[url('/bg-pattern.svg')] opacity-10 pointer-events-none"></div>
 
-<div className="w-full h-40 rounded-md mb-6 overflow-hidden relative">
-  <Image
-    src={bannerSrc}
-    alt={`${safeCategory} banner`}
-    fill
-    className="object-cover"
-  />
-</div>   
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4 mb-6 items-center">
-        {/* Dynamic Brands */}
-        <select
-          value={brand}
-          onChange={(e) => handleFilterChange('brand', e.target.value)}
-          className="border border-gray-300 px-3 py-2 rounded-md text-sm"
-        >
-          <option value="">All Brands</option>
-          {brands.map((b) => (
-            <option key={b} value={b}>
-              {b}
-            </option>
-          ))}
-        </select>
-
-        <input
-          type="number"
-          placeholder="Min Price"
-          value={minPrice}
-          onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-          className="border border-gray-300 px-3 py-2 rounded-md text-sm w-32"
-        />
-
-        <input
-          type="number"
-          placeholder="Max Price"
-          value={maxPrice}
-          onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-          className="border border-gray-300 px-3 py-2 rounded-md text-sm w-32"
-        />
-
-        <select
-          value={sort}
-          onChange={handleSortChange}
-          className="border border-gray-300 px-3 py-2 rounded-md text-sm ml-auto"
-        >
-          <option value="name-asc">Name (A–Z)</option>
-          <option value="name-desc">Name (Z–A)</option>
-          <option value="price-asc">Price (Low to High)</option>
-          <option value="price-desc">Price (High to Low)</option>
-        </select>
-      </div>
-
-      {/* Products Grid */}
-      {loading ? (
-        <div className="text-center py-12 text-gray-600">Loading products...</div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
-          {products.map((product) => {
-            const inWishlist = isInWishlist(product._id);
-            return (
-              <div key={product._id} className="border p-4 rounded-md bg-white shadow-sm">
-                <div
-                  onClick={() => router.push(`/product/${product._id}`)}
-                  className="cursor-pointer mb-2 w-full h-40 relative"
-                >
-                  <CldImage
-                    src={getPublicId(product.images?.[0]) || '/Electronics.jpg'}
-                    alt={product.name}
-                    width={300}
-                    height={300}
-                    crop="fill"
-                    className="w-full h-full object-cover rounded"
-                  />
-                </div>
-
-                <h3 className="text-sm font-semibold text-gray-800 truncate mb-1">{product.name}</h3>
-
-                {renderStars(product.rating || 4)}
-
-                {renderStockProgress(product.quantity)}
-                
-                <span className="text-gray-500 line-through text-sm">Ksh.{product.oldPrice.toLocaleString()}</span>
-                <span className="text-red-600 font-bold block">Ksh.{product.calculatedPrice.toLocaleString()}</span>
-
-                <div className="flex gap-2 mt-2">
-                  {(() => {
-                    const cartItem = cartItems.find((item) => item.id === product._id);
-                    return cartItem ? (
-                      <div className="flex items-center gap-2 w-full">
-                        <button
-                          onClick={() => decreaseQuantity(product._id)}
-                          className="bg-gray-200 px-2 py-1 rounded text-sm font-bold"
-                        >
-                          -
-                        </button>
-                        <span className="px-3 py-1 bg-orange-100 text-orange-600 font-semibold rounded-full text-sm">
-                          {cartItem.quantity}
-                        </span>
-                        <button
-                          onClick={() => increaseQuantity(product._id)}
-                          className="bg-gray-200 px-2 py-1 rounded text-sm font-bold"
-                        >
-                          +
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => handleAddToCart(product)}
-                        className="flex-1 bg-orange-500 text-white text-sm py-1 rounded hover:bg-orange-600"
-                      >
-                        Add to Cart
-                      </button>
-                    );
-                  })()}
-
-                  <button
-                    onClick={() => addToWishlist(product)}
-                    className={`text-sm px-3 py-1 rounded ${
-                      inWishlist ? 'bg-red-100 text-red-500' : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    {inWishlist ? '❤️' : '🤍'}
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+      <div className="relative md:px-8 lg:px-16 max-w-6xl mx-auto px-4 pt-28 pb-10">
+        {/* Breadcrumb */}
+        <div className="mb-6 overflow-x-auto">
+          <nav className="flex items-center text-sm text-gray-500 whitespace-nowrap flex-nowrap gap-1 px-1">
+            <span>Home</span>
+            <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
+            <span>Shop</span>
+            <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
+            <span>Products</span>
+            <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
+            <span className="text-gray-700 font-semibold capitalize">{safeCategory}</span>
+          </nav>
         </div>
-      )}
 
-      {/* Pagination */}
-      <div className="flex justify-center gap-2">
-        {Array.from({ length: totalPages }, (_, i) => (
-          <a
-            key={i}
-            href={`?page=${i + 1}&sort=${sort}&brand=${brand}&minPrice=${minPrice}&maxPrice=${maxPrice}`}
-            className={`px-3 py-1 border rounded-md ${
-              page === i + 1 ? 'bg-orange-500 text-white' : 'bg-white text-gray-700'
-            }`}
+        {/* Banner */}
+        <div className="w-full h-44 rounded-lg mb-6 overflow-hidden relative shadow-md">
+          <Image src={bannerSrc} alt={`${safeCategory} banner`} fill className="object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-wrap gap-4 mb-6 items-center bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-sm">
+          <select
+            value={brand}
+            onChange={(e) => handleFilterChange('brand', e.target.value)}
+            className="border border-gray-300 px-3 py-2 rounded-md text-sm"
           >
-            {i + 1}
-          </a>
-        ))}
+            <option value="">All Brands</option>
+            {brands.map((b) => (
+              <option key={b} value={b}>
+                {b}
+              </option>
+            ))}
+          </select>
+
+          <input
+            type="number"
+            placeholder="Min Price"
+            value={minPrice}
+            onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+            className="border border-gray-300 px-3 py-2 rounded-md text-sm w-32"
+          />
+
+          <input
+            type="number"
+            placeholder="Max Price"
+            value={maxPrice}
+            onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+            className="border border-gray-300 px-3 py-2 rounded-md text-sm w-32"
+          />
+
+          <select
+            value={sort}
+            onChange={handleSortChange}
+            className="border border-gray-300 px-3 py-2 rounded-md text-sm ml-auto"
+          >
+            <option value="name-asc">Name (A–Z)</option>
+            <option value="name-desc">Name (Z–A)</option>
+            <option value="price-asc">Price (Low to High)</option>
+            <option value="price-desc">Price (High to Low)</option>
+          </select>
+        </div>
+
+        {/* Product Grid */}
+        {loading ? (
+          <div className="text-center py-12 text-gray-600">Loading products...</div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+            {products.map((product) => {
+              const inWishlist = isInWishlist(product._id);
+              return (
+                <div key={product._id} className="border p-4 rounded-lg bg-white/90 shadow hover:shadow-md transition">
+                  <div
+                    onClick={() => router.push(`/product/${product._id}`)}
+                    className="cursor-pointer mb-2 w-full h-40 relative"
+                  >
+                    <CldImage
+                      src={getPublicId(product.images?.[0]) || '/Electronics.jpg'}
+                      alt={product.name}
+                      width={300}
+                      height={300}
+                      crop="fill"
+                      className="w-full h-full object-cover rounded"
+                    />
+                  </div>
+
+                  <h3 className="text-sm font-semibold text-gray-800 truncate mb-1">{product.name}</h3>
+
+                  {renderStars(product.rating || 4)}
+
+                  {renderStockProgress(product.quantity)}
+
+                  <span className="text-gray-500 line-through text-sm">Ksh.{product.oldPrice.toLocaleString()}</span>
+                  <span className="text-red-600 font-bold block">Ksh.{product.calculatedPrice.toLocaleString()}</span>
+
+                  <div className="flex gap-2 mt-2">
+                    {(() => {
+                      const cartItem = cartItems.find((item) => item.id === product._id);
+                      return cartItem ? (
+                        <div className="flex items-center gap-2 w-full">
+                          <button
+                            onClick={() => decreaseQuantity(product._id)}
+                            className="bg-gray-200 px-2 py-1 rounded text-sm font-bold"
+                          >
+                            -
+                          </button>
+                          <span className="px-3 py-1 bg-orange-100 text-orange-600 font-semibold rounded-full text-sm">
+                            {cartItem.quantity}
+                          </span>
+                          <button
+                            onClick={() => increaseQuantity(product._id)}
+                            className="bg-gray-200 px-2 py-1 rounded text-sm font-bold"
+                          >
+                            +
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleAddToCart(product)}
+                          className="flex-1 bg-orange-500 text-white text-sm py-1 rounded hover:bg-orange-600"
+                        >
+                          Add to Cart
+                        </button>
+                      );
+                    })()}
+
+                    <button
+                      onClick={() => addToWishlist(product)}
+                      className={`text-sm px-3 py-1 rounded ${
+                        inWishlist ? 'bg-red-100 text-red-500' : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      {inWishlist ? '❤️' : '🤍'}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Pagination */}
+        <div className="flex justify-center gap-2">
+          {Array.from({ length: totalPages }, (_, i) => (
+            <a
+              key={i}
+              href={`?page=${i + 1}&sort=${sort}&brand=${brand}&minPrice=${minPrice}&maxPrice=${maxPrice}`}
+              className={`px-3 py-1 border rounded-md ${
+                page === i + 1 ? 'bg-orange-500 text-white' : 'bg-white text-gray-700'
+              }`}
+            >
+              {i + 1}
+            </a>
+          ))}
+        </div>
       </div>
     </div>
   );

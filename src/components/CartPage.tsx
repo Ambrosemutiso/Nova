@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useCart } from '@/app/context/CartContext';
 import { CldImage } from 'next-cloudinary';
-import { Player } from '@lottiefiles/react-lottie-player';
 import RecentlyViewed from '@/components/RecentlyViewed';
 import SponsoredProducts from '@/components/SponsoredProducts';
 import TopPicksForYou from '@/components/TopPicksForYou';
 import SuggestedForYou from '@/components/SuggestedForYou';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
+import { Player } from '@lottiefiles/react-lottie-player';
 
 // 🗺️ County → Town mapping (Kenya)
 export const countyTownMap: Record<string, string[]> = {
@@ -26,7 +26,7 @@ export const countyTownMap: Record<string, string[]> = {
   Embu: ['Embu Town', 'Runyenjes', 'Manyatta', 'Siakago'],
   TharakaNithi: ['Chuka', 'Chogoria', 'Marimanti', 'Kanyanga'],
   Kitui: ['Kitui Town', 'Mutomo', 'Mwingi', 'Kabati', 'Kwa Vonza'],
-  Makueni: ['Wote', 'Makindu', 'Kibwezi', 'Mtito Andei', 'Emali'],
+  Makueni: ['Wote', 'Makindu', 'Kibwezi', 'Mtito Andei', 'Emali', 'Sultan Hamud'],
   Nyandarua: ['Ol Kalou', 'Engineer', 'Njabini', 'Ndemi', 'Kinangop'],
   Laikipia: ['Nanyuki', 'Rumuruti', 'Nyahururu', 'Kinamba', 'Doldol'],
   Turkana: ['Lodwar', 'Kakuma', 'Lokichogio', 'Lorugum'],
@@ -126,7 +126,9 @@ export default function CartPage() {
   const [paymentMethod, setPaymentMethod] = useState<'mpesa' | 'airtel' | ''>('');
   const [processingPayment, setProcessingPayment] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [paymentStatus, setPaymentStatus] = useState('');
+  const [showRemoveModal, setShowRemoveModal] = useState(false);
+  const [itemToRemove, setItemToRemove] = useState<string | null>(null);
+
 
   useEffect(() => {
     const storedUserId = localStorage.getItem('userId');
@@ -362,6 +364,49 @@ const getPublicId = (url?: string) => {
         </div>
       )}
 
+{/* 🗑️ Remove Item Confirmation Modal */}
+{showRemoveModal && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
+    <div className="bg-white p-6 rounded-xl w-full max-w-sm shadow-xl relative">
+      <button
+        onClick={() => setShowRemoveModal(false)}
+        className="absolute top-2 right-4 text-gray-500 text-2xl font-bold"
+      >
+        ×
+      </button>
+
+      <h2 className="text-lg font-semibold text-gray-800 text-center mb-3">
+        Remove this item?
+      </h2>
+      <p className="text-center text-sm text-gray-500 mb-6">
+        Are you sure you want to remove this item from your cart?
+      </p>
+
+      <div className="flex gap-4 justify-center">
+        <button
+          onClick={() => {
+            if (itemToRemove) {
+              removeFromCart(itemToRemove);
+              toast.info('Item removed from cart.');
+            }
+            setShowRemoveModal(false);
+            setItemToRemove(null);
+          }}
+          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition"
+        >
+          Remove
+        </button>
+        <button
+          onClick={() => setShowRemoveModal(false)}
+          className="border border-gray-300 px-4 py-2 rounded hover:bg-gray-100 transition"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
       {/* 🧺 Cart Section */}
       <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Cart Items */}
@@ -385,11 +430,15 @@ const getPublicId = (url?: string) => {
                     </p>
                   </div>
                   <button
-                    onClick={() => removeFromCart(item.id)}
-                    className="text-red-500 text-xl font-bold hover:text-red-700"
-                  >
-                    ×
-                  </button>
+                     onClick={() => {
+                       setItemToRemove(item.id);
+                       setShowRemoveModal(true);
+                     }}
+                     className="text-red-500 text-xl font-bold hover:text-red-700"
+                   >
+                     ×
+                   </button>
+
                 </div>
 
                 <div className="flex items-center mt-3 gap-3">

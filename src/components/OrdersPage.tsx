@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Loader2, Search, Truck, PackageCheck, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { Player } from '@lottiefiles/react-lottie-player';
 
 interface OrderItem {
   name: string;
@@ -189,11 +190,12 @@ export default function MyOrdersPage() {
           animate={{ opacity: 1 }}
           className="text-center text-gray-500 italic py-20"
         >
-          <img
-            src="/empty-orders.svg"
-            alt="No orders"
-            className="w-40 mx-auto mb-4 opacity-70"
-          />
+        <Player
+          autoplay
+          loop
+          src="https://assets5.lottiefiles.com/packages/lf20_qh5z2fdq.json"
+          style={{ height: '300px', width: '300px' }}
+        />
           <p>No orders found for your filters.</p>
         </motion.div>
       ) : (
