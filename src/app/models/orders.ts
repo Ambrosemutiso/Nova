@@ -13,11 +13,6 @@ const orderSchema = new mongoose.Schema({
       status: { type: String, enum: ['Pending', 'Delivered', 'Cancelled'], default: 'Pending' }
     }
   ],
-  logisticsPartner: {
-  type: mongoose.Schema.Types.ObjectId,
-  ref: 'LogisticsPartner',
-  default: null,
-},
   totalAmount: Number,
   deliveryFee: Number,
   customerInfo: Object,

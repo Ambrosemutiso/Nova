@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { CldImage } from 'next-cloudinary';
 
 type Product = {
@@ -26,10 +27,20 @@ const SLIDE_INTERVAL = 6000;
 const PRODUCT_ROTATION_INTERVAL = 3000;
 
 export default function HeroSlider() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isHovered, setIsHovered] = useState(false);
-  const [isInView, setIsInView] = useState(true);
   const [banners, setBanners] = useState<Banner[]>([]);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const progressRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Responsive detection
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Fetch banners
   useEffect(() => {
@@ -47,48 +58,143 @@ export default function HeroSlider() {
     fetchBanners();
   }, []);
 
-  // Auto scroll logic
+  // Auto slide (desktop)
   useEffect(() => {
+    if (!isDesktop || banners.length === 0) return;
     const interval = setInterval(() => {
-      if (!containerRef.current || isHovered || !isInView || banners.length === 0) return;
-
-      const container = containerRef.current;
-      const cardWidth = container.querySelector('div')?.clientWidth || 400;
-      const maxScroll = container.scrollWidth - container.clientWidth;
-
-      if (container.scrollLeft + cardWidth >= maxScroll) {
-        container.scrollTo({ left: 0, behavior: 'smooth' });
-      } else {
-        container.scrollBy({ left: cardWidth, behavior: 'smooth' });
-      }
+      setActiveIndex((prev) => (prev + 1) % banners.length);
     }, SLIDE_INTERVAL);
-
     return () => clearInterval(interval);
-  }, [isHovered, isInView, banners]);
+  }, [banners, isDesktop]);
 
-  // Pause auto scroll when not in view
+  // Auto slide + progress (mobile)
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsInView(entry.isIntersecting),
-      { threshold: 0.1 }
-    );
+    if (isDesktop || banners.length === 0) return;
 
-    if (containerRef.current) observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, []);
+    let startTime = Date.now();
+    const duration = SLIDE_INTERVAL;
+    const step = 50;
+
+    const tick = () => {
+      if (isPaused) return;
+      const elapsed = Date.now() - startTime;
+      const pct = Math.min((elapsed / duration) * 100, 100);
+      setProgress(pct);
+
+      if (pct >= 100) {
+        setProgress(0);
+        startTime = Date.now();
+        setActiveIndex((prev) => (prev + 1) % banners.length);
+      }
+    };
+
+    progressRef.current = setInterval(tick, step);
+    return () => {
+      if (progressRef.current) clearInterval(progressRef.current);
+    };
+  }, [banners, isDesktop, isPaused]);
+
+  if (banners.length === 0) return null;
 
   return (
-    <div
-      ref={containerRef}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className="w-full overflow-x-auto whitespace-nowrap scroll-smooth scrollbar-hide px-4 pt-28 pb-10"
-    >
-      <div className="inline-flex gap-4">
-        {banners.map((banner) => (
-          <BannerCard key={banner.id} banner={banner} />
-        ))}
-      </div>
+    <div className="w-full pt-28 pb-6 lg:pb-10 select-none">
+      {/* 🖥 Desktop View */}
+      {isDesktop ? (
+        <div className="relative w-full h-[400px] overflow-hidden">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeIndex}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.7 }}
+              className="absolute inset-0"
+            >
+              <BannerCard banner={banners[activeIndex]} />
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Dots */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+            {banners.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setActiveIndex(i)}
+                className={`w-3 h-3 rounded-full transition-all ${
+                  i === activeIndex ? 'bg-orange-500 scale-110' : 'bg-gray-300'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      ) : (
+        /* 📱 Mobile View: swipe + momentum snapping */
+        <div
+          className="relative w-full overflow-hidden"
+          onTouchStart={() => setIsPaused(true)}
+          onTouchEnd={() => setIsPaused(false)}
+        >
+          <motion.div
+            className="flex cursor-grab active:cursor-grabbing"
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.2}
+            onDragEnd={(_, info: PanInfo) => {
+              const swipeThreshold = 100;
+              if (info.offset.x < -swipeThreshold) {
+                // swipe left → next
+                setActiveIndex((prev) => (prev + 1) % banners.length);
+                setProgress(0);
+              } else if (info.offset.x > swipeThreshold) {
+                // swipe right → previous
+                setActiveIndex(
+                  (prev) => (prev - 1 + banners.length) % banners.length
+                );
+                setProgress(0);
+              }
+            }}
+            animate={{
+              x: `-${activeIndex * 100}%`,
+            }}
+            transition={{
+              type: 'spring',
+              stiffness: 300,
+              damping: 30,
+            }}
+            style={{
+              width: `${banners.length * 100}%`,
+            }}
+          >
+            {banners.map((banner) => (
+              <div key={banner.id} className="w-full flex-shrink-0 snap-center">
+                <BannerCard banner={banner} />
+              </div>
+            ))}
+          </motion.div>
+
+          {/* Progress Indicators */}
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1 w-3/4">
+            {banners.map((_, i) => (
+              <div
+                key={i}
+                className="flex-1 h-1.5 rounded-full bg-gray-300 overflow-hidden"
+              >
+                {i === activeIndex && (
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progress}%` }}
+                    className="h-full bg-orange-500"
+                    transition={{
+                      ease: 'linear',
+                      duration: SLIDE_INTERVAL / 1000,
+                    }}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -101,6 +207,7 @@ function BannerCard({ banner }: { banner: Banner }) {
   useEffect(() => {
     startRotation();
     return () => stopRotation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const startRotation = () => {
@@ -124,7 +231,7 @@ function BannerCard({ banner }: { banner: Banner }) {
 
   return (
     <div
-      className="relative min-w-[300px] sm:min-w-[340px] md:min-w-[400px] aspect-[16/9] rounded-lg overflow-hidden shadow-md flex-shrink-0"
+      className="relative w-[90vw] sm:w-[80vw] lg:w-full h-[230px] sm:h-[260px] lg:h-[400px] rounded-xl overflow-hidden shadow-md"
       onMouseEnter={stopRotation}
       onMouseLeave={startRotation}
     >
@@ -136,15 +243,12 @@ function BannerCard({ banner }: { banner: Banner }) {
         priority
       />
 
-      <div className="absolute inset-0 bg-black/40 flex flex-col justify-between p-4">
-        {/* Banner title */}
-        <h2 className="text-white text-xl sm:text-2xl md:text-3xl font-bold drop-shadow mb-2">
+      <div className="absolute inset-0 bg-black/40 flex flex-col justify-between p-4 lg:p-8">
+        <h2 className="text-white text-lg sm:text-2xl lg:text-4xl font-bold drop-shadow mb-2">
           {banner.heading}
         </h2>
 
-        {/* Product info */}
-        <div className="flex justify-between items-center bg-white/90 p-2 rounded shadow">
-          {/* Product details */}
+        <div className="flex justify-between items-center bg-white/95 p-2 rounded-lg shadow">
           <div className="w-2/3">
             <p className="text-gray-800 font-semibold text-sm truncate">
               {currentProduct.name}
@@ -160,12 +264,17 @@ function BannerCard({ banner }: { banner: Banner }) {
                 -{getDiscount(currentProduct.oldPrice, currentProduct.calculatedPrice)}%
               </span>
             </div>
-               <p className={`text-left text-sm font-semibold ${currentProduct.quantity > 0 ? 'text-green-600' : 'text-red-500'}`}>
-                 {currentProduct.quantity > 0 ? `${currentProduct.quantity} unit${currentProduct.quantity > 1 ? 's' : ''} left` : 'Out of stock'}
-               </p>
+            <p
+              className={`text-xs mt-1 font-medium ${
+                currentProduct.quantity > 0 ? 'text-green-600' : 'text-red-500'
+              }`}
+            >
+              {currentProduct.quantity > 0
+                ? `${currentProduct.quantity} left`
+                : 'Out of stock'}
+            </p>
           </div>
 
-          {/* Product image */}
           <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded overflow-hidden">
             <CldImage
               src={getPublicId(currentProduct.images[0])}
@@ -173,16 +282,14 @@ function BannerCard({ banner }: { banner: Banner }) {
               width="300"
               height="300"
               crop="fill"
-              className="object-cover rounded shadow"
-              loading="lazy"
+              className="object-cover rounded"
             />
           </div>
         </div>
 
-        {/* CTA */}
         <button
           aria-label={`Shop now for ${currentProduct.name}`}
-          className="mt-2 bg-orange-500 text-white text-xs sm:text-sm px-3 py-1 rounded-md hover:bg-orange-600 transition self-start"
+          className="mt-2 bg-orange-500 text-white text-xs sm:text-sm px-4 py-2 rounded-md hover:bg-orange-600 transition self-start"
         >
           {banner.cta}
         </button>

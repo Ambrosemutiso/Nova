@@ -10,30 +10,19 @@ export default function SellOnNovaXpress({
 }: {
   onOpenSellerLogin: () => void;
 }) {
-  const [showModal, setShowModal] = useState(false);
-
-  // 🕒 Auto show modal after 2 minutes
-  useEffect(() => {
-    const timer = setTimeout(() => setShowModal(true), 120000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleOpenModal = () => setShowModal(true);
-  const handleCloseModal = () => setShowModal(false);
-
   // 🧠 Mouse position tracking for parallax
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const { innerWidth, innerHeight } = window;
-    const x = (e.clientX / innerWidth - 0.5) * 2; // -1 to 1
+    const x = (e.clientX / innerWidth - 0.5) * 2;
     const y = (e.clientY / innerHeight - 0.5) * 2;
     mouseX.set(x);
     mouseY.set(y);
   };
 
-  // Parallax transforms (subtle)
+  // Parallax transforms
   const boxX = useTransform(mouseX, (v) => v * 20);
   const boxY = useTransform(mouseY, (v) => v * 20);
   const storeX = useTransform(mouseX, (v) => v * -25);
@@ -54,14 +43,13 @@ export default function SellOnNovaXpress({
         animate={{ opacity: 0.4, y: [0, 20, 0] }}
         transition={{ repeat: Infinity, duration: 8 }}
         className="absolute -top-20 left-0 w-full h-64 bg-gradient-to-r from-orange-200 to-orange-400 rounded-full blur-3xl opacity-40"
-      ></motion.div>
-
+      />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.4, y: [0, -20, 0] }}
         transition={{ repeat: Infinity, duration: 10 }}
         className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-l from-orange-300 to-orange-100 rounded-full blur-3xl opacity-30"
-      ></motion.div>
+      />
 
       {/* 🔘 Floating Parallax Icons */}
       <motion.div
@@ -72,7 +60,6 @@ export default function SellOnNovaXpress({
       >
         <FaBoxOpen />
       </motion.div>
-
       <motion.div
         style={{ x: storeX, y: storeY }}
         animate={{ y: [0, 20, 0] }}
@@ -81,7 +68,6 @@ export default function SellOnNovaXpress({
       >
         <FaStore />
       </motion.div>
-
       <motion.div
         style={{ x: truckX, y: truckY }}
         animate={{ y: [0, -20, 0] }}
@@ -90,7 +76,6 @@ export default function SellOnNovaXpress({
       >
         <FaTruck />
       </motion.div>
-
       <motion.div
         style={{ x: usersX, y: usersY }}
         animate={{ y: [0, 15, 0] }}
@@ -116,7 +101,7 @@ export default function SellOnNovaXpress({
           customers nationwide.
         </p>
         <button
-          onClick={handleOpenModal}
+          onClick={onOpenSellerLogin}
           className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-full text-lg font-semibold shadow-md"
         >
           Start Selling Now
@@ -208,39 +193,12 @@ export default function SellOnNovaXpress({
           Join NovaXpress today and take your products to every corner of Kenya.
         </p>
         <button
-          onClick={handleOpenModal}
+          onClick={onOpenSellerLogin}
           className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-3 rounded-full text-lg font-semibold shadow-lg"
         >
           Start Selling Now
         </button>
       </section>
-
-      {/* 💬 Popup Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-          <div className="bg-white p-8 rounded-2xl shadow-lg w-96 relative text-center">
-            <button
-              onClick={handleCloseModal}
-              className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-lg"
-            >
-              ×
-            </button>
-            <h3 className="text-xl font-semibold mb-3 text-orange-600">Become a Seller</h3>
-            <p className="text-gray-600 mb-5">
-              Log in or create a seller account to start selling on NovaXpress.
-            </p>
-            <button
-              onClick={() => {
-                handleCloseModal();
-                onOpenSellerLogin();
-              }}
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-full font-semibold"
-            >
-              Continue to Seller Login
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -107,15 +107,15 @@ export default function AffiliateLanding() {
       <section className="bg-orange-50 py-16 mt-20 relative z-10">
         <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-3 gap-8 text-center">
           <div>
-            <h3 className="text-3xl font-bold text-orange-600 mb-2">100,000+</h3>
+            <h3 className="text-3xl font-bold text-orange-600 mb-2">100K+</h3>
             <p className="text-gray-600">Active Affiliates Nationwide</p>
           </div>
           <div>
-            <h3 className="text-3xl font-bold text-orange-600 mb-2">KSH.1M+</h3>
+            <h3 className="text-3xl font-bold text-orange-600 mb-2">1M+</h3>
             <p className="text-gray-600">Monthly payments</p>
           </div>
           <div>
-            <h3 className="text-3xl font-bold text-orange-600 mb-2">KSH. 100k+</h3>
+            <h3 className="text-3xl font-bold text-orange-600 mb-2">100K+</h3>
             <p className="text-gray-600">Paid Daily</p>
           </div>
           <div>
