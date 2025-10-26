@@ -130,13 +130,29 @@ export default function SellOnNovaXpress({
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-2xl font-semibold text-orange-600 mb-4">Why Sell on NovaXpress?</h2>
-          <ul className="space-y-3 text-gray-700 leading-relaxed">
-            <li><CheckCircle size={16} className="text-orange-500" /> Reach thousands of active shoppers every day.</li>
-            <li><CheckCircle size={16} className="text-orange-500" /> Get real-time insights on your sales and performance.</li>
-            <li><CheckCircle size={16} className="text-orange-500" /> Flexible delivery options for your customers.</li>
-            <li><CheckCircle size={16} className="text-orange-500" /> Simple product upload & automatic stock management.</li>
-            <li><CheckCircle size={16} className="text-orange-500" /> Instant payouts directly to your wallet or bank.</li>
-          </ul>
+<ul className="space-y-3 text-gray-700 leading-relaxed">
+  <li className="flex items-center gap-2">
+    <CheckCircle size={16} className="text-orange-500" />
+    Reach thousands of active shoppers every day.
+  </li>
+  <li className="flex items-center gap-2">
+    <CheckCircle size={16} className="text-orange-500" />
+    Get real-time insights on your sales and performance.
+  </li>
+  <li className="flex items-center gap-2">
+    <CheckCircle size={16} className="text-orange-500" />
+    Flexible delivery options for your customers.
+  </li>
+  <li className="flex items-center gap-2">
+    <CheckCircle size={16} className="text-orange-500" />
+    Simple product upload & automatic stock management.
+  </li>
+  <li className="flex items-center gap-2">
+    <CheckCircle size={16} className="text-orange-500" />
+    Instant payouts directly to your wallet or bank.
+  </li>
+</ul>
+
         </motion.div>
       </section>
 

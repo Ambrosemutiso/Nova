@@ -116,11 +116,11 @@ export default function PartnerWithNovaXpress() {
             Why Partner With NovaXpress?
           </h2>
           <ul className="space-y-3 text-gray-700 leading-relaxed">
-            <li><CheckCircle size={16} className="text-orange-500" /> Get access to a large marketplace of delivery requests daily.</li>
-            <li><CheckCircle size={16} className="text-orange-500" /> Seamless tracking and automated pickup assignments.</li>
-            <li><CheckCircle size={16} className="text-orange-500" /> Transparent payments and fast settlements.</li>
-            <li><CheckCircle size={16} className="text-orange-500" /> Nationwide coverage and county-level control.</li>
-            <li><CheckCircle size={16} className="text-orange-500" /> Dedicated logistics dashboard for operations.</li>
+            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-orange-500" /> Get access to a large marketplace of delivery requests daily.</li>
+            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-orange-500" /> Seamless tracking and automated pickup assignments.</li>
+            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-orange-500" /> Transparent payments and fast settlements.</li>
+            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-orange-500" /> Nationwide coverage and county-level control.</li>
+            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-orange-500" /> Dedicated logistics dashboard for operations.</li>
           </ul>
         </motion.div>
       </section>
