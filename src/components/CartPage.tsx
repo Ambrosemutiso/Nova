@@ -387,7 +387,6 @@ const getPublicId = (url?: string) => {
           onClick={() => {
             if (itemToRemove) {
               removeFromCart(itemToRemove);
-              toast.info('Item removed from cart.');
             }
             setShowRemoveModal(false);
             setItemToRemove(null);

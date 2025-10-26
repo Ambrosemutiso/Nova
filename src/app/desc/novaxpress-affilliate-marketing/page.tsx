@@ -4,6 +4,7 @@ import { motion, useMotionValue, useTransform } from 'framer-motion';
 import Image from 'next/image';
 import { useState } from 'react';
 import { FaMoneyBillWave, FaUserFriends, FaChartLine, FaLink } from 'react-icons/fa';
+import { CheckCircle } from 'lucide-react';
 
 export default function AffiliateLanding() {
   const [showModal, setShowModal] = useState(false);
@@ -94,11 +95,11 @@ export default function AffiliateLanding() {
         >
           <h2 className="text-2xl font-semibold text-orange-600 mb-4">Why Join NovaXpress Affiliates?</h2>
           <ul className="space-y-3 text-gray-700 leading-relaxed">
-            <li>💰 Earn up to <b>10% commission</b> on every successful referral.</li>
-            <li>📊 Track your clicks, sales, and earnings in real-time.</li>
-            <li>🔗 Share your personalized affiliate links anywhere — social media, blogs, or WhatsApp.</li>
-            <li>🚀 Withdraw your earnings instantly to your wallet or M-Pesa.</li>
-            <li>👥 Work with brands and grow your personal influence.</li>
+            <li><CheckCircle size={16} className="text-orange-500" /> Earn up to <b>10% commission</b> on every successful referral.</li>
+            <li><CheckCircle size={16} className="text-orange-500" /> Track your clicks, sales, and earnings in real-time.</li>
+            <li><CheckCircle size={16} className="text-orange-500" /> Share your personalized affiliate links anywhere — social media, blogs, or WhatsApp.</li>
+            <li><CheckCircle size={16} className="text-orange-500" /> Withdraw your earnings instantly to your wallet or M-Pesa.</li>
+            <li><CheckCircle size={16} className="text-orange-500" /> Work with brands and grow your personal influence.</li>
           </ul>
         </motion.div>
       </section>

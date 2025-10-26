@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import Image from 'next/image';
 import { FaTruck, FaMapMarkedAlt, FaHandshake} from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
+import { CheckCircle } from 'lucide-react';
 
 export default function PartnerWithNovaXpress() {
   const router = useRouter();
@@ -116,11 +116,11 @@ export default function PartnerWithNovaXpress() {
             Why Partner With NovaXpress?
           </h2>
           <ul className="space-y-3 text-gray-700 leading-relaxed">
-            <li>✅ Get access to a large marketplace of delivery requests daily.</li>
-            <li>✅ Seamless tracking and automated pickup assignments.</li>
-            <li>✅ Transparent payments and fast settlements.</li>
-            <li>✅ Nationwide coverage and county-level control.</li>
-            <li>✅ Dedicated logistics dashboard for operations.</li>
+            <li><CheckCircle size={16} className="text-orange-500" /> Get access to a large marketplace of delivery requests daily.</li>
+            <li><CheckCircle size={16} className="text-orange-500" /> Seamless tracking and automated pickup assignments.</li>
+            <li><CheckCircle size={16} className="text-orange-500" /> Transparent payments and fast settlements.</li>
+            <li><CheckCircle size={16} className="text-orange-500" /> Nationwide coverage and county-level control.</li>
+            <li><CheckCircle size={16} className="text-orange-500" /> Dedicated logistics dashboard for operations.</li>
           </ul>
         </motion.div>
       </section>

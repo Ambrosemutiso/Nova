@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import Image from 'next/image';
 import { FaBoxOpen, FaStore, FaTruck, FaUsers } from 'react-icons/fa';
+import { CheckCircle } from 'lucide-react'
 
 export default function SellOnNovaXpress({
   onOpenSellerLogin,
@@ -131,11 +131,11 @@ export default function SellOnNovaXpress({
         >
           <h2 className="text-2xl font-semibold text-orange-600 mb-4">Why Sell on NovaXpress?</h2>
           <ul className="space-y-3 text-gray-700 leading-relaxed">
-            <li>✅ Reach thousands of active shoppers every day.</li>
-            <li>✅ Get real-time insights on your sales and performance.</li>
-            <li>✅ Flexible delivery options for your customers.</li>
-            <li>✅ Simple product upload & automatic stock management.</li>
-            <li>✅ Instant payouts directly to your wallet or bank.</li>
+            <li><CheckCircle size={16} className="text-orange-500" /> Reach thousands of active shoppers every day.</li>
+            <li><CheckCircle size={16} className="text-orange-500" /> Get real-time insights on your sales and performance.</li>
+            <li><CheckCircle size={16} className="text-orange-500" /> Flexible delivery options for your customers.</li>
+            <li><CheckCircle size={16} className="text-orange-500" /> Simple product upload & automatic stock management.</li>
+            <li><CheckCircle size={16} className="text-orange-500" /> Instant payouts directly to your wallet or bank.</li>
           </ul>
         </motion.div>
       </section>
