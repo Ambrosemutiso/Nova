@@ -19,7 +19,7 @@ export default function Loader() {
         transition={{ repeat: Infinity, duration: 5 }}
       >
         <Image className="rounded-full"
-          src="/Logo.png"
+          src="/Logo.jpg"
           alt="Logo"
           width={120}
           height={120}

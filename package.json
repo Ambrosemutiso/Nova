@@ -10,7 +10,7 @@
   "dependencies": {
     "@headlessui/react": "^2.2.4",
     "@lottiefiles/react-lottie-player": "^3.6.0",
-    "@prisma/client": "^6.6.0",
+    "@prisma/client": "^6.18.0",
     "@radix-ui/react-dialog": "^1.1.14",
     "@remirror/core": "^3.0.1",
     "@remirror/pm": "^3.0.1",
@@ -102,7 +102,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.3.1",
     "postcss": "^8.5.3",
-    "prisma": "^6.11.0",
+    "prisma": "^6.18.0",
     "tailwindcss": "^3.4.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"

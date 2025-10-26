@@ -69,18 +69,17 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
 
         {/* Header */}
         <div className="p-6 pt-14">
-          <div className="flex items-center justify-center mb-8 space-x-2">
-            <h2
-              onClick={() => {
-                router.push('/');
-                onClose();
-              }}
-              className="cursor-pointer font-extrabold text-2xl text-orange-600 tracking-wide"
-            >
-              NOVAXPRESS
-            </h2>
-            <FiSend className="text-orange-500 text-2xl" />
-          </div>
+          <div 
+          className="flex items-center justify-center mb-8 cursor-pointer"
+          onClick={() => {
+            router.push('/');
+            onClose();
+            }}>
+              <img
+              src="/Logo.jpg" 
+              alt="Novaxpress Logo"
+              className="h-10 w-auto object-contain dark:invert-0 transition-transform hover:scale-105"/>
+              </div>
 
           {/* Categories */}
           <ul className="space-y-3">
