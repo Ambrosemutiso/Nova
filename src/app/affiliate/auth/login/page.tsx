@@ -5,7 +5,7 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Eye, EyeOff, Mail, Lock, User, Phone } from 'lucide-react';
+import { Eye, EyeOff, Briefcase, BarChart3, Globe2, MessageSquare } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function AffiliateAuth() {
@@ -56,150 +56,145 @@ export default function AffiliateAuth() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-orange-50 via-white to-orange-100 px-4">
-      {/* ✨ Animated gradient orbs background */}
+    <div
+      className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden px-4 bg-cover bg-center"
+      style={{
+        backgroundImage: "url('/Affiliate-dashboard.jpg')", // ✅ same premium background
+      }}
+    >
+      {/* Overlay gradient for contrast */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/70 z-0"></div>
+
+      {/* 🌍 Animated floating affiliate-themed icons */}
       <motion.div
-        className="absolute -top-32 -left-24 w-72 h-72 bg-orange-200 rounded-full mix-blend-multiply filter blur-2xl opacity-60 animate-blob"
-        animate={{ x: [0, 30, 0], y: [0, 20, 0] }}
-        transition={{ duration: 8, repeat: Infinity }}
-      />
+        className="absolute top-10 left-10 text-orange-400 opacity-70"
+        animate={{ y: [0, -10, 0], rotate: [0, 5, -5, 0] }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        <Briefcase size={45} />
+      </motion.div>
+
       <motion.div
-        className="absolute -bottom-32 -right-24 w-80 h-80 bg-yellow-200 rounded-full mix-blend-multiply filter blur-2xl opacity-60 animate-blob"
-        animate={{ x: [0, -20, 0], y: [0, 30, 0] }}
-        transition={{ duration: 9, repeat: Infinity }}
-      />
+        className="absolute bottom-20 right-12 text-orange-500 opacity-70"
+        animate={{ y: [0, 10, 0] }}
+        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        <BarChart3 size={45} />
+      </motion.div>
+
       <motion.div
-        className="absolute top-1/2 left-1/2 w-64 h-64 bg-pink-200 rounded-full mix-blend-multiply filter blur-2xl opacity-50 animate-blob"
-        animate={{ x: [0, -40, 0], y: [0, -30, 0] }}
-        transition={{ duration: 10, repeat: Infinity }}
-      />
+        className="absolute top-1/3 right-1/4 text-white opacity-60"
+        animate={{ y: [0, -15, 0] }}
+        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        <Globe2 size={40} />
+      </motion.div>
+
+      <motion.div
+        className="absolute bottom-10 left-1/4 text-orange-300 opacity-50"
+        animate={{ rotate: [0, 360] }}
+        transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+      >
+        <MessageSquare size={40} />
+      </motion.div>
 
       {/* 🧊 Auth Card */}
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative w-full max-w-md bg-white/80 backdrop-blur-md shadow-2xl rounded-2xl p-8 border border-orange-100 z-10"
+        className="relative z-10 backdrop-blur-md bg-white/10 border border-white/20 shadow-2xl rounded-2xl p-8 w-full max-w-md"
       >
-        {/* 🎨 Header with Illustration */}
-        <div className="flex flex-col items-center mb-6">
-          <img src="https://storyset.com/illustration/affiliate-marketing/rafiki.svg"
-            alt="Affiliate illustration"
-            className="w-28 h-28 object-contain mb-3 drop-shadow-md"
+        <div className="text-center mb-6">
+          <img
+            src="/Logo.jpg"
+            alt="Novaxpress Logo"
+            className="h-16 w-auto mx-auto rounded-lg mb-2"
           />
-          <h2 className="text-2xl md:text-3xl font-bold text-center text-orange-600 drop-shadow-sm">
-            {isLogin ? 'Affiliate Login' : 'Affiliate Registration'}
+          <h2 className="text-2xl font-bold text-white">
+            {isLogin ? 'Affiliate Login' : 'Join NovaXpress Affiliates'}
           </h2>
+          <p className="text-sm text-gray-300 mt-1">
+            Empower your earnings with NovaXpress 💼
+          </p>
         </div>
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSubmit();
-          }}
-          className="space-y-4"
-        >
-          {!isLogin && (
-            <>
-              <div className="relative">
-                <User className="absolute left-3 top-3 text-orange-500" size={18} />
-                <input
-                  type="text"
-                  placeholder="Full Name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-300 outline-none"
-                />
-              </div>
-              <div className="relative">
-                <Phone className="absolute left-3 top-3 text-orange-500" size={18} />
-                <input
-                  type="tel"
-                  placeholder="Phone Number"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-300 outline-none"
-                />
-              </div>
-            </>
-          )}
-
-          <div className="relative">
-            <Mail className="absolute left-3 top-3 text-orange-500" size={18} />
+        {/* Form */}
+        {!isLogin && (
+          <>
             <input
-              type="email"
-              placeholder="Email Address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-300 outline-none"
+              type="text"
+              placeholder="Full Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full mb-3 p-2 bg-white/20 border border-white/30 text-white rounded placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
-          </div>
-
-          <div className="relative">
-            <Lock className="absolute left-3 top-3 text-orange-500" size={18} />
             <input
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-orange-300 outline-none"
+              type="text"
+              placeholder="Phone Number"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              className="w-full mb-3 p-2 bg-white/20 border border-white/30 text-white rounded placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
-            <span
-              className="absolute top-2.5 right-3 text-gray-600 cursor-pointer"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </span>
-          </div>
+          </>
+        )}
 
-          {!isLogin && (
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 text-orange-500" size={18} />
-              <input
-                type="password"
-                placeholder="Confirm Password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-300 outline-none"
-              />
-            </div>
-          )}
+        <input
+          type="email"
+          placeholder="Email Address"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full mb-3 p-2 bg-white/20 border border-white/30 text-white rounded placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
+        />
 
-          <motion.button
-            whileTap={{ scale: 0.97 }}
-            type="submit"
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2.5 rounded-lg font-semibold shadow-lg transition-all"
+        <div className="relative w-full mb-3">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-2 bg-white/20 border border-white/30 text-white rounded placeholder-gray-300 pr-10 focus:outline-none focus:ring-2 focus:ring-orange-500"
+          />
+          <span
+            className="absolute top-2.5 right-3 text-gray-300 cursor-pointer"
+            onClick={() => setShowPassword(!showPassword)}
           >
-            {isLogin ? 'Login' : 'Register'}
-          </motion.button>
-        </form>
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </span>
+        </div>
 
-        <p className="text-sm mt-6 text-center text-gray-600">
-          {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
+        {!isLogin && (
+          <input
+            type="password"
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className="w-full mb-4 p-2 bg-white/20 border border-white/30 text-white rounded placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
+          />
+        )}
+
+        <button
+          onClick={handleSubmit}
+          className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded font-semibold transition-all"
+        >
+          {isLogin ? 'Login' : 'Register'}
+        </button>
+
+        <p className="text-sm mt-4 text-center text-gray-300">
+          {isLogin ? "Don't have an account?" : 'Already registered?'}{' '}
           <button
             onClick={() => setIsLogin(!isLogin)}
-            className="text-orange-600 font-semibold hover:underline"
+            className="text-orange-400 hover:underline"
           >
             {isLogin ? 'Register here' : 'Login here'}
           </button>
         </p>
       </motion.div>
 
-      {/* Tailwind animation for floating effect */}
-      <style jsx global>{`
-        @keyframes blob {
-          0%,
-          100% {
-            transform: translate(0, 0) scale(1);
-          }
-          50% {
-            transform: translate(20px, -20px) scale(1.05);
-          }
-        }
-        .animate-blob {
-          animation: blob 8s infinite;
-        }
-      `}</style>
+      {/* Footer */}
+      <p className="absolute bottom-4 text-xs text-gray-400 z-10">
+        © {new Date().getFullYear()} NovaXpress Affiliates — Connect. Earn. Grow.
+      </p>
     </div>
   );
 }
