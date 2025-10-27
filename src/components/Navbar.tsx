@@ -26,6 +26,21 @@ export default function Navbar() {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const searchRef = useRef<HTMLDivElement | null>(null);
+  const notifRef = useRef<HTMLDivElement | null>(null);
+
+  // 🔹 Auto-close notification modal when search or dropdown opens
+useEffect(() => {
+  if (showSearch || showDropdown) setShowNotifModal(false);
+}, [showSearch, showDropdown]);
+
+// 🔹 Auto-close search and dropdown when notification modal opens
+useEffect(() => {
+  if (showNotifModal) {
+    setShowSearch(false);
+    setShowDropdown(false);
+  }
+}, [showNotifModal]);
+
 
   const router = useRouter();
   const { cartItems } = useCart();
@@ -49,20 +64,22 @@ export default function Navbar() {
   }, []);
 
   // 🔹 Close dropdown/search on outside click
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current && !dropdownRef.current.contains(event.target as Node)
-      ) setShowDropdown(false);
+useEffect(() => {
+  function handleClickOutside(event: MouseEvent) {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node))
+      setShowDropdown(false);
 
-      if (
-        searchRef.current && !searchRef.current.contains(event.target as Node)
-      ) setShowSearch(false);
-    }
+    if (searchRef.current && !searchRef.current.contains(event.target as Node))
+      setShowSearch(false);
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    if (notifRef.current && !notifRef.current.contains(event.target as Node))
+      setShowNotifModal(false);
+  }
+
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => document.removeEventListener('mousedown', handleClickOutside);
+}, []);
+
 
 const getPublicId = (url?: string) => {
    if (!url || typeof url !== 'string') 
@@ -209,7 +226,7 @@ useEffect(() => {
                     {product.name}
                   </span>
                   <span className="text-xs text-orange-600 font-semibold">
-                    Ksh {product.price?.toLocaleString()}
+                    Ksh {product.calculatedPrice?.toLocaleString()}
                   </span>
                 </div>
               </li>
@@ -221,12 +238,17 @@ useEffect(() => {
   </AnimatePresence>
 
   {/* Search Icon Button */}
-  <button
-    onClick={() => setShowSearch((prev) => !prev)}
-    className="text-2xl text-orange-500 relative z-10"
-  >
-    <FiSearch />
-  </button>
+<button
+  onClick={() => {
+    setShowSearch((prev) => !prev);
+    setShowDropdown(false);
+    setShowNotifModal(false);
+  }}
+  className="text-2xl text-orange-500 relative z-10"
+>
+  <FiSearch />
+</button>
+
 </div>
 
           {/* Cart or Orders */}
@@ -252,28 +274,39 @@ useEffect(() => {
 
           {/* Notifications */}
           <button
-            onClick={() => setShowNotifModal(!showNotifModal)}
-            className="relative text-2xl text-orange-500"
-          >
-            <FiBell />
-            {notifications.some((n) => !n.read) && (
+  onClick={() => {
+    setShowNotifModal((prev) => !prev);
+    setShowSearch(false);
+    setShowDropdown(false);
+  }}
+  className="relative text-2xl text-orange-500"
+>
+  <FiBell />
+  {/* ...badge */}
+              {notifications.some((n) => !n.read) && (
               <span className="absolute -top-2 -right-2 bg-orange-600 text-white text-xs rounded-full px-1.5 py-0.5">
                 {notifications.filter((n) => !n.read).length}
               </span>
             )}
-          </button>
+</button>
+
 
           {/* User Dropdown */}
           {user ? (
             <div className="relative" ref={dropdownRef}>
-              <Image
-                src={user.image || '/avatar.png'}
-                alt="Profile"
-                width={38}
-                height={38}
-                className="rounded-full cursor-pointer border"
-                onClick={() => setShowDropdown((prev) => !prev)}
-              />
+<Image
+  src={user.image || '/avatar.png'}
+  alt="Profile"
+  width={38}
+  height={38}
+  className="rounded-full cursor-pointer border"
+  onClick={() => {
+    setShowDropdown((prev) => !prev);
+    setShowSearch(false);
+    setShowNotifModal(false);
+  }}
+/>
+
               <AnimatePresence>
                 {showDropdown && (
                   <motion.div
@@ -312,6 +345,74 @@ useEffect(() => {
             <Sidebar onClose={() => setShowSidebar(false)} />
           ))}
         {showLogin && <Login onClose={() => setShowLogin(false)} />}
+
+          {/* 🔔 Notification Modal */}
+<AnimatePresence>
+  {showNotifModal && (
+    <motion.div
+      ref={notifRef}
+      initial={{ opacity: 0, y: -8, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -8, scale: 0.98 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
+      className="absolute right-16 top-14 w-96 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border border-orange-100/60 dark:border-gray-700/60 
+                 rounded-2xl shadow-xl z-[60] overflow-hidden ring-1 ring-black/5"
+    >
+      {/* Header */}
+      <div className="px-5 py-3 border-b border-orange-100/70 dark:border-gray-700/70 flex justify-between items-center bg-gradient-to-r from-orange-50/70 to-white/70 dark:from-gray-800/70 dark:to-gray-900/70">
+        <h4 className="font-semibold text-gray-800 dark:text-gray-100 text-sm uppercase tracking-wide">
+          Notifications
+        </h4>
+        <button
+          onClick={() => setShowNotifModal(false)}
+          className="text-gray-500 hover:text-orange-500 text-xs font-medium transition-colors"
+        >
+          Close
+        </button>
+      </div>
+
+      {/* Body */}
+      {notifications.length > 0 ? (
+        <ul className="max-h-80 overflow-y-auto divide-y divide-orange-50/70 dark:divide-gray-800/70">
+          {notifications.map((notif, i) => (
+            <li
+              key={i}
+              className={`px-5 py-3 text-sm cursor-pointer flex flex-col gap-1 hover:bg-orange-50/70 dark:hover:bg-gray-800/80 transition-all ${
+                notif.read
+                  ? 'text-gray-600 dark:text-gray-400'
+                  : 'text-gray-900 dark:text-gray-100 font-semibold'
+              }`}
+              onClick={() => {
+                // handle click (optional navigation or mark as read)
+                setShowNotifModal(false);
+              }}
+            >
+              <div className="flex justify-between items-center">
+                <span className="truncate">{notif.message || 'New update available'}</span>
+                {!notif.read && (
+                  <span className="bg-orange-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                    New
+                  </span>
+                )}
+              </div>
+              <span className="text-xs text-gray-400 dark:text-gray-500">
+                {new Date(notif.createdAt).toLocaleString()}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="p-6 text-gray-500 dark:text-gray-400 text-sm text-center">
+          You’re all caught up 🎉  
+          <div className="text-xs text-gray-400 mt-1">
+            No new notifications at the moment
+          </div>
+        </div>
+      )}
+    </motion.div>
+  )}
+</AnimatePresence>
+
       </nav>
     </>
   );
