@@ -24,7 +24,7 @@ interface Order {
     email: string;
     phone: string;
     town?: string;
-    city?: string;
+    county?: string;
     deliveryInstructions?: string;
   };
   items: OrderItem[];
@@ -92,7 +92,7 @@ export default function SellerOrdersPage() {
 
     const matchesCity =
       cityFilter === 'All' ||
-      order.customerInfo.city?.toLowerCase() === cityFilter.toLowerCase();
+      order.customerInfo.county?.toLowerCase() === cityFilter.toLowerCase();
 
     const matchesSearch =
       searchTerm === '' ||
@@ -209,7 +209,7 @@ const handleDownloadLabelPDF = () => {
   pdf.setFontSize(9);
   pdf.text(`Name: ${selectedLabelOrder.customerInfo.firstName} ${selectedLabelOrder.customerInfo.lastName}`, 10, buyerY + 5);
   pdf.text(`Phone: ${selectedLabelOrder.customerInfo.phone}`, 10, buyerY + 10);
-  pdf.text(`City: ${selectedLabelOrder.customerInfo.city || 'N/A'}`, 10, buyerY + 15);
+  pdf.text(`City: ${selectedLabelOrder.customerInfo.county || 'N/A'}`, 10, buyerY + 15);
   pdf.text(`Address: ${selectedLabelOrder.customerInfo.town || 'N/A'}`, 10, buyerY + 20);
 
   // Order details table
@@ -251,7 +251,7 @@ const handleDownloadLabelPDF = () => {
 };
 
   // ✅ Extract available cities dynamically
-  const cities = Array.from(new Set(orders.map((o) => o.customerInfo.city).filter(Boolean)));
+  const cities = Array.from(new Set(orders.map((o) => o.customerInfo.county).filter(Boolean)));
 
   return (
     <div className="md:ml-64 px-6 pt-28 pb-10">
@@ -465,10 +465,10 @@ const handleDownloadLabelPDF = () => {
             <strong>Phone:</strong> {selectedLabelOrder.customerInfo.phone}
           </div>
           <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded">
-            <strong>City:</strong> {selectedLabelOrder.customerInfo.city || 'N/A'}
+            <strong>County:</strong> {selectedLabelOrder.customerInfo.county || 'N/A'}
           </div>
           <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded">
-            <strong>Address:</strong> {selectedLabelOrder.customerInfo.town || 'N/A'}
+            <strong>Town:</strong> {selectedLabelOrder.customerInfo.town || 'N/A'}
           </div>
         </div>
       </div>

@@ -5,7 +5,8 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Package, Truck, MapPin, Clock } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function LogisticsAuth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -59,11 +60,69 @@ export default function LogisticsAuth() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-4">
-      <div className="bg-white shadow p-6 rounded w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4 text-center">
-          {isLogin ? 'Logistics Partner Login' : 'Logistics Partner Registration'}
-        </h2>
+    <div
+      className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden px-4 bg-cover bg-center"
+      style={{
+        backgroundImage:
+          "url('/Logistics-partner.jpg')", // same background as affiliate login
+      }}
+    >
+      {/* Overlay gradient for better contrast */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-black/70 z-0"></div>
+
+      {/* Animated floating icons */}
+      <motion.div
+        className="absolute top-10 left-10 text-orange-400 opacity-70"
+        animate={{ y: [0, -10, 0], rotate: [0, 5, -5, 0] }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        <Truck size={50} />
+      </motion.div>
+
+      <motion.div
+        className="absolute bottom-20 right-12 text-orange-500 opacity-70"
+        animate={{ y: [0, 10, 0] }}
+        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        <Package size={45} />
+      </motion.div>
+
+      <motion.div
+        className="absolute top-32 right-1/3 text-white opacity-60"
+        animate={{ y: [0, -15, 0] }}
+        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        <MapPin size={40} />
+      </motion.div>
+
+      <motion.div
+        className="absolute bottom-10 left-1/4 text-orange-300 opacity-50"
+        animate={{ rotate: [0, 360] }}
+        transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+      >
+        <Clock size={40} />
+      </motion.div>
+
+      {/* Auth Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="relative z-10 backdrop-blur-md bg-white/10 border border-white/20 shadow-2xl rounded-2xl p-8 w-full max-w-md"
+      >
+        <div className="text-center mb-6">
+          <img
+            src="/Logo.jpg"
+            alt="NovaXpress Logo"
+            className="h-16 w-auto mx-auto rounded-lg mb-2"
+          />
+          <h2 className="text-2xl font-bold text-white">
+            {isLogin ? 'Logistics Partner Login' : 'Join NovaXpress Logistics'}
+          </h2>
+          <p className="text-sm text-gray-300 mt-1">
+            Deliver excellence with NovaXpress 🚚
+          </p>
+        </div>
 
         {!isLogin && (
           <>
@@ -72,14 +131,14 @@ export default function LogisticsAuth() {
               placeholder="Full Name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full mb-2 p-2 border rounded"
+              className="w-full mb-3 p-2 bg-white/20 border border-white/30 text-white rounded placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
             <input
               type="text"
               placeholder="Phone Number"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="w-full mb-2 p-2 border rounded"
+              className="w-full mb-3 p-2 bg-white/20 border border-white/30 text-white rounded placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </>
         )}
@@ -89,19 +148,19 @@ export default function LogisticsAuth() {
           placeholder="Email Address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full mb-2 p-2 border rounded"
+          className="w-full mb-3 p-2 bg-white/20 border border-white/30 text-white rounded placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
         />
 
-        <div className="relative w-full mb-2">
+        <div className="relative w-full mb-3">
           <input
             type={showPassword ? 'text' : 'password'}
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-2 border rounded pr-10"
+            className="w-full p-2 bg-white/20 border border-white/30 text-white rounded placeholder-gray-300 pr-10 focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
           <span
-            className="absolute top-2.5 right-3 text-gray-600 cursor-pointer"
+            className="absolute top-2.5 right-3 text-gray-300 cursor-pointer"
             onClick={() => setShowPassword(!showPassword)}
           >
             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -114,27 +173,32 @@ export default function LogisticsAuth() {
             placeholder="Confirm Password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full mb-4 p-2 border rounded"
+            className="w-full mb-4 p-2 bg-white/20 border border-white/30 text-white rounded placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
         )}
 
         <button
           onClick={handleSubmit}
-          className="w-full bg-orange-600 text-white py-2 rounded hover:bg-orange-700"
+          className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded font-semibold transition-all"
         >
           {isLogin ? 'Login' : 'Register'}
         </button>
 
-        <p className="text-sm mt-4 text-center">
-          {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
+        <p className="text-sm mt-4 text-center text-gray-300">
+          {isLogin ? "Don't have an account?" : 'Already registered?'}{' '}
           <button
             onClick={() => setIsLogin(!isLogin)}
-            className="text-green-500 hover:underline"
+            className="text-orange-400 hover:underline"
           >
             {isLogin ? 'Register here' : 'Login here'}
           </button>
         </p>
-      </div>
+      </motion.div>
+
+      {/* Subtle footer text */}
+      <p className="absolute bottom-4 text-xs text-gray-400 z-10">
+        © {new Date().getFullYear()} NovaXpress Logistics — Speed. Reliability. Excellence.
+      </p>
     </div>
   );
 }
