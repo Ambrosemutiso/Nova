@@ -11,6 +11,7 @@ interface OrderItem {
   name: string;
   quantity: number;
   price: number;
+  fulfillmentMode: string;
   images: string[];
   status?: string;
 }
@@ -425,71 +426,116 @@ const handleDownloadLabelPDF = () => {
       )}
 
 {showLabelModal && selectedLabelOrder && (
-  <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
-    <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 relative">
+  <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center backdrop-blur-sm transition-all">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-xl p-6 relative overflow-hidden animate-fade-in">
+      {/* Close Button */}
       <button
-        className="absolute top-2 right-3 text-gray-500 text-lg"
+        className="absolute top-3 right-3 text-gray-400 hover:text-orange-500 text-xl transition"
         onClick={() => setShowLabelModal(false)}
       >
         ✕
       </button>
 
-      <h2 className="text-lg font-semibold mb-3 text-orange-600 text-center">
-        NovaXpress Delivery Label
-      </h2>
+      {/* Company Header */}
+      <div className="flex flex-col items-center border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
+        <img
+          src="/Logo.jpg"
+          alt="NovaXpress Logo"
+          className="h-14 object-contain mb-2 dark:invert"
+        />
+        <h2 className="text-xl font-semibold text-orange-600">
+          NovaXpress Delivery Label
+        </h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          www.novaxpress.co.ke | support@novaxpress.co.ke
+        </p>
+      </div>
 
-      <div className="border p-4 rounded-lg bg-gray-50 text-sm text-gray-700 space-y-2">
-        <h3 className="text-orange-600 font-semibold">Seller Details</h3>
-        <p><strong>Name:</strong> {JSON.parse(localStorage.getItem('sellerUser') || '{}').name || 'N/A'}</p>
-        <p><strong>Shop:</strong> {JSON.parse(localStorage.getItem('sellerUser') || '{}').shopName || 'N/A'}</p>
-        <p><strong>Phone:</strong> {JSON.parse(localStorage.getItem('sellerUser') || '{}').phone || 'N/A'}</p>
-        <p><strong>City:</strong> {JSON.parse(localStorage.getItem('sellerUser') || '{}').city || 'N/A'}</p>
+      {/* Customer Information */}
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 mb-4">
+        <h3 className="text-orange-600 font-semibold mb-2 text-sm uppercase">
+          Customer Information
+        </h3>
+        <div className="grid grid-cols-2 gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded">
+            <strong>Name:</strong> {selectedLabelOrder.customerInfo.firstName}{' '}
+            {selectedLabelOrder.customerInfo.lastName}
+          </div>
+          <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded">
+            <strong>Phone:</strong> {selectedLabelOrder.customerInfo.phone}
+          </div>
+          <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded">
+            <strong>City:</strong> {selectedLabelOrder.customerInfo.city || 'N/A'}
+          </div>
+          <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded">
+            <strong>Address:</strong> {selectedLabelOrder.customerInfo.town || 'N/A'}
+          </div>
+        </div>
+      </div>
 
-        <h3 className="text-orange-600 font-semibold mt-3">Buyer Details</h3>
-        <p><strong>Name:</strong> {selectedLabelOrder.customerInfo.firstName} {selectedLabelOrder.customerInfo.lastName}</p>
-        <p><strong>Phone:</strong> {selectedLabelOrder.customerInfo.phone}</p>
-        <p><strong>City:</strong> {selectedLabelOrder.customerInfo.city || 'N/A'}</p>
-        <p><strong>Address:</strong> {selectedLabelOrder.customerInfo.town || 'N/A'}</p>
-
-        <h3 className="text-orange-600 font-semibold mt-3">Items</h3>
-        <table className="w-full border text-xs">
-          <thead className="bg-orange-100 text-orange-800">
+      {/* Items Section */}
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 mb-4">
+        <h3 className="text-orange-600 font-semibold mb-2 text-sm uppercase">
+          Order Items
+        </h3>
+        <table className="w-full text-xs border-collapse border border-gray-200 dark:border-gray-700">
+          <thead className="bg-orange-100 dark:bg-gray-800 text-orange-800 dark:text-gray-200">
             <tr>
-              <th className="border px-1 py-1">Item</th>
-              <th className="border px-1 py-1">Qty</th>
-              <th className="border px-1 py-1">Price</th>
-              <th className="border px-1 py-1">Subtotal</th>
+              <th className="border px-2 py-1 text-left">Item</th>
+              <th className="border px-2 py-1">Qty</th>
+              <th className="border px-2 py-1">Price</th>
+              <th className="border px-2 py-1">Subtotal</th>
             </tr>
           </thead>
           <tbody>
             {selectedLabelOrder.items.map((item, i) => (
-              <tr key={i}>
-                <td className="border px-1 py-1">{item.name}</td>
-                <td className="border px-1 py-1 text-center">{item.quantity}</td>
-                <td className="border px-1 py-1 text-right">Ksh {item.price}</td>
-                <td className="border px-1 py-1 text-right">Ksh {item.price * item.quantity}</td>
+              <tr key={i} className="hover:bg-orange-50 dark:hover:bg-gray-800 transition">
+                <td className="border px-2 py-1">{item.name}</td>
+                <td className="border px-2 py-1 text-center">{item.quantity}</td>
+                <td className="border px-2 py-1 text-right">
+                  Ksh {item.price.toLocaleString()}
+                </td>
+                <td className="border px-2 py-1 text-right">
+                  Ksh {(item.price * item.quantity).toLocaleString()}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
+      </div>
 
-        <div className="flex justify-between items-center mt-4 border-t pt-3">
+      {/* Tracking Section */}
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 mb-4 text-sm">
+        <h3 className="text-orange-600 font-semibold mb-2 text-sm uppercase">
+          Tracking Information
+        </h3>
+        <p><strong>Tracking Number:</strong> {selectedLabelOrder.trackingNumber}</p>
+        <p><strong>Order ID:</strong> {selectedLabelOrder._id.slice(-6)}</p>
+        <p><strong>Total:</strong> Ksh {selectedLabelOrder.totalAmount.toLocaleString()}</p>
+
+        <div className="flex justify-between items-center mt-3 border-t border-gray-200 dark:border-gray-700 pt-3">
           {barcodeSrc && <img src={barcodeSrc} alt="Barcode" className="h-12" />}
-          {qrSrc && <img src={qrSrc} alt="QR Code" className="h-20 w-20 rounded-md" />}
+          {qrSrc && <img src={qrSrc} alt="QR Code" className="h-16 w-16 rounded-md" />}
         </div>
       </div>
 
+      {/* Footer */}
       <div className="text-right mt-4">
         <button
           onClick={handleDownloadLabelPDF}
-          className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded"
+          className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-lg shadow transition"
         >
           Download PDF
         </button>
       </div>
+
+      <p className="text-center text-xs text-gray-500 mt-3">
+        © {new Date().getFullYear()} NovaXpress Ltd. All rights reserved.
+      </p>
     </div>
   </div>
-      )}
+)}
+
     </div>
   );
 }
