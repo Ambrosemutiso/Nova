@@ -85,13 +85,13 @@ export default function MyVouchersPage() {
 
   if (!data)
     return (
-      <div className="flex justify-center items-center min-h-[70vh] text-gray-500">
-        Loading your vouchers...
+      <div className="flex items-center justify-center min-h-screen bg-white">
+        <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
       </div>
     );
 
   const novaPoints = data.ordersCount; // 1 order = 1 NovaPoint
-  const cashEquivalent = novaPoints * 50;
+  const cashEquivalent = novaPoints * 120;
 
   return (
     <div
@@ -138,7 +138,7 @@ export default function MyVouchersPage() {
               <p className="text-lg text-gray-700">
                 You’ve earned <span className="font-bold text-orange-600">{novaPoints}</span> NovaPoints
               </p>
-              <p className="text-sm text-gray-600">Each NovaPoint = KSh 50</p>
+              <p className="text-sm text-gray-600">Each NovaPoint = KSh 120</p>
               <p className="text-xl font-semibold text-green-700 mt-1">Total Value: KSh {cashEquivalent.toLocaleString()}</p>
             </div>
 
@@ -169,8 +169,130 @@ export default function MyVouchersPage() {
           </div>
         </motion.div>
 
-        {/* Existing sections remain unchanged below */}
-        {/* ... Shopping progress, vouchers list, top customer banner ... */}
+      {/* 💳 Main Content */}
+      <div className="max-w-5xl mx-auto px-6 space-y-8 relative z-10">
+        {/* Progress Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl p-6 border border-orange-100"
+        >
+          <h2 className="text-xl font-semibold text-gray-800 mb-3">
+            🛒 Your Shopping Progress
+          </h2>
+          <p className="text-sm text-gray-600 mb-2">
+            You’ve made{' '}
+            <span className="font-semibold">{data.ordersCount}</span> orders so
+            far.
+          </p>
+          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${data.percentage}%` }}
+              className="bg-gradient-to-r from-orange-500 to-yellow-500 h-3 rounded-full"
+            />
+          </div>
+          <p className="text-sm mt-2 text-yellow-700 font-medium">
+            {data.percentage}% of all customer orders completed
+          </p>
+        </motion.div>
+
+        {/* Top Customer Banner */}
+        {data.isTopCustomer && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="bg-gradient-to-r from-yellow-200 via-yellow-100 to-yellow-50 border-l-8 border-yellow-400 rounded-2xl p-5 shadow-md text-center"
+          >
+            <p className="text-yellow-800 font-semibold text-lg">
+              🏆 You’re among our <b>Top Customers!</b> Keep shining and enjoy
+              exclusive rewards.
+            </p>
+          </motion.div>
+        )}
+
+        {/* Vouchers List */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl p-6 border border-orange-100"
+        >
+          <h2 className="text-xl font-semibold text-orange-600 mb-5 flex items-center gap-2">
+            🎫 Your Active Vouchers
+          </h2>
+          {data.vouchers.length > 0 ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {data.vouchers.map((voucher) => (
+                <motion.div
+                  key={voucher._id}
+                  whileHover={{ scale: 1.03 }}
+                  className="p-5 rounded-xl bg-gradient-to-br from-blue-50 to-white border border-blue-100 shadow hover:shadow-lg transition"
+                >
+                  <h3 className="font-semibold text-blue-700 text-lg">
+                    Code: {voucher.code}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Discount:{' '}
+                    <span className="text-green-600 font-semibold">
+                      {voucher.discount}%
+                    </span>{' '}
+                    off
+                  </p>
+                  <p className="text-sm text-gray-500 mb-3">
+                    Expires on:{' '}
+                    {new Date(voucher.expiry).toLocaleDateString()}
+                  </p>
+                  <div className="flex justify-between items-center">
+                    <span
+                      className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                        voucher.status === 'active'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-gray-200 text-gray-600'
+                      }`}
+                    >
+                      {voucher.status === 'active' ? 'Active ✅' : 'Expired ❌'}
+                    </span>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(voucher.code);
+                        toast.success('Voucher code copied 🎉');
+                      }}
+                      className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 text-sm rounded-md"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-center">
+              No active vouchers yet. Keep shopping to earn some 🎉
+            </p>
+          )}
+        </motion.div>
+
+        {/* How to Use Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl p-6 border border-orange-100"
+        >
+          <h2 className="text-xl font-semibold text-orange-600 mb-3">
+            💡 How to Use Your Voucher
+          </h2>
+          <ul className="list-disc pl-6 space-y-2 text-sm text-gray-700">
+            <li>Copy your voucher code.</li>
+            <li>Go to the checkout page during your next purchase.</li>
+            <li>Enter it in the “Promo/Voucher Code” field.</li>
+            <li>Enjoy your discount instantly 🎉</li>
+          </ul>
+        </motion.div>
+      </div>
       </div>
 
       {/* 💬 Redeem Modal */}
