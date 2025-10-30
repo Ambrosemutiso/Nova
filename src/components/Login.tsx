@@ -34,17 +34,32 @@ export default function LoginModal({
     }
   };
 
-  const finishLogin = (user: any) => {
-    login(user);
-    toast.success('Signed in successfully');
-    onClose();
+const finishLogin = async (user: any) => {
+  login(user);
+  toast.success("Signed in successfully");
+  onClose();
 
-    if (role === 'buyer') {
-      window.location.href = '/';
-    } else {
-      window.location.href = '/seller/dashboard';
-    }
-  };
+  try {
+    await fetch("/api/sendWelcomeEmail", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: user.email,
+        name: user.displayName,
+        role,
+      }),
+    });
+  } catch (error) {
+    console.error("Welcome email failed:", error);
+  }
+
+  if (role === "buyer") {
+    window.location.href = "/";
+  } else {
+    window.location.href = "/seller/dashboard";
+  }
+};
+
 
   return (
     <motion.div

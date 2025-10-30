@@ -270,7 +270,7 @@ export default function MyVouchersPage() {
             </div>
           ) : (
             <p className="text-gray-500 text-center">
-              No active vouchers yet. Keep shopping to earn some 🎉
+              No active vouchers yet. Keep shopping to earn some!
             </p>
           )}
         </motion.div>
@@ -289,7 +289,7 @@ export default function MyVouchersPage() {
             <li>Copy your voucher code.</li>
             <li>Go to the checkout page during your next purchase.</li>
             <li>Enter it in the “Promo/Voucher Code” field.</li>
-            <li>Enjoy your discount instantly 🎉</li>
+            <li>Enjoy your discount instantly!</li>
           </ul>
         </motion.div>
       </div>

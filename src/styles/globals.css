@@ -134,3 +134,16 @@ button {
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes rotate-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-rotate-slow {
+  animation: rotate-slow 12s linear infinite;
+}
