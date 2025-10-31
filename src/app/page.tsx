@@ -61,7 +61,7 @@ export default function Home() {
           <SwiperSlide>
             <Slide
               src="/slider1.jpg"
-              title="Welcome to Our App"
+              title="Welcome Novaxpress"
               description="Best products, best prices, just for you!"
               isActive={activeIndex === 0}
             />

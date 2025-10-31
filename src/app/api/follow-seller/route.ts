@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
 import Seller from '@/app/models/seller';
-import Notification from '@/app/models/notification'; // ✅ import Notification model
+import Notification from '@/app/models/notification'; 
 import { Types } from 'mongoose';
 
 type Follower = {
