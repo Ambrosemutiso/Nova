@@ -1,41 +1,43 @@
+// fixMissingPasswords.js
 import * as dotenv from "dotenv";
 dotenv.config();
 
 import mongoose from "mongoose";
 import { dbConnect } from "@/lib/dbConnect";
 
-async function fixPhoneNumberIndex() {
+async function injectMissingPasswords() {
   await dbConnect();
 
   const db = mongoose.connection.db;
-  if (!db) {
-    throw new Error("Database connection not established.");
+  if (!db) throw new Error("Database connection not established.");
+
+  const collections = ["users", "sellers"];
+  const fixedPassword = "Abro3042";
+
+  for (const name of collections) {
+    const collection = db.collection(name);
+    console.log(`🔍 Checking ${name} collection for missing passwords...`);
+
+    const missing = await collection
+      .find({ $or: [{ password: { $exists: false } }, { password: null }] })
+      .toArray();
+
+    console.log(`🧩 Found ${missing.length} ${name} without passwords.`);
+
+    for (const doc of missing) {
+      await collection.updateOne(
+        { _id: doc._id },
+        { $set: { password: fixedPassword } }
+      );
+      console.log(`✅ Updated ${name} ${doc._id} with password: ${fixedPassword}`);
+    }
   }
 
-  const collection = db.collection("sellers");
-
-  console.log("🔍 Checking indexes on sellers collection...");
-  const indexes = await collection.indexes();
-  console.log("Current indexes:", indexes);
-
-  const hasPhoneIndex = indexes.find((idx) => idx.name === "phoneNumber_1");
-  if (hasPhoneIndex) {
-    console.log("⚠️ Dropping old phoneNumber_1 index...");
-    await collection.dropIndex("phoneNumber_1");
-    console.log("✅ Dropped old index");
-  } else {
-    console.log("ℹ️ No old phoneNumber_1 index found, skipping drop");
-  }
-
-  // Recreate NON-unique index (optional)
-  console.log("🔧 Creating NON-unique index for phoneNumber...");
-  await collection.createIndex({ phoneNumber: 1 });
-  console.log("✅ New NON-unique phoneNumber index created.");
-
+  console.log("🎯 All missing passwords have been patched!");
   mongoose.connection.close();
 }
 
-fixPhoneNumberIndex().catch((err) => {
+injectMissingPasswords().catch((err) => {
   console.error("❌ Failed:", err);
   mongoose.connection.close();
 });

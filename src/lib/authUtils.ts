@@ -3,109 +3,168 @@ import {
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { auth, db } from './firebaseConfig';
 import { collection, doc, setDoc } from 'firebase/firestore';
 
-export const signInWithGoogle = async (role: 'buyer' | 'seller') => {
+/**
+ * 🔹 Google Sign-in (login or register)
+ */
+export const signInWithGoogle = async (
+  role: 'buyer' | 'seller',
+  mode: 'login' | 'register' = 'login'
+) => {
   const provider = new GoogleAuthProvider();
   provider.addScope('profile');
   provider.addScope('email');
 
   try {
-    // --- Try popup first ---
     const result = await signInWithPopup(auth, provider);
-    return await handleLoginResult(result, role);
+    return await handleLoginResult(result, role, mode);
   } catch (error: any) {
-    console.warn('Popup sign-in failed, trying redirect...', error?.code);
-
+    console.warn('Popup failed, trying redirect...', error?.code);
     if (
       error?.code === 'auth/popup-closed-by-user' ||
       error?.code === 'auth/cancelled-popup-request' ||
       error?.code === 'auth/popup-blocked'
     ) {
-      // --- Fallback to redirect ---
       await signInWithRedirect(auth, provider);
-
       const result = await getRedirectResult(auth);
-      if (result) {
-        return await handleLoginResult(result, role);
-      }
+      if (result) return await handleLoginResult(result, role, mode);
     }
-
     console.error('Google Sign-in Error:', error);
     throw error;
   }
 };
 
-// --- Extracted login handler ---
-const handleLoginResult = async (result: any, role: 'buyer' | 'seller') => {
-  const user = result.user;
+/**
+ * 🔹 Email/Password Authentication
+ */
+export const handleEmailAuth = async (
+  mode: 'login' | 'register',
+  email: string,
+  password: string,
+  name: string,
+  role: 'buyer' | 'seller'
+) => {
+  try {
+    let user;
 
-  // ---- 🌍 ISO Country → Currency map (trimmed for demo) ----
+    if (mode === 'register') {
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      user = result.user;
+    } else {
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      user = result.user;
+    }
+
+    const userData = await buildUserData(user, name, role);
+    await saveUserToFirestoreAndMongo(userData, role, mode);
+    return userData;
+  } catch (error: any) {
+    console.error('Email auth error:', error);
+    throw new Error(error.message || `Failed to ${mode}`);
+  }
+};
+
+/**
+ * 🔹 Password Reset
+ */
+export const resetPassword = async (email: string) => {
+  try {
+    await sendPasswordResetEmail(auth, email);
+    return true;
+  } catch (error: any) {
+    console.error('Password reset error:', error);
+    throw new Error(error.message || 'Failed to send password reset email');
+  }
+};
+
+/**
+ * 🔹 Common handler for successful Google login
+ */
+const handleLoginResult = async (
+  result: any,
+  role: 'buyer' | 'seller',
+  mode: 'login' | 'register'
+) => {
+  const user = result.user;
+  const userData = await buildUserData(user, user.displayName, role);
+  await saveUserToFirestoreAndMongo(userData, role, mode);
+  return userData;
+};
+
+/**
+ * 🔹 Builds unified user object with geo-detected country & currency
+ */
+const buildUserData = async (user: any, name: string, role: 'buyer' | 'seller') => {
   const countryCurrencyMap: Record<string, string> = {
     KE: 'KES',
-    US: 'USD',
-    GB: 'GBP',
-    IN: 'INR',
-    NG: 'NGN',
-    TZ: 'TZS',
     UG: 'UGX',
+    TZ: 'TZS',
+    RW: 'RWF',
   };
 
-  let country: string | undefined;
-  let currency: string | undefined;
-
-  // 🌐 fallback: IP-based geolocation (since no phone number)
+  let country = 'KE';
   try {
     const geoRes = await fetch('https://ipapi.co/json/');
     const geoData = await geoRes.json();
-    country = geoData.country_code;
-  } catch (err) {
-    console.warn('Geo lookup failed', err);
+    country = geoData.country_code || 'KE';
+  } catch {
+    console.warn('Geo lookup failed, defaulting to KE');
   }
 
-  if (country) {
-    currency = countryCurrencyMap[country] || 'USD';
-  }
+  const currency = countryCurrencyMap[country] || 'USD';
+  const token = await user.getIdToken();
 
-  // ---- 📦 Build user data ----
-  const userData = {
-    name: user.displayName,
-    email: user.email,
-    image: user.photoURL,
-    phoneNumber: null, 
+  return {
+    name: name || user.displayName || '',
+    email: user.email || '',
+    image: user.photoURL || '',
+    phoneNumber: user.phoneNumber || null,
     country,
     currency,
     role,
-    isPhoneVerified: false, 
+    token,
+    isPhoneVerified: !!user.phoneNumber,
   };
+};
 
-  // ---- 🔥 Save to Firestore ----
+/**
+ * 🔹 Saves user to Firestore and MongoDB
+ */
+const saveUserToFirestoreAndMongo = async (
+  userData: any,
+  role: 'buyer' | 'seller',
+  mode: 'login' | 'register'
+) => {
   const docRef =
     role === 'buyer'
-      ? doc(collection(db, 'users'), user.uid)
-      : doc(collection(db, 'sellers'), user.uid);
+      ? doc(collection(db, 'users'), userData.email)
+      : doc(collection(db, 'sellers'), userData.email);
+
   await setDoc(docRef, userData, { merge: true });
 
-  // ---- 🗄️ Save to MongoDB ----
   const endpoint =
-    role === 'buyer'
-      ? '/api/auth/google-login'
-      : '/api/seller/google-login';
+    role === 'buyer' ? '/api/auth/google-login' : '/api/seller/google-login';
 
   const res = await fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(userData),
+    body: JSON.stringify({
+      provider: 'email',
+      mode,
+      ...userData,
+    }),
   });
 
   const data = await res.json();
-  if (!res.ok || !data.success) throw new Error(data.message || 'Failed to log in');
+  if (!res.ok || !data.success) {
+    throw new Error(data.message || 'Failed to save user in backend');
+  }
 
-  // ---- ✅ Return full user + needsPhoneNumber flag ----
-  return {
-    ...data.user,
-    needsPhoneNumber: true, // always true until OTP verified
-  };
+  return data.user;
 };

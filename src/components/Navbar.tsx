@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
-import { FiMenu, FiShoppingCart, FiPackage, FiSearch, FiBell } from 'react-icons/fi';
+import { FiMenu, FiShoppingCart, FiPackage, FiSearch, FiBell, FiUser } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/app/context/CartContext';
 import Login from './Login';
@@ -104,23 +104,27 @@ const getPublicId = (url?: string) => {
   }, [isSeller, user]);
 
   // 🔹 Seller order count
-  useEffect(() => {
-    if (user?.role === 'seller') fetchOrders(user._id);
-  }, [user]);
+useEffect(() => {
+  if (user?.role === 'seller' && user._id) {
+    fetchOrders(user._id);
+  }
+}, [user]);
 
-  const fetchOrders = async (sellerId: string) => {
-    try {
-      const res = await fetch('/api/orders/count', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sellerId }),
-      });
-      const data = await res.json();
-      if (res.ok) setOrderCount(data.count);
-    } catch (err) {
-      console.error('Failed to fetch order count:', err);
-    }
-  };
+const fetchOrders = async (sellerId?: string) => {
+  if (!sellerId) return;
+  try {
+    const res = await fetch('/api/orders/count', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sellerId }),
+    });
+    const data = await res.json();
+    if (res.ok) setOrderCount(data.count);
+  } catch (err) {
+    console.error('Failed to fetch order count:', err);
+  }
+};
+
 
 useEffect(() => {
   if (!searchTerm.trim()) {
@@ -292,49 +296,62 @@ useEffect(() => {
 
 
           {/* User Dropdown */}
-          {user ? (
-            <div className="relative" ref={dropdownRef}>
-<Image
-  src={user.image || '/avatar.png'}
-  alt="Profile"
-  width={38}
-  height={38}
-  className="rounded-full cursor-pointer border"
-  onClick={() => {
-    setShowDropdown((prev) => !prev);
-    setShowSearch(false);
-    setShowNotifModal(false);
-  }}
-/>
+{user ? (
+  <div className="relative" ref={dropdownRef}>
+    {user.image ? (
+      <Image
+        src={user.image}
+        alt="Profile"
+        width={38}
+        height={38}
+        className="rounded-full cursor-pointer border"
+        onClick={() => {
+          setShowDropdown((prev) => !prev);
+          setShowSearch(false);
+          setShowNotifModal(false);
+        }}
+      />
+    ) : (
+      <FiUser
+        size={38}
+        className="text-orange-500 cursor-pointer hover:text-orange-600"
+        onClick={() => {
+          setShowDropdown((prev) => !prev);
+          setShowSearch(false);
+          setShowNotifModal(false);
+        }}
+      />
+    )}
 
-              <AnimatePresence>
-                {showDropdown && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 4 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute right-0 mt-3 bg-white dark:bg-gray-900 shadow-lg rounded-lg border z-50 w-40"
-                    style={{ boxShadow: '0 6px 15px rgba(0,0,0,0.15)' }}
-                  >
-                    <button
-                      onClick={logout}
-                      className="w-full flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-100 dark:hover:bg-gray-800 rounded"
-                    >
-                      <LogOut size={18} /> Logout
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          ) : (
-            <button
-              onClick={() => setShowLogin(true)}
-              className="bg-orange-500 hover:bg-orange-600 text-white py-2 px-6 rounded-full transition"
-            >
-              Sign In
-            </button>
-          )}
+    <AnimatePresence>
+      {showDropdown && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 4 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+          className="absolute right-0 mt-3 bg-white dark:bg-gray-900 shadow-lg rounded-lg border z-50 w-40"
+          style={{ boxShadow: '0 6px 15px rgba(0,0,0,0.15)' }}
+        >
+          <button
+            onClick={logout}
+            className="w-full flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-100 dark:hover:bg-gray-800 rounded"
+          >
+            <LogOut size={18} /> Logout
+          </button>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
+) : (
+  <button
+    onClick={() => setShowLogin(true)}
+    className="bg-orange-500 hover:bg-orange-600 text-white py-2 px-6 rounded-full transition"
+  >
+    Sign In
+  </button>
+)}
+
         </div>
 
         {/* Modals */}

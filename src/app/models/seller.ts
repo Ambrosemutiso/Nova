@@ -19,6 +19,10 @@ const sellerSchema = new mongoose.Schema({
   type: String,
   default: null,   // default explicitly to null
 },
+    password: {
+      type: String,
+      required: [true, 'Password is required'],
+    },
   country: { type: String },
   currency: { type: String },
   role: {

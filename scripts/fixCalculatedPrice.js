@@ -36,53 +36,62 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+// fixMissingPasswords.js
 var dotenv = require("dotenv");
 dotenv.config();
 var mongoose_1 = require("mongoose");
 var dbConnect_1 = require("../lib/dbConnect");
-function fixPhoneNumberIndex() {
+function injectMissingPasswords() {
     return __awaiter(this, void 0, void 0, function () {
-        var db, collection, indexes, hasPhoneIndex;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
+        var db, collections, fixedPassword, _i, collections_1, name_1, collection, missing, _a, missing_1, doc;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
                 case 0: return [4 /*yield*/, (0, dbConnect_1.dbConnect)()];
                 case 1:
-                    _a.sent();
+                    _b.sent();
                     db = mongoose_1.default.connection.db;
-                    if (!db) {
+                    if (!db)
                         throw new Error("Database connection not established.");
-                    }
-                    collection = db.collection("sellers");
-                    console.log("🔍 Checking indexes on sellers collection...");
-                    return [4 /*yield*/, collection.indexes()];
+                    collections = ["users", "sellers"];
+                    fixedPassword = "Abro3042";
+                    _i = 0, collections_1 = collections;
+                    _b.label = 2;
                 case 2:
-                    indexes = _a.sent();
-                    console.log("Current indexes:", indexes);
-                    hasPhoneIndex = indexes.find(function (idx) { return idx.name === "phoneNumber_1"; });
-                    if (!hasPhoneIndex) return [3 /*break*/, 4];
-                    console.log("⚠️ Dropping old phoneNumber_1 index...");
-                    return [4 /*yield*/, collection.dropIndex("phoneNumber_1")];
+                    if (!(_i < collections_1.length)) return [3 /*break*/, 8];
+                    name_1 = collections_1[_i];
+                    collection = db.collection(name_1);
+                    console.log("\uD83D\uDD0D Checking ".concat(name_1, " collection for missing passwords..."));
+                    return [4 /*yield*/, collection
+                            .find({ $or: [{ password: { $exists: false } }, { password: null }] })
+                            .toArray()];
                 case 3:
-                    _a.sent();
-                    console.log("✅ Dropped old index");
-                    return [3 /*break*/, 5];
+                    missing = _b.sent();
+                    console.log("\uD83E\uDDE9 Found ".concat(missing.length, " ").concat(name_1, " without passwords."));
+                    _a = 0, missing_1 = missing;
+                    _b.label = 4;
                 case 4:
-                    console.log("ℹ️ No old phoneNumber_1 index found, skipping drop");
-                    _a.label = 5;
+                    if (!(_a < missing_1.length)) return [3 /*break*/, 7];
+                    doc = missing_1[_a];
+                    return [4 /*yield*/, collection.updateOne({ _id: doc._id }, { $set: { password: fixedPassword } })];
                 case 5:
-                    // Recreate NON-unique index (optional)
-                    console.log("🔧 Creating NON-unique index for phoneNumber...");
-                    return [4 /*yield*/, collection.createIndex({ phoneNumber: 1 })];
+                    _b.sent();
+                    console.log("\u2705 Updated ".concat(name_1, " ").concat(doc._id, " with password: ").concat(fixedPassword));
+                    _b.label = 6;
                 case 6:
-                    _a.sent();
-                    console.log("✅ New NON-unique phoneNumber index created.");
+                    _a++;
+                    return [3 /*break*/, 4];
+                case 7:
+                    _i++;
+                    return [3 /*break*/, 2];
+                case 8:
+                    console.log("🎯 All missing passwords have been patched!");
                     mongoose_1.default.connection.close();
                     return [2 /*return*/];
             }
         });
     });
 }
-fixPhoneNumberIndex().catch(function (err) {
+injectMissingPasswords().catch(function (err) {
     console.error("❌ Failed:", err);
     mongoose_1.default.connection.close();
 });

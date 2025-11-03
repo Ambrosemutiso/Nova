@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     title: "Novaxpress — Kenya’s Trusted Multi-Seller E-Commerce Marketplace",
     description:
       "Join Novaxpress to buy and sell across Kenya. Secure payments, fast delivery, and engaging video ads that boost your product visibility.",
-    url: "https://novaxpress.shop",
+    url: "https://novaxpress.co.ke",
     siteName: "Novaxpress",
     images: [
       {

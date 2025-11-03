@@ -185,7 +185,7 @@ export async function POST(req: NextRequest) {
       <div class="container">
         <!-- Header -->
         <div class="header">
-          <img src="https://novaxpress.shop/logo.png" alt="NovaXpress Logo" width="120" />
+          <img src="/Logo.jpg" alt="NovaXpress Logo" width="120" />
           <h1>${isBuyer ? "Welcome to NovaXpress!" : "Welcome to NovaXpress Seller Hub!"}</h1>
         </div>
 
@@ -198,20 +198,20 @@ export async function POST(req: NextRequest) {
               <p>We’re thrilled to have you join <b>NovaXpress</b> — your one-stop marketplace for amazing products, great prices, and fast deliveries.</p>
               <p>Start browsing, discover exclusive deals, and experience a smarter way to shop.</p>
               <div class="cta">
-                <a href="https://novaxpress.shop">Start Shopping 🛍️</a>
+                <a href="https://novaxpress.co.ke">Start Shopping 🛍️</a>
               </div>
             `
               : `
               <p>Welcome to the <b>NovaXpress Seller Hub</b> — the platform designed to help your business grow, connect with customers, and increase sales.</p>
               <p>Get started by adding your first products and building your storefront today.</p>
               <div class="cta">
-                <a href="https://novaxpress.shop/seller/dashboard">Go to Seller Dashboard 💼</a>
+                <a href="https://novaxpress.co.ke/seller/dashboard">Go to Seller Dashboard 💼</a>
               </div>
             `
           }
           <p style="font-size: 14px; color: #666;">
             Need help? Our team is here for you. Contact us anytime at 
-            <a href="mailto:support@novaxpress.shop" style="color: ${primary}; text-decoration: none;">support@novaxpress.shop</a>.
+            <a href="mailto:support@novaxpress.co.ke" style="color: ${primary}; text-decoration: none;">support@novaxpress.shop</a>.
           </p>
         </div>
 
@@ -221,10 +221,10 @@ export async function POST(req: NextRequest) {
             ? `
             <div class="app-download">
               <p>📱 Get the NovaXpress App for faster shopping</p>
-              <div class="app-logos">
-                <a href="#"><img src="/play_store.png" alt="Get it on Google Play" /></a>
-                <a href="#"><img src="/app_store.png" alt="Download on the App Store" /></a>
-              </div>
+            <div className="app-logos">
+              <a href="#"><Image src="/play_store.png" alt="Google Play" width={135} height={40} /></a>
+              <a href="#"><Image src="/app_store.png" alt="App Store" width={120} height={40} /></a>
+            </div>
             </div>
             `
             : ""
@@ -247,9 +247,9 @@ export async function POST(req: NextRequest) {
           </div>
 
           <div class="footer-links">
-            <a href="https://novaxpress.shop/privacy">Privacy Policy</a> |
-            <a href="https://novaxpress.shop/terms">Terms of Service</a> |
-            <a href="https://novaxpress.shop/contact">Contact</a>
+            <a href="https://novaxpress.co.ke/privacy">Privacy Policy</a> |
+            <a href="https://novaxpress.co.ke/terms">Terms of Service</a> |
+            <a href="https://novaxpress.co.ke/contact">Contact</a>
           </div>
 
           <p style="font-size: 12px; margin-top: 10px;">
