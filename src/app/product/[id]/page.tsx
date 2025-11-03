@@ -13,7 +13,7 @@ import BehaviorTracker from '@/components/BehaviourTracker';
 import ProductImageViewer from '@/components/ProductImageViewer';
 import SellerSection from '@/components/SellerSection';
 import MoreFromSeller from '@/components/MoreFromSeller';
-import Login from '@/components/Login';
+import BuyerLoginModal from '@/components/modals/BuyerLoginModal';
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -324,7 +324,7 @@ return (
       <RelatedProducts name={product.name} currentId={product._id.toString()} />
       <CustomersAlsoViewed productId={product._id.toString()} />
       <BehaviorTracker product={product} />
-      {showLoginModal && <Login onClose={() => setShowLoginModal(false)} />}
+      {showLoginModal && <BuyerLoginModal onClose={() => setShowLoginModal(false)} />}
       <SellerSection product={product} showLoginModal={() => setShowLoginModal(true)} />
       <MoreFromSeller sellerId={product.sellerId} currentProductId={product._id.toString()} />
 <button className="text-sm text-red-600 underline mt-4" onClick={() => setShowReportModal(true)}>Report Incorrect Product Details</button>

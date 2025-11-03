@@ -36,66 +36,40 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// fixMissingPasswordsHashed.js
+exports.dbConnect = dbConnect;
 var dotenv = require("dotenv");
 dotenv.config();
 var mongoose_1 = require("mongoose");
-var bcrypt = require("bcryptjs");
-var dbConnect_1 = require("../lib/dbConnect");
-function injectMissingPasswords() {
+var MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) {
+    throw new Error('❌ MongoDB URI not defined in environment variables');
+}
+var isConnected = false;
+function dbConnect() {
     return __awaiter(this, void 0, void 0, function () {
-        var db, collections, plainPassword, hashedPassword, _i, collections_1, name_1, collection, missing, _a, missing_1, doc;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
-                case 0: return [4 /*yield*/, (0, dbConnect_1.dbConnect)()];
+        var db, err_1;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    if (isConnected) {
+                        console.log('✅ MongoDB: Already connected');
+                        return [2 /*return*/];
+                    }
+                    _a.label = 1;
                 case 1:
-                    _b.sent();
-                    db = mongoose_1.default.connection.db;
-                    if (!db)
-                        throw new Error("Database connection not established.");
-                    collections = ["users", "sellers"];
-                    plainPassword = "Abro3042";
-                    return [4 /*yield*/, bcrypt.hash(plainPassword, 10)];
+                    _a.trys.push([1, 3, , 4]);
+                    return [4 /*yield*/, mongoose_1.default.connect(MONGODB_URI)];
                 case 2:
-                    hashedPassword = _b.sent();
-                    _i = 0, collections_1 = collections;
-                    _b.label = 3;
+                    db = _a.sent();
+                    isConnected = true;
+                    console.log('✅ MongoDB: Connected successfully');
+                    return [2 /*return*/, db];
                 case 3:
-                    if (!(_i < collections_1.length)) return [3 /*break*/, 9];
-                    name_1 = collections_1[_i];
-                    collection = db.collection(name_1);
-                    console.log("\uD83D\uDD0D Checking ".concat(name_1, " collection for missing passwords..."));
-                    return [4 /*yield*/, collection
-                            .find({ $or: [{ password: { $exists: false } }, { password: null }] })
-                            .toArray()];
-                case 4:
-                    missing = _b.sent();
-                    console.log("\uD83E\uDDE9 Found ".concat(missing.length, " ").concat(name_1, " without passwords."));
-                    _a = 0, missing_1 = missing;
-                    _b.label = 5;
-                case 5:
-                    if (!(_a < missing_1.length)) return [3 /*break*/, 8];
-                    doc = missing_1[_a];
-                    return [4 /*yield*/, collection.updateOne({ _id: doc._id }, { $set: { password: hashedPassword } })];
-                case 6:
-                    _b.sent();
-                    console.log("\u2705 Updated ".concat(name_1, " ").concat(doc._id, " with hashed password."));
-                    _b.label = 7;
-                case 7:
-                    _a++;
-                    return [3 /*break*/, 5];
-                case 8:
-                    _i++;
-                    return [3 /*break*/, 3];
-                case 9:
-                    console.log("🎯 All missing passwords have been securely patched!");
-                    mongoose_1.default.connection.close();
-                    return [2 /*return*/];
+                    err_1 = _a.sent();
+                    console.error('❌ MongoDB: Connection error', err_1);
+                    throw new Error('Failed to connect to MongoDB');
+                case 4: return [2 /*return*/];
             }
         });
     });
 }
-injectMissingPasswords().catch(function (err) {
-    console.error("❌ Failed:", err);
-    mongoose_1.default.connection.close();
-});

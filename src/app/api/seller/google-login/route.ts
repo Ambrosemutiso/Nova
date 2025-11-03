@@ -1,149 +1,72 @@
-import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { dbConnect } from '@/lib/dbConnect';
-import Seller from '@/app/models/seller';
+import { NextResponse } from "next/server";
+import { dbConnect } from "@/lib/dbConnect";
+import Seller from "@/app/models/seller";
+import bcrypt from "bcryptjs";
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+export async function POST(req: Request) {
+  await dbConnect();
 
-export async function POST(req: NextRequest) {
   try {
-    await dbConnect();
-    const body = await req.json();
-    const { provider } = body; // 'google' or 'email'
+    const { provider, mode, name, email, image, phoneNumber, country, currency, password } =
+      await req.json();
 
-    if (!provider) {
+    if (!email) {
       return NextResponse.json(
-        { success: false, message: 'Provider type is required' },
+        { success: false, error: "Email is required" },
         { status: 400 }
       );
     }
 
-    // -------------------------------
-    // 🔹 GOOGLE LOGIN / REGISTER
-    // -------------------------------
-    if (provider === 'google') {
-      const { name, email, image, role, phoneNumber, country, currency, plan } = body;
+    let seller = await Seller.findOne({ email });
 
-      if (!email) {
-        return NextResponse.json(
-          { success: false, message: 'Email is required' },
-          { status: 400 }
-        );
+    if (!seller) {
+      // Hash password only if it’s provided (email/password registration)
+      let hashedPassword = undefined;
+      if (password) {
+        const salt = await bcrypt.genSalt(10);
+        hashedPassword = await bcrypt.hash(password, salt);
       }
 
-      let seller = await Seller.findOne({ email });
+      const newSellerData: any = {
+        name,
+        email,
+        image,
+        phoneNumber: phoneNumber || null,
+        country: country || null,
+        currency: currency || null,
+        role: "seller",
+        isPhoneVerified: false,
+        provider: provider || "google",
+        ...(hashedPassword && { password: hashedPassword }),
+      };
 
-      if (!seller) {
-        seller = await Seller.create({
-          name,
-          email,
-          image,
-          role: role || 'seller',
-          phoneNumber: phoneNumber || null,
-          country: country || null,
-          currency: currency || null,
-          plan: plan || 'free',
-        });
-      } else {
-        if (!seller.plan) seller.plan = 'free';
-        if (!seller.phoneNumber && phoneNumber) seller.phoneNumber = phoneNumber;
-        await seller.save();
-      }
-
-      const token = jwt.sign(
-        { id: seller._id, email: seller.email, role: seller.role },
-        JWT_SECRET,
-        { expiresIn: '7d' }
-      );
-
-      return NextResponse.json({ success: true, user: seller, token });
-    }
-
-    // -------------------------------
-    // 🔹 EMAIL/PASSWORD LOGIN & REGISTER
-    // -------------------------------
-    else if (provider === 'email') {
-      const { mode, name, email, password, phoneNumber, country, plan } = body;
-
-      if (!email || !password) {
-        return NextResponse.json(
-          { success: false, message: 'Email and password are required' },
-          { status: 400 }
-        );
-      }
-
-      let seller = await Seller.findOne({ email });
-
-      // 🔸 REGISTER
-      if (mode === 'register') {
-        if (seller) {
-          return NextResponse.json(
-            { success: false, message: 'Seller already exists' },
-            { status: 400 }
-          );
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-        seller = await Seller.create({
-          name,
-          email,
-          password: hashedPassword,
-          role: 'seller',
-          phoneNumber,
-          country,
-          plan: plan || 'free',
-        });
-
-        return NextResponse.json({
-          success: true,
-          message: 'Seller registered successfully',
-        });
-      }
-
-      // 🔸 LOGIN
-      else if (mode === 'login') {
-        if (!seller) {
-          return NextResponse.json(
-            { success: false, message: 'Seller not found' },
-            { status: 404 }
-          );
-        }
-
-        const validPassword = await bcrypt.compare(password, seller.password);
-        if (!validPassword) {
-          return NextResponse.json(
-            { success: false, message: 'Invalid credentials' },
-            { status: 401 }
-          );
-        }
-
-        const token = jwt.sign(
-          { id: seller._id, email: seller.email, role: seller.role },
-          JWT_SECRET,
-          { expiresIn: '7d' }
-        );
-
-        return NextResponse.json({ success: true, user: seller, token });
-      }
-
+      seller = await Seller.create(newSellerData);
+    } else if (mode === "register") {
+      // Prevent duplicate registration
       return NextResponse.json(
-        { success: false, message: 'Invalid mode (expected login/register)' },
+        { success: false, error: "Seller already exists" },
         { status: 400 }
       );
     }
 
-    // -------------------------------
-    // ❌ INVALID PROVIDER
-    // -------------------------------
+    // ✅ If phone missing or not verified → ask frontend to open OTP modal
+    if (!seller.phoneNumber || !seller.isPhoneVerified) {
+      return NextResponse.json({
+        success: true,
+        user: seller,
+        needsPhoneNumber: true,
+      });
+    }
+
+    return NextResponse.json({
+      success: true,
+      user: seller,
+      needsPhoneNumber: false,
+    });
+  } catch (error) {
+    console.error("Seller Google-login error:", error);
     return NextResponse.json(
-      { success: false, message: 'Unsupported provider' },
-      { status: 400 }
-    );
-  } catch (err) {
-    console.error('Error in seller auth:', err);
-    return NextResponse.json(
-      { success: false, message: 'Server error' },
+      { success: false, error: "Seller login failed" },
       { status: 500 }
     );
   }

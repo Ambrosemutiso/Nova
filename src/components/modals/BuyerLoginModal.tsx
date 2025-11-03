@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -14,7 +14,7 @@ interface LoginModalProps {
   defaultRole?: 'buyer' | 'seller' | null;
 }
 
-export default function LoginModal({ onClose, defaultRole = 'buyer' }: LoginModalProps) {
+export default function BuyerLoginModal({ onClose, defaultRole = 'buyer' }: LoginModalProps) {
   const [isLogin, setIsLogin] = useState(true);
   const [role, setRole] = useState<'buyer' | 'seller' | null>(defaultRole);
   const [name, setName] = useState('');
@@ -47,7 +47,7 @@ export default function LoginModal({ onClose, defaultRole = 'buyer' }: LoginModa
     }
 
     try {
-      const res = await axios.post('/api/auth', {
+      const res = await axios.post('/api/auth/google-login', {
         provider: 'email',
         mode: isLogin ? 'login' : 'signup',
         name,

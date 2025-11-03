@@ -1,118 +1,102 @@
 import { NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import { dbConnect } from '@/lib/dbConnect';
 import User from '@/app/models/user';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'novaxpress_secret_123'; // replace in prod with env var
 
 export async function POST(req: Request) {
   await dbConnect();
 
   try {
     const body = await req.json();
-    const { provider } = body;
+    const {
+      provider, // "google" | "email"
+      mode, // "login" | "signup" for email
+      name,
+      email,
+      password,
+      image,
+      role,
+      phoneNumber,
+      country,
+    } = body;
 
-    if (!provider) {
-      return NextResponse.json({ success: false, error: 'Provider is required' }, { status: 400 });
+    if (!email) {
+      return NextResponse.json({ success: false, error: 'Email is required' }, { status: 400 });
     }
 
-    // --------------------------
-    // 🔹 GOOGLE AUTHENTICATION
-    // --------------------------
+    // -------------------------------
+    // 🔹 GOOGLE LOGIN OR SIGNUP
+    // -------------------------------
     if (provider === 'google') {
-      const { name, email, image, role, phoneNumber, country, currency } = body;
-
-      if (!email) {
-        return NextResponse.json({ success: false, error: 'Email is required' }, { status: 400 });
-      }
-
       let user = await User.findOne({ email });
+
       if (!user) {
         user = await User.create({
           name,
           email,
           image,
           role,
-          phoneNumber: phoneNumber || null,
           country: country || null,
-          currency: currency || null,
+          phoneNumber: phoneNumber || null,
           isPhoneVerified: false,
         });
       }
 
-      const token = jwt.sign(
-        { id: user._id, email: user.email, role: user.role },
-        JWT_SECRET,
-        { expiresIn: '7d' }
-      );
-
-      return NextResponse.json({
-        success: true,
-        token,
-        user,
-        needsPhoneNumber: !user.phoneNumber || !user.isPhoneVerified,
-      });
+      const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+      return NextResponse.json({ success: true, user, token });
     }
 
-    // --------------------------
-    // 🔹 EMAIL / PASSWORD AUTH
-    // --------------------------
-    else if (provider === 'email') {
-      const { name, email, password, role, mode } = body; // mode = 'login' or 'signup'
-
-      if (!email || !password) {
-        return NextResponse.json({ success: false, error: 'Email and password are required' }, { status: 400 });
-      }
-
-      let user = await User.findOne({ email });
-
-      // SIGNUP FLOW
+    // -------------------------------
+    // 🔹 EMAIL LOGIN / SIGNUP
+    // -------------------------------
+    if (provider === 'email') {
+      // Signup
       if (mode === 'signup') {
-        if (user) {
-          return NextResponse.json({ success: false, error: 'User already exists' }, { status: 400 });
+        if (!password || !name || !country || !phoneNumber) {
+          return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        user = await User.create({
+        const existing = await User.findOne({ email });
+        if (existing) {
+          return NextResponse.json({ success: false, error: 'Email already registered' }, { status: 400 });
+        }
+
+        const hashed = await bcrypt.hash(password, 10);
+        const newUser = await User.create({
           name,
           email,
-          password: hashedPassword,
-          role: role || 'buyer',
+          password: hashed,
+          role,
+          phoneNumber,
+          country,
           isPhoneVerified: false,
         });
+
+        const token = jwt.sign({ id: newUser._id, role: newUser.role }, JWT_SECRET, { expiresIn: '7d' });
+        return NextResponse.json({ success: true, user: newUser, token });
       }
 
-      // LOGIN FLOW
-      else if (mode === 'login') {
-        if (!user) {
-          return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+      // Login
+      if (mode === 'login') {
+        const user = await User.findOne({ email });
+        if (!user || !user.password) {
+          return NextResponse.json({ success: false, error: 'Invalid email or password' }, { status: 401 });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-          return NextResponse.json({ success: false, error: 'Invalid credentials' }, { status: 401 });
+          return NextResponse.json({ success: false, error: 'Invalid email or password' }, { status: 401 });
         }
-      } else {
-        return NextResponse.json({ success: false, error: 'Invalid mode' }, { status: 400 });
+
+        const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+        return NextResponse.json({ success: true, user, token });
       }
-
-      const token = jwt.sign(
-        { id: user._id, email: user.email, role: user.role },
-        JWT_SECRET,
-        { expiresIn: '7d' }
-      );
-
-      return NextResponse.json({
-        success: true,
-        token,
-        user,
-      });
     }
 
-    // Unknown provider
-    return NextResponse.json({ success: false, error: 'Unsupported provider' }, { status: 400 });
-
+    return NextResponse.json({ success: false, error: 'Invalid provider or mode' }, { status: 400 });
   } catch (error) {
     console.error('Auth error:', error);
     return NextResponse.json({ success: false, error: 'Authentication failed' }, { status: 500 });

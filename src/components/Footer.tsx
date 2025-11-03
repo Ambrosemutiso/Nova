@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { FaFacebook, FaInstagram, FaTiktok, FaTwitter, FaYoutube } from 'react-icons/fa';
 
-export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () => void }) {
+export default function Footer() {
   const [isSeller, setIsSeller] = useState(false);
 
   useEffect(() => {
@@ -15,7 +15,7 @@ export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () =>
   if (isSeller) {
     return (
       <footer className="bg-white shadow-md p-4 text-center text-gray-600">
-        &copy; {new Date().getFullYear()}. All rights reserved.
+        &copy; {new Date().getFullYear()}NovaXpress. All rights reserved.
       </footer>
     );
   }

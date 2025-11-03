@@ -3,7 +3,6 @@ import { useEffect, useState, useRef } from 'react';
 import { FiMenu, FiShoppingCart, FiPackage, FiSearch, FiBell, FiUser } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/app/context/CartContext';
-import Login from './Login';
 import Sidebar from './Sidebar';
 import SellerSidebar from '@/app/seller/sidebar/SellerSidebar';
 import Image from 'next/image';
@@ -13,8 +12,12 @@ import type { Notification } from '@/app/types/notification';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CldImage } from 'next-cloudinary';
 
-export default function Navbar() {
-  const [showLogin, setShowLogin] = useState(false);
+type NavbarProps = {
+  onOpenBuyerLogin?: () => void;
+  onOpenSellerLogin?: () => void;
+};
+
+export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin }: NavbarProps) {
   const [showSidebar, setShowSidebar] = useState(false);
   const [orderCount, setOrderCount] = useState(0);
   const [showSearch, setShowSearch] = useState(false);
@@ -24,29 +27,17 @@ export default function Navbar() {
   const [showNotifModal, setShowNotifModal] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
+
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const searchRef = useRef<HTMLDivElement | null>(null);
   const notifRef = useRef<HTMLDivElement | null>(null);
 
-  // 🔹 Auto-close notification modal when search or dropdown opens
-useEffect(() => {
-  if (showSearch || showDropdown) setShowNotifModal(false);
-}, [showSearch, showDropdown]);
-
-// 🔹 Auto-close search and dropdown when notification modal opens
-useEffect(() => {
-  if (showNotifModal) {
-    setShowSearch(false);
-    setShowDropdown(false);
-  }
-}, [showNotifModal]);
-
-
   const router = useRouter();
   const { cartItems } = useCart();
   const { user, logout } = useAuth();
-  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+
   const isSeller = user?.role === 'seller';
+  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
   const promos = [
     '🔥 Flash Sale! Up to 50% off selected products!',
@@ -55,7 +46,7 @@ useEffect(() => {
     '💳 Secure Payments via M-Pesa & AirtelMoney',
   ];
 
-  // 🔹 Cycle promo messages
+  // 🔸 Promo rotation
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentPromo((prev) => (prev + 1) % promos.length);
@@ -63,29 +54,19 @@ useEffect(() => {
     return () => clearInterval(interval);
   }, []);
 
-  // 🔹 Close dropdown/search on outside click
-useEffect(() => {
-  function handleClickOutside(event: MouseEvent) {
-    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node))
-      setShowDropdown(false);
-
-    if (searchRef.current && !searchRef.current.contains(event.target as Node))
-      setShowSearch(false);
-
-    if (notifRef.current && !notifRef.current.contains(event.target as Node))
-      setShowNotifModal(false);
-  }
-
-  document.addEventListener('mousedown', handleClickOutside);
-  return () => document.removeEventListener('mousedown', handleClickOutside);
-}, []);
-
-
-const getPublicId = (url?: string) => {
-   if (!url || typeof url !== 'string') 
-   return ''; const match = url.match(/\/upload\/(?:v\d+\/)?([^\.]+)/);
-   return match ? match[1] : url; };
-
+  // 🔹 Close dropdown/search/notif on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node))
+        setShowDropdown(false);
+      if (searchRef.current && !searchRef.current.contains(event.target as Node))
+        setShowSearch(false);
+      if (notifRef.current && !notifRef.current.contains(event.target as Node))
+        setShowNotifModal(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // 🔹 Fetch notifications
   useEffect(() => {
@@ -101,56 +82,58 @@ const getPublicId = (url?: string) => {
       }
     };
     fetchNotifications();
-  }, [isSeller, user]);
+  }, [user, isSeller]);
 
   // 🔹 Seller order count
-useEffect(() => {
-  if (user?.role === 'seller' && user._id) {
-    fetchOrders(user._id);
-  }
-}, [user]);
+  useEffect(() => {
+    if (user?.role === 'seller' && user._id) {
+      fetchOrders(user._id);
+    }
+  }, [user]);
 
-const fetchOrders = async (sellerId?: string) => {
-  if (!sellerId) return;
-  try {
-    const res = await fetch('/api/orders/count', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sellerId }),
-    });
-    const data = await res.json();
-    if (res.ok) setOrderCount(data.count);
-  } catch (err) {
-    console.error('Failed to fetch order count:', err);
-  }
-};
-
-
-useEffect(() => {
-  if (!searchTerm.trim()) {
-    setSuggestions([]);
-    return;
-  }
-
-  const fetchSuggestions = async () => {
+  const fetchOrders = async (sellerId?: string) => {
+    if (!sellerId) return;
     try {
-      const res = await fetch(`/api/products/suggest?q=${encodeURIComponent(searchTerm)}`);
+      const res = await fetch('/api/orders/count', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sellerId }),
+      });
       const data = await res.json();
-      setSuggestions(data.slice(0, 5)); // Expecting array of { _id, name, price, images }
-    } catch (error) {
-      console.error('Suggestion fetch failed', error);
+      if (res.ok) setOrderCount(data.count);
+    } catch (err) {
+      console.error('Failed to fetch order count:', err);
     }
   };
 
-  const timeout = setTimeout(fetchSuggestions, 300);
-  return () => clearTimeout(timeout);
-}, [searchTerm]);
+  // 🔹 Product search suggestions
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setSuggestions([]);
+      return;
+    }
+    const timeout = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/products/suggest?q=${encodeURIComponent(searchTerm)}`);
+        const data = await res.json();
+        setSuggestions(data.slice(0, 5));
+      } catch (error) {
+        console.error('Suggestion fetch failed', error);
+      }
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
 
+  const getPublicId = (url?: string) => {
+    if (!url || typeof url !== 'string') return '';
+    const match = url.match(/\/upload\/(?:v\d+\/)?([^\.]+)/);
+    return match ? match[1] : url;
+  };
 
   return (
     <>
       {/* 🔸 Promo Bar */}
-      <div className="fixed top-0 left-0 w-full bg-gradient-to-r from-orange-500 via-orange-400 to-orange-600 text-white text-sm py-1 overflow-hidden z-50 flex justify-center items-center">
+      <div className="fixed top-0 left-0 w-full bg-gradient-to-r from-orange-500 via-orange-400 to-orange-600 text-white text-sm py-1 z-50 flex justify-center items-center">
         <motion.div
           key={currentPromo}
           initial={{ y: 20, opacity: 0 }}
@@ -165,7 +148,6 @@ useEffect(() => {
 
       {/* 🔹 Navbar */}
       <nav className="fixed top-6 left-0 w-full z-50 bg-gradient-to-b from-orange-50 via-white to-orange-100 dark:from-gray-900 dark:to-gray-800 shadow-lg py-3 px-4 flex items-center justify-between transition-all">
-
         {/* Sidebar Button */}
         <button onClick={() => setShowSidebar(true)} className="text-2xl text-orange-600">
           <FiMenu />
@@ -178,82 +160,78 @@ useEffect(() => {
 
         {/* Right Section */}
         <div className="flex items-center gap-4 relative ml-auto">
-{/* Expandable Search */}
-<div ref={searchRef} className="relative flex items-center">
-  <AnimatePresence>
-    {showSearch && (
-      <motion.div
-        initial={{ width: 0, opacity: 0 }}
-        animate={{ width: 240, opacity: 1 }}
-        exit={{ width: 0, opacity: 0 }}
-        transition={{ duration: 0.3 }}
-        className="absolute right-8"
-      >
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && searchTerm.trim()) {
-              router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
-              setShowSearch(false);
-            }
-          }}
-          placeholder="Search products..."
-          className="w-full border border-orange-300 rounded-full py-1.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
-        />
+          {/* Search */}
+          <div ref={searchRef} className="relative flex items-center">
+            <AnimatePresence>
+              {showSearch && (
+                <motion.div
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 240, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="absolute right-8"
+                >
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && searchTerm.trim()) {
+                        router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+                        setShowSearch(false);
+                      }
+                    }}
+                    placeholder="Search products..."
+                    className="w-full border border-orange-300 rounded-full py-1.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
+                  />
 
-        {/* 🔸 Product Suggestions */}
-        {suggestions.length > 0 && (
-          <ul className="absolute top-9 left-0 w-full bg-white border border-orange-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
-            {suggestions.map((product: any, i) => (
-              <li
-                key={i}
-                onClick={() => {
-                  router.push(`/product/${product._id}`);
-                  setSearchTerm('');
-                  setShowSearch(false);
-                }}
-                className="flex items-center gap-3 px-3 py-2 hover:bg-orange-50 cursor-pointer"
-              >
-                {/* Product Image */}
-                <CldImage 
-                  src={getPublicId(product.images[0])} 
-                  alt={product.name} 
-                  width="40" 
-                  height="40" 
-                  className="rounded-md object-cover" />
+                  {/* Suggestions */}
+                  {suggestions.length > 0 && (
+                    <ul className="absolute top-9 left-0 w-full bg-white border border-orange-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
+                      {suggestions.map((product: any, i) => (
+                        <li
+                          key={i}
+                          onClick={() => {
+                            router.push(`/product/${product._id}`);
+                            setSearchTerm('');
+                            setShowSearch(false);
+                          }}
+                          className="flex items-center gap-3 px-3 py-2 hover:bg-orange-50 cursor-pointer"
+                        >
+                          <CldImage
+                            src={getPublicId(product.images[0])}
+                            alt={product.name}
+                            width="40"
+                            height="40"
+                            className="rounded-md object-cover"
+                          />
+                          <div className="flex flex-col">
+                            <span className="text-sm text-gray-800 font-medium truncate max-w-[130px]">
+                              {product.name}
+                            </span>
+                            <span className="text-xs text-orange-600 font-semibold">
+                              Ksh {product.calculatedPrice?.toLocaleString()}
+                            </span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-                {/* Name + Price */}
-                <div className="flex flex-col">
-                  <span className="text-sm text-gray-800 font-medium truncate max-w-[130px]">
-                    {product.name}
-                  </span>
-                  <span className="text-xs text-orange-600 font-semibold">
-                    Ksh {product.calculatedPrice?.toLocaleString()}
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </motion.div>
-    )}
-  </AnimatePresence>
-
-  {/* Search Icon Button */}
-<button
-  onClick={() => {
-    setShowSearch((prev) => !prev);
-    setShowDropdown(false);
-    setShowNotifModal(false);
-  }}
-  className="text-2xl text-orange-500 relative z-10"
->
-  <FiSearch />
-</button>
-
-</div>
+            <button
+              onClick={() => {
+                setShowSearch((prev) => !prev);
+                setShowDropdown(false);
+                setShowNotifModal(false);
+              }}
+              className="text-2xl text-orange-500 relative z-10"
+            >
+              <FiSearch />
+            </button>
+          </div>
 
           {/* Cart or Orders */}
           {isSeller ? (
@@ -278,158 +256,138 @@ useEffect(() => {
 
           {/* Notifications */}
           <button
-  onClick={() => {
-    setShowNotifModal((prev) => !prev);
-    setShowSearch(false);
-    setShowDropdown(false);
-  }}
-  className="relative text-2xl text-orange-500"
->
-  <FiBell />
-  {/* ...badge */}
-              {notifications.some((n) => !n.read) && (
+            onClick={() => {
+              setShowNotifModal((prev) => !prev);
+              setShowSearch(false);
+              setShowDropdown(false);
+            }}
+            className="relative text-2xl text-orange-500"
+          >
+            <FiBell />
+            {notifications.some((n) => !n.read) && (
               <span className="absolute -top-2 -right-2 bg-orange-600 text-white text-xs rounded-full px-1.5 py-0.5">
                 {notifications.filter((n) => !n.read).length}
               </span>
             )}
-</button>
-
-
-          {/* User Dropdown */}
-{user ? (
-  <div className="relative" ref={dropdownRef}>
-    {user.image ? (
-      <Image
-        src={user.image}
-        alt="Profile"
-        width={38}
-        height={38}
-        className="rounded-full cursor-pointer border"
-        onClick={() => {
-          setShowDropdown((prev) => !prev);
-          setShowSearch(false);
-          setShowNotifModal(false);
-        }}
-      />
-    ) : (
-      <FiUser
-        size={38}
-        className="text-orange-500 cursor-pointer hover:text-orange-600"
-        onClick={() => {
-          setShowDropdown((prev) => !prev);
-          setShowSearch(false);
-          setShowNotifModal(false);
-        }}
-      />
-    )}
-
-    <AnimatePresence>
-      {showDropdown && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 4 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
-          className="absolute right-0 mt-3 bg-white dark:bg-gray-900 shadow-lg rounded-lg border z-50 w-40"
-          style={{ boxShadow: '0 6px 15px rgba(0,0,0,0.15)' }}
-        >
-          <button
-            onClick={logout}
-            className="w-full flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-100 dark:hover:bg-gray-800 rounded"
-          >
-            <LogOut size={18} /> Logout
           </button>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  </div>
-) : (
-  <button
-    onClick={() => setShowLogin(true)}
-    className="bg-orange-500 hover:bg-orange-600 text-white py-2 px-6 rounded-full transition"
-  >
-    Sign In
-  </button>
-)}
 
+          {/* User or Sign-in */}
+          {user ? (
+            <div className="relative" ref={dropdownRef}>
+              {user.image ? (
+                <Image
+                  src={user.image}
+                  alt="Profile"
+                  width={38}
+                  height={38}
+                  className="rounded-full cursor-pointer border"
+                  onClick={() => setShowDropdown((prev) => !prev)}
+                />
+              ) : (
+                <FiUser
+                  size={38}
+                  className="text-orange-500 cursor-pointer hover:text-orange-600"
+                  onClick={() => setShowDropdown((prev) => !prev)}
+                />
+              )}
+
+              <AnimatePresence>
+                {showDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 4 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 mt-3 bg-white dark:bg-gray-900 shadow-lg rounded-lg border z-50 w-40"
+                  >
+                    <button
+                      onClick={logout}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-100 dark:hover:bg-gray-800 rounded"
+                    >
+                      <LogOut size={18} /> Logout
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                // ✅ Call prop instead of local modal
+                if (onOpenBuyerLogin) onOpenBuyerLogin();
+                else router.push('/auth/google-login');
+              }}
+              className="bg-orange-500 hover:bg-orange-600 text-white py-2 px-6 rounded-full transition"
+            >
+              Sign In
+            </button>
+          )}
         </div>
 
-        {/* Modals */}
+        {/* Sidebars */}
         {showSidebar &&
           (isSeller ? (
             <SellerSidebar onClose={() => setShowSidebar(false)} />
           ) : (
             <Sidebar onClose={() => setShowSidebar(false)} />
           ))}
-        {showLogin && <Login onClose={() => setShowLogin(false)} />}
 
-          {/* 🔔 Notification Modal */}
-<AnimatePresence>
-  {showNotifModal && (
-    <motion.div
-      ref={notifRef}
-      initial={{ opacity: 0, y: -8, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -8, scale: 0.98 }}
-      transition={{ duration: 0.25, ease: 'easeOut' }}
-      className="absolute right-16 top-14 w-96 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border border-orange-100/60 dark:border-gray-700/60 
-                 rounded-2xl shadow-xl z-[60] overflow-hidden ring-1 ring-black/5"
-    >
-      {/* Header */}
-      <div className="px-5 py-3 border-b border-orange-100/70 dark:border-gray-700/70 flex justify-between items-center bg-gradient-to-r from-orange-50/70 to-white/70 dark:from-gray-800/70 dark:to-gray-900/70">
-        <h4 className="font-semibold text-gray-800 dark:text-gray-100 text-sm uppercase tracking-wide">
-          Notifications
-        </h4>
-        <button
-          onClick={() => setShowNotifModal(false)}
-          className="text-gray-500 hover:text-orange-500 text-xs font-medium transition-colors"
-        >
-          Close
-        </button>
-      </div>
-
-      {/* Body */}
-      {notifications.length > 0 ? (
-        <ul className="max-h-80 overflow-y-auto divide-y divide-orange-50/70 dark:divide-gray-800/70">
-          {notifications.map((notif, i) => (
-            <li
-              key={i}
-              className={`px-5 py-3 text-sm cursor-pointer flex flex-col gap-1 hover:bg-orange-50/70 dark:hover:bg-gray-800/80 transition-all ${
-                notif.read
-                  ? 'text-gray-600 dark:text-gray-400'
-                  : 'text-gray-900 dark:text-gray-100 font-semibold'
-              }`}
-              onClick={() => {
-                // handle click (optional navigation or mark as read)
-                setShowNotifModal(false);
-              }}
+        {/* 🔔 Notifications */}
+        <AnimatePresence>
+          {showNotifModal && (
+            <motion.div
+              ref={notifRef}
+              initial={{ opacity: 0, y: -8, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.98 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="absolute right-16 top-14 w-96 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border border-orange-100/60 dark:border-gray-700/60 rounded-2xl shadow-xl z-[60]"
             >
-              <div className="flex justify-between items-center">
-                <span className="truncate">{notif.message || 'New update available'}</span>
-                {!notif.read && (
-                  <span className="bg-orange-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
-                    New
-                  </span>
-                )}
+              <div className="px-5 py-3 border-b border-orange-100 dark:border-gray-700 flex justify-between items-center bg-gradient-to-r from-orange-50 to-white dark:from-gray-800 dark:to-gray-900">
+                <h4 className="font-semibold text-gray-800 dark:text-gray-100 text-sm uppercase tracking-wide">
+                  Notifications
+                </h4>
+                <button
+                  onClick={() => setShowNotifModal(false)}
+                  className="text-gray-500 hover:text-orange-500 text-xs font-medium transition-colors"
+                >
+                  Close
+                </button>
               </div>
-              <span className="text-xs text-gray-400 dark:text-gray-500">
-                {new Date(notif.createdAt).toLocaleString()}
-              </span>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <div className="p-6 text-gray-500 dark:text-gray-400 text-sm text-center">
-          You’re all caught up 🎉  
-          <div className="text-xs text-gray-400 mt-1">
-            No new notifications at the moment
-          </div>
-        </div>
-      )}
-    </motion.div>
-  )}
-</AnimatePresence>
 
+              {notifications.length > 0 ? (
+                <ul className="max-h-80 overflow-y-auto divide-y divide-orange-50 dark:divide-gray-800">
+                  {notifications.map((notif, i) => (
+                    <li
+                      key={i}
+                      onClick={() => setShowNotifModal(false)}
+                      className={`px-5 py-3 text-sm flex flex-col gap-1 hover:bg-orange-50 dark:hover:bg-gray-800 transition-all ${
+                        notif.read ? 'text-gray-600' : 'text-gray-900 font-semibold'
+                      }`}
+                    >
+                      <div className="flex justify-between items-center">
+                        <span>{notif.message || 'New update available'}</span>
+                        {!notif.read && (
+                          <span className="bg-orange-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                            New
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs text-gray-400">
+                        {new Date(notif.createdAt).toLocaleString()}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="p-6 text-gray-500 text-sm text-center">
+                  You’re all caught up!
+                  <div className="text-xs text-gray-400 mt-1">No new notifications</div>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
     </>
   );
