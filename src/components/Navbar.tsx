@@ -285,7 +285,7 @@ export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin }: NavbarPr
                 />
               ) : (
                 <FiUser
-                  size={38}
+                  size={18}
                   className="text-orange-500 cursor-pointer hover:text-orange-600"
                   onClick={() => setShowDropdown((prev) => !prev)}
                 />

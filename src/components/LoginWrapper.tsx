@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import SellerLoginModal from '@/components/modals/SellerLoginModal';
 import BuyerLoginModal from '@/components/modals/BuyerLoginModal';
+import Footer from '@/components/Footer';
 import Navbar from './Navbar';
-import SellOnNovaXpress from '@/app/desc/sell-on-novaxpress/page';
 
 export default function LoginWrapper() {
   const [activeModal, setActiveModal] = useState<'buyer' | 'seller' | null>(null);
@@ -19,7 +19,7 @@ export default function LoginWrapper() {
       {activeModal === 'buyer' && <BuyerLoginModal onClose={closeModal} />}
 
       {/* Footer still opens modals via props */}
-      <SellOnNovaXpress onOpenSellerLogin={openSellerLogin} />
+      <Footer onOpenSellerLogin={openSellerLogin} />
       <Navbar onOpenBuyerLogin={openBuyerLogin}/>
     </>
   );

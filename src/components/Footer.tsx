@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { FaFacebook, FaInstagram, FaTiktok, FaTwitter, FaYoutube } from 'react-icons/fa';
 
-export default function Footer() {
+export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () => void }) {
   const [isSeller, setIsSeller] = useState(false);
 
   useEffect(() => {
