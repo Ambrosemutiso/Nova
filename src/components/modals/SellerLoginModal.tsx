@@ -80,7 +80,7 @@ export default function SellerLoginModal({ onClose }: { onClose: () => void }) {
         plan: 'free',
       };
 
-      const res = await axios.post('/api/seller/auth', payload);
+      const res = await axios.post('/api/seller/google-login', payload);
 
       if (res.data.success) {
         if (isLogin) {
