@@ -19,8 +19,8 @@ export default function LoginWrapper() {
       {activeModal === 'buyer' && <BuyerLoginModal onClose={closeModal} />}
 
       {/* Footer still opens modals via props */}
-      <Footer onOpenSellerLogin={openSellerLogin} />
       <Navbar onOpenBuyerLogin={openBuyerLogin}/>
+      <Footer onOpenSellerLogin={openSellerLogin} />
     </>
   );
 }

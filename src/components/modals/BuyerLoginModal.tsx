@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import { Eye, EyeOff, Globe2, ShoppingBag, Heart } from 'lucide-react';
 import { signInWithGoogle } from '@/lib/authUtils';
 import { useAuth } from '@/app/context/AuthContext';
@@ -109,7 +109,6 @@ export default function BuyerLoginModal({ onClose, defaultRole = 'buyer' }: Logi
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      <ToastContainer />
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}

@@ -147,3 +147,7 @@ button {
 .animate-rotate-slow {
   animation: rotate-slow 12s linear infinite;
 }
+
+.Toastify__toast-container {
+  z-index: 999999 !important;
+}

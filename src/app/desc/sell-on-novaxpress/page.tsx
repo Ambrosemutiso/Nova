@@ -1,15 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import Image from 'next/image';
 import { FaBoxOpen, FaStore, FaTruck, FaUsers } from 'react-icons/fa';
-import { CheckCircle } from 'lucide-react'
+import { CheckCircle } from 'lucide-react';
+import SellerLoginModal from '@/components/modals/SellerLoginModal';
 
-export default function SellOnNovaXpress({
-  onOpenSellerLogin,
-}: {
-  onOpenSellerLogin: () => void;
-}) {
+export default function SellOnNovaXpress() {
+  const [showLogin, setShowLogin] = useState(false);
+
   // 🧠 Mouse position tracking for parallax
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -37,6 +37,9 @@ export default function SellOnNovaXpress({
       onMouseMove={handleMouseMove}
       className="relative min-h-screen bg-gradient-to-b from-orange-50 via-white to-orange-100 text-gray-800 overflow-hidden pt-24 pb-16"
     >
+      {/* 🧩 Seller Login Modal */}
+      {showLogin && <SellerLoginModal onClose={() => setShowLogin(false)} />}
+
       {/* 🌊 Animated Gradient Waves */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -101,7 +104,7 @@ export default function SellOnNovaXpress({
           customers nationwide.
         </p>
         <button
-          onClick={onOpenSellerLogin}
+          onClick={() => setShowLogin(true)}
           className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-full text-lg font-semibold shadow-md"
         >
           Start Selling Now
@@ -130,29 +133,28 @@ export default function SellOnNovaXpress({
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-2xl font-semibold text-orange-600 mb-4">Why Sell on NovaXpress?</h2>
-<ul className="space-y-3 text-gray-700 leading-relaxed">
-  <li className="flex items-center gap-2">
-    <CheckCircle size={16} className="text-orange-500" />
-    Reach thousands of active shoppers every day.
-  </li>
-  <li className="flex items-center gap-2">
-    <CheckCircle size={16} className="text-orange-500" />
-    Get real-time insights on your sales and performance.
-  </li>
-  <li className="flex items-center gap-2">
-    <CheckCircle size={16} className="text-orange-500" />
-    Flexible delivery options for your customers.
-  </li>
-  <li className="flex items-center gap-2">
-    <CheckCircle size={16} className="text-orange-500" />
-    Simple product upload & automatic stock management.
-  </li>
-  <li className="flex items-center gap-2">
-    <CheckCircle size={16} className="text-orange-500" />
-    Instant payouts directly to your wallet or bank.
-  </li>
-</ul>
-
+          <ul className="space-y-3 text-gray-700 leading-relaxed">
+            <li className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-orange-500" />
+              Reach thousands of active shoppers every day.
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-orange-500" />
+              Get real-time insights on your sales and performance.
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-orange-500" />
+              Flexible delivery options for your customers.
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-orange-500" />
+              Simple product upload & automatic stock management.
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-orange-500" />
+              Instant payouts directly to your wallet or bank.
+            </li>
+          </ul>
         </motion.div>
       </section>
 
@@ -209,7 +211,7 @@ export default function SellOnNovaXpress({
           Join NovaXpress today and take your products to every corner of Kenya.
         </p>
         <button
-          onClick={onOpenSellerLogin}
+          onClick={() => setShowLogin(true)}
           className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-3 rounded-full text-lg font-semibold shadow-lg"
         >
           Start Selling Now
