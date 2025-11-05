@@ -1,0 +1,58 @@
+[
+  {
+    "name": "Kenya",
+    "code": "KE",
+    "flag": "https://flagcdn.com/w40/ke.png",
+    "dialCode": "+254",
+    "currency": "KES"
+  },
+  {
+    "name": "Uganda",
+    "code": "UG",
+    "flag": "https://flagcdn.com/w40/ug.png",
+    "dialCode": "+256",
+    "currency": "UGX"
+  },
+  {
+    "name": "Tanzania",
+    "code": "TZ",
+    "flag": "https://flagcdn.com/w40/tz.png",
+    "dialCode": "+255",
+    "currency": "TZS"
+  },
+  {
+    "name": "Rwanda",
+    "code": "RW",
+    "flag": "https://flagcdn.com/w40/rw.png",
+    "dialCode": "+250",
+    "currency": "RWF"
+  },
+  {
+    "name": "Burundi",
+    "code": "BI",
+    "flag": "https://flagcdn.com/w40/bi.png",
+    "dialCode": "+257",
+    "currency": "BIF"
+  },
+  {
+    "name": "South Sudan",
+    "code": "SS",
+    "flag": "https://flagcdn.com/w40/ss.png",
+    "dialCode": "+211",
+    "currency": "SSP"
+  },
+  {
+    "name": "Ethiopia",
+    "code": "ET",
+    "flag": "https://flagcdn.com/w40/et.png",
+    "dialCode": "+251",
+    "currency": "ETB"
+  },
+  {
+    "name": "Somalia",
+    "code": "SO",
+    "flag": "https://flagcdn.com/w40/so.png",
+    "dialCode": "+252",
+    "currency": "SOS"
+  }
+]

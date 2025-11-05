@@ -83,6 +83,7 @@ export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin }: NavbarPr
     };
     fetchNotifications();
   }, [user, isSeller]);
+  
 
   // 🔹 Seller order count
   useEffect(() => {

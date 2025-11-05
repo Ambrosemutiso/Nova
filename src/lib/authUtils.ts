@@ -3,116 +3,82 @@ import {
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  sendPasswordResetEmail,
 } from 'firebase/auth';
-import { auth, db } from './firebaseConfig';
-import { collection, doc, setDoc } from 'firebase/firestore';
+import { auth } from './firebaseConfig';
+
+const countryCurrencyMap: Record<string, string> = {
+  KE: 'KES',
+  UG: 'UGX',
+  TZ: 'TZS',
+  RW: 'RWF',
+  BI: 'BIF',
+  ET: 'ETB',
+  SO: 'SOS',
+  SS: 'SSP',
+};
 
 /**
- * 🔹 Google Sign-in (login or register)
+ * 🔹 Start Google sign-in
+ * Automatically saves a redirect marker (so modal reopens after redirect)
  */
-export const signInWithGoogle = async (
-  role: 'buyer' | 'seller',
-  mode: 'login' | 'register' = 'login'
-) => {
+export const signInWithGoogle = async (role: 'buyer' | 'seller') => {
   const provider = new GoogleAuthProvider();
   provider.addScope('profile');
   provider.addScope('email');
 
-  try {
-    const result = await signInWithPopup(auth, provider);
-    return await handleLoginResult(result, role, mode);
-  } catch (error: any) {
-    console.warn('Popup failed, trying redirect...', error?.code);
-    if (
-      error?.code === 'auth/popup-closed-by-user' ||
-      error?.code === 'auth/cancelled-popup-request' ||
-      error?.code === 'auth/popup-blocked'
-    ) {
-      await signInWithRedirect(auth, provider);
-      const result = await getRedirectResult(auth);
-      if (result) return await handleLoginResult(result, role, mode);
-    }
-    console.error('Google Sign-in Error:', error);
-    throw error;
-  }
-};
-
-/**
- * 🔹 Email/Password Authentication
- */
-export const handleEmailAuth = async (
-  mode: 'login' | 'register',
-  email: string,
-  password: string,
-  name: string,
-  role: 'buyer' | 'seller'
-) => {
-  try {
-    let user;
-
-    if (mode === 'register') {
-      const result = await createUserWithEmailAndPassword(auth, email, password);
-      user = result.user;
-    } else {
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      user = result.user;
-    }
-
-    const userData = await buildUserData(user, name, role);
-    await saveUserToFirestoreAndMongo(userData, role, mode);
-    return userData;
-  } catch (error: any) {
-    console.error('Email auth error:', error);
-    throw new Error(error.message || `Failed to ${mode}`);
-  }
-};
-
-/**
- * 🔹 Password Reset
- */
-export const resetPassword = async (email: string) => {
-  try {
-    await sendPasswordResetEmail(auth, email);
-    return true;
-  } catch (error: any) {
-    console.error('Password reset error:', error);
-    throw new Error(error.message || 'Failed to send password reset email');
-  }
-};
-
-/**
- * 🔹 Common handler for successful Google login
- */
-const handleLoginResult = async (
-  result: any,
-  role: 'buyer' | 'seller',
-  mode: 'login' | 'register'
-) => {
-  const user = result.user;
-  const userData = await buildUserData(user, user.displayName, role);
-  await saveUserToFirestoreAndMongo(userData, role, mode);
-  return userData;
-};
-
-/**
- * 🔹 Builds unified user object with geo-detected country & currency
- */
-const buildUserData = async (user: any, name: string, role: 'buyer' | 'seller') => {
-  const countryCurrencyMap: Record<string, string> = {
-    KE: 'KES',
-    UG: 'UGX',
-    TZ: 'TZS',
-    RW: 'RWF',
-  };
+  // ✅ Save marker before any attempt
+  localStorage.setItem('pendingGoogleRedirect', role);
 
   let country = 'KE';
   try {
-    const geoRes = await fetch('https://ipapi.co/json/');
-    const geoData = await geoRes.json();
-    country = geoData.country_code || 'KE';
+    const res = await fetch('https://ipapi.co/json/');
+    const geo = await res.json();
+    country = geo.country_code || 'KE';
+  } catch {
+    console.warn('Geo lookup failed, defaulting to KE');
+  }
+
+  const currency = countryCurrencyMap[country] || 'USD';
+
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+    const token = await user.getIdToken();
+
+    localStorage.removeItem('pendingGoogleRedirect'); // ✅ Done, clear marker
+
+    return {
+      name: user.displayName || '',
+      email: user.email || '',
+      image: user.photoURL || '',
+      phoneNumber: user.phoneNumber || null,
+      token,
+      country,
+      currency,
+    };
+  } catch (error: any) {
+    console.warn('Popup failed, using redirect...', error?.code);
+    await signInWithRedirect(auth, provider);
+    // 🚀 redirect will happen automatically; we’ll handle result later
+  }
+};
+
+/**
+ * 🔹 Handle redirect result (called on mount)
+ * Returns Google user info if redirect succeeded
+ */
+export const checkGoogleRedirectResult = async () => {
+  const result = await getRedirectResult(auth);
+  if (!result) return null;
+
+  const user = result.user;
+  if (!user) return null;
+
+  let country = 'KE';
+  try {
+    const res = await fetch('https://ipapi.co/json/');
+    const geo = await res.json();
+    country = geo.country_code || 'KE';
   } catch {
     console.warn('Geo lookup failed, defaulting to KE');
   }
@@ -120,51 +86,15 @@ const buildUserData = async (user: any, name: string, role: 'buyer' | 'seller') 
   const currency = countryCurrencyMap[country] || 'USD';
   const token = await user.getIdToken();
 
+  localStorage.removeItem('pendingGoogleRedirect'); // ✅ clear marker now that we’re back
+
   return {
-    name: name || user.displayName || '',
+    name: user.displayName || '',
     email: user.email || '',
     image: user.photoURL || '',
     phoneNumber: user.phoneNumber || null,
+    token,
     country,
     currency,
-    role,
-    token,
-    isPhoneVerified: !!user.phoneNumber,
   };
-};
-
-/**
- * 🔹 Saves user to Firestore and MongoDB
- */
-const saveUserToFirestoreAndMongo = async (
-  userData: any,
-  role: 'buyer' | 'seller',
-  mode: 'login' | 'register'
-) => {
-  const docRef =
-    role === 'buyer'
-      ? doc(collection(db, 'users'), userData.email)
-      : doc(collection(db, 'sellers'), userData.email);
-
-  await setDoc(docRef, userData, { merge: true });
-
-  const endpoint =
-    role === 'buyer' ? '/api/auth/google-login' : '/api/seller/google-login';
-
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      provider: 'email',
-      mode,
-      ...userData,
-    }),
-  });
-
-  const data = await res.json();
-  if (!res.ok || !data.success) {
-    throw new Error(data.message || 'Failed to save user in backend');
-  }
-
-  return data.user;
 };

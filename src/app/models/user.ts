@@ -3,11 +3,11 @@ import mongoose from 'mongoose';
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  image: String,
+  image: { type: String, default: null },
   role: { type: String, enum: ['buyer', 'seller'], default: 'buyer' },
   phoneNumber: {
   type: String,
-  default: null,   // default explicitly to null
+  default: null, 
 },
     password: {
       type: String,
