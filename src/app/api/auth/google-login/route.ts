@@ -215,68 +215,116 @@ export async function POST(req: Request) {
 
     if (!mode) {
       return NextResponse.json(
-        { success: false, error: 'Mode is required.' },
+        { success: false, error: 'Mode is required!' },
         { status: 400 }
       );
     }
 
-    // ------------------------------------------------
-    // 🔹 SIGNUP
-    // ------------------------------------------------
-    if (mode === 'signup') {
-      if (!name || !email || !password || !phoneNumber || !country) {
-        return NextResponse.json(
-          { success: false, error: 'Missing required fields.' },
-          { status: 400 }
-        );
-      }
+// ------------------------------------------------
+// 🔹 SIGNUP (Corrected and hardened)
+// ------------------------------------------------
+if (mode === 'signup') {
+  if (!name || !email || !password || !phoneNumber || !country) {
+    return NextResponse.json(
+      { success: false, error: 'Missing required fields!' },
+      { status: 400 }
+    );
+  }
 
-      // Validate phone number (must be 9 digits, not starting with 0)
-      if (!/^[1-9]\d{8}$/.test(phoneNumber)) {
-        return NextResponse.json(
-          { success: false, error: 'Invalid phone number format. Use 9 digits without leading 0.' },
-          { status: 400 }
-        );
-      }
+  // Normalize email
+  const normalizedEmail = email.trim().toLowerCase();
 
-      const existing = await User.findOne({ email });
-      if (existing) {
-        return NextResponse.json(
-          { success: false, error: 'Email already registered.' },
-          { status: 400 }
-        );
-      }
+  // ✅ Normalize and validate phone number
+  let clean = phoneNumber.replace(/[\s\-()]/g, ''); // remove spaces, dashes, brackets
+  if (clean.startsWith('+')) clean = clean.slice(1);
+  clean = clean.replace(/^(254|256|255|250|257|211|251|252)/, ''); // remove country code
+  if (clean.startsWith('0')) clean = clean.slice(1);
 
-      const hashed = await bcrypt.hash(password, 10);
+  if (!/^[1-9]\d{8}$/.test(clean)) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Invalid phone number format. Use 9 digits without leading 0!',
+      },
+      { status: 400 }
+    );
+  }
 
-      const newUser = await User.create({
-        provider: 'email',
-        name,
-        email,
-        password: hashed,
-        role: role || 'buyer',
-        phoneNumber,
-        country,
-        currency,
-        image: image || null,
-      });
+  // ✅ Check if email already exists (normalized)
+  const existing = await User.findOne({ email: normalizedEmail });
+  if (existing) {
+    return NextResponse.json(
+      { success: false, error: 'Email already registered, try logging in!' },
+      { status: 400 }
+    );
+  }
 
-      const token = jwt.sign(
-        { id: newUser._id.toString(), role: newUser.role },
-        JWT_SECRET,
-        { expiresIn: '7d' }
+  // ✅ Hash password securely
+  const hashed = await bcrypt.hash(password, 10);
+
+  // ✅ Try creating user safely (handle race condition)
+  try {
+    const newUser = await User.create({
+      provider: 'email',
+      name,
+      email: normalizedEmail,
+      password: hashed,
+      role: role || 'buyer',
+      phoneNumber,
+      country,
+      currency,
+      image: image || null,
+    });
+
+    // Generate JWT
+    const token = jwt.sign(
+      { id: newUser._id.toString(), role: newUser.role },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    const userData = newUser.toObject();
+    delete userData.password;
+
+      // ------------------------------------------------
+  // 📧 Send Welcome Email (Non-blocking)
+  // ------------------------------------------------
+  try {
+    await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/sendWelcomeEmail`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: newUser.email,
+        name: newUser.name,
+        role: newUser.role,
+      }),
+    });
+  } catch (emailErr) {
+    console.error('⚠️ Welcome email failed:', emailErr);
+  }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Account created successfully!',
+      user: userData,
+      token,
+    });
+  } catch (err: any) {
+    // ✅ Handle duplicate key error (MongoDB)
+    if (err.code === 11000 && err.keyPattern?.email) {
+      return NextResponse.json(
+        { success: false, error: 'This email is already registered.' },
+        { status: 400 }
       );
-
-      const userData = newUser.toObject();
-      delete userData.password;
-
-      return NextResponse.json({
-        success: true,
-        message: 'Account created successfully.',
-        user: userData,
-        token,
-      });
     }
+
+    console.error('Signup error:', err);
+    return NextResponse.json(
+      { success: false, error: 'Account creation failed. Please try again.' },
+      { status: 500 }
+    );
+  }
+}
 
     // ------------------------------------------------
     // 🔹 LOGIN
@@ -284,7 +332,7 @@ export async function POST(req: Request) {
     if (mode === 'login') {
       if (!email || !password) {
         return NextResponse.json(
-          { success: false, error: 'Email and password are required.' },
+          { success: false, error: 'Email and password are required!' },
           { status: 400 }
         );
       }
@@ -292,7 +340,7 @@ export async function POST(req: Request) {
       const user = await User.findOne({ email });
       if (!user || !user.password) {
         return NextResponse.json(
-          { success: false, error: 'Invalid email or password.' },
+          { success: false, error: 'Invalid email or password!' },
           { status: 401 }
         );
       }
@@ -300,7 +348,7 @@ export async function POST(req: Request) {
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
         return NextResponse.json(
-          { success: false, error: 'Invalid email or password.' },
+          { success: false, error: 'Invalid email or password!' },
           { status: 401 }
         );
       }
@@ -316,7 +364,7 @@ export async function POST(req: Request) {
 
       return NextResponse.json({
         success: true,
-        message: 'Login successful.',
+        message: 'Login successful!',
         user: userData,
         token,
       });
@@ -328,7 +376,7 @@ export async function POST(req: Request) {
     if (mode === 'forgot-password') {
       if (!email) {
         return NextResponse.json(
-          { success: false, error: 'Email is required.' },
+          { success: false, error: 'Email is required!' },
           { status: 400 }
         );
       }
@@ -336,7 +384,7 @@ export async function POST(req: Request) {
       const user = await User.findOne({ email });
       if (!user) {
         return NextResponse.json(
-          { success: false, error: 'No account found with that email.' },
+          { success: false, error: 'No account found with that email!' },
           { status: 404 }
         );
       }
@@ -346,7 +394,7 @@ export async function POST(req: Request) {
 
       return NextResponse.json({
         success: true,
-        message: 'Password reset email sent successfully.',
+        message: 'Password reset email sent successfully!',
       });
     }
 
@@ -356,14 +404,14 @@ export async function POST(req: Request) {
     if (mode === 'reset-password') {
       if (!token || !password || !confirmPassword) {
         return NextResponse.json(
-          { success: false, error: 'Token, password, and confirmation are required.' },
+          { success: false, error: 'Token, password, and confirmation are required!' },
           { status: 400 }
         );
       }
 
       if (password !== confirmPassword) {
         return NextResponse.json(
-          { success: false, error: 'Passwords do not match.' },
+          { success: false, error: 'Passwords do not match!' },
           { status: 400 }
         );
       }
@@ -373,7 +421,7 @@ export async function POST(req: Request) {
         decoded = jwt.verify(token, JWT_SECRET);
       } catch {
         return NextResponse.json(
-          { success: false, error: 'Invalid or expired token.' },
+          { success: false, error: 'Invalid or expired token!' },
           { status: 401 }
         );
       }
@@ -381,7 +429,7 @@ export async function POST(req: Request) {
       const user = await User.findById(decoded.id);
       if (!user) {
         return NextResponse.json(
-          { success: false, error: 'User not found.' },
+          { success: false, error: 'User not found!' },
           { status: 404 }
         );
       }
@@ -392,7 +440,7 @@ export async function POST(req: Request) {
 
       return NextResponse.json({
         success: true,
-        message: 'Password reset successful.',
+        message: 'Password reset successful!',
       });
     }
 
@@ -400,13 +448,13 @@ export async function POST(req: Request) {
     // ❌ INVALID MODE
     // ------------------------------------------------
     return NextResponse.json(
-      { success: false, error: 'Invalid mode provided.' },
+      { success: false, error: 'Invalid mode provided!' },
       { status: 400 }
     );
   } catch (error: any) {
     console.error('Auth error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Authentication failed.' },
+      { success: false, error: error.message || 'Authentication failed!' },
       { status: 500 }
     );
   }

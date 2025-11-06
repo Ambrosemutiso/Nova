@@ -46,25 +46,13 @@ export default function BuyerLoginModal({ onClose, defaultRole = 'buyer' }: Logi
 
 const validatePhone = (num: string): string | null => {
   if (!num) return null;
-
-  // Remove all spaces, hyphens, and parentheses
   let clean = num.replace(/[\s\-()]/g, '');
-
-  // Remove country code prefixes like +254 or 254
   if (clean.startsWith('+254')) clean = clean.slice(4);
   else if (clean.startsWith('254')) clean = clean.slice(3);
-
-  // Remove leading zero if present (e.g. 0712345678 -> 712345678)
   if (clean.startsWith('0')) clean = clean.slice(1);
-
-  // Must now be exactly 9 digits and not start with 0
-  if (/^[1-9]\d{8}$/.test(clean)) {
-    return clean; // valid and normalized
-  }
-
-  return null; // invalid format
+  if (/^[1-9]\d{8}$/.test(clean)) return clean;
+  return null;
 };
-
 
   const handleEmailCheck = async (email: string) => {
     try {
@@ -102,7 +90,7 @@ const handleForgotPassword = async () => {
     if (!isLogin) {
       if (password !== confirmPassword) return toast.error("Passwords don't match.");
       if (!strongPassword(password))
-        return toast.error('Password must include uppercase, lowercase, number, and symbol.');
+        return toast.error('Password must be 8 characters, include uppercase, lowercase, number, and a special character.');
       if (!validatePhone(phoneNumber))
         return toast.error('Enter a valid phone number without starting with 0, 07, 06, or 05.');
 

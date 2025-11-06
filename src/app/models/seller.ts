@@ -1,23 +1,20 @@
 import mongoose from 'mongoose';
 
-const settingsSchema = new mongoose.Schema(
-  {
-    currency: { type: String, default: 'USD' },
-    country: { type: String, default: 'US' },
-    language: { type: String, default: 'en' },
-  },
-  { _id: false }
-);
-
 const sellerSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  email: { type: String, unique: true, required: true },
-  image: { type: String },
+  email: {
+  type: String,
+  required: true,
+  unique: true,
+  trim: true,
+  lowercase: true,
+},
+  image: { type: String , default: null},
   logo: { type: String },
   banner: { type: String },
   phoneNumber: {
   type: String,
-  default: null,   // default explicitly to null
+  default: null,   
 },
     password: {
       type: String,
@@ -60,9 +57,6 @@ const sellerSchema = new mongoose.Schema({
       default: 'free',
     },
   },
-
-  settings: { type: settingsSchema, default: () => ({}) },
-
   createdAt: { type: Date, default: Date.now },
 });
 
