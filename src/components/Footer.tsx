@@ -31,6 +31,10 @@ export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () =>
               <li><a href="/desc/careers">Careers</a></li>
               <li><a href="/desc/terms">Terms & Conditions</a></li>
               <li><a href="/desc/privacy">Privacy Policy</a></li>
+              <li><a href="/desc/delivery-policy">Shipping & Delivery Policy</a></li>
+              <li><a href="/desc/buyer-protection-policy">Buyer Protection Policy</a></li>
+              <li><a href="/desc/seller-policy">Seller Policy</a></li>
+              <li><a href="/desc/comminuty-and-market-place-policy">Comminuity & Market Policy</a></li>
           </ul>
         </div>
 
@@ -82,6 +86,7 @@ export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () =>
             <Image src="/visa.png" alt="Visa" width={40} height={24} />
             <Image src="/mastercard.png" alt="MasterCard" width={40} height={24} />
             <Image src="/mpesa.png" alt="MPesa" width={40} height={24} />
+            <Image src="/airtel.png" alt="Airtel" width={40} height={24} />
           </div>
 
           <div className="flex space-x-4">

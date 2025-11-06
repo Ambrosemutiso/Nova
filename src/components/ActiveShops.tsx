@@ -74,7 +74,6 @@ export default function ActiveShops() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 pt-24 pb-16">
-      <h1 className="text-2xl font-bold text-orange-600 mb-6">Available Seller Shops</h1>
 
       {/* 🔹 Search & Sort Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
@@ -100,7 +99,7 @@ export default function ActiveShops() {
         <div className="text-center py-20">
           <p className="text-gray-600 mb-3">😔 No active shops found.</p>
           <Link
-            href="/become-a-seller"
+            href="/desc/sell-on-novaxpress"
             className="text-orange-600 font-medium hover:underline"
           >
             Become a Seller →
@@ -125,12 +124,11 @@ export default function ActiveShops() {
                   <h3 className="text-lg font-semibold text-gray-900 group-hover:text-orange-600 transition">
                     {seller.shopName || seller.name}
                   </h3>
-                  <p className="text-sm text-gray-500 truncate">{seller.email}</p>
                 </div>
               </div>
 
               <div className="absolute top-2 right-2">
-                <span className="bg-green-100 text-green-700 text-xs font-medium px-2 py-1 rounded-full">
+                <span className="bg-green-100 text-orange-700 text-xs font-medium px-2 py-1 rounded-full">
                   Active
                 </span>
               </div>

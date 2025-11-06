@@ -1,24 +1,24 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Package, RefreshCw, CreditCard, Clock, Mail, Truck } from 'lucide-react';
+import { Truck, Globe, Clock, Package, MapPin, Mail } from 'lucide-react';
 
-export default function ReturnsRefunds() {
+export default function ShippingAndDelivery() {
   return (
     <div className="bg-white text-gray-800">
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-orange-500 via-orange-400 to-yellow-400 text-white py-24 px-6 text-center">
         <div className="max-w-5xl mx-auto">
-          <h1 className="text-4xl sm:text-5xl font-extrabold mb-4">Refunds & Returns Policy</h1>
+          <h1 className="text-4xl sm:text-5xl font-extrabold mb-4">Shipping & Delivery Policy</h1>
           <p className="text-lg sm:text-xl max-w-3xl mx-auto">
-            We want you to shop with confidence. Learn how NovaXpress handles refunds, exchanges, and returns.
+            NovaXpress ensures your orders are delivered safely, quickly, and affordably across East Africa.
           </p>
         </div>
       </section>
 
       {/* Main Content */}
       <section className="max-w-5xl mx-auto px-6 py-16 space-y-12 leading-relaxed">
-        {/* 1. Overview */}
+        {/* 1. Coverage */}
         <motion.div
           className="bg-white border border-gray-200 shadow-sm rounded-2xl p-8"
           initial={{ opacity: 0, y: 20 }}
@@ -26,17 +26,17 @@ export default function ReturnsRefunds() {
           transition={{ duration: 0.4 }}
         >
           <div className="flex items-center gap-3 mb-4">
-            <Package className="w-6 h-6 text-orange-500" />
-            <h2 className="text-2xl font-semibold text-gray-900">1. Our Commitment</h2>
+            <Globe className="w-6 h-6 text-orange-500" />
+            <h2 className="text-2xl font-semibold text-gray-900">1. Delivery Coverage</h2>
           </div>
           <p className="text-gray-700">
-            At NovaXpress, customer satisfaction is our top priority.  
-            If you’re not fully satisfied with your purchase, we’ll do our best to make it right.  
-            Our refund and return policy outlines how we handle returns, replacements, and reimbursements for eligible orders.
+            NovaXpress operates across <strong>Kenya, Uganda, Tanzania, Rwanda, Ethiopia, South Sudan, and Somalia</strong>.
+            Depending on the seller’s location, delivery times may vary.  
+            We partner with trusted regional couriers and independent vendors to ensure smooth and timely delivery.
           </p>
         </motion.div>
 
-        {/* 2. Return Eligibility */}
+        {/* 2. Delivery Timelines */}
         <motion.div
           className="bg-white border border-gray-200 shadow-sm rounded-2xl p-8"
           initial={{ opacity: 0, y: 20 }}
@@ -44,20 +44,17 @@ export default function ReturnsRefunds() {
           transition={{ duration: 0.4, delay: 0.1 }}
         >
           <div className="flex items-center gap-3 mb-4">
-            <RefreshCw className="w-6 h-6 text-orange-500" />
-            <h2 className="text-2xl font-semibold text-gray-900">2. Return Eligibility</h2>
+            <Clock className="w-6 h-6 text-orange-500" />
+            <h2 className="text-2xl font-semibold text-gray-900">2. Delivery Timelines</h2>
           </div>
-          <p className="text-gray-700 mb-3">
-            To be eligible for a return or exchange, items must meet the following conditions:
-          </p>
           <ul className="list-disc list-inside text-gray-700 space-y-2">
-            <li>The item must be unused, in its original packaging, and in the same condition you received it.</li>
-            <li>Return requests must be submitted within <strong>7 days</strong> of delivery.</li>
-            <li>Products such as personal care items, perishables, or intimate goods are not returnable for hygiene reasons.</li>
+            <li><strong>Local Deliveries (within the same country):</strong> Typically take 1–3 business days.</li>
+            <li><strong>Cross-Border Deliveries (between East African countries):</strong> Usually delivered within 5–10 business days.</li>
+            <li>Public holidays and remote area deliveries may slightly extend the timeline.</li>
           </ul>
         </motion.div>
 
-        {/* 3. Refunds */}
+        {/* 3. Shipping Fees */}
         <motion.div
           className="bg-white border border-gray-200 shadow-sm rounded-2xl p-8"
           initial={{ opacity: 0, y: 20 }}
@@ -65,20 +62,20 @@ export default function ReturnsRefunds() {
           transition={{ duration: 0.4, delay: 0.2 }}
         >
           <div className="flex items-center gap-3 mb-4">
-            <CreditCard className="w-6 h-6 text-orange-500" />
-            <h2 className="text-2xl font-semibold text-gray-900">3. Refund Process</h2>
+            <Truck className="w-6 h-6 text-orange-500" />
+            <h2 className="text-2xl font-semibold text-gray-900">3. Shipping Fees</h2>
           </div>
           <p className="text-gray-700 mb-3">
-            Once your return is received and inspected, we’ll notify you by email regarding the status of your refund.
+            Shipping costs are calculated based on the seller’s location, delivery destination, and parcel weight.
           </p>
           <ul className="list-disc list-inside text-gray-700 space-y-2">
-            <li>If approved, your refund will be processed within <strong>5–10 business days</strong>.</li>
-            <li>Refunds will be credited to your original payment method (mobile money, debit card, or NovaXpress wallet).</li>
-            <li>Shipping fees are non-refundable unless the return is due to an error or defective item.</li>
+            <li>Some sellers may offer free delivery for specific products or minimum order values.</li>
+            <li>Buyers will always see the exact shipping cost before confirming checkout.</li>
+            <li>In cases of combined orders from multiple sellers, shipping may be split into multiple deliveries.</li>
           </ul>
         </motion.div>
 
-        {/* 4. Exchanges */}
+        {/* 4. Order Tracking */}
         <motion.div
           className="bg-white border border-gray-200 shadow-sm rounded-2xl p-8"
           initial={{ opacity: 0, y: 20 }}
@@ -86,16 +83,16 @@ export default function ReturnsRefunds() {
           transition={{ duration: 0.4, delay: 0.3 }}
         >
           <div className="flex items-center gap-3 mb-4">
-            <Truck className="w-6 h-6 text-orange-500" />
-            <h2 className="text-2xl font-semibold text-gray-900">4. Exchanges</h2>
+            <MapPin className="w-6 h-6 text-orange-500" />
+            <h2 className="text-2xl font-semibold text-gray-900">4. Order Tracking</h2>
           </div>
           <p className="text-gray-700">
-            If your item arrives damaged or defective, you may request an exchange for the same product or a replacement item.
-            NovaXpress sellers are required to handle replacements promptly to maintain high buyer satisfaction.
+            Once your order is shipped, you’ll receive a tracking link or code via email or SMS.  
+            You can monitor your order’s progress directly through your NovaXpress account or the courier’s tracking system.
           </p>
         </motion.div>
 
-        {/* 5. Timelines & Exceptions */}
+        {/* 5. Handling Delays & Lost Packages */}
         <motion.div
           className="bg-white border border-gray-200 shadow-sm rounded-2xl p-8"
           initial={{ opacity: 0, y: 20 }}
@@ -103,23 +100,20 @@ export default function ReturnsRefunds() {
           transition={{ duration: 0.4, delay: 0.4 }}
         >
           <div className="flex items-center gap-3 mb-4">
-            <Clock className="w-6 h-6 text-orange-500" />
-            <h2 className="text-2xl font-semibold text-gray-900">5. Timelines & Exceptions</h2>
+            <Package className="w-6 h-6 text-orange-500" />
+            <h2 className="text-2xl font-semibold text-gray-900">5. Delays & Lost Packages</h2>
           </div>
           <p className="text-gray-700 mb-3">
-            Please note that refund and return timelines may vary depending on:
+            While delays are rare, they may occur due to customs, weather, or courier issues.  
+            In such cases, we’ll keep you updated throughout the process.
           </p>
           <ul className="list-disc list-inside text-gray-700 space-y-2">
-            <li>The seller’s location and return logistics.</li>
-            <li>Payment method and banking processes.</li>
-            <li>Verification of returned item condition.</li>
+            <li>If your package is lost or severely delayed, NovaXpress will investigate and assist with replacement or refund procedures.</li>
+            <li>We encourage buyers to ensure accurate shipping details to avoid delivery issues.</li>
           </ul>
-          <p className="mt-3 text-gray-700">
-            Items marked as <strong>Final Sale</strong> or <strong>Non-Returnable</strong> are not eligible for refunds.
-          </p>
         </motion.div>
 
-        {/* 6. Contact */}
+        {/* 6. Support */}
         <motion.div
           className="bg-white border border-gray-200 shadow-sm rounded-2xl p-8"
           initial={{ opacity: 0, y: 20 }}
@@ -128,17 +122,17 @@ export default function ReturnsRefunds() {
         >
           <div className="flex items-center gap-3 mb-4">
             <Mail className="w-6 h-6 text-orange-500" />
-            <h2 className="text-2xl font-semibold text-gray-900">6. Need Assistance?</h2>
+            <h2 className="text-2xl font-semibold text-gray-900">6. Need Help?</h2>
           </div>
           <p className="text-gray-700">
-            For support or refund-related queries, contact our team at{' '}
+            For questions regarding your shipment or delivery updates, reach out to our logistics support team at{' '}
             <a
               href="mailto:support@novaxpress.africa"
               className="text-orange-500 font-medium hover:underline"
             >
               support@novaxpress.africa
             </a>.  
-            Our support agents will respond within 24 hours.
+            Our team is available 7 days a week to assist with any shipping-related concerns.
           </p>
         </motion.div>
       </section>
@@ -146,10 +140,10 @@ export default function ReturnsRefunds() {
       {/* Footer CTA */}
       <section className="bg-orange-500 text-white text-center py-16 px-6">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold mb-3">Shop with Confidence</h2>
+          <h2 className="text-3xl font-bold mb-3">Fast, Reliable & Transparent</h2>
           <p className="text-lg mb-8">
-            At NovaXpress, every order is backed by our trusted refund and return policy.
-            Your satisfaction means everything to us.
+            At NovaXpress, every delivery is handled with care and efficiency.  
+            Shop with peace of mind knowing your orders are always in safe hands.
           </p>
           <a
             href="/"
