@@ -128,7 +128,7 @@ export default function ActiveShops() {
               </div>
 
               <div className="absolute top-2 right-2">
-                <span className="bg-green-100 text-orange-700 text-xs font-medium px-2 py-1 rounded-full">
+                <span className="bg-orange-100 text-orange-700 text-xs font-medium px-2 py-1 rounded-full">
                   Active
                 </span>
               </div>

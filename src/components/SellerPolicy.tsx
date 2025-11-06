@@ -7,7 +7,7 @@ export default function SellerPolicy() {
   return (
     <div className="bg-white text-gray-800">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-400 text-white py-24 px-6 text-center">
+      <section className="relative bg-gradient-to-r from-orange-600 via-orange-500 to-amber-400 text-white py-24 px-6 text-center">
         <div className="max-w-5xl mx-auto">
           <h1 className="text-4xl sm:text-5xl font-extrabold mb-4">Seller Policy & Code of Conduct</h1>
           <p className="text-lg sm:text-xl max-w-3xl mx-auto">
@@ -26,7 +26,7 @@ export default function SellerPolicy() {
           transition={{ duration: 0.4 }}
         >
           <div className="flex items-center gap-3 mb-4">
-            <Store className="w-6 h-6 text-blue-500" />
+            <Store className="w-6 h-6 text-orange-500" />
             <h2 className="text-2xl font-semibold text-gray-900">1. Purpose of this Policy</h2>
           </div>
           <p className="text-gray-700">
@@ -43,7 +43,7 @@ export default function SellerPolicy() {
           transition={{ duration: 0.4, delay: 0.1 }}
         >
           <div className="flex items-center gap-3 mb-4">
-            <CheckCircle className="w-6 h-6 text-blue-500" />
+            <CheckCircle className="w-6 h-6 text-orange-500" />
             <h2 className="text-2xl font-semibold text-gray-900">2. Seller Responsibilities</h2>
           </div>
           <ul className="list-disc list-inside text-gray-700 space-y-2">
@@ -62,7 +62,7 @@ export default function SellerPolicy() {
           transition={{ duration: 0.4, delay: 0.2 }}
         >
           <div className="flex items-center gap-3 mb-4">
-            <ShieldAlert className="w-6 h-6 text-blue-500" />
+            <ShieldAlert className="w-6 h-6 text-orange-500" />
             <h2 className="text-2xl font-semibold text-gray-900">3. Product Authenticity & Quality Standards</h2>
           </div>
           <p className="text-gray-700 mb-3">
@@ -83,7 +83,7 @@ export default function SellerPolicy() {
           transition={{ duration: 0.4, delay: 0.3 }}
         >
           <div className="flex items-center gap-3 mb-4">
-            <Scale className="w-6 h-6 text-blue-500" />
+            <Scale className="w-6 h-6 text-orange-500" />
             <h2 className="text-2xl font-semibold text-gray-900">4. Fair Pricing & Transparency</h2>
           </div>
           <p className="text-gray-700">
@@ -100,7 +100,7 @@ export default function SellerPolicy() {
           transition={{ duration: 0.4, delay: 0.4 }}
         >
           <div className="flex items-center gap-3 mb-4">
-            <DollarSign className="w-6 h-6 text-blue-500" />
+            <DollarSign className="w-6 h-6 text-orange-500" />
             <h2 className="text-2xl font-semibold text-gray-900">5. Payments, Fees & Settlements</h2>
           </div>
           <p className="text-gray-700">
@@ -121,7 +121,7 @@ export default function SellerPolicy() {
           transition={{ duration: 0.4, delay: 0.5 }}
         >
           <div className="flex items-center gap-3 mb-4">
-            <FileText className="w-6 h-6 text-blue-500" />
+            <FileText className="w-6 h-6 text-orange-500" />
             <h2 className="text-2xl font-semibold text-gray-900">6. Communication & Professional Conduct</h2>
           </div>
           <p className="text-gray-700">
@@ -138,7 +138,7 @@ export default function SellerPolicy() {
           transition={{ duration: 0.4, delay: 0.6 }}
         >
           <div className="flex items-center gap-3 mb-4">
-            <ShieldAlert className="w-6 h-6 text-blue-500" />
+            <ShieldAlert className="w-6 h-6 text-orange-500" />
             <h2 className="text-2xl font-semibold text-gray-900">7. Violations & Account Enforcement</h2>
           </div>
           <p className="text-gray-700">
@@ -149,7 +149,7 @@ export default function SellerPolicy() {
       </section>
 
       {/* Footer CTA */}
-      <section className="bg-blue-600 text-white text-center py-16 px-6">
+      <section className="bg-orange-600 text-white text-center py-16 px-6">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold mb-3">Sell with Confidence. Build with Integrity.</h2>
           <p className="text-lg mb-8">
@@ -157,7 +157,7 @@ export default function SellerPolicy() {
           </p>
           <a
             href="/"
-            className="inline-block bg-white text-blue-600 font-semibold py-3 px-8 rounded-full shadow hover:bg-gray-100 transition"
+            className="inline-block bg-white text-orange-600 font-semibold py-3 px-8 rounded-full shadow hover:bg-gray-100 transition"
           >
             Return to Home
           </a>

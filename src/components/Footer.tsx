@@ -34,7 +34,7 @@ export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () =>
               <li><a href="/desc/delivery-policy">Shipping & Delivery Policy</a></li>
               <li><a href="/desc/buyer-protection-policy">Buyer Protection Policy</a></li>
               <li><a href="/desc/seller-policy">Seller Policy</a></li>
-              <li><a href="/desc/comminuty-and-market-place-policy">Comminuity & Market Policy</a></li>
+              <li><a href="/desc/community-and-market-policy">Community & Market Policy</a></li>
           </ul>
         </div>
 
