@@ -21,15 +21,80 @@ import {
   Cell,
   PieChart,
   Pie,
+  AreaChart,
+  Area,
 } from "recharts";
 
-
-// ---------- Dummy data ----------
+// ---------- Dummy data (extended with small series for sparklines) ----------
 const stats = [
-  { id: 1, title: "Total Orders", value: "248k", change: "+24%", icon: ShoppingCart, trend: "up" },
-  { id: 2, title: "Total Sales", value: "$47.6k", change: "+14%", icon: DollarSign, trend: "up" },
-  { id: 3, title: "Total Visits", value: "189k", change: "-35%", icon: Eye, trend: "down" },
-  { id: 4, title: "Bounce Rate", value: "24.6%", change: "+18%", icon: BarChart3, trend: "up" },
+  {
+    id: 1,
+    title: "Total Orders",
+    value: "248k",
+    change: "+24%",
+    icon: ShoppingCart,
+    trend: "up",
+    series: [
+      { x: 1, v: 12 },
+      { x: 2, v: 18 },
+      { x: 3, v: 22 },
+      { x: 4, v: 26 },
+      { x: 5, v: 32 },
+      { x: 6, v: 36 },
+      { x: 7, v: 44 },
+    ],
+  },
+  {
+    id: 2,
+    title: "Total Sales",
+    value: "$47.6k",
+    change: "+14%",
+    icon: DollarSign,
+    trend: "up",
+    series: [
+      { x: 1, v: 8 },
+      { x: 2, v: 12 },
+      { x: 3, v: 18 },
+      { x: 4, v: 20 },
+      { x: 5, v: 28 },
+      { x: 6, v: 34 },
+      { x: 7, v: 38 },
+    ],
+  },
+  {
+    id: 3,
+    title: "Total Visits",
+    value: "189k",
+    change: "-35%",
+    icon: Eye,
+    trend: "down",
+    series: [
+      { x: 1, v: 50 },
+      { x: 2, v: 46 },
+      { x: 3, v: 40 },
+      { x: 4, v: 34 },
+      { x: 5, v: 30 },
+      { x: 6, v: 26 },
+      { x: 7, v: 22 },
+    ],
+  },
+  {
+    id: 4,
+    title: "Bounce Rate",
+    value: "24.6%",
+    change: "+18%",
+    icon: BarChart3,
+    trend: "up",
+    series: [
+      { x: 1, v: 6 },
+      { x: 2, v: 8 },
+      { x: 3, v: 10 },
+      { x: 4, v: 12 },
+      { x: 5, v: 14 },
+      { x: 6, v: 16 },
+      { x: 7, v: 18 },
+    ],
+  },
 ];
 
 const salesData = [
@@ -50,25 +115,61 @@ const donutData = [
   { name: "Income", value: 14 },
 ];
 
-// ---------- Stats Card ----------
-function StatsCard({ title, value, change, icon: Icon, trend }: any) {
+// ---------- Stats Card (with sparkline area chart beneath the value) ----------
+function StatsCard({ id, title, value, change, icon: Icon, trend, series }: any) {
+  // colors
+  const isUp = trend === "up";
+  const strokeColor = isUp ? "#10b981" : "#ef4444"; // green / red
+  const gradientId = `grad-spark-${id}`;
+
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-all border border-gray-100 flex justify-between items-start">
-      <div>
-        <p className="text-sm text-gray-500">{title}</p>
-        <h3 className="text-2xl font-bold text-gray-900 mt-1">{value}</h3>
-        <p className={`text-sm font-medium mt-1 ${trend === "up" ? "text-green-500" : "text-red-500"}`}>
-          {change}
-        </p>
+    <div className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-all border border-gray-100 flex flex-col justify-between">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-sm text-gray-500">{title}</p>
+          <h3 className="text-2xl font-bold text-gray-900 mt-1">{value}</h3>
+          <p className={`text-sm font-medium mt-1 ${isUp ? "text-green-600" : "text-red-600"}`}>
+            {change}
+          </p>
+        </div>
+
+        <div className="ml-4 shrink-0 bg-orange-50 p-3 rounded-xl">
+          <Icon size={22} className="text-orange-500" />
+        </div>
       </div>
-      <div className="bg-orange-50 p-3 rounded-xl">
-        <Icon size={22} className="text-orange-500" />
+
+      {/* Sparkline (AreaChart) positioned under the value area — fixed height ~40px */}
+      <div className="mt-4">
+        <div style={{ width: "100%", height: 40 }}>
+          <ResponsiveContainer>
+            <AreaChart data={series}>
+              <defs>
+                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={strokeColor} stopOpacity={0.24} />
+                  <stop offset="100%" stopColor={strokeColor} stopOpacity={0.05} />
+                </linearGradient>
+              </defs>
+
+              <Area
+                type="monotone"
+                dataKey="v"
+                stroke={strokeColor}
+                strokeWidth={2}
+                fill={`url(#${gradientId})`}
+                isAnimationActive={true}
+                animationDuration={700}
+                dot={false}
+                activeDot={false}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );
 }
 
-// ---------- Charts ----------
+// ---------- Sales & Views Chart ----------
 function SalesViewsChart() {
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
@@ -87,6 +188,7 @@ function SalesViewsChart() {
   );
 }
 
+// ---------- Order Status Donut ----------
 function OrderStatusDonut() {
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
@@ -95,7 +197,17 @@ function OrderStatusDonut() {
         <div style={{ width: 160, height: 160 }}>
           <ResponsiveContainer>
             <PieChart>
-              <Pie data={donutData} dataKey="value" innerRadius={50} outerRadius={70} paddingAngle={3}>
+              <Pie
+                data={donutData}
+                dataKey="value"
+                innerRadius={50}
+                outerRadius={70}
+                paddingAngle={3}
+                startAngle={90}
+                endAngle={-270}
+                animationDuration={900}
+                animationEasing="ease-out"
+              >
                 {donutData.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
@@ -126,20 +238,58 @@ function OrderStatusDonut() {
   );
 }
 
+// ---------- Mini Donut for Summary (animated) ----------
+function MiniDonut({ label, value, color, percent, usd }: any) {
+  const chartData = [
+    { name: "progress", value: percent },
+    { name: "rest", value: Math.max(0, 100 - percent) },
+  ];
 
+  const gradId = `mini-donut-grad-${label}`;
+
+  return (
+    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex flex-col items-center">
+      <div style={{ width: 90, height: 90 }}>
+        <ResponsiveContainer>
+          <PieChart>
+            <defs>
+              <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor={color} stopOpacity={0.95} />
+                <stop offset="100%" stopColor={color} stopOpacity={0.6} />
+              </linearGradient>
+            </defs>
+
+            <Pie
+              data={chartData}
+              dataKey="value"
+              innerRadius={30}
+              outerRadius={40}
+              startAngle={90}
+              endAngle={-270}
+              paddingAngle={2}
+              animationDuration={900}
+              animationEasing="ease-out"
+            >
+              <Cell key="progress" fill={`url(#${gradId})`} />
+              <Cell key="rest" fill="#e5e7eb" />
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+
+      <p className="text-xs text-gray-500 mt-2">{label}</p>
+      <p className="text-lg font-bold text-gray-900">{Number(value).toLocaleString()}</p>
+      <p className="text-sm font-medium text-green-600">
+        +{percent}% {usd} USD
+      </p>
+    </div>
+  );
+}
+
+// ---------- Main Dashboard ----------
 export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 flex flex-col">
-      {/* Header */}
-      <header className="flex items-center justify-between bg-white shadow-sm px-8 py-4 border-b border-gray-100 sticky top-0 z-20">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
-          <p className="text-sm text-gray-500">Affiliate Performance Insights</p>
-        </div>
-        <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl shadow-sm transition">
-          Settings
-        </button>
-      </header>
 
       {/* Main Content with Tailwind top padding */}
       <main className="flex-1 pt-28 p-8 space-y-8">
@@ -171,20 +321,23 @@ export default function DashboardPage() {
           </div>
           <div className="space-y-6">
             <OrderStatusDonut />
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <h3 className="text-gray-700 font-semibold mb-3">Summary</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-orange-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500">Monthly</p>
-                  <p className="text-xl font-bold text-gray-900">65,127</p>
-                  <p className="text-sm text-green-600 font-medium">+16.5% 55.21 USD</p>
-                </div>
-                <div className="bg-blue-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500">Yearly</p>
-                  <p className="text-xl font-bold text-gray-900">984,246</p>
-                  <p className="text-sm text-blue-600 font-medium">+24.9% 267.35 USD</p>
-                </div>
-              </div>
+
+            {/* Summary with Animated Donut Charts (unique colors per metric) */}
+            <div className="grid grid-cols-2 gap-4">
+              <MiniDonut
+                label="Monthly"
+                value={65127}
+                color="#f97316" // orange
+                percent={16.5}
+                usd={55.21}
+              />
+              <MiniDonut
+                label="Yearly"
+                value={984246}
+                color="#3b82f6" // blue
+                percent={24.9}
+                usd={267.35}
+              />
             </div>
           </div>
         </section>

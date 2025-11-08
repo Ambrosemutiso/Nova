@@ -146,11 +146,11 @@ export default function SellerSidebar({ isOpen = false, onClose, onOpen }: Props
           bg-white/20 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl z-20"
           style={{ width: '60px' }}
         >
-          {menuItems.slice(0, 5).map((item, index) => (
+          {menuItems.slice(0, 7).map((item, index) => (
             <button
               key={index}
               onClick={() => router.push(item.path)}
-              className="group relative mb-5 text-white hover:scale-110 transition-transform"
+              className="group relative mb-5 text-orange-500 hover:scale-110 transition-transform"
               title={item.label}
             >
               {item.icon}
