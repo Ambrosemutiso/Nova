@@ -11,6 +11,12 @@ import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import { Player } from '@lottiefiles/react-lottie-player';
 
+type CartProps = {
+  onOpenBuyerLogin?: () => void;
+  onOpenSellerLogin?: () => void;
+};
+
+
 // 🗺️ County → Town mapping (Kenya)
 export const countyTownMap: Record<string, string[]> = {
   Nairobi: ['Westlands', 'Kasarani', 'Embakasi', 'Langata', 'Dagoretti', 'Starehe', 'Makadara', 'Kibra'],
@@ -113,7 +119,7 @@ const baseCountyFees: Record<string, number> = {
   Vihiga: 170,
 };
 
-export default function CartPage() {
+export default function CartPage({ onOpenBuyerLogin, onOpenSellerLogin }: CartProps) {
   const { cartItems, removeFromCart, increaseQuantity, decreaseQuantity, clearCart } = useCart();
   const router = useRouter();
 
@@ -514,13 +520,27 @@ const getPublicId = (url?: string) => {
             </div>
           )}
 
-          <button
-            onClick={handleCheckout}
-            disabled={!county || !town}
-            className="mt-5 w-full bg-orange-500 text-white py-2 rounded hover:bg-orange-600 transition disabled:opacity-50"
-          >
-            Checkout & Pay
-          </button>
+{!userId ? (
+  <button
+    onClick={() => {
+      toast.info('Please log in to checkout your order.');
+                if (onOpenBuyerLogin) onOpenBuyerLogin();
+                else router.push('/auth/google-login');
+    }}
+    className="mt-5 w-full bg-gray-400 text-white py-2 rounded cursor-pointer"
+  >
+    Login to Checkout
+  </button>
+) : (
+  <button
+    onClick={handleCheckout}
+    disabled={!county || !town}
+    className="mt-5 w-full bg-orange-500 text-white py-2 rounded hover:bg-orange-600 transition disabled:opacity-50"
+  >
+    Checkout & Pay
+  </button>
+)}
+
         </div>
       </div>
 

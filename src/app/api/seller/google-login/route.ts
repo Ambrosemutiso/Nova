@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
-import User from '@/app/models/user';
+import Seller from '@/app/models/seller'; // ✅ Use Seller model instead of User
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
@@ -101,36 +101,34 @@ export async function POST(req: Request) {
         );
       }
 
-      const existing = await User.findOne({ email: normalizedEmail });
+      const existing = await Seller.findOne({ email: normalizedEmail });
       if (existing) {
         return NextResponse.json({ success: false, error: 'Email already registered.' }, { status: 400 });
       }
 
       const hashed = await bcrypt.hash(password, 10);
 
-      const newUser = await User.create({
-        provider: 'email',
+      const newSeller = await Seller.create({
         name,
         email: normalizedEmail,
         password: hashed,
-        role: 'seller', // 👈 Always seller for this route
         phoneNumber,
         country,
         currency,
         image: image || null,
       });
 
-      const token = jwt.sign({ id: newUser._id.toString(), role: 'seller' }, JWT_SECRET, { expiresIn: '7d' });
+      const token = jwt.sign({ id: newSeller._id.toString(), role: 'seller' }, JWT_SECRET, { expiresIn: '7d' });
 
-      const userData = newUser.toObject();
-      delete userData.password;
+      const sellerData = newSeller.toObject();
+      delete sellerData.password;
 
       // Optional: trigger welcome email (non-blocking)
       try {
         await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/sendWelcomeEmail`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: newUser.email, name: newUser.name, role: 'seller' }),
+          body: JSON.stringify({ email: newSeller.email, name: newSeller.name, role: 'seller' }),
         });
       } catch (emailErr) {
         console.warn('⚠️ Seller welcome email failed:', emailErr);
@@ -139,7 +137,7 @@ export async function POST(req: Request) {
       return NextResponse.json({
         success: true,
         message: 'Seller account created successfully!',
-        user: userData,
+        user: sellerData,
         token,
       });
     }
@@ -151,23 +149,23 @@ export async function POST(req: Request) {
       if (!email || !password)
         return NextResponse.json({ success: false, error: 'Email and password are required!' }, { status: 400 });
 
-      const user = await User.findOne({ email, role: 'seller' });
-      if (!user || !user.password)
+      const seller = await Seller.findOne({ email });
+      if (!seller || !seller.password)
         return NextResponse.json({ success: false, error: 'Invalid seller credentials!' }, { status: 401 });
 
-      const isMatch = await bcrypt.compare(password, user.password);
+      const isMatch = await bcrypt.compare(password, seller.password);
       if (!isMatch)
         return NextResponse.json({ success: false, error: 'Invalid email or password!' }, { status: 401 });
 
-      const token = jwt.sign({ id: user._id.toString(), role: 'seller' }, JWT_SECRET, { expiresIn: '7d' });
+      const token = jwt.sign({ id: seller._id.toString(), role: 'seller' }, JWT_SECRET, { expiresIn: '7d' });
 
-      const userData = user.toObject();
-      delete userData.password;
+      const sellerData = seller.toObject();
+      delete sellerData.password;
 
       return NextResponse.json({
         success: true,
         message: 'Seller login successful!',
-        user: userData,
+        user: sellerData,
         token,
       });
     }
@@ -179,12 +177,12 @@ export async function POST(req: Request) {
       if (!email)
         return NextResponse.json({ success: false, error: 'Email is required!' }, { status: 400 });
 
-      const user = await User.findOne({ email, role: 'seller' });
-      if (!user)
+      const seller = await Seller.findOne({ email });
+      if (!seller)
         return NextResponse.json({ success: false, error: 'No seller account found!' }, { status: 404 });
 
-      const resetToken = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '15m' });
-      await sendResetEmail(email, user.name, resetToken);
+      const resetToken = jwt.sign({ id: seller._id }, JWT_SECRET, { expiresIn: '15m' });
+      await sendResetEmail(email, seller.name, resetToken);
 
       return NextResponse.json({
         success: true,
@@ -209,12 +207,12 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: false, error: 'Invalid or expired token!' }, { status: 401 });
       }
 
-      const user = await User.findById(decoded.id);
-      if (!user || user.role !== 'seller')
+      const seller = await Seller.findById(decoded.id);
+      if (!seller)
         return NextResponse.json({ success: false, error: 'Seller not found!' }, { status: 404 });
 
-      user.password = await bcrypt.hash(password, 10);
-      await user.save();
+      seller.password = await bcrypt.hash(password, 10);
+      await seller.save();
 
       return NextResponse.json({ success: true, message: 'Password reset successful!' });
     }
