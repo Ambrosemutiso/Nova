@@ -1,688 +1,213 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
+import React from "react";
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
+  LayoutDashboard,
+  ShoppingCart,
+  Users,
+  BarChart3,
+  Settings,
+  Eye,
+  Gift,
+  DollarSign,
+} from "lucide-react";
+
+import {
   ResponsiveContainer,
-  CartesianGrid,
   BarChart,
   Bar,
+  XAxis,
+  Tooltip,
+  Cell,
   PieChart,
   Pie,
-  Cell,
-  Legend,
-} from 'recharts';
-import { ShieldCheck, Store, CheckCircle, XCircle , Crown, Gem } from 'lucide-react';
-import { Edit2 } from 'react-feather';
-import SystemStatus from '@/components/SystemStatus';
-import { MetricCard } from '@/components/MetricCards';
-
-const COLORS = ['#f97316', '#16a34a', '#dc2626', '#eab308', '#3b82f6'];
-
-export interface Seller {
-  _id: string;
-  name: string;
-  email: string;
-  image?: string;
-  logo?: string;
-  banner?: string;
-  phoneNumber?: string;
-  role: 'seller';
-  shopName?: string;
-  isVerified: boolean;
-  followers: {
-    userId: string;
-    followedAt?: Date;
-  }[];
-  shop: {
-    isActive: boolean;
-    activatedAt?: Date;
-    expiresAt?: Date;
-    amountPaid?: number;
-    transactionId?: string;
-    plan?: 'free' | 'basic' | 'premium';
-  };
-  createdAt: Date;
-}
-
-interface ChartPoint {
-  month: string;
-  revenue: number;
-  activeProducts: number;
-}
-
-interface Metrics {
-  totalOrders: number;
-  totalRevenue: number;
-  activeProducts: number;
-  totalFollowers: number;
-  deliveredOrders: number;
-  cancelledOrders: number;
-  pendingOrders: number;
-  paidOrders: number;
-  subtotalRevenue: number;
-  chartData: ChartPoint[];
-}
-
-export default function SellerDashboard() {
-  const [seller, setSeller] = useState<Seller | null>(null);
-  const [metrics, setMetrics] = useState<Metrics | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [year, setYear] = useState(new Date().getFullYear());
-
-  const [activatingShop, setActivatingShop] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editShopName, setEditShopName] = useState(seller?.name || '');
-  const [editImage, setEditImage] = useState(seller?.image || '');
-  const [editBanner, setEditBanner] = useState(seller?.banner || '');
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<"basic" | "premium" | null>(null);
-  const [paymentPhone, setPaymentPhone] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"mpesa" | "airtel" | "">("");
+} from "recharts";
 
 
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+// ---------- Dummy data ----------
+const stats = [
+  { id: 1, title: "Total Orders", value: "248k", change: "+24%", icon: ShoppingCart, trend: "up" },
+  { id: 2, title: "Total Sales", value: "$47.6k", change: "+14%", icon: DollarSign, trend: "up" },
+  { id: 3, title: "Total Visits", value: "189k", change: "-35%", icon: Eye, trend: "down" },
+  { id: 4, title: "Bounce Rate", value: "24.6%", change: "+18%", icon: BarChart3, trend: "up" },
+];
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem('sellerUser');
-    if (!storedUser) return;
+const salesData = [
+  { name: "Jan", sales: 20, views: 12 },
+  { name: "Feb", sales: 8, views: 6 },
+  { name: "Mar", sales: 60, views: 56 },
+  { name: "Apr", sales: 12, views: 10 },
+  { name: "May", sales: 28, views: 22 },
+  { name: "Jun", sales: 22, views: 18 },
+  { name: "Jul", sales: 30, views: 40 },
+  { name: "Aug", sales: 6, views: 4 },
+  { name: "Sep", sales: 20, views: 26 },
+];
 
-    const parsed = JSON.parse(storedUser);
-    setSeller(parsed);
-    fetchMetrics(parsed._id, year);
-  }, [year]);
+const donutData = [
+  { name: "Sales", value: 68 },
+  { name: "Product", value: 25 },
+  { name: "Income", value: 14 },
+];
 
-  const fetchMetrics = async (sellerId: string, selectedYear: number) => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/seller/metrics', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sellerId, year: selectedYear }),
-      });
-      const data = await res.json();
-      setMetrics(data);
-    } catch (err) {
-      console.error('Metrics fetch error:', err);
-      toast.error('Failed to load metrics');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-const openPaymentModal = (plan: "basic" | "premium") => {
-  setSelectedPlan(plan);
-  setPaymentMethod("");
-  setPaymentPhone("");
-  setShowPaymentModal(true);
-};
-
-const handleConfirmPayment = async () => {
-  if (!selectedPlan || !paymentMethod || !paymentPhone) {
-    toast.error("Please fill all details");
-    return;
-  }
-
-  try {
-    setActivatingShop(true);
-
-    let amount = selectedPlan === "basic" ? 1300 : 3000;
-    if (selectedPlan === "premium" && seller?.shop?.plan === "basic") {
-      const alreadyPaid = seller.shop?.amountPaid || 0;
-      amount = 3000 - alreadyPaid;
-    }
-
-    const res = await fetch("/api/seller/payment/initiate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sellerId: seller?._id,
-        plan: selectedPlan,
-        method: paymentMethod,
-        phone: paymentPhone,
-        amount,
-      }),
-    });
-
-    const data = await res.json();
-    if (data.success) {
-      toast.success("Payment request sent! Please complete on your phone.");
-      setShowPaymentModal(false);
-    } else {
-      toast.error(data.error || "Payment initiation failed");
-    }
-  } catch (err) {
-    console.error(err);
-    toast.error("Error initiating payment");
-  } finally {
-    setActivatingShop(false);
-  }
-};
-
-  const isShopActive =
-    seller?.shop?.isActive &&
-    seller.shop.expiresAt &&
-    new Date(seller.shop.expiresAt) > new Date();
-
+// ---------- Stats Card ----------
+function StatsCard({ title, value, change, icon: Icon, trend }: any) {
   return (
-    <div className="md:ml-64 p-4 md:p-6 max-w-6xl mx-auto pt-28 pb-10">
-      <h1 className="text-3xl font-bold text-orange-600 mb-4">
-        Welcome, {seller?.name || 'Loading...'}
-      </h1>
-      <SystemStatus/>
-
-      <div className="mb-6 p-4 rounded-lg border bg-white shadow flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-700">
-            <Store className="w-5 h-5 text-orange-500" /> Seller Shop
-          </h2>
-
-          {isShopActive ? (
-            <p className="text-green-600 text-sm mt-1">
-              Your shop is active until{' '}
-              <strong>{new Date(seller!.shop.expiresAt!).toLocaleDateString()}</strong>{' '}
-              (
-              <span className="font-bold">
-                {seller?.shop?.plan?.toUpperCase() || 'Unspecified'}
-              </span>{' '}
-              Package)
-            </p>
-          ) : (
-            <p className="text-red-600 text-sm mt-1">
-              You don&apos;t have an active shop.
-            </p>
-          )}
-        </div>
-
-        <div className="flex items-center gap-3">
-
-{seller?.shop?.plan === 'premium' && isShopActive ? (
-  <span className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-white font-semibold px-3 py-1 rounded-full shadow-md flex items-center gap-1">
-    <Crown size={16} className="text-white" />
-    Premium
-  </span>
-) : seller?.shop?.plan === 'basic' && isShopActive ? (
-  <>
-    <span className="bg-blue-100 text-blue-700 font-medium px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
-      <Gem size={16} className="text-blue-600" />
-      Basic
-    </span>
-    <button
-      onClick={() => setShowUpgradeModal(true)}
-      className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded"
-    >
-      Upgrade Shop
-    </button>
-  </>
-) : (
-  <button
-    onClick={() => setShowUpgradeModal(true)}
-    className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded"
-  >
-    Activate Shop
-  </button>
-)}
-
-{(seller?.shop?.plan === 'basic' || seller?.shop?.plan === 'premium') && (
-  <button
-    onClick={() => {
-      setEditShopName(seller?.shopName || '');
-      setEditImage(seller?.image || '');
-      setEditBanner(seller?.banner || '');
-      setShowEditModal(true);
-    }}
-    className="text-sm text-orange-600 hover:underline flex items-center gap-1"
-  >
-    <Edit2 size={16} /> Edit Shop
-  </button>
-)}
-  </div>
-</div>
-
-{showUpgradeModal && (
-  <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center px-4">
-    {/* Floating Background Icons */}
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      <div className="absolute top-10 left-20 text-white/10 text-8xl animate-pulse">💼</div>
-      <div className="absolute bottom-20 right-24 text-white/10 text-8xl animate-pulse delay-200">🛒</div>
-      <div className="absolute top-1/3 right-1/3 text-white/5 text-9xl animate-bounce-slow">💡</div>
-    </div>
-
-    {/* Modal Container */}
-    <div className="relative bg-white/10 backdrop-blur-2xl border border-white/20 p-8 rounded-3xl w-full max-w-5xl shadow-2xl overflow-hidden">
-      {/* Gradient Glow Accent */}
-      <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-orange-500/10 via-transparent to-blue-400/10 pointer-events-none"></div>
-
-      <button
-        onClick={() => setShowUpgradeModal(false)}
-        className="absolute top-4 right-5 text-white/70 hover:text-orange-400 text-3xl font-bold transition"
-      >
-        ×
-      </button>
-
-      <h2 className="text-3xl font-bold text-white mb-8 text-center">
-        Upgrade Your Shop Plan
-      </h2>
-
-      {/* Status Dots */}
-      <div className="flex justify-center gap-6 mb-8">
-        <div
-          className={`h-4 w-4 rounded-full ${
-            seller?.shop?.plan === "free"
-              ? "bg-gray-400 animate-ping"
-              : "bg-gray-600"
-          }`}
-        />
-        <div
-          className={`h-4 w-4 rounded-full ${
-            seller?.shop?.plan === "basic"
-              ? "bg-orange-400 animate-ping"
-              : "bg-orange-600/70"
-          }`}
-        />
-        <div
-          className={`h-4 w-4 rounded-full ${
-            seller?.shop?.plan === "premium"
-              ? "bg-blue-400 animate-ping"
-              : "bg-blue-600/70"
-          }`}
-        />
+    <div className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-all border border-gray-100 flex justify-between items-start">
+      <div>
+        <p className="text-sm text-gray-500">{title}</p>
+        <h3 className="text-2xl font-bold text-gray-900 mt-1">{value}</h3>
+        <p className={`text-sm font-medium mt-1 ${trend === "up" ? "text-green-500" : "text-red-500"}`}>
+          {change}
+        </p>
       </div>
-
-      {/* Plans */}
-      <div className="flex md:grid md:grid-cols-3 gap-6 overflow-x-auto snap-x snap-mandatory px-2 pb-2 scrollbar-hide">
-        {/* Free Plan */}
-        <div className="min-w-[85%] md:min-w-0 snap-center border border-white/20 rounded-2xl p-6 bg-white/10 hover:bg-white/20 transition relative backdrop-blur-md">
-          {seller?.shop?.plan === "free" && (
-            <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gray-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow">
-              Current Plan
-            </span>
-          )}
-          <h3 className="text-xl font-semibold text-white">Free Plan</h3>
-          <p className="text-gray-300 mb-3">Ksh 0 / year</p>
-          <ul className="space-y-2 text-sm text-gray-200 mb-5">
-            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Add up to 5 Products</li>
-            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Receive up to 5 Orders</li>
-            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Limited Analytics</li>
-            <li className="flex items-center gap-2"><XCircle size={16} className="text-red-400" /> No Product Boost</li>
-            <li className="flex items-center gap-2"><XCircle size={16} className="text-red-400" /> No Front Shop</li>
-            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Withdrawals capped at Ksh 1000</li>
-          </ul>
-          <button disabled className="w-full bg-gray-500 text-white py-2 rounded cursor-not-allowed">
-            Free
-          </button>
-        </div>
-
-        {/* Basic Plan */}
-        <div className="min-w-[85%] md:min-w-0 snap-center border border-orange-400/50 rounded-2xl p-6 bg-gradient-to-b from-orange-500/10 to-transparent hover:shadow-orange-500/30 hover:shadow-xl transition relative backdrop-blur-md">
-          {seller?.shop?.plan === "basic" && (
-            <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow">
-              Current Plan
-            </span>
-          )}
-          <h3 className="text-xl font-semibold text-orange-400">Basic Plan</h3>
-          <p className="text-gray-200 mb-3">Ksh 1300 / year</p>
-          <ul className="space-y-2 text-sm text-gray-200 mb-5">
-            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Add up to 100 Products</li>
-            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Receive up to 100 Orders</li>
-            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Standard Visibility</li>
-            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Access to Orders</li>
-            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Product Ads Boost</li>
-            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Shop Visibility</li>
-          </ul>
-          <button
-            onClick={() => openPaymentModal("basic")}
-            disabled={activatingShop}
-            className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded font-medium transition"
-          >
-            {activatingShop ? "Processing..." : "Upgrade to Basic"}
-          </button>
-        </div>
-
-        {/* Premium Plan */}
-        <div className="relative min-w-[85%] md:min-w-0 snap-center">
-          {/* Animated Aura */}
-          <div className="absolute inset-0 -z-10 flex items-center justify-center">
-            <div className="absolute w-[140%] h-[140%] rounded-full bg-gradient-to-r from-orange-400 via-pink-400 to-purple-500 opacity-30 blur-3xl animate-pulse-slow" />
-          </div>
-
-          {/* Floating Orbiting Badges with Glow */}
-          <div className="absolute inset-0 pointer-events-none">
-            <span className="absolute text-4xl text-white/80 animate-orbit-slow left-1/2 -translate-x-1/2 top-[-2rem] animate-glow-slow drop-shadow-[0_0_10px_rgba(255,255,255,0.6)]">
-              ⭐
-            </span>
-            <span className="absolute text-3xl text-white/70 animate-orbit-fast left-[-1rem] top-1/3 animate-glow-medium drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
-              🧭
-            </span>
-            <span className="absolute text-5xl text-white/80 animate-orbit-medium right-[-1rem] bottom-1/4 animate-glow-fast drop-shadow-[0_0_12px_rgba(255,255,255,0.6)]">
-              💎
-            </span>
-          </div>
-
-          <div className="relative border border-blue-400/60 rounded-2xl p-6 bg-gradient-to-b from-blue-500/10 to-transparent hover:shadow-blue-400/40 hover:shadow-2xl hover:scale-[1.03] transition backdrop-blur-md">
-            {seller?.shop?.plan === "premium" && (
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow">
-                Current Plan
-              </span>
-            )}
-            <span className="absolute -top-3 left-1/4 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow">
-              Recommended
-            </span>
-            <h3 className="text-xl font-semibold text-blue-300">Premium Plan</h3>
-            <p className="text-gray-200 mb-3">
-              {seller?.shop?.plan === "basic"
-                ? "Top-up Ksh 1700 to upgrade"
-                : "Ksh 3000 / year"}
-            </p>
-            <ul className="space-y-2 text-sm text-gray-200 mb-5">
-              <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> All Basic Features</li>
-              <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Premium Badge</li>
-              <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Higher Visibility</li>
-              <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Unlimited Withdrawals</li>
-              <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Unlimited Orders</li>
-              <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Unlimited Products</li>
-            </ul>
-            <button
-              onClick={() => openPaymentModal("premium")}
-              disabled={activatingShop}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-medium transition"
-            >
-              {activatingShop ? "Processing..." : "Upgrade to Premium"}
-            </button>
-          </div>
-        </div>
+      <div className="bg-orange-50 p-3 rounded-xl">
+        <Icon size={22} className="text-orange-500" />
       </div>
     </div>
-  </div>
-)}
+  );
+}
 
-
-
-{showPaymentModal && (
-  <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
-    <div className="bg-white p-6 rounded-xl w-full max-w-md relative">
-      <button
-        onClick={() => setShowPaymentModal(false)}
-        className="absolute top-2 right-4 text-gray-500 text-2xl font-bold"
-      >
-        ×
-      </button>
-
-      <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">
-        {selectedPlan === "basic" ? "Basic Plan" : "Premium Plan"}
-      </h2>
-
-      <p className="text-center text-lg font-semibold text-orange-600 mb-4">
-        Amount: {selectedPlan === "basic" ? "Ksh 1300" : "Ksh 3000"}
-      </p>
-
-      <label className="block mb-2 text-sm text-orange-600">Phone Number</label>
-      <input
-        type="text"
-        value={paymentPhone}
-        onChange={(e) => setPaymentPhone(e.target.value)}
-        className="w-full border px-3 py-2 rounded mb-4"
-        placeholder="Enter Mpesa/Airtel number (2547xxxxxxxx)"
-      />
-
-      <label className="block mb-2 text-sm text-orange-600">Payment Method</label>
-      <div className="flex items-center gap-4 mb-4">
-
-        <button
-          onClick={() => setPaymentMethod("mpesa")}
-          className={`flex-1 flex items-center gap-2 border px-3 py-2 rounded-lg transition ${
-            paymentMethod === "mpesa"
-              ? "border-green-500 bg-green-50"
-              : "hover:border-green-400"
-          }`}
-        >
-          <img
-            src="/mpesa.png" 
-            alt="M-Pesa"
-            className="h-6"
-          />
-          <span className="font-medium text-gray-700">M-Pesa</span>
-        </button>
-
-        <button
-          onClick={() => setPaymentMethod("airtel")}
-          className={`flex-1 flex items-center gap-2 border px-3 py-2 rounded-lg transition ${
-            paymentMethod === "airtel"
-              ? "border-red-500 bg-red-50"
-              : "hover:border-red-400"
-          }`}
-        >
-          <img
-            src="/airtel.png" 
-            alt="Airtel"
-            className="h-6"
-          />
-          <span className="font-medium text-gray-700">Airtel Money</span>
-        </button>
+// ---------- Charts ----------
+function SalesViewsChart() {
+  return (
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+      <h2 className="text-gray-700 font-semibold mb-4">Sales & Views</h2>
+      <div style={{ width: "100%", height: 250 }}>
+        <ResponsiveContainer>
+          <BarChart data={salesData}>
+            <XAxis dataKey="name" stroke="#94a3b8" />
+            <Tooltip cursor={{ fill: "#f3f4f6" }} />
+            <Bar dataKey="sales" radius={[6, 6, 0, 0]} fill="#f97316" />
+            <Bar dataKey="views" radius={[6, 6, 0, 0]} fill="#3b82f6" />
+          </BarChart>
+        </ResponsiveContainer>
       </div>
-
-      <button
-        onClick={handleConfirmPayment}
-        disabled={activatingShop}
-        className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded"
-      >
-        {activatingShop ? "Processing..." : "Confirm & Pay"}
-      </button>
     </div>
-  </div>
-)}
+  );
+}
 
-      <div className="mb-4">
-        <label className="text-sm font-medium text-gray-700 mr-2">Select Year:</label>
-        <select
-          value={year}
-          onChange={(e) => setYear(Number(e.target.value))}
-          className="border rounded px-3 py-1"
-        >
-          {[2020, 2021, 2022, 2023, 2024, 2025, 2026].map((yr) => (
-            <option key={yr} value={yr}>
-              {yr}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {loading ? (
-        <div className="flex justify-center items-center h-48">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-600"></div>
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <MetricCard label="Total Orders" value={metrics?.totalOrders} color="orange" />
-            <MetricCard label="Delivered Orders" value={metrics?.deliveredOrders} color="green" />
-            <MetricCard label="Cancelled Orders" value={metrics?.cancelledOrders} color="red" />
-            <MetricCard label="Pending Orders" value={metrics?.pendingOrders} color="yellow" />
-            <MetricCard label="Paid Orders" value={metrics?.paidOrders} color="blue" />
-            <MetricCard label="Active Products" value={metrics?.activeProducts} color="orange" />
-            <div className="bg-white p-6 rounded-xl shadow-md text-center relative">
-              {metrics?.totalFollowers && metrics.totalFollowers >= 1 && (
-                <span className="absolute top-2 right-2 bg-yellow-400 text-black text-xs px-3 py-1 rounded-full shadow font-semibold flex items-center gap-1">
-                  <ShieldCheck size={14} className="text-green-700" />
-                  Verified Seller
-                </span>
-              )}
-              <h3 className="text-lg font-medium text-gray-600">Followers</h3>
-              <p className="text-3xl font-bold text-orange-600">
-                {metrics?.totalFollowers ?? '--'}
-              </p>
-            </div>
-          </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded-xl shadow-md">
-          <h2 className="text-lg font-semibold mb-4 text-gray-700">
-            Revenue Overview ({year})
-          </h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={metrics?.chartData || []}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="revenue" stroke="#f97316" strokeWidth={3} name="Revenue" />
-              <Line type="monotone" dataKey="activeProducts" stroke="#3b82f6" strokeWidth={3} name="Active Products" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-md">
-          <h2 className="text-lg font-semibold mb-4 text-gray-700">
-            Active Products per Month
-            </h2>
-  <ResponsiveContainer width="100%" height={300}>
-    <BarChart data={metrics?.chartData || []}>
-      <CartesianGrid strokeDasharray="3 3" />
-      <XAxis dataKey="month" />
-      <YAxis />
-      <Tooltip />
-      <Legend />
-      <Bar dataKey="activeProducts" fill="#3b82f6" name="Active Products" />
-    </BarChart>
-  </ResponsiveContainer>
-</div>
-
-<div className="bg-white p-6 rounded-xl shadow-md">
-  <h2 className="text-lg font-semibold mb-4 text-gray-700">
-    Active Products Distribution ({year})
-  </h2>
-  <ResponsiveContainer width="100%" height={300}>
-    <PieChart>
-      <Pie
-        data={(metrics?.chartData || []).map(item => ({
-          name: item.month,
-          value: item.activeProducts,
-        }))}
-        dataKey="value"
-        cx="50%"
-        cy="50%"
-        outerRadius={100}
-        label
-      >
-        {(metrics?.chartData || []).map((_, index) => (
-          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-        ))}
-      </Pie>
-      <Tooltip />
-      <Legend />
-    </PieChart>
-  </ResponsiveContainer>
-</div>
-
-        <div className="bg-white p-6 rounded-xl shadow-md">
-          <h2 className="text-lg font-semibold mb-4 text-gray-700">
-            Order Status
-          </h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={[{
-              name: 'Orders',
-              Delivered: metrics?.deliveredOrders || 0,
-              Cancelled: metrics?.cancelledOrders || 0,
-              Pending: metrics?.pendingOrders || 0,
-              Paid: metrics?.paidOrders || 0,
-            }]}> 
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="Delivered" fill="#16a34a" />
-              <Bar dataKey="Cancelled" fill="#dc2626" />
-              <Bar dataKey="Pending" fill="#eab308" />
-              <Bar dataKey="Paid" fill="#3b82f6" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="bg-white p-6 rounded-xl shadow-md">
-          <h2 className="text-lg font-semibold mb-4 text-gray-700">
-            Orders Distribution
-          </h2>
-          <ResponsiveContainer width="100%" height={300}>
+function OrderStatusDonut() {
+  return (
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+      <h3 className="text-gray-700 font-semibold mb-4">Order Status</h3>
+      <div className="flex items-center gap-6">
+        <div style={{ width: 160, height: 160 }}>
+          <ResponsiveContainer>
             <PieChart>
-              <Pie
-                dataKey="value"
-                data={[
-                  { name: 'Delivered', value: metrics?.deliveredOrders || 0 },
-                  { name: 'Cancelled', value: metrics?.cancelledOrders || 0 },
-                  { name: 'Pending', value: metrics?.pendingOrders || 0 },
-                  { name: 'Paid', value: metrics?.paidOrders || 0 }
-                ]}
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-                label
-              >
-                {COLORS.map((color, index) => (
-                  <Cell key={`cell-${index}`} fill={color} />
+              <Pie data={donutData} dataKey="value" innerRadius={50} outerRadius={70} paddingAngle={3}>
+                {donutData.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={index === 0 ? "#3b82f6" : index === 1 ? "#f97316" : "#10b981"}
+                  />
                 ))}
               </Pie>
-              <Legend />
-              <Tooltip />
             </PieChart>
           </ResponsiveContainer>
         </div>
+        <div className="text-gray-700">
+          <p className="text-2xl font-bold text-gray-900">68%</p>
+          <p className="text-sm text-gray-500">Total Sales</p>
+          <ul className="mt-3 text-sm space-y-1">
+            <li>
+              <span className="inline-block w-3 h-3 bg-blue-500 mr-2 rounded-sm" /> Sales
+            </li>
+            <li>
+              <span className="inline-block w-3 h-3 bg-orange-500 mr-2 rounded-sm" /> Product
+            </li>
+            <li>
+              <span className="inline-block w-3 h-3 bg-green-500 mr-2 rounded-sm" /> Income
+            </li>
+          </ul>
+        </div>
       </div>
-        </>
-      )}
-
-    {showEditModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
-        <div className="bg-white p-6 rounded-xl w-full max-w-md relative">
-        <button onClick={() => setShowEditModal(false)} className="absolute top-2 right-4 text-gray-500 text-2xl font-bold">×</button>
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">Edit Shop Info</h2>
-      <label className="block mb-1 text-sm font-medium text-gray-600">Shop Name</label>
-      <input
-        type="text"
-        value={editShopName}
-        onChange={(e) => setEditShopName(e.target.value)}
-        className="w-full border px-3 py-2 rounded mb-4"
-      />
-      <label className="block mb-1 text-sm font-medium text-gray-600">Profile Image URL</label>
-      <input
-        type="text"
-        value={editImage}
-        onChange={(e) => setEditImage(e.target.value)}
-        className="w-full border px-3 py-2 rounded mb-4"
-      />
-      <label className="block mb-1 text-sm font-medium text-gray-600">Banner Image URL</label>
-      <input
-        type="text"
-        value={editBanner}
-        onChange={(e) => setEditBanner(e.target.value)}
-        className="w-full border px-3 py-2 rounded mb-4"
-      />
-
-      <button
-        onClick={() => {
-          const updated = {
-            ...seller,
-            shopName: editShopName,
-            image: editImage,
-            bannerImage: editBanner,
-          };
-          setSeller(updated as Seller);
-          localStorage.setItem('sellerUser', JSON.stringify(updated));
-          setShowEditModal(false);
-          toast.success('Shop info updated locally!');
-        }}
-        className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded"
-        >
-        Save Changes
-      </button>
     </div>
-  </div>
-)}
+  );
+}
+
+
+export default function DashboardPage() {
+  return (
+    <div className="min-h-screen bg-gray-50 text-gray-800 flex flex-col">
+      {/* Header */}
+      <header className="flex items-center justify-between bg-white shadow-sm px-8 py-4 border-b border-gray-100 sticky top-0 z-20">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
+          <p className="text-sm text-gray-500">Affiliate Performance Insights</p>
+        </div>
+        <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl shadow-sm transition">
+          Settings
+        </button>
+      </header>
+
+      {/* Main Content with Tailwind top padding */}
+      <main className="flex-1 pt-28 p-8 space-y-8">
+        {/* 🎉 Congratulations Card */}
+        <div className="bg-gradient-to-r from-orange-500 to-orange-400 rounded-2xl p-6 flex items-center justify-between text-white shadow-md">
+          <div>
+            <h2 className="text-lg font-semibold">Congratulations Jhon 🎉</h2>
+            <p className="text-white/90 text-sm">You are the top seller this month!</p>
+            <h3 className="text-3xl font-bold mt-2">$168.5K</h3>
+            <p className="text-white/80 text-xs">58% of sales target achieved</p>
+            <button className="mt-3 bg-white text-orange-600 font-medium px-3 py-1 rounded-full text-sm hover:bg-gray-100">
+              View Details
+            </button>
+          </div>
+          <Gift size={64} className="opacity-90" />
+        </div>
+
+        {/* 📊 Stats Cards */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {stats.map((s) => (
+            <StatsCard key={s.id} {...s} />
+          ))}
+        </section>
+
+        {/* 📈 Charts Section */}
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <SalesViewsChart />
+          </div>
+          <div className="space-y-6">
+            <OrderStatusDonut />
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <h3 className="text-gray-700 font-semibold mb-3">Summary</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-orange-50 rounded-xl p-4">
+                  <p className="text-xs text-gray-500">Monthly</p>
+                  <p className="text-xl font-bold text-gray-900">65,127</p>
+                  <p className="text-sm text-green-600 font-medium">+16.5% 55.21 USD</p>
+                </div>
+                <div className="bg-blue-50 rounded-xl p-4">
+                  <p className="text-xs text-gray-500">Yearly</p>
+                  <p className="text-xl font-bold text-gray-900">984,246</p>
+                  <p className="text-sm text-blue-600 font-medium">+24.9% 267.35 USD</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* Floating Bottom Action Bar */}
+      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-white shadow-md border border-gray-200 rounded-full flex items-center justify-around w-[90%] max-w-md px-6 py-3">
+        <button className="text-orange-500 hover:text-orange-600">
+          <LayoutDashboard size={22} />
+        </button>
+        <button className="text-gray-500 hover:text-orange-500">
+          <ShoppingCart size={22} />
+        </button>
+        <button className="text-gray-500 hover:text-orange-500">
+          <BarChart3 size={22} />
+        </button>
+        <button className="text-gray-500 hover:text-orange-500">
+          <Users size={22} />
+        </button>
+        <button className="text-gray-500 hover:text-orange-500">
+          <Settings size={22} />
+        </button>
+      </div>
     </div>
   );
 }

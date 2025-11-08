@@ -325,13 +325,33 @@ export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin }: NavbarPr
           )}
         </div>
 
-        {/* Sidebars */}
-        {showSidebar &&
-          (isSeller ? (
-            <SellerSidebar onClose={() => setShowSidebar(false)} />
-          ) : (
-            <Sidebar onClose={() => setShowSidebar(false)} />
-          ))}
+{/* 🧭 Sidebars */}
+{isSeller ? (
+  <>
+    {/* 🧡 Seller Sidebar — only visible on mobile when open */}
+    {showSidebar && (
+      <div className="md:hidden">
+        <SellerSidebar onClose={() => setShowSidebar(false)} />
+      </div>
+    )}
+
+    {/* 📱 Floating Menu Button (mobile only) */}
+    {!showSidebar && (
+      <button
+        onClick={() => setShowSidebar(true)}
+        className="md:hidden fixed bottom-6 right-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all z-[60]"
+        aria-label="Open Menu"
+      >
+        <FiMenu size={22} />
+      </button>
+    )}
+  </>
+) : (
+  /* 🛍️ Buyer Sidebar (standard behavior) */
+  showSidebar && <Sidebar onClose={() => setShowSidebar(false)} />
+)}
+
+
 
         {/* 🔔 Notifications */}
         <AnimatePresence>
