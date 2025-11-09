@@ -1,4 +1,5 @@
 'use client';
+
 import { useEffect, useState, useRef } from 'react';
 import { FiMenu, FiShoppingCart, FiPackage, FiSearch, FiBell, FiUser } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
@@ -16,6 +17,17 @@ type NavbarProps = {
   onOpenBuyerLogin?: () => void;
   onOpenSellerLogin?: () => void;
 };
+
+const countryData = [
+  { name: 'Kenya', code: 'KE', flag: 'https://flagcdn.com/w40/ke.png', dialCode: '+254', currency: 'KES' },
+  { name: 'Uganda', code: 'UG', flag: 'https://flagcdn.com/w40/ug.png', dialCode: '+256', currency: 'UGX' },
+  { name: 'Tanzania', code: 'TZ', flag: 'https://flagcdn.com/w40/tz.png', dialCode: '+255', currency: 'TZS' },
+  { name: 'Rwanda', code: 'RW', flag: 'https://flagcdn.com/w40/rw.png', dialCode: '+250', currency: 'RWF' },
+  { name: 'Burundi', code: 'BI', flag: 'https://flagcdn.com/w40/bi.png', dialCode: '+257', currency: 'BIF' },
+  { name: 'South Sudan', code: 'SS', flag: 'https://flagcdn.com/w40/ss.png', dialCode: '+211', currency: 'SSP' },
+  { name: 'Ethiopia', code: 'ET', flag: 'https://flagcdn.com/w40/et.png', dialCode: '+251', currency: 'ETB' },
+  { name: 'Somalia', code: 'SO', flag: 'https://flagcdn.com/w40/so.png', dialCode: '+252', currency: 'SOS' },
+];
 
 export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin }: NavbarProps) {
   const [showSidebar, setShowSidebar] = useState(false);
@@ -45,6 +57,11 @@ export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin }: NavbarPr
     '🚚 Free delivery for orders above Ksh 2,000!',
     '💳 Secure Payments via M-Pesa & AirtelMoney',
   ];
+
+  const getSellerCountry = (user?: any) => {
+    if (!user || !user.country) return countryData[0]; // default Kenya
+    return countryData.find((c) => c.name === user.country) || countryData[0];
+  };
 
   // 🔸 Promo rotation
   useEffect(() => {
@@ -83,7 +100,6 @@ export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin }: NavbarPr
     };
     fetchNotifications();
   }, [user, isSeller]);
-  
 
   // 🔹 Seller order count
   useEffect(() => {
@@ -131,6 +147,8 @@ export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin }: NavbarPr
     return match ? match[1] : url;
   };
 
+  const sellerCountry = getSellerCountry(user);
+
   return (
     <>
       {/* 🔸 Promo Bar */}
@@ -161,6 +179,20 @@ export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin }: NavbarPr
 
         {/* Right Section */}
         <div className="flex items-center gap-4 relative ml-auto">
+          {/* Country Flag & Currency */}
+          {user && (
+            <div className="flex items-center gap-2 border border-orange-200 rounded-full px-3 py-1 cursor-pointer hover:bg-orange-50 transition">
+              <Image
+                src={sellerCountry.flag}
+                alt={sellerCountry.name}
+                width={24}
+                height={16}
+                className="rounded-sm"
+              />
+              <span className="text-sm font-medium text-gray-700">{sellerCountry.currency}</span>
+            </div>
+          )}
+
           {/* Search */}
           <div ref={searchRef} className="relative flex items-center">
             <AnimatePresence>
@@ -314,7 +346,6 @@ export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin }: NavbarPr
           ) : (
             <button
               onClick={() => {
-                // ✅ Call prop instead of local modal
                 if (onOpenBuyerLogin) onOpenBuyerLogin();
                 else router.push('/auth/google-login');
               }}
@@ -325,33 +356,28 @@ export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin }: NavbarPr
           )}
         </div>
 
-{/* 🧭 Sidebars */}
-{isSeller ? (
-  <>
-    {/* 🧡 Seller Sidebar — only visible on mobile when open */}
-    {showSidebar && (
-      <div className="md:hidden">
-        <SellerSidebar onClose={() => setShowSidebar(false)} />
-      </div>
-    )}
+        {/* 🧭 Sidebars */}
+        {isSeller ? (
+          <>
+            {showSidebar && (
+              <div className="md:hidden">
+                <SellerSidebar onClose={() => setShowSidebar(false)} />
+              </div>
+            )}
 
-    {/* 📱 Floating Menu Button (mobile only) */}
-    {!showSidebar && (
-      <button
-        onClick={() => setShowSidebar(true)}
-        className="md:hidden fixed bottom-6 right-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all z-[60]"
-        aria-label="Open Menu"
-      >
-        <FiMenu size={22} />
-      </button>
-    )}
-  </>
-) : (
-  /* 🛍️ Buyer Sidebar (standard behavior) */
-  showSidebar && <Sidebar onClose={() => setShowSidebar(false)} />
-)}
-
-
+            {!showSidebar && (
+              <button
+                onClick={() => setShowSidebar(true)}
+                className="md:hidden fixed bottom-6 right-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all z-[60]"
+                aria-label="Open Menu"
+              >
+                <FiMenu size={22} />
+              </button>
+            )}
+          </>
+        ) : (
+          showSidebar && <Sidebar onClose={() => setShowSidebar(false)} />
+        )}
 
         {/* 🔔 Notifications */}
         <AnimatePresence>

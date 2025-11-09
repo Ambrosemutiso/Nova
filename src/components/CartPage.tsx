@@ -524,10 +524,9 @@ const getPublicId = (url?: string) => {
   <button
     onClick={() => {
       toast.info('Please log in to checkout your order.');
-                if (onOpenBuyerLogin) onOpenBuyerLogin();
-                else router.push('/auth/google-login');
+      if (onOpenBuyerLogin) onOpenBuyerLogin();
     }}
-    className="mt-5 w-full bg-gray-400 text-white py-2 rounded cursor-pointer"
+    className="mt-5 w-full bg-gray-400 text-white py-2 rounded cursor-pointer hover:bg-gray-500 transition"
   >
     Login to Checkout
   </button>
@@ -540,6 +539,7 @@ const getPublicId = (url?: string) => {
     Checkout & Pay
   </button>
 )}
+
 
         </div>
       </div>
