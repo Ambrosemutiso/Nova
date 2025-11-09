@@ -179,19 +179,7 @@ export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin }: NavbarPr
 
         {/* Right Section */}
         <div className="flex items-center gap-4 relative ml-auto">
-          {/* Country Flag & Currency */}
-          {user && (
-            <div className="flex items-center gap-2 border border-orange-200 rounded-full px-3 py-1 cursor-pointer hover:bg-orange-50 transition">
-              <Image
-                src={sellerCountry.flag}
-                alt={sellerCountry.name}
-                width={24}
-                height={16}
-                className="rounded-sm"
-              />
-              <span className="text-sm font-medium text-gray-700">{sellerCountry.currency}</span>
-            </div>
-          )}
+
 
           {/* Search */}
           <div ref={searchRef} className="relative flex items-center">
@@ -265,6 +253,18 @@ export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin }: NavbarPr
               <FiSearch />
             </button>
           </div>
+
+                    {/* Country Flag & Currency */}
+          {user && (
+            <div className="flex items-center gap-2 border border-orange-200 rounded-full px-3 py-1 cursor-pointer hover:bg-orange-50 transition">
+              <img
+                src={sellerCountry.flag}
+                alt={sellerCountry.name}
+                className="w-6 h-4 rounded-sm object-cover"
+              />
+              <span className="text-sm font-medium text-gray-700">{sellerCountry.currency}</span>
+            </div>
+          )}
 
           {/* Cart or Orders */}
           {isSeller ? (
