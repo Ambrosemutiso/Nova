@@ -24,6 +24,7 @@ const iconMap: Record<string, any> = {
   Box, // For active products
 };
 
+
 // ---------- Stats Card Component ----------
 function StatsCard({ id, title, value, change, icon, trend, series }: any) {
   const isUp = trend === "up";
@@ -197,60 +198,49 @@ export default function DashboardPage() {
   const [summary, setSummary] = useState<any[]>([]);
   const [topSeller, setTopSeller] = useState<any>(null);
 
-  useEffect(() => {
-    const fetchMetrics = async () => {
-      try {
-        const res = await fetch("/api/seller/metrics/dashboard", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sellerId: "YOUR_SELLER_ID_HERE" }),
-        });
-        const data = await res.json();
+  // ---------- Utility to get sellerId ----------
+const getSellerId = (): string | null => {
+  if (typeof window === "undefined") return null;
 
-        const enhancedStats = data.stats.map((s: any) => ({
-          ...s,
-          value: s.value.toLocaleString(),
-          series: s.series,
-        }));
+  try {
+    const sellerData = localStorage.getItem("sellerUser");
+    if (sellerData) {
+      const seller = JSON.parse(sellerData);
+      return seller._id || null;
+    }
+    return localStorage.getItem("sellerId"); // fallback
+  } catch {
+    return null;
+  }
+};
 
-        // Add total active products summary card
-        const activeProductsSummary = [
-          {
-            label: "Active Products (Month)",
-            value: data.activeProducts?.month || 0,
-            color: "#f59e0b",
-            percent: Math.round(
-              ((data.activeProducts?.month || 0) /
-                (data.activeProducts?.monthlyTarget || 100)) *
-                100
-            ),
-            usd: data.activeProducts?.month || 0,
-          },
-          {
-            label: "Active Products (Year)",
-            value: data.activeProducts?.year || 0,
-            color: "#8b5cf6",
-            percent: Math.round(
-              ((data.activeProducts?.year || 0) /
-                (data.activeProducts?.yearlyTarget || 1000)) *
-                100
-            ),
-            usd: data.activeProducts?.year || 0,
-          },
-        ];
 
-        setStats(enhancedStats || []);
-        setSalesData(data.salesData || []);
-        setOrderStatus(data.donutData || []);
-        setSummary([...(data.summary || []), ...activeProductsSummary]);
-        setTopSeller(data.topSeller || null);
-      } catch (err) {
-        console.error("Failed to fetch dashboard metrics", err);
-      }
-    };
+useEffect(() => {
+  const fetchMetrics = async () => {
+    const sellerId = getSellerId();
+    if (!sellerId) return;
 
-    fetchMetrics();
-  }, []);
+    try {
+      const res = await fetch("/api/seller/metrics/dashboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sellerId }),
+      });
+      const data = await res.json();
+
+      setStats(data.stats || []);
+      setSalesData(data.salesData || []);
+      setOrderStatus(data.donutData || []);
+      setSummary([...(data.summary || []), ...(data.activeProductsSummary || [])]);
+      setTopSeller(data.topSeller || null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  fetchMetrics();
+}, []);
+
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 flex flex-col">
