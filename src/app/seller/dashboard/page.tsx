@@ -200,7 +200,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const res = await fetch("/api/seller/metrics", {
+        const res = await fetch("/api/seller/metrics/dashboard", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ sellerId: "YOUR_SELLER_ID_HERE" }),
