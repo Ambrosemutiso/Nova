@@ -66,6 +66,38 @@ const [showReportModal, setShowReportModal] = useState(false);
     }
   }, [reportSuccess]);
 
+useEffect(() => {
+  if (!product) return; // ✅ guard to prevent running when product is null
+
+  const startTime = Date.now();
+
+  // Record the view
+  fetch("/api/product/views", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ productId: product._id, sellerId: product.sellerId }),
+  });
+
+  // Track bounce (user leaves quickly)
+  const handleBeforeUnload = () => {
+    const timeSpent = Date.now() - startTime;
+    if (timeSpent < 5000) {
+      navigator.sendBeacon(
+        "/api/product/views",
+        JSON.stringify({
+          productId: product._id,
+          sellerId: product.sellerId,
+          bounced: true,
+        })
+      );
+    }
+  };
+
+  window.addEventListener("beforeunload", handleBeforeUnload);
+  return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+}, [product]);
+
+  
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const _id = localStorage.getItem('userId');

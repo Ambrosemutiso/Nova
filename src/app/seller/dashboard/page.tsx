@@ -55,12 +55,22 @@ function SalesViewsChart({ data }: { data: any[] }) {
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ];
 
-  // Ensure every month is represented
-  const chartData = months.map((m, idx) =>
-    data[idx]
-      ? { name: m, ...data[idx] }
-      : { name: m, sales: 0, views: 0 }
-  );
+  // Normalize data so each month exists and apply a minimum bar height for visibility
+  const chartData = months.map((m, idx) => {
+    const monthData = data[idx] || { sales: 0, views: 0 };
+    const safeSales = Math.max(monthData.sales, 0);
+    const safeViews = Math.max(monthData.views, 0);
+
+    // Ensure views are at least 5% of sales if zero — purely visual
+    const adjustedViews =
+      safeViews === 0 && safeSales > 0
+        ? safeSales * 0.05
+        : safeViews === 0
+        ? 0.5
+        : safeViews;
+
+    return { name: m, sales: safeSales, views: adjustedViews };
+  });
 
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
@@ -70,12 +80,13 @@ function SalesViewsChart({ data }: { data: any[] }) {
           <BarChart
             data={chartData}
             margin={{ top: 20, right: 30, left: 10, bottom: 20 }}
+            barCategoryGap="25%" // ✅ better spacing
           >
             <XAxis
               dataKey="name"
               stroke="#94a3b8"
               tick={{ fontSize: 12 }}
-              interval={0} // ✅ forces all labels (Jan–Dec) to show
+              interval={0} // ✅ shows all labels (Jan–Dec)
             />
             <Tooltip
               contentStyle={{ borderRadius: "10px" }}
@@ -83,29 +94,22 @@ function SalesViewsChart({ data }: { data: any[] }) {
             />
             <Bar
               dataKey="sales"
-              radius={[6, 6, 0, 0]}
               fill="#f97316"
               name="Sales"
+              radius={[6, 6, 0, 0]}
             />
             <Bar
               dataKey="views"
-              radius={[6, 6, 0, 0]}
               fill="#3b82f6"
               name="Views"
+              radius={[6, 6, 0, 0]}
             />
-            <text
-              x="50%"
-              y="100%"
-              textAnchor="middle"
-              dominantBaseline="middle"
-              className="text-xs fill-gray-500"
-            >
-              Months
-            </text>
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <div className="flex justify-end gap-4 mt-3 text-xs text-gray-600">
+
+      {/* Legend */}
+      <div className="flex justify-center gap-4 mt-3 text-xs text-gray-600">
         <div className="flex items-center gap-1">
           <span className="w-3 h-3 bg-orange-500 rounded-sm"></span> Sales
         </div>
@@ -116,6 +120,8 @@ function SalesViewsChart({ data }: { data: any[] }) {
     </div>
   );
 }
+
+
 
 
 // ---------- Order Status Donut ----------
@@ -165,7 +171,7 @@ function OrderStatusDonut({ data }: { data: { name: string; value: number }[] })
 
 
 // ---------- Mini Donut ----------
-function MiniDonut({ label, value, color, percent }: any) {
+function MiniDonut({ label, value, color, percent, usd }: any) {
   const chartData = [{ name: "progress", value: percent }, { name: "rest", value: Math.max(0, 100 - percent) }];
   const gradId = `mini-donut-grad-${label}`;
 
@@ -189,7 +195,7 @@ function MiniDonut({ label, value, color, percent }: any) {
       </div>
       <p className="text-xs text-gray-500 mt-2">{label}</p>
       <p className="text-lg font-bold text-gray-900">{Number(value).toLocaleString()}</p>
-      <p className="text-sm font-medium text-green-600">+{percent}%</p>
+      <p className="text-sm font-medium text-green-600">+{percent}% {usd}</p>
     </div>
   );
 }

@@ -10,48 +10,66 @@ export async function GET(req: NextRequest) {
     await dbConnect();
     const { searchParams } = new URL(req.url);
     const sellerId = searchParams.get("sellerId");
+
     if (!sellerId) {
       return NextResponse.json({ error: "Missing sellerId" }, { status: 400 });
     }
 
     const sellerObjectId = new mongoose.Types.ObjectId(sellerId);
+    const months = Array.from({ length: 12 }, (_, i) => i + 1);
     const currentYear = new Date().getFullYear();
 
-    // 🧮 Monthly sales + views for full 12 months
-    const monthlyData = await Order.aggregate([
+    // -------------------------------
+    // 🧾 1️⃣ Monthly Sales (12 months)
+    // -------------------------------
+    const monthlyOrders = await Order.aggregate([
       { $match: { "items.sellerId": sellerObjectId } },
       { $unwind: "$items" },
       {
         $group: {
           _id: { month: { $month: "$createdAt" } },
           sales: { $sum: "$items.price" },
-          views: { $sum: { $multiply: [1, 1] } }, // placeholder for now
+          orders: { $sum: 1 },
         },
       },
       { $sort: { "_id.month": 1 } },
     ]);
 
-    const months = Array.from({ length: 12 }, (_, i) => i + 1);
     const salesData = months.map((m) => {
-      const match = monthlyData.find((d) => d._id.month === m);
-      return { month: m, sales: match?.sales || 0, views: match?.views || 0 };
+      const found = monthlyOrders.find((x) => x._id.month === m);
+      return {
+        month: m,
+        sales: found?.sales || 0,
+        orders: found?.orders || 0,
+      };
     });
 
-    // ---------- 1️⃣ STATS CARDS ----------
+    // -------------------------------
+    // 💰 2️⃣ Total Orders + Revenue
+    // -------------------------------
     const totalOrders = await Order.countDocuments({ "items.sellerId": sellerObjectId });
-    const totalSales = await Order.aggregate([
+    const totalSalesAgg = await Order.aggregate([
       { $unwind: "$items" },
       { $match: { "items.sellerId": sellerObjectId } },
       { $group: { _id: null, total: { $sum: "$items.price" } } },
     ]);
-    const totalRevenue = totalSales[0]?.total || 0;
+    const totalRevenue = totalSalesAgg[0]?.total || 0;
 
-    // simulate metrics with sparkline (12 months)
-    const makeSeries = (base: number) =>
-      months.map((m) => ({
+    // -------------------------------
+    // 👀 3️⃣ Visits + Bounce Rate (Simulated / placeholder)
+    // -------------------------------
+    const totalVisits = Math.round(totalOrders * (10 + Math.random() * 4)); // visits proportional to orders
+    const bounceRate = Math.round(40 + Math.random() * 10); // between 40–50%
+
+    // helper to build 12-month sparkline from actual or simulated data
+    const makeSeries = (data: number[]) => {
+      if (data.length === 12) return data.map((v, i) => ({ name: i + 1, value: v }));
+      const avg = data.reduce((a, b) => a + b, 0) / (data.length || 1);
+      return months.map((m) => ({
         name: m,
-        value: Math.round(base * (0.7 + Math.random() * 0.6)),
+        value: Math.round(avg * (0.7 + Math.random() * 0.6)),
       }));
+    };
 
     const stats = [
       {
@@ -61,7 +79,7 @@ export async function GET(req: NextRequest) {
         change: "+8%",
         icon: "ShoppingCart",
         trend: "up",
-        series: makeSeries(totalOrders / 12),
+        series: makeSeries(salesData.map((x) => x.orders)),
       },
       {
         id: "sales",
@@ -70,48 +88,49 @@ export async function GET(req: NextRequest) {
         change: "+5%",
         icon: "DollarSign",
         trend: "up",
-        series: makeSeries(totalRevenue / 12),
+        series: makeSeries(salesData.map((x) => x.sales)),
       },
       {
         id: "visits",
         title: "Total Visits",
-        value: "18,250",
+        value: totalVisits.toLocaleString(),
         change: "+3%",
         icon: "Eye",
         trend: "up",
-        series: makeSeries(1500),
+        series: makeSeries(Array(12).fill(totalVisits / 12)),
       },
       {
         id: "bounce",
         title: "Bounce Rate",
-        value: "42%",
+        value: `${bounceRate}%`,
         change: "-2%",
         icon: "BarChart3",
         trend: "down",
-        series: makeSeries(42),
+        series: makeSeries(Array(12).fill(bounceRate)),
       },
     ];
 
-    // ---------- 2️⃣ ORDER STATUS DONUT ----------
-    const allOrders = await Order.aggregate([
+    // -------------------------------
+    // 🍩 4️⃣ Order Status Breakdown
+    // -------------------------------
+    const statusAgg = await Order.aggregate([
       { $match: { "items.sellerId": sellerObjectId } },
       { $unwind: "$items" },
-      { $match: { "items.sellerId": sellerObjectId } },
       {
         $group: {
           _id: "$items.status",
           count: { $sum: 1 },
         },
       },
-      { $sort: { count: -1 } },
     ]);
-
-    const donutData = allOrders.map((s) => ({
+    const donutData = statusAgg.map((s) => ({
       name: s._id || "Unknown",
       value: s.count,
     }));
 
-    // ---------- 3️⃣ TOP SELLER ----------
+    // -------------------------------
+    // 🏆 5️⃣ Top Seller
+    // -------------------------------
     const topSellerAgg = await Order.aggregate([
       { $unwind: "$items" },
       {
@@ -130,14 +149,23 @@ export async function GET(req: NextRequest) {
       topSeller = {
         name: seller?.name || "Top Seller",
         revenue: topSellerAgg[0].revenue,
-        percentageAchieved: Math.round((topSellerAgg[0].revenue / (totalRevenue || 1)) * 100),
+        percentageAchieved: Math.round(
+          (topSellerAgg[0].revenue / (totalRevenue || 1)) * 100
+        ),
       };
     }
 
-    // ---------- 4️⃣ ACTIVE PRODUCTS ----------
+    // -------------------------------
+    // 📦 6️⃣ Active Products
+    // -------------------------------
     const totalProducts = await Product.countDocuments({ sellerId });
-    const activeProducts = await Product.countDocuments({ sellerId, active: true });
-    const activePercent = totalProducts ? Math.round((activeProducts / totalProducts) * 100) : 0;
+    const activeProducts = await Product.countDocuments({
+      sellerId,
+      quantity: { $gt: 0 },
+    });
+    const activePercent = totalProducts
+      ? Math.round((activeProducts / totalProducts) * 100)
+      : 0;
 
     const summary = [
       {
@@ -145,23 +173,24 @@ export async function GET(req: NextRequest) {
         value: activeProducts,
         percent: activePercent,
         color: "#3b82f6",
-        usd: "",
       },
     ];
 
-    // ---------- 5️⃣ FINAL RESPONSE ----------
+    // -------------------------------
+    // ✅ Final Response
+    // -------------------------------
     return NextResponse.json({
       stats,
-      salesData: salesData.map((d) => ({
-        sales: d.sales,
-        views: d.views,
-      })),
+      salesData,
       donutData,
       summary,
       topSeller,
     });
   } catch (error: any) {
     console.error("Dashboard metrics error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
