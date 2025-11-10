@@ -1,34 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Store, Edit2, Gem, Crown, CheckCircle, XCircle} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Store,
+  Edit2,
+  Gem,
+  Crown,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
 import { toast } from "react-toastify";
-
-export interface Seller {
-  _id: string;
-  name: string;
-  email: string;
-  image?: string;
-  logo?: string;
-  banner?: string;
-  phoneNumber?: string;
-  role: 'seller';
-  shopName?: string;
-  isVerified: boolean;
-  followers: {
-    userId: string;
-    followedAt?: Date;
-  }[];
-  shop: {
-    isActive: boolean;
-    activatedAt?: Date;
-    expiresAt?: Date;
-    amountPaid?: number;
-    transactionId?: string;
-    plan?: 'free' | 'basic' | 'premium';
-  };
-  createdAt: Date;
-}
 
 export default function SellerSettingsPage() {
   const [seller, setSeller] = useState<any>(null);
@@ -38,65 +20,78 @@ export default function SellerSettingsPage() {
   const [selectedPlan, setSelectedPlan] = useState<"basic" | "premium" | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"mpesa" | "airtel" | "">("");
   const [paymentPhone, setPaymentPhone] = useState("");
-  const [loading] = useState(false);
   const [activatingShop, setActivatingShop] = useState(false);
-  const [editShopName, setEditShopName] = useState(seller?.name || '');
-  const [editImage, setEditImage] = useState(seller?.image || '');
-  const [editBanner, setEditBanner] = useState(seller?.banner || '');
+  const [editShopName, setEditShopName] = useState("");
+  const [editImage, setEditImage] = useState("");
+  const [editBanner, setEditBanner] = useState("");
 
   useEffect(() => {
     const stored = localStorage.getItem("sellerUser");
-    if (stored) setSeller(JSON.parse(stored));
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      setSeller(parsed);
+      setEditShopName(parsed?.shopName || "");
+      setEditImage(parsed?.image || "");
+      setEditBanner(parsed?.banner || "");
+    }
   }, []);
 
-const openPaymentModal = (plan: "basic" | "premium") => {
-  setSelectedPlan(plan);
-  setPaymentMethod("");
-  setPaymentPhone("");
-  setShowPaymentModal(true);
-};
+  const openPaymentModal = (plan: "basic" | "premium") => {
+    setSelectedPlan(plan);
+    setPaymentMethod("");
+    setPaymentPhone("");
+    setShowPaymentModal(true);
+    setShowUpgradeModal(false); // ✅ ensure payment modal appears above
+  };
 
-const handleConfirmPayment = async () => {
-  if (!selectedPlan || !paymentMethod || !paymentPhone) {
-    toast.error("Please fill all details");
-    return;
-  }
-
-  try {
-    setActivatingShop(true);
-
-    let amount = selectedPlan === "basic" ? 1300 : 3000;
-    if (selectedPlan === "premium" && seller?.shop?.plan === "basic") {
-      const alreadyPaid = seller.shop?.amountPaid || 0;
-      amount = 3000 - alreadyPaid;
+  const handleConfirmPayment = async () => {
+    if (!selectedPlan || !paymentMethod || !paymentPhone) {
+      toast.error("Please fill all details");
+      return;
     }
 
-    const res = await fetch("/api/seller/payment/initiate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sellerId: seller?._id,
-        plan: selectedPlan,
-        method: paymentMethod,
-        phone: paymentPhone,
-        amount,
-      }),
-    });
+    try {
+      setActivatingShop(true);
+      let amount = selectedPlan === "basic" ? 1300 : 3000;
+      if (selectedPlan === "premium" && seller?.shop?.plan === "basic") {
+        const alreadyPaid = seller.shop?.amountPaid || 0;
+        amount = 3000 - alreadyPaid;
+      }
 
-    const data = await res.json();
-    if (data.success) {
-      toast.success("Payment request sent! Please complete on your phone.");
-      setShowPaymentModal(false);
-    } else {
-      toast.error(data.error || "Payment initiation failed");
+      const res = await fetch("/api/seller/payment/initiate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sellerId: seller?._id,
+          plan: selectedPlan,
+          method: paymentMethod,
+          phone: paymentPhone,
+          amount,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Payment request sent! Complete on your phone.");
+        setShowPaymentModal(false);
+      } else {
+        toast.error(data.error || "Payment failed");
+      }
+    } catch (err) {
+      toast.error("Error initiating payment");
+    } finally {
+      setActivatingShop(false);
     }
-  } catch (err) {
-    console.error(err);
-    toast.error("Error initiating payment");
-  } finally {
-    setActivatingShop(false);
-  }
-};
+  };
+
+  const fadeIn = {
+    hidden: { opacity: 0, y: 30 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: { delay: i * 0.1, duration: 0.4 },
+    }),
+  };
 
   const isShopActive =
     seller?.shop?.isActive &&
@@ -104,223 +99,173 @@ const handleConfirmPayment = async () => {
     new Date(seller.shop.expiresAt) > new Date();
 
   return (
-    <div className="md:ml-64 p-6 min-h-screen bg-gradient-to-b from-white to-gray-50 pt-28">
+    <div className="md:ml-64 p-6 min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 pt-28 relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-r from-orange-500/10 to-gray-200/5 blur-3xl -z-10" />
+
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between mb-8"
+      >
         <div>
-          <h1 className="text-3xl font-bold text-orange-600">Seller Settings</h1>
-          <p className="text-gray-600 text-sm">
-            Manage your shop details, plan upgrades, and business settings.
+          <h1 className="text-4xl font-bold text-gray-900">Seller Settings</h1>
+          <p className="text-gray-500 text-sm">
+            Manage your shop details, plan upgrades & payment settings.
           </p>
         </div>
-
-      </div>
+      </motion.div>
 
       {/* Sections */}
       <div className="grid gap-8 max-w-6xl mx-auto">
-        {/* SHOP DETAILS */}
-        <div className="bg-white shadow-sm border border-gray-200 rounded-xl p-6 hover:shadow-md transition">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-              <Store className="text-orange-500" /> Shop Details
-            {isShopActive ? (
-            <p className="text-green-600 text-sm mt-1">
-              Your shop is active until{' '}
-              <strong>{new Date(seller!.shop.expiresAt!).toLocaleDateString()}</strong>{' '}
-              (
-              <span className="font-bold">
-                {seller?.shop?.plan?.toUpperCase() || 'Unspecified'}
-              </span>{' '}
-              Package)
-            </p>
-          ) : (
-            <p className="text-red-600 text-sm mt-1">
-              You don&apos;t have an active shop.
-            </p>
-          )}
-            </h2>
-            <button
-              onClick={() => setShowEditModal(true)}
-              className="flex items-center gap-2 text-sm text-orange-600 hover:underline"
-            >
-              <Edit2 size={16} /> Edit
-            </button>
-
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-4">
-            <div>
-              <p className="text-gray-500 text-sm">Shop Name</p>
-              <p className="font-medium">{seller?.shopName || "N/A"}</p>
-            </div>
-            <div>
-              <p className="text-gray-500 text-sm">Email</p>
-              <p className="font-medium">{seller?.email || "N/A"}</p>
-            </div>
-            <div>
-              <p className="text-gray-500 text-sm">Phone</p>
-              <p className="font-medium">{seller?.phoneNumber || "N/A"}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* PLAN UPGRADE */}
-        <div className="bg-white shadow-sm border border-gray-200 rounded-xl p-6 hover:shadow-md transition">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-              <Crown className="text-orange-500" /> Subscription Plan
-            </h2>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div>
-              <p className="text-sm text-gray-500">Current Plan</p>
-              <div className="flex items-center gap-2 mt-1">
-                {seller?.shop?.plan === "premium" ? (
-                  <span className="bg-blue-600 text-white px-3 py-1 rounded-full flex items-center gap-1 text-sm font-medium">
-                    <Crown size={14} /> Premium
-                  </span>
-                ) : seller?.shop?.plan === "basic" ? (
-                  <span className="bg-orange-100 text-orange-600 px-3 py-1 rounded-full flex items-center gap-1 text-sm font-medium">
-                    <Gem size={14} /> Basic
-                  </span>
-                ) : (
-                  <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm">
-                    Free Plan
-                  </span>
-                )}
+        {[
+          {
+            title: "Shop Details",
+            icon: <Store className="text-orange-500" />,
+            content: (
+              <div className="grid md:grid-cols-3 gap-4">
+                <div>
+                  <p className="text-gray-500 text-sm">Shop Name</p>
+                  <p className="font-medium text-gray-800">{seller?.name || "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500 text-sm">Email</p>
+                  <p className="font-medium text-gray-800">{seller?.email || "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500 text-sm">Phone</p>
+                  <p className="font-medium text-gray-800">{seller?.phoneNumber || "N/A"}</p>
+                </div>
               </div>
+            ),
+            rightAction: (
+              <button
+                onClick={() => setShowEditModal(true)}
+                className="flex items-center gap-2 text-sm text-orange-600 hover:underline"
+              >
+                <Edit2 size={16} /> Edit
+              </button>
+            ),
+          },
+          {
+            title: "Subscription Plan",
+            icon: <Crown className="text-orange-500" />,
+            content: (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Current Plan</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    {seller?.shop?.plan === "premium" ? (
+                      <span className="bg-blue-600 text-white px-3 py-1 rounded-full flex items-center gap-1 text-sm font-medium">
+                        <Crown size={14} /> Premium
+                      </span>
+                    ) : seller?.shop?.plan === "basic" ? (
+                      <span className="bg-orange-100 text-orange-600 px-3 py-1 rounded-full flex items-center gap-1 text-sm font-medium">
+                        <Gem size={14} /> Basic
+                      </span>
+                    ) : (
+                      <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm">
+                        Free Plan
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setShowUpgradeModal(true)}
+                  className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg font-medium shadow-sm transition"
+                >
+                  {seller?.shop?.plan === "premium" ? "Manage Plan" : "Upgrade Plan"}
+                </button>
+              </div>
+            ),
+          },
+          {
+            title: "Business Preferences",
+            icon: <Gem className="text-gray-500" />,
+            content: (
+              <p className="text-gray-500 text-sm">
+                Coming soon — configure delivery, policies & working hours.
+              </p>
+            ),
+          },
+        ].map((section, i) => (
+          <motion.div
+            key={i}
+            variants={fadeIn}
+            initial="hidden"
+            animate="visible"
+            custom={i}
+            className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                {section.icon} {section.title}
+              </h2>
+              {section.rightAction}
             </div>
-
-            <button
-              onClick={() => setShowUpgradeModal(true)}
-              className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg font-medium shadow-sm transition"
-            >
-              {seller?.shop?.plan === "premium" ? "Manage Plan" : "Upgrade Plan"}
-            </button>
-          </div>
-        </div>
-
-        {/* BUSINESS SETTINGS */}
-        <div className="bg-white shadow-sm border border-gray-200 rounded-xl p-6 hover:shadow-md transition">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">
-            Business Preferences
-          </h2>
-          <p className="text-gray-500 text-sm">
-            Coming soon — configure business hours, delivery options, and store policies here.
-          </p>
-        </div>
+            {section.content}
+          </motion.div>
+        ))}
       </div>
 
-      {/* ====== PAYMENT MODAL ====== */}
-      {showPaymentModal && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-xl w-full max-w-md relative shadow-xl">
-            <button
-              onClick={() => setShowPaymentModal(false)}
-              className="absolute top-3 right-4 text-gray-500 text-2xl font-bold"
+      {/* ====== MODALS ====== */}
+      <AnimatePresence>
+        {showEditModal && (
+          <motion.div
+            className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white p-6 rounded-xl w-full max-w-md relative shadow-lg"
             >
-              ×
-            </button>
-
-            <h2 className="text-xl font-semibold text-center text-gray-800 mb-3">
-              {selectedPlan === "basic" ? "Basic Plan" : "Premium Plan"}
-            </h2>
-
-            <p className="text-center text-orange-600 font-semibold mb-4">
-              Amount: {selectedPlan === "basic" ? "Ksh 1300" : "Ksh 3000"}
-            </p>
-
-            <label className="block text-sm text-gray-600 mb-1">Phone Number</label>
-            <input
-              type="text"
-              value={paymentPhone}
-              onChange={(e) => setPaymentPhone(e.target.value)}
-              placeholder="2547xxxxxxxx"
-              className="w-full border px-3 py-2 rounded mb-4"
-            />
-
-            <label className="block text-sm text-gray-600 mb-1">Payment Method</label>
-            <div className="flex gap-4 mb-5">
               <button
-                onClick={() => setPaymentMethod("mpesa")}
-                className={`flex-1 border rounded-lg px-3 py-2 ${
-                  paymentMethod === "mpesa" ? "border-green-500 bg-green-50" : ""
-                }`}
+                onClick={() => setShowEditModal(false)}
+                className="absolute top-2 right-4 text-gray-500 text-2xl font-bold"
               >
-                <img src="/mpesa.png" className="h-6 mx-auto" />
+                ×
               </button>
+              <h2 className="text-xl font-semibold mb-4 text-gray-800">Edit Shop Info</h2>
+              {[
+                ["Shop Name", editShopName, setEditShopName],
+                ["Profile Image URL", editImage, setEditImage],
+                ["Banner Image URL", editBanner, setEditBanner],
+              ].map(([label, val, set]: any, idx) => (
+                <div key={idx}>
+                  <label className="block text-sm text-gray-600 mb-1">{label}</label>
+                  <input
+                    type="text"
+                    value={val}
+                    onChange={(e) => set(e.target.value)}
+                    className="w-full border px-3 py-2 rounded mb-3"
+                  />
+                </div>
+              ))}
               <button
-                onClick={() => setPaymentMethod("airtel")}
-                className={`flex-1 border rounded-lg px-3 py-2 ${
-                  paymentMethod === "airtel" ? "border-red-500 bg-red-50" : ""
-                }`}
+                onClick={() => {
+                  const updated = {
+                    ...seller,
+                    shopName: editShopName,
+                    image: editImage,
+                    bannerImage: editBanner,
+                  };
+                  setSeller(updated);
+                  localStorage.setItem("sellerUser", JSON.stringify(updated));
+                  setShowEditModal(false);
+                  toast.success("Shop info updated!");
+                }}
+                className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded"
               >
-                <img src="/airtel.png" className="h-6 mx-auto" />
+                Save Changes
               </button>
-            </div>
-
-            <button
-              onClick={handleConfirmPayment}
-              disabled={loading}
-              className={`w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded-lg ${
-                loading ? "opacity-70 cursor-not-allowed" : ""
-              }`}
-            >
-              {loading ? "Processing..." : "Confirm & Pay"}
-            </button>
-          </div>
-        </div>
-      )}
-
-          {showEditModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
-        <div className="bg-white p-6 rounded-xl w-full max-w-md relative">
-        <button onClick={() => setShowEditModal(false)} className="absolute top-2 right-4 text-gray-500 text-2xl font-bold">×</button>
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">Edit Shop Info</h2>
-      <label className="block mb-1 text-sm font-medium text-gray-600">Shop Name</label>
-      <input
-        type="text"
-        value={editShopName}
-        onChange={(e) => setEditShopName(e.target.value)}
-        className="w-full border px-3 py-2 rounded mb-4"
-      />
-      <label className="block mb-1 text-sm font-medium text-gray-600">Profile Image URL</label>
-      <input
-        type="text"
-        value={editImage}
-        onChange={(e) => setEditImage(e.target.value)}
-        className="w-full border px-3 py-2 rounded mb-4"
-      />
-      <label className="block mb-1 text-sm font-medium text-gray-600">Banner Image URL</label>
-      <input
-        type="text"
-        value={editBanner}
-        onChange={(e) => setEditBanner(e.target.value)}
-        className="w-full border px-3 py-2 rounded mb-4"
-      />
-
-      <button
-        onClick={() => {
-          const updated = {
-            ...seller,
-            shopName: editShopName,
-            image: editImage,
-            bannerImage: editBanner,
-          };
-          setSeller(updated as Seller);
-          localStorage.setItem('sellerUser', JSON.stringify(updated));
-          setShowEditModal(false);
-          toast.success('Shop info updated locally!');
-        }}
-        className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded"
-        >
-        Save Changes
-      </button>
-    </div>
-  </div>
-)}
-
+            </motion.div>
+          </motion.div>
+        )}
 {showUpgradeModal && (
   <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center px-4">
     {/* Floating Background Icons */}
@@ -477,6 +422,71 @@ const handleConfirmPayment = async () => {
     </div>
   </div>
 )}
+        {showPaymentModal && (
+          <motion.div
+            className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white p-6 rounded-xl w-full max-w-md relative shadow-xl"
+            >
+              <button
+                onClick={() => setShowPaymentModal(false)}
+                className="absolute top-3 right-4 text-gray-500 text-2xl font-bold"
+              >
+                ×
+              </button>
+              <h2 className="text-xl font-semibold text-center text-gray-800 mb-3">
+                {selectedPlan === "basic" ? "Basic Plan" : "Premium Plan"}
+              </h2>
+              <p className="text-center text-orange-600 font-semibold mb-4">
+                Amount: {selectedPlan === "basic" ? "Ksh 1300" : "Ksh 3000"}
+              </p>
+              <label className="block text-sm text-gray-600 mb-1">Phone Number</label>
+              <input
+                type="text"
+                value={paymentPhone}
+                onChange={(e) => setPaymentPhone(e.target.value)}
+                placeholder="2547xxxxxxxx"
+                className="w-full border px-3 py-2 rounded mb-4"
+              />
+              <label className="block text-sm text-gray-600 mb-1">Payment Method</label>
+              <div className="flex gap-4 mb-5">
+                <button
+                  onClick={() => setPaymentMethod("mpesa")}
+                  className={`flex-1 border rounded-lg px-3 py-2 ${
+                    paymentMethod === "mpesa" ? "border-green-500 bg-green-50" : ""
+                  }`}
+                >
+                  <img src="/mpesa.png" className="h-6 mx-auto" />
+                </button>
+                <button
+                  onClick={() => setPaymentMethod("airtel")}
+                  className={`flex-1 border rounded-lg px-3 py-2 ${
+                    paymentMethod === "airtel" ? "border-red-500 bg-red-50" : ""
+                  }`}
+                >
+                  <img src="/airtel.png" className="h-6 mx-auto" />
+                </button>
+              </div>
+              <button
+                onClick={handleConfirmPayment}
+                disabled={activatingShop}
+                className={`w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded-lg ${
+                  activatingShop ? "opacity-70 cursor-not-allowed" : ""
+                }`}
+              >
+                {activatingShop ? "Processing..." : "Confirm & Pay"}
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

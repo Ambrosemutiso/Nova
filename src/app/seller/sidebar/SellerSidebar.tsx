@@ -3,7 +3,6 @@ import { useRouter } from 'next/navigation';
 import {
   FiHome,
   FiBox,
-  FiBarChart2,
   FiShoppingBag,
   FiPlusCircle,
   FiDollarSign,
@@ -39,7 +38,6 @@ export default function SellerSidebar({ isOpen = false, onClose, onOpen }: Props
     { label: 'Add Product', icon: <FiPlusCircle size={20} />, path: '/seller/products/add' },
     { label: 'Inventory', icon: <FiBox size={20} />, path: '/seller/inventory' },
     { label: 'Orders', icon: <FiShoppingBag size={20} />, path: '/seller/orders' },
-    { label: 'Analytics', icon: <FiBarChart2 size={20} />, path: '/seller/analytics' },
     { label: 'Finance', icon: <FiDollarSign size={20} />, path: '/seller/finance' },
     { label: 'Awards', icon: <FiAward size={20} />, path: '/seller/awards' },
     { label: 'Messages', icon: <FiMessageSquare size={20} />, path: '/seller/chat' },

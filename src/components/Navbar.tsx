@@ -58,10 +58,27 @@ export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin }: NavbarPr
     '💳 Secure Payments via M-Pesa & AirtelMoney',
   ];
 
-  const getSellerCountry = (user?: any) => {
-    if (!user || !user.country) return countryData[0]; // default Kenya
-    return countryData.find((c) => c.name === user.country) || countryData[0];
-  };
+// 🔹 Unified Country & Currency Resolver
+const getUserCountryData = (user?: any) => {
+  if (!user) return countryData[0]; // default to Kenya
+
+  // Try multiple possible locations for country data
+  const userCountry =
+    user.country ||
+    user?.sellerDetails?.country ||
+    user?.profile?.country ||
+    'Kenya';
+
+  // Case-insensitive match
+  const match = countryData.find(
+    (c) => c.name.toLowerCase() === userCountry.toLowerCase()
+  );
+
+  return match || countryData[0];
+};
+
+const userCountryData = getUserCountryData(user);
+
 
   // 🔸 Promo rotation
   useEffect(() => {
@@ -147,8 +164,6 @@ export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin }: NavbarPr
     return match ? match[1] : url;
   };
 
-  const sellerCountry = getSellerCountry(user);
-
   return (
     <>
       {/* 🔸 Promo Bar */}
@@ -174,13 +189,19 @@ export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin }: NavbarPr
 
         {/* Logo */}
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/')}>
-          <span className="font-bold text-orange-600 text-lg hidden sm:inline">Novaxpress</span>
+      <img
+      src="/Logo.jpg"
+      alt="Novaxpress Logo"
+      className="h-10 w-auto object-contain object-center scale-110 hover:scale-115 transition-transform duration-300 rounded-none
+        dark:invert dark:brightness-110 dark:contrast-105 dark:drop-shadow-[0_0_6px_rgba(255,255,255,0.25)]"
+      style={{
+        clipPath: 'inset(5% 5% 5% 5%)', // hides extra white borders if present
+      }}
+    />   
         </div>
 
         {/* Right Section */}
         <div className="flex items-center gap-4 relative ml-auto">
-
-
           {/* Search */}
           <div ref={searchRef} className="relative flex items-center">
             <AnimatePresence>
@@ -254,15 +275,16 @@ export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin }: NavbarPr
             </button>
           </div>
 
-                    {/* Country Flag & Currency */}
+      {/* Country Flag & Currency */}
           {user && (
             <div className="flex items-center gap-2 border border-orange-200 rounded-full px-3 py-1 cursor-pointer hover:bg-orange-50 transition">
-              <img
-                src={sellerCountry.flag}
-                alt={sellerCountry.name}
-                className="w-6 h-4 rounded-sm object-cover"
-              />
-              <span className="text-sm font-medium text-gray-700">{sellerCountry.currency}</span>
+<img
+  src={userCountryData.flag}
+  alt={userCountryData.name}
+  className="w-6 h-4 rounded-sm object-cover"
+/>
+<span className="text-sm font-medium text-gray-700">{userCountryData.currency}</span>
+
             </div>
           )}
 

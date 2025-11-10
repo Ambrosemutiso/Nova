@@ -57,7 +57,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="relative flex h-[calc(100vh-80px)] bg-gray-50 dark:bg-gray-900">
+    <div className="relative flex bg-gray-50 dark:bg-gray-900 pt-28 md:ml-64 p-6 min-h-screen">
       {/* Sidebar */}
       <div className="w-full md:w-80 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex flex-col">
         {/* Header */}
