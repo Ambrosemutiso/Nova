@@ -8,6 +8,8 @@ import {
   FiPlusCircle,
   FiDollarSign,
   FiAward,
+  FiMessageSquare,
+  FiSettings,
 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
@@ -40,6 +42,8 @@ export default function SellerSidebar({ isOpen = false, onClose, onOpen }: Props
     { label: 'Analytics', icon: <FiBarChart2 size={20} />, path: '/seller/analytics' },
     { label: 'Finance', icon: <FiDollarSign size={20} />, path: '/seller/finance' },
     { label: 'Awards', icon: <FiAward size={20} />, path: '/seller/awards' },
+    { label: 'Messages', icon: <FiMessageSquare size={20} />, path: '/seller/chat' },
+    { label: 'Settings', icon: <FiSettings size={20} />, path: '/seller/settings' },
   ];
 
   return (
@@ -71,7 +75,6 @@ export default function SellerSidebar({ isOpen = false, onClose, onOpen }: Props
             {/* Header (mobile only) */}
             {isMobile && (
               <div className="flex justify-between items-center px-4 py-3 border-b border-orange-400">
-                <p className="font-semibold text-sm text-white/90">Seller Menu</p>
                 <button
                   onClick={onClose}
                   className="text-white hover:text-red-200 transition text-xl"
@@ -127,7 +130,7 @@ export default function SellerSidebar({ isOpen = false, onClose, onOpen }: Props
                   <span className="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse"></span>
                   <span className="font-medium text-green-100">All Good</span>
                 </div>
-                <p>© {new Date().getFullYear()} YourShop. All rights reserved.</p>
+                <p>© {new Date().getFullYear()} Novaxpress. All rights reserved.</p>
               </div>
             )}
           </motion.aside>
@@ -146,7 +149,7 @@ export default function SellerSidebar({ isOpen = false, onClose, onOpen }: Props
           bg-white/20 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl z-20"
           style={{ width: '60px' }}
         >
-          {menuItems.slice(0, 7).map((item, index) => (
+          {menuItems.slice(0, 9).map((item, index) => (
             <button
               key={index}
               onClick={() => router.push(item.path)}

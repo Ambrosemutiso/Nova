@@ -357,33 +357,27 @@ export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin }: NavbarPr
         </div>
 
         {/* 🧭 Sidebars */}
-{isSeller && (
-  <>
-    {/* Desktop sidebar: always visible */}
-    <div className="hidden md:block">
-      <SellerSidebar isOpen={true} />
-    </div>
+        {isSeller ? (
+          <>
+            {showSidebar && (
+              <div className="md:hidden">
+                <SellerSidebar onClose={() => setShowSidebar(false)} />
+              </div>
+            )}
 
-    {/* Mobile sidebar: toggled */}
-    {showSidebar && (
-      <div className="md:hidden">
-        <SellerSidebar onClose={() => setShowSidebar(false)} isOpen={true} />
-      </div>
-    )}
-
-    {/* Mobile menu button */}
-    {!showSidebar && (
-      <button
-        onClick={() => setShowSidebar(true)}
-        className="md:hidden fixed bottom-6 right-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all z-[60]"
-        aria-label="Open Menu"
-      >
-        <FiMenu size={22} />
-      </button>
-    )}
-  </>
-)}
-
+            {!showSidebar && (
+              <button
+                onClick={() => setShowSidebar(true)}
+                className="md:hidden fixed bottom-6 right-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all z-[60]"
+                aria-label="Open Menu"
+              >
+                <FiMenu size={22} />
+              </button>
+            )}
+          </>
+        ) : (
+          showSidebar && <Sidebar onClose={() => setShowSidebar(false)} />
+        )}
 
         {/* 🔔 Notifications */}
         <AnimatePresence>
