@@ -56,21 +56,17 @@ function SalesViewsChart({ data }: { data: any[] }) {
   ];
 
   // Normalize data so each month exists and apply a minimum bar height for visibility
-  const chartData = months.map((m, idx) => {
-    const monthData = data[idx] || { sales: 0, views: 0 };
-    const safeSales = Math.max(monthData.sales, 0);
-    const safeViews = Math.max(monthData.views, 0);
+const chartData = months.map((m, idx) => {
+  const monthData = data[idx] || { sales: 0, views: 0 };
+  const safeSales = Number(monthData.sales) || 0;
+  const safeViews = Number(monthData.views) || 0;
 
-    // Ensure views are at least 5% of sales if zero — purely visual
-    const adjustedViews =
-      safeViews === 0 && safeSales > 0
-        ? safeSales * 0.05
-        : safeViews === 0
-        ? 0.5
-        : safeViews;
+  // minimum 0.5 for visibility
+  const adjustedViews = safeViews === 0 && safeSales > 0 ? safeSales * 0.05 : safeViews || 0;
 
-    return { name: m, sales: safeSales, views: adjustedViews };
-  });
+  return { name: m, sales: safeSales, views: adjustedViews };
+});
+
 
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
@@ -88,10 +84,11 @@ function SalesViewsChart({ data }: { data: any[] }) {
               tick={{ fontSize: 12 }}
               interval={0} // ✅ shows all labels (Jan–Dec)
             />
-            <Tooltip
-              contentStyle={{ borderRadius: "10px" }}
-              formatter={(value: number) => value.toLocaleString()}
-            />
+<Tooltip
+  contentStyle={{ borderRadius: "10px" }}
+  formatter={(value: any) => Number(value)?.toLocaleString() || "0"}
+/>
+
             <Bar
               dataKey="sales"
               fill="#f97316"
@@ -236,15 +233,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 flex flex-col">
       <main className="flex-1 pt-28 p-8 space-y-8">
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((s) => <StatsCard key={s.id} {...s} />)}
-        </section>
-
-        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <SalesViewsChart data={salesData} />
-          </div>
-                  {topSeller && (
+        {topSeller && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-gradient-to-r from-orange-500 to-orange-400 rounded-2xl p-6 flex items-center justify-between text-white shadow-md">
             <div>
               <h2 className="text-lg font-semibold">Congratulations {topSeller.name || "Seller"} 🎉</h2>
@@ -258,6 +247,15 @@ export default function DashboardPage() {
             </motion.div>
           </motion.div>
         )}
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {stats.map((s) => <StatsCard key={s.id} {...s} />)}
+        </section>
+
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <SalesViewsChart data={salesData} />
+          </div>
+
           <div className="space-y-6">
             <OrderStatusDonut data={orderStatus} />
             <div className="grid grid-cols-2 gap-4">
