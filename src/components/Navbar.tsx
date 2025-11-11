@@ -254,7 +254,7 @@ useEffect(() => {
                       }
                     }}
                     placeholder="Search products..."
-                    className="w-full border border-orange-300 rounded-full py-1.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
+                    className="w-11 border border-orange-300 rounded-full py-1.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
                   />
 
                   {/* Suggestions */}

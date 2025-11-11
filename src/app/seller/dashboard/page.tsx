@@ -239,24 +239,14 @@ export default function DashboardPage() {
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.3 }}
-    className="relative rounded-2xl p-6 text-white shadow-lg overflow-hidden"
+    className="relative rounded-2xl p-6 text-white shadow-lg overflow-hidden bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700"
   >
-    {/* Animated Aura */}
+    {/* 🔥 Animated Aura */}
     <div className="absolute inset-0 -z-10 flex items-center justify-center">
-      <div
-        className={`absolute w-[160%] h-[160%] rounded-full blur-3xl opacity-40 animate-pulse-slow ${
-          sellerPerformance.rank === "Gold"
-            ? "bg-gradient-to-r from-yellow-400 via-orange-400 to-red-500"
-            : sellerPerformance.rank === "Silver"
-            ? "bg-gradient-to-r from-gray-400 via-gray-300 to-gray-500"
-            : sellerPerformance.rank === "Bronze"
-            ? "bg-gradient-to-r from-amber-700 via-orange-600 to-orange-800"
-            : "bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500"
-        }`}
-      />
+      <div className="absolute w-[160%] h-[160%] rounded-full blur-3xl opacity-40 animate-pulse-slow bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600" />
     </div>
 
-    {/* Card Content */}
+    {/* 🏆 Card Content */}
     <div className="relative z-10">
       {sellerPerformance.isTopSeller ? (
         <>
@@ -267,34 +257,34 @@ export default function DashboardPage() {
         </>
       ) : (
         <>
-          <h2 className="text-2xl font-bold">
-            🥇 {sellerPerformance.rank} Seller
-          </h2>
+          <h2 className="text-2xl font-bold">🥇 {sellerPerformance.rank} Seller</h2>
           <p className="text-white/90 mt-1">
             You’ve earned <span className="font-semibold">{sellerPerformance.rank}</span> status!
           </p>
         </>
       )}
 
-      {/* Revenue Display */}
+      {/* 💰 Revenue */}
       <h3 className="text-4xl font-extrabold mt-4">
         Ksh {sellerPerformance.revenue.toLocaleString()}
       </h3>
 
       {!sellerPerformance.isTopSeller && (
         <>
-          {/* Progress Bar */}
+          {/* 📈 Progress Bar */}
           <div className="mt-4 bg-white/20 rounded-full h-3 overflow-hidden shadow-inner">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${sellerPerformance.progressPercent}%` }}
               transition={{ duration: 0.8 }}
-              className="h-3 rounded-full bg-gradient-to-r from-orange-400 to-orange-600"
+              className="h-3 rounded-full bg-white"
             />
           </div>
 
           <div className="flex justify-between text-xs mt-2 text-white/80">
-            <span>{sellerPerformance.progressPercent}% toward {sellerPerformance.nextTier}</span>
+            <span>
+              {sellerPerformance.progressPercent}% toward {sellerPerformance.nextTier}
+            </span>
             <span>
               Target: Ksh {sellerPerformance.nextThreshold.toLocaleString()}
             </span>
@@ -302,7 +292,7 @@ export default function DashboardPage() {
         </>
       )}
 
-      {/* Button */}
+      {/* 🧡 Button */}
       <button
         onClick={() => (window.location.href = "/seller/awards")}
         className="mt-5 bg-white text-orange-600 font-semibold px-4 py-2 rounded-full text-sm shadow hover:bg-gray-100 transition"
@@ -312,6 +302,7 @@ export default function DashboardPage() {
     </div>
   </motion.div>
 )}
+
 
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((s) => <StatsCard key={s.id} {...s} />)}
