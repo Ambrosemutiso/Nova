@@ -1,15 +1,8 @@
-"use client";
+'use client';
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Store,
-  Edit2,
-  Gem,
-  Crown,
-  CheckCircle,
-  XCircle,
-} from "lucide-react";
+import { Store, Edit2, Gem, Crown, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "react-toastify";
 
 export default function SellerSettingsPage() {
@@ -41,7 +34,7 @@ export default function SellerSettingsPage() {
     setPaymentMethod("");
     setPaymentPhone("");
     setShowPaymentModal(true);
-    setShowUpgradeModal(false); // ✅ ensure payment modal appears above
+    setShowUpgradeModal(false);
   };
 
   const handleConfirmPayment = async () => {
@@ -49,7 +42,6 @@ export default function SellerSettingsPage() {
       toast.error("Please fill all details");
       return;
     }
-
     try {
       setActivatingShop(true);
       let amount = selectedPlan === "basic" ? 1300 : 3000;
@@ -99,18 +91,19 @@ export default function SellerSettingsPage() {
     new Date(seller.shop.expiresAt) > new Date();
 
   return (
-    <div className="md:ml-64 p-6 min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 pt-28 relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-r from-orange-500/10 to-gray-200/5 blur-3xl -z-10" />
+    <div className="md:ml-64 p-6 min-h-screen bg-gray-50 pt-28 relative">
+      {/* Subtle gradient background */}
+      <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-r from-orange-50 via-white to-gray-50 blur-3xl -z-10" />
 
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between mb-8"
+        className="flex items-center justify-between mb-10"
       >
         <div>
           <h1 className="text-4xl font-bold text-gray-900">Seller Settings</h1>
-          <p className="text-gray-500 text-sm">
+          <p className="text-gray-500 text-sm mt-1">
             Manage your shop details, plan upgrades & payment settings.
           </p>
         </div>
@@ -173,7 +166,7 @@ export default function SellerSettingsPage() {
 
                 <button
                   onClick={() => setShowUpgradeModal(true)}
-                  className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg font-medium shadow-sm transition"
+                  className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg font-medium shadow transition"
                 >
                   {seller?.shop?.plan === "premium" ? "Manage Plan" : "Upgrade Plan"}
                 </button>
@@ -196,7 +189,7 @@ export default function SellerSettingsPage() {
             initial="hidden"
             animate="visible"
             custom={i}
-            className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all"
+            className="bg-white border border-gray-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all"
           >
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
@@ -208,7 +201,7 @@ export default function SellerSettingsPage() {
           </motion.div>
         ))}
       </div>
-
+      
       {/* ====== MODALS ====== */}
       <AnimatePresence>
         {showEditModal && (
@@ -267,160 +260,117 @@ export default function SellerSettingsPage() {
           </motion.div>
         )}
 {showUpgradeModal && (
-  <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center px-4">
-    {/* Floating Background Icons */}
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      <div className="absolute top-10 left-20 text-white/10 text-8xl animate-pulse">💼</div>
-      <div className="absolute bottom-20 right-24 text-white/10 text-8xl animate-pulse delay-200">🛒</div>
-      <div className="absolute top-1/3 right-1/3 text-white/5 text-9xl animate-bounce-slow">💡</div>
-    </div>
-
-    {/* Modal Container */}
-    <div className="relative bg-white/10 backdrop-blur-2xl border border-white/20 p-8 rounded-3xl w-full max-w-5xl shadow-2xl overflow-hidden">
-      {/* Gradient Glow Accent */}
-      <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-orange-500/10 via-transparent to-blue-400/10 pointer-events-none"></div>
-
-      <button
-        onClick={() => setShowUpgradeModal(false)}
-        className="absolute top-4 right-5 text-white/70 hover:text-orange-400 text-3xl font-bold transition"
-      >
-        ×
-      </button>
-
-      <h2 className="text-3xl font-bold text-white mb-8 text-center">
-        Upgrade Your Shop Plan
-      </h2>
-
-      {/* Status Dots */}
-      <div className="flex justify-center gap-6 mb-8">
-        <div
-          className={`h-4 w-4 rounded-full ${
-            seller?.shop?.plan === "free"
-              ? "bg-gray-400 animate-ping"
-              : "bg-gray-600"
-          }`}
-        />
-        <div
-          className={`h-4 w-4 rounded-full ${
-            seller?.shop?.plan === "basic"
-              ? "bg-orange-400 animate-ping"
-              : "bg-orange-600/70"
-          }`}
-        />
-        <div
-          className={`h-4 w-4 rounded-full ${
-            seller?.shop?.plan === "premium"
-              ? "bg-blue-400 animate-ping"
-              : "bg-blue-600/70"
-          }`}
-        />
-      </div>
-
-      {/* Plans */}
-      <div className="flex md:grid md:grid-cols-3 gap-6 overflow-x-auto snap-x snap-mandatory px-2 pb-2 scrollbar-hide">
-        {/* Free Plan */}
-        <div className="min-w-[85%] md:min-w-0 snap-center border border-white/20 rounded-2xl p-6 bg-white/10 hover:bg-white/20 transition relative backdrop-blur-md">
-          {seller?.shop?.plan === "free" && (
-            <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gray-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow">
-              Current Plan
-            </span>
-          )}
-          <h3 className="text-xl font-semibold text-white">Free Plan</h3>
-          <p className="text-gray-300 mb-3">Ksh 0 / year</p>
-          <ul className="space-y-2 text-sm text-gray-200 mb-5">
-            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Add up to 5 Products</li>
-            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Receive up to 5 Orders</li>
-            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Limited Analytics</li>
-            <li className="flex items-center gap-2"><XCircle size={16} className="text-red-400" /> No Product Boost</li>
-            <li className="flex items-center gap-2"><XCircle size={16} className="text-red-400" /> No Front Shop</li>
-            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Withdrawals capped at Ksh 1000</li>
-          </ul>
-          <button disabled className="w-full bg-gray-500 text-white py-2 rounded cursor-not-allowed">
-            Free
-          </button>
-        </div>
-
-        {/* Basic Plan */}
-        <div className="min-w-[85%] md:min-w-0 snap-center border border-orange-400/50 rounded-2xl p-6 bg-gradient-to-b from-orange-500/10 to-transparent hover:shadow-orange-500/30 hover:shadow-xl transition relative backdrop-blur-md">
-          {seller?.shop?.plan === "basic" && (
-            <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow">
-              Current Plan
-            </span>
-          )}
-          <h3 className="text-xl font-semibold text-orange-400">Basic Plan</h3>
-          <p className="text-gray-200 mb-3">Ksh 1300 / year</p>
-          <ul className="space-y-2 text-sm text-gray-200 mb-5">
-            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Add up to 100 Products</li>
-            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Receive up to 100 Orders</li>
-            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Standard Visibility</li>
-            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Access to Orders</li>
-            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Product Ads Boost</li>
-            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Shop Visibility</li>
-          </ul>
-          <button
-            onClick={() => openPaymentModal("basic")}
-            disabled={activatingShop}
-            className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded font-medium transition"
-          >
-            {activatingShop ? "Processing..." : "Upgrade to Basic"}
-          </button>
-        </div>
-
-        {/* Premium Plan */}
-        <div className="relative min-w-[85%] md:min-w-0 snap-center">
-          {/* Animated Aura */}
-          <div className="absolute inset-0 -z-10 flex items-center justify-center">
-            <div className="absolute w-[140%] h-[140%] rounded-full bg-gradient-to-r from-orange-400 via-pink-400 to-purple-500 opacity-30 blur-3xl animate-pulse-slow" />
-          </div>
-
-          {/* Floating Orbiting Badges with Glow */}
-          <div className="absolute inset-0 pointer-events-none">
-            <span className="absolute text-4xl text-white/80 animate-orbit-slow left-1/2 -translate-x-1/2 top-[-2rem] animate-glow-slow drop-shadow-[0_0_10px_rgba(255,255,255,0.6)]">
-              ⭐
-            </span>
-            <span className="absolute text-3xl text-white/70 animate-orbit-fast left-[-1rem] top-1/3 animate-glow-medium drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
-              🧭
-            </span>
-            <span className="absolute text-5xl text-white/80 animate-orbit-medium right-[-1rem] bottom-1/4 animate-glow-fast drop-shadow-[0_0_12px_rgba(255,255,255,0.6)]">
-              💎
-            </span>
-          </div>
-
-          <div className="relative border border-blue-400/60 rounded-2xl p-6 bg-gradient-to-b from-blue-500/10 to-transparent hover:shadow-blue-400/40 hover:shadow-2xl hover:scale-[1.03] transition backdrop-blur-md">
-            {seller?.shop?.plan === "premium" && (
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow">
-                Current Plan
-              </span>
-            )}
-            <span className="absolute -top-3 left-1/4 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow">
-              Recommended
-            </span>
-            <h3 className="text-xl font-semibold text-blue-300">Premium Plan</h3>
-            <p className="text-gray-200 mb-3">
-              {seller?.shop?.plan === "basic"
-                ? "Top-up Ksh 1700 to upgrade"
-                : "Ksh 3000 / year"}
-            </p>
-            <ul className="space-y-2 text-sm text-gray-200 mb-5">
-              <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> All Basic Features</li>
-              <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Premium Badge</li>
-              <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Higher Visibility</li>
-              <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Unlimited Withdrawals</li>
-              <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Unlimited Orders</li>
-              <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Unlimited Products</li>
-            </ul>
-            <button
-              onClick={() => openPaymentModal("premium")}
-              disabled={activatingShop}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-medium transition"
-            >
-              {activatingShop ? "Processing..." : "Upgrade to Premium"}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+<div className="flex md:grid md:grid-cols-3 gap-6 overflow-x-auto snap-x snap-mandatory px-2 pb-2 scrollbar-hide">
+  {/* Free Plan */}
+  <div
+    className={`relative min-w-[85%] md:min-w-0 snap-center border rounded-3xl p-6 bg-white/20 backdrop-blur-sm transition-transform duration-300 hover:scale-105 hover:shadow-lg 
+      ${seller?.shop?.plan === "free" ? "border-gray-400 shadow-[0_0_20px_rgba(255,255,255,0.2)] animate-glow-subtle" : "border-gray-300"}
+    `}
+  >
+    {seller?.shop?.plan === "free" && (
+      <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gray-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow">
+        Current Plan
+      </span>
+    )}
+    <h3 className="text-xl font-bold text-gray-800 mb-1">Free Plan</h3>
+    <p className="text-gray-500 mb-3">Ksh 0 / year</p>
+    <ul className="space-y-2 text-sm text-gray-600 mb-5">
+      <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500" /> Add up to 5 Products</li>
+      <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500" /> Receive up to 5 Orders</li>
+      <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500" /> Limited Analytics</li>
+      <li className="flex items-center gap-2"><XCircle size={16} className="text-red-500" /> No Product Boost</li>
+      <li className="flex items-center gap-2"><XCircle size={16} className="text-red-500" /> No Front Shop</li>
+      <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500" /> Withdrawals capped at Ksh 1000</li>
+    </ul>
+    <button disabled className="w-full bg-gray-400 text-white py-2 rounded-lg cursor-not-allowed">
+      Free
+    </button>
   </div>
+
+  {/* Basic Plan */}
+  <div
+    className={`relative min-w-[85%] md:min-w-0 snap-center border rounded-3xl p-6 bg-gradient-to-b from-orange-100/30 to-transparent backdrop-blur-sm transition-transform duration-300 hover:scale-105 hover:shadow-xl
+      ${
+        seller?.shop?.plan === "basic"
+          ? "border-orange-500 shadow-[0_0_25px_rgba(255,165,0,0.5)] animate-glow-orange"
+          : "border-orange-300"
+      }`}
+  >
+    {seller?.shop?.plan === "basic" && (
+      <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow">
+        Current Plan
+      </span>
+    )}
+    <h3 className="text-xl font-bold text-orange-600 mb-1">Basic Plan</h3>
+    <p className="text-gray-700 mb-3">Ksh 1300 / year</p>
+    <ul className="space-y-2 text-sm text-gray-700 mb-5">
+      <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500" /> Add up to 100 Products</li>
+      <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500" /> Receive up to 100 Orders</li>
+      <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500" /> Standard Visibility</li>
+      <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500" /> Access to Orders</li>
+      <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500" /> Product Ads Boost</li>
+      <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500" /> Shop Visibility</li>
+    </ul>
+    <button
+      onClick={() => openPaymentModal("basic")}
+      disabled={activatingShop || seller?.shop?.plan === "basic" || seller?.shop?.plan === "premium"}
+      className={`w-full py-2 rounded-lg font-medium transition ${
+        seller?.shop?.plan === "basic" || seller?.shop?.plan === "premium"
+          ? "bg-gray-400 text-white cursor-not-allowed"
+          : "bg-orange-600 hover:bg-orange-700 text-white"
+      }`}
+    >
+      {activatingShop ? "Processing..." : "Upgrade to Basic"}
+    </button>
+  </div>
+
+  {/* Premium Plan */}
+  <div
+    className={`relative min-w-[85%] md:min-w-0 snap-center border rounded-3xl p-6 bg-gradient-to-b from-blue-100/30 to-transparent backdrop-blur-sm transition-transform duration-300 hover:scale-105 hover:shadow-2xl
+      ${
+        seller?.shop?.plan === "premium"
+          ? "border-blue-400 shadow-[0_0_30px_rgba(0,123,255,0.5)] animate-glow-blue"
+          : "border-blue-400/50"
+      }`}
+  >
+    {/* Glowing Aura for Recommended */}
+    <div className="absolute inset-0 -z-10">
+      <div className="absolute w-full h-full rounded-3xl bg-gradient-to-r from-blue-500/20 via-orange-400/10 to-purple-400/20 blur-2xl animate-pulse-slow" />
+    </div>
+
+    {seller?.shop?.plan === "premium" && (
+      <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow">
+        Current Plan
+      </span>
+    )}
+    <span className="absolute -top-3 left-1/4 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow animate-pulse">
+      Recommended
+    </span>
+    <h3 className="text-xl font-bold text-blue-600 mb-1">Premium Plan</h3>
+    <p className="text-gray-700 mb-3">
+      {seller?.shop?.plan === "basic" ? "Top-up Ksh 1700 to upgrade" : "Ksh 3000 / year"}
+    </p>
+    <ul className="space-y-2 text-sm text-gray-700 mb-5">
+      <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500" /> All Basic Features</li>
+      <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500" /> Premium Badge</li>
+      <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500" /> Higher Visibility</li>
+      <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500" /> Unlimited Withdrawals</li>
+      <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500" /> Unlimited Orders</li>
+      <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500" /> Unlimited Products</li>
+    </ul>
+    <button
+      onClick={() => openPaymentModal("premium")}
+      disabled={activatingShop || seller?.shop?.plan === "premium"}
+      className={`w-full py-2 rounded-lg font-medium transition ${
+        seller?.shop?.plan === "premium"
+          ? "bg-gray-400 text-white cursor-not-allowed"
+          : "bg-blue-600 hover:bg-blue-700 text-white"
+      }`}
+    >
+      {activatingShop ? "Processing..." : "Upgrade to Premium"}
+    </button>
+  </div>
+</div>
 )}
         {showPaymentModal && (
           <motion.div

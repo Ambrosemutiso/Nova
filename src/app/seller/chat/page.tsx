@@ -5,36 +5,13 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { FiSearch, FiMessageCircle, FiPlus, FiX } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Player } from '@lottiefiles/react-lottie-player';
 
 export default function Chat() {
   const router = useRouter();
 
-  const [chats, setChats] = useState([
-    {
-      id: '1',
-      name: 'John Mwangi',
-      avatar: '/avatar.png',
-      lastMessage: 'Hey! I wanted to ask about my recent order.',
-      time: '2m ago',
-      unread: true,
-    },
-    {
-      id: '2',
-      name: 'Grace Otieno',
-      avatar: '/avatar.png',
-      lastMessage: 'Thanks for the quick delivery 🙏',
-      time: '10m ago',
-      unread: false,
-    },
-    {
-      id: '3',
-      name: 'Ali Yusuf',
-      avatar: '/avatar.png',
-      lastMessage: 'Can you restock that phone case?',
-      time: '1h ago',
-      unread: true,
-    },
-  ]);
+  // 💬 Start with no chats
+  const [chats, setChats] = useState<any[]>([]);
 
   const [showModal, setShowModal] = useState(false);
   const [newChat, setNewChat] = useState({ name: '', message: '' });
@@ -57,20 +34,36 @@ export default function Chat() {
   };
 
   return (
-    <div className="relative flex bg-gray-50 dark:bg-gray-900 pt-28 md:ml-64 p-6 min-h-screen">
-      {/* Sidebar */}
-      <div className="w-full md:w-80 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex flex-col">
-        {/* Header */}
-        <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-            <FiMessageCircle className="text-orange-500" />
-            Messages
-          </h2>
-        </div>
+    <div className="relative min-h-screen pt-28 pb-16 px-6 overflow-hidden bg-gradient-to-b from-orange-50 via-white to-orange-100 dark:from-gray-900 dark:to-gray-800">
+      {/* 🌈 Animated background blobs */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.3, y: [0, 25, 0] }}
+        transition={{ repeat: Infinity, duration: 12 }}
+        className="absolute -top-32 left-10 w-96 h-96 bg-gradient-to-r from-orange-300 to-yellow-200 rounded-full blur-3xl opacity-30"
+      />
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.3, y: [0, -30, 0] }}
+        transition={{ repeat: Infinity, duration: 15 }}
+        className="absolute bottom-0 right-0 w-[28rem] h-[28rem] bg-gradient-to-l from-orange-200 to-orange-100 rounded-full blur-3xl opacity-30"
+      />
 
-        {/* Search */}
-        <div className="px-4 py-3">
-          <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 rounded-full px-3 py-2">
+      {/* 💬 Page Header */}
+      <div className="relative z-10 text-center mb-10">
+        <h1 className="text-3xl md:text-4xl font-bold text-orange-600">
+          Chats
+        </h1>
+        <p className="text-gray-700 mt-2">
+          Your conversations with customers appear here.
+        </p>
+      </div>
+
+      <div className="relative z-10 grid md:grid-cols-3 gap-6">
+        {/* 🧩 Chat List */}
+        <div className="md:col-span-1 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl shadow-md p-4 flex flex-col max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-orange-400 scrollbar-track-transparent">
+          {/* Search */}
+          <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 rounded-full px-3 py-2 mb-4">
             <FiSearch className="text-gray-500" />
             <input
               type="text"
@@ -78,74 +71,45 @@ export default function Chat() {
               className="bg-transparent flex-1 text-sm focus:outline-none text-gray-700 dark:text-gray-100"
             />
           </div>
-        </div>
 
-        {/* Chat List */}
-        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-orange-400 scrollbar-track-transparent">
-          {chats.map((chat, index) => (
-            <motion.div
-              key={chat.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              onClick={() => router.push(`/seller/chat/${chat.id}`)}
-              className={`flex items-center gap-3 px-4 py-3 cursor-pointer border-b border-gray-100 dark:border-gray-700 hover:bg-orange-50 dark:hover:bg-gray-700 transition-all ${
-                chat.unread ? 'bg-orange-50 dark:bg-gray-800' : ''
-              }`}
-            >
-              <Image
-                src={chat.avatar}
-                alt={chat.name}
-                width={44}
-                height={44}
-                className="rounded-full object-cover"
+          {/* Empty state for no chats */}
+          {chats.length === 0 && (
+            <div className="flex flex-col items-center justify-center mt-10">
+              <Player
+                autoplay
+                loop
+                src="https://assets5.lottiefiles.com/packages/lf20_qh5z2fdq.json"
+                style={{ height: '200px', width: '200px' }}
               />
+              <p className="mt-3 text-orange-700 font-medium text-sm text-center">
+                No chats yet
+              </p>
+            </div>
+          )}
+        </div>
 
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-center">
-                  <h4 className="text-sm font-semibold text-gray-800 dark:text-white truncate">
-                    {chat.name}
-                  </h4>
-                  <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
-                    {chat.time}
-                  </span>
-                </div>
-                <p
-                  className={`text-xs mt-0.5 truncate ${
-                    chat.unread
-                      ? 'text-gray-800 dark:text-gray-200 font-medium'
-                      : 'text-gray-500 dark:text-gray-400'
-                  }`}
-                >
-                  {chat.lastMessage}
-                </p>
-              </div>
+        {/* 🖼 Chat Placeholder / Content */}
+        <div className="md:col-span-2 hidden md:flex items-center justify-center rounded-2xl bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm shadow-md">
+          <div className="text-center px-6 py-10">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.4 }}
+              className="w-20 h-20 mx-auto mb-4 flex items-center justify-center bg-orange-500 rounded-full shadow-lg"
+            >
+              <FiMessageCircle className="text-white text-3xl" />
             </motion.div>
-          ))}
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
+              Select or start a chat
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+              Conversations with your customers will appear here.
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Chat Placeholder */}
-      <div className="hidden md:flex flex-1 items-center justify-center bg-gradient-to-br from-white via-orange-50 to-orange-100 dark:from-gray-900 dark:to-gray-800">
-        <div className="text-center">
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.4 }}
-            className="w-20 h-20 mx-auto mb-4 flex items-center justify-center bg-orange-500 rounded-full shadow-lg"
-          >
-            <FiMessageCircle className="text-white text-3xl" />
-          </motion.div>
-          <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
-            Select or start a chat
-          </h3>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-            Conversations with your customers will appear here.
-          </p>
-        </div>
-      </div>
-
-      {/* Floating New Chat Button */}
+      {/* ✨ Floating New Chat Button */}
       <button
         onClick={() => setShowModal(true)}
         className="fixed bottom-8 right-8 bg-orange-500 hover:bg-orange-600 text-white p-4 rounded-full shadow-lg transition-transform active:scale-95"
@@ -153,7 +117,7 @@ export default function Chat() {
         <FiPlus size={24} />
       </button>
 
-      {/* Modal */}
+      {/* 📝 Modal */}
       <AnimatePresence>
         {showModal && (
           <motion.div

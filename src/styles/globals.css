@@ -188,3 +188,27 @@ button {
 .animate-pulse-slow { animation: pulse 4s ease-in-out infinite; }
 .animate-bounce-slow { animation: bounce 3s ease-in-out infinite; }
 
+  @keyframes glow-subtle {
+    0%, 100% { box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+    50% { box-shadow: 0 0 20px rgba(255,255,255,0.4); }
+  }
+  .animate-glow-subtle { animation: glow-subtle 3s ease-in-out infinite; }
+
+  @keyframes glow-orange {
+    0%, 100% { box-shadow: 0 0 15px rgba(255,165,0,0.4); }
+    50% { box-shadow: 0 0 25px rgba(255,165,0,0.6); }
+  }
+  .animate-glow-orange { animation: glow-orange 2.5s ease-in-out infinite; }
+
+  @keyframes glow-blue {
+    0%, 100% { box-shadow: 0 0 20px rgba(0,123,255,0.4); }
+    50% { box-shadow: 0 0 35px rgba(0,123,255,0.6); }
+  }
+  .animate-glow-blue { animation: glow-blue 2.5s ease-in-out infinite; }
+
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); }
+  }
+  .animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
+

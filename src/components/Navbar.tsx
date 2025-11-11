@@ -39,6 +39,7 @@ export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin }: NavbarPr
   const [showNotifModal, setShowNotifModal] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [guestCountry, setGuestCountry] = useState<any>(null);
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const searchRef = useRef<HTMLDivElement | null>(null);
@@ -58,27 +59,56 @@ export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin }: NavbarPr
     '💳 Secure Payments via M-Pesa & AirtelMoney',
   ];
 
-// 🔹 Unified Country & Currency Resolver
-const getUserCountryData = (user?: any) => {
-  if (!user) return countryData[0]; // default to Kenya
+  useEffect(() => {
+  if (guestCountry) localStorage.setItem("guestCountry", JSON.stringify(guestCountry));
+}, [guestCountry]);
 
-  // Try multiple possible locations for country data
-  const userCountry =
-    user.country ||
-    user?.sellerDetails?.country ||
-    user?.profile?.country ||
-    'Kenya';
+useEffect(() => {
+  const stored = localStorage.getItem("guestCountry");
+  if (stored) setGuestCountry(JSON.parse(stored));
+}, []);
 
-  // Case-insensitive match
-  const match = countryData.find(
-    (c) => c.name.toLowerCase() === userCountry.toLowerCase()
-  );
+  // 🌍 NEW: Fetch guest country via IP if user not logged in
+  useEffect(() => {
+    const fetchGuestCountry = async () => {
+      if (user) return; // skip for logged-in users
 
-  return match || countryData[0];
-};
+      try {
+        const res = await fetch("https://ipapi.co/json/");
+        const data = await res.json();
 
-const userCountryData = getUserCountryData(user);
+        if (data && data.country_code) {
+          const foundCountry =
+            countryData.find(
+              (c) => c.code.toUpperCase() === data.country_code.toUpperCase()
+            ) || countryData[0];
 
+          setGuestCountry(foundCountry);
+        } else {
+          setGuestCountry(countryData[0]); // fallback Kenya
+        }
+      } catch (err) {
+        console.error("IP lookup failed:", err);
+        setGuestCountry(countryData[0]); // fallback
+      }
+    };
+
+    fetchGuestCountry();
+  }, [user]);
+
+  // ✅ Unified function for flag + currency
+  const getUserCountryData = (user?: any, guestCountry?: any) => {
+    if (user?.country) {
+      const isoCode = user.country;
+      const match = countryData.find(
+        (c) => c.code.toUpperCase() === isoCode.toUpperCase()
+      );
+      return match || countryData[0];
+    }
+    return guestCountry || countryData[0];
+  };
+
+  const currentCountry = getUserCountryData(user, guestCountry);
 
   // 🔸 Promo rotation
   useEffect(() => {
@@ -277,15 +307,15 @@ const userCountryData = getUserCountryData(user);
 
       {/* Country Flag & Currency */}
           {user && (
-            <div className="flex items-center gap-2 border border-orange-200 rounded-full px-3 py-1 cursor-pointer hover:bg-orange-50 transition">
-<img
-  src={userCountryData.flag}
-  alt={userCountryData.name}
-  className="w-6 h-4 rounded-sm object-cover"
-/>
-<span className="text-sm font-medium text-gray-700">{userCountryData.currency}</span>
+<div className="flex items-center gap-2 border border-orange-200 rounded-full px-3 py-1 cursor-pointer hover:bg-orange-50 transition">
+  <img
+    src={currentCountry.flag}
+    alt={currentCountry.name}
+    className="w-6 h-4 rounded-sm object-cover"
+  />
+  <span className="text-sm font-medium text-gray-700">{currentCountry.currency}</span>
+</div>
 
-            </div>
           )}
 
           {/* Cart or Orders */}
@@ -383,7 +413,7 @@ const userCountryData = getUserCountryData(user);
           <>
             {showSidebar && (
               <div className="md:hidden">
-                <SellerSidebar onClose={() => setShowSidebar(false)} />
+                <SellerSidebar isOpen={showSidebar} onClose={() => setShowSidebar(false)} />
               </div>
             )}
 

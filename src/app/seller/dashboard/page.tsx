@@ -203,7 +203,8 @@ export default function DashboardPage() {
   const [salesData, setSalesData] = useState<any[]>([]);
   const [orderStatus, setOrderStatus] = useState<any[]>([]);
   const [summary, setSummary] = useState<any[]>([]);
-  const [topSeller, setTopSeller] = useState<any>(null);
+  const [sellerPerformance, setSellerPerformance] = useState<any>(null);
+
 
   useEffect(() => {
     const fetchMetrics = async () => {
@@ -222,7 +223,7 @@ export default function DashboardPage() {
         setSalesData(data.salesData || []);
         setOrderStatus(data.donutData || []);
         setSummary([...(data.summary || []), ...(data.activeProductsSummary || [])]);
-        setTopSeller(data.topSeller || null);
+        setSellerPerformance(data.sellerPerformance || null);
       } catch (err) {
         console.error("Dashboard metrics error:", err);
       }
@@ -233,20 +234,85 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 flex flex-col">
       <main className="flex-1 pt-28 p-8 space-y-8">
-        {topSeller && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-gradient-to-r from-orange-500 to-orange-400 rounded-2xl p-6 flex items-center justify-between text-white shadow-md">
-            <div>
-              <h2 className="text-lg font-semibold">Congratulations {topSeller.name || "Seller"} 🎉</h2>
-              <p className="text-white/90 text-sm">You are the top seller this month!</p>
-              <h3 className="text-3xl font-bold mt-2">Ksh {topSeller.revenue?.toLocaleString() || "0"}</h3>
-              <p className="text-white/80 text-xs">{topSeller.percentageAchieved || 0}% of sales target achieved</p>
-              <button onClick={() => (window.location.href = "/seller/awards")} className="mt-3 bg-white text-orange-600 font-medium px-3 py-1 rounded-full text-sm hover:bg-gray-100 transition">View Awards</button>
-            </div>
-            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} transition={{ duration: 0.6, repeat: Infinity, repeatType: "reverse" }}>
-              <Gift size={64} className="opacity-90" />
-            </motion.div>
-          </motion.div>
-        )}
+{sellerPerformance && (
+  <motion.div
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.3 }}
+    className="relative rounded-2xl p-6 text-white shadow-lg overflow-hidden"
+  >
+    {/* Animated Aura */}
+    <div className="absolute inset-0 -z-10 flex items-center justify-center">
+      <div
+        className={`absolute w-[160%] h-[160%] rounded-full blur-3xl opacity-40 animate-pulse-slow ${
+          sellerPerformance.rank === "Gold"
+            ? "bg-gradient-to-r from-yellow-400 via-orange-400 to-red-500"
+            : sellerPerformance.rank === "Silver"
+            ? "bg-gradient-to-r from-gray-400 via-gray-300 to-gray-500"
+            : sellerPerformance.rank === "Bronze"
+            ? "bg-gradient-to-r from-amber-700 via-orange-600 to-orange-800"
+            : "bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500"
+        }`}
+      />
+    </div>
+
+    {/* Card Content */}
+    <div className="relative z-10">
+      {sellerPerformance.isTopSeller ? (
+        <>
+          <h2 className="text-2xl font-bold">🏆 Top Seller of the Month!</h2>
+          <p className="text-white/90 mt-1">
+            Congratulations — you’ve achieved the highest sales this month!
+          </p>
+        </>
+      ) : (
+        <>
+          <h2 className="text-2xl font-bold">
+            🥇 {sellerPerformance.rank} Seller
+          </h2>
+          <p className="text-white/90 mt-1">
+            You’ve earned <span className="font-semibold">{sellerPerformance.rank}</span> status!
+          </p>
+        </>
+      )}
+
+      {/* Revenue Display */}
+      <h3 className="text-4xl font-extrabold mt-4">
+        Ksh {sellerPerformance.revenue.toLocaleString()}
+      </h3>
+
+      {!sellerPerformance.isTopSeller && (
+        <>
+          {/* Progress Bar */}
+          <div className="mt-4 bg-white/20 rounded-full h-3 overflow-hidden shadow-inner">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${sellerPerformance.progressPercent}%` }}
+              transition={{ duration: 0.8 }}
+              className="h-3 rounded-full bg-gradient-to-r from-orange-400 to-orange-600"
+            />
+          </div>
+
+          <div className="flex justify-between text-xs mt-2 text-white/80">
+            <span>{sellerPerformance.progressPercent}% toward {sellerPerformance.nextTier}</span>
+            <span>
+              Target: Ksh {sellerPerformance.nextThreshold.toLocaleString()}
+            </span>
+          </div>
+        </>
+      )}
+
+      {/* Button */}
+      <button
+        onClick={() => (window.location.href = "/seller/awards")}
+        className="mt-5 bg-white text-orange-600 font-semibold px-4 py-2 rounded-full text-sm shadow hover:bg-gray-100 transition"
+      >
+        View Awards
+      </button>
+    </div>
+  </motion.div>
+)}
+
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((s) => <StatsCard key={s.id} {...s} />)}
         </section>

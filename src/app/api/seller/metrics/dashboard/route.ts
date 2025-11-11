@@ -151,26 +151,55 @@ const deliveredSummary = {
 };
 
     // -------------------------------
-    // 5️⃣ Top Seller
-    // -------------------------------
-    const topSellerAgg = await Order.aggregate([
-      { $unwind: "$items" },
-      {
-        $group: { _id: "$items.sellerId", revenue: { $sum: "$items.price" } },
-      },
-      { $sort: { revenue: -1 } },
-      { $limit: 1 },
-    ]);
-    let topSeller = null;
-    if (topSellerAgg.length > 0) {
-      const seller = await Seller.findById(topSellerAgg[0]._id).select("name");
-      topSeller = {
-        name: seller?.name || "Top Seller",
-        revenue: topSellerAgg[0].revenue,
-        percentageAchieved: Math.round((topSellerAgg[0].revenue / (totalRevenue || 1)) * 100),
-      };
-    }
+// 🏆 Seller Performance & Rank
+// -------------------------------
+const sellerRevenueAgg = await Order.aggregate([
+  { $unwind: "$items" },
+  { $match: { "items.sellerId": sellerObjectId } },
+  { $group: { _id: null, revenue: { $sum: "$items.price" } } },
+]);
+const sellerRevenue = sellerRevenueAgg[0]?.revenue || 0;
 
+// Global top seller (optional global highlight)
+const topSellerAgg = await Order.aggregate([
+  { $unwind: "$items" },
+  { $group: { _id: "$items.sellerId", revenue: { $sum: "$items.price" } } },
+  { $sort: { revenue: -1 } },
+  { $limit: 1 },
+]);
+const topSellerId = topSellerAgg[0]?._id?.toString();
+const topSellerRevenue = topSellerAgg[0]?.revenue || 0;
+const isTopSeller = topSellerId === sellerId;
+
+// Tier system
+let rank = "Bronze";
+let nextTier = "Silver";
+let nextThreshold = 1_000_000;
+
+if (sellerRevenue >= 2_000_000) {
+  rank = "Gold";
+  nextTier = "Top Seller";
+  nextThreshold = topSellerRevenue || 3_000_000;
+} else if (sellerRevenue >= 1_000_000) {
+  rank = "Silver";
+  nextTier = "Gold";
+  nextThreshold = 2_000_000;
+}
+
+const progressPercent = Math.min(
+  Math.round((sellerRevenue / nextThreshold) * 100),
+  100
+);
+
+const sellerPerformance = {
+  isTopSeller,
+  rank,
+  revenue: sellerRevenue,
+  topSellerRevenue,
+  nextTier,
+  nextThreshold,
+  progressPercent,
+};
     // -------------------------------
     // 6️⃣ Active Products
     // -------------------------------
@@ -186,9 +215,9 @@ return NextResponse.json({
   stats,
   salesData,
   donutData,
-  summary, // keep your active products
-  activeProductsSummary: [deliveredSummary], // delivered orders minidonut
-  topSeller,
+  summary,
+  activeProductsSummary: [deliveredSummary],
+  sellerPerformance,
 });
 
   } catch (err) {
@@ -196,3 +225,7 @@ return NextResponse.json({
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+
+
+
