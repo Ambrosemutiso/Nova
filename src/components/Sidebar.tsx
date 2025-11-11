@@ -7,7 +7,8 @@ import {
   FiHome, FiSmartphone, FiMonitor, FiHeart, FiUser,
   FiTv, FiWatch, FiGift, FiTruck, FiBook, FiTool,
   FiGrid, FiZoomIn, FiZoomOut, FiPackage, FiLayout,
-  FiLoader, FiSend, FiSun, FiMoon, FiGlobe
+  FiLoader, FiSend, FiSun, FiMoon, FiGlobe,
+  FiFilm
 } from 'react-icons/fi';
 
 export default function Sidebar({ onClose }: { onClose: () => void }) {
@@ -49,6 +50,7 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
     { label: 'Automotive', icon: <FiTool />, route: '/category/Motors' },
     { label: 'Books & Stationery', icon: <FiBook />, route: '/category/Books' },
     { label: 'Sound Systems', icon: <FiLoader />, route: '/category/Systems' },
+    { label: 'Ads', icon: <FiFilm />, route: '/Ads' },
     { label: 'Shops', icon: <FiGrid />, route: '/shops' },
   ];
 

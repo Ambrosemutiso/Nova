@@ -42,7 +42,7 @@ export default function SellerSidebar({ isOpen = false, onClose, onOpen }: Props
     { label: 'Finance', icon: <FiDollarSign size={20} />, path: '/seller/finance' },
     { label: 'Awards', icon: <FiAward size={20} />, path: '/seller/awards' },
     { label: 'Messages', icon: <FiMessageSquare size={20} />, path: '/seller/chat' },
-    { label: 'AdVideos', icon: <FiFilm size={20} />, path: '/seller/advideos' },
+    { label: 'AdVideos', icon: <FiFilm size={20} />, path: '/seller/ads/upload' },
     { label: 'Settings', icon: <FiSettings size={20} />, path: '/seller/settings' },
   ];
 
