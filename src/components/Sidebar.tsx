@@ -50,7 +50,7 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
     { label: 'Automotive', icon: <FiTool />, route: '/category/Motors' },
     { label: 'Books & Stationery', icon: <FiBook />, route: '/category/Books' },
     { label: 'Sound Systems', icon: <FiLoader />, route: '/category/Systems' },
-    { label: 'Ads', icon: <FiFilm />, route: '/Ads' },
+    { label: 'Ads', icon: <FiFilm />, route: '/ads' },
     { label: 'Shops', icon: <FiGrid />, route: '/shops' },
   ];
 

@@ -95,7 +95,7 @@ export default function AdUploadPage({ sellerId }: { sellerId: string }) {
   };
 
   return (
-    <div className="max-w-lg mx-auto p-6 bg-white shadow-lg rounded-2xl border border-gray-100">
+    <div className="max-w-lg mx-auto p-6 relative min-h-screen pt-28 pb-16 bg-white shadow-lg rounded-2xl border border-gray-100">
       <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center">
         Upload a New Ad
       </h1>
