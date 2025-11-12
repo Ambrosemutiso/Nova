@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import cloudinary from '@/lib/cloudinary';
 import { dbConnect } from '@/lib/dbConnect';
 import Ad from '@/app/models/Ads';
+import stream from 'stream';
 
 export const runtime = 'nodejs';
 
@@ -27,20 +28,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'File must be a video' }, { status: 400 });
     }
 
-    // Convert File to Buffer
+    console.log('📤 Uploading video to Cloudinary...');
+
+    // Convert File to Node.js readable stream
     const buffer = Buffer.from(await file.arrayBuffer());
+    const readable = stream.Readable.from(buffer);
 
-    // Build base64 string with MIME prefix
-    const mimeType = mediaType === 'video' ? 'video/mp4' : 'image/jpeg';
-    const uploadString = `data:${mimeType};base64,${buffer.toString('base64')}`;
-
-    // Upload to Cloudinary
-    console.log('📤 Uploading to Cloudinary...');
-    const uploadResult = await cloudinary.uploader.upload(uploadString, {
-      resource_type: mediaType === 'video' ? 'video' : 'image',
-      folder: 'novamax/ads',
-      use_filename: true,
-      unique_filename: true,
+    const uploadResult: any = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'video',
+          folder: 'novamax/ads',
+          use_filename: true,
+          unique_filename: true,
+        },
+        (error, result) => {
+          if (error) return reject(error);
+          resolve(result);
+        }
+      );
+      readable.pipe(uploadStream);
     });
 
     console.log('✅ Cloudinary upload success:', uploadResult.secure_url);
@@ -54,14 +61,14 @@ export async function POST(req: NextRequest) {
       description,
       mediaUrl: cleanedUrl,
       mediaType,
-      thumbnailUrl: mediaType === 'video' ? cleanedUrl : null,
+      thumbnailUrl: cleanedUrl,
       category,
       country,
     });
 
     return NextResponse.json({ ad: newAd }, { status: 201 });
   } catch (error: any) {
-    console.error('❌ Cloudinary upload failed:', error);
+    console.error('❌ Upload failed:', error);
     return NextResponse.json(
       { error: 'Upload failed', details: error.message || 'Unknown error' },
       { status: 500 }

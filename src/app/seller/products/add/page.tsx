@@ -126,6 +126,7 @@ export default function AddProduct() {
       setCalculatedPrice(0);
     }
   };
+  
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length + imageFiles.length > 10) {
