@@ -3,7 +3,7 @@ import cloudinary from '@/lib/cloudinary';
 import { dbConnect } from '@/lib/dbConnect';
 import Ad from '@/app/models/Ads';
 
-export const runtime = 'nodejs'; 
+export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   await dbConnect();
@@ -22,16 +22,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
-  if (!fileBase64.startsWith('data:')) {
-    console.warn('⚠️ Invalid base64 format. Expected data URL.');
-    return NextResponse.json({ error: 'Invalid file format' }, { status: 400 });
-  }
-
   try {
+    let uploadString = fileBase64;
+
+    // 🧠 If the file is raw base64, prepend MIME type
+    if (!fileBase64.startsWith('data:')) {
+      const mimePrefix =
+        mediaType === 'video'
+          ? 'data:video/mp4;base64,'
+          : 'data:image/jpeg;base64,';
+      uploadString = `${mimePrefix}${fileBase64}`;
+    }
+
     console.log('📤 Uploading to Cloudinary...');
-    const uploadResult = await cloudinary.uploader.upload(fileBase64, {
+    const uploadResult = await cloudinary.uploader.upload(uploadString, {
       resource_type: mediaType === 'video' ? 'video' : 'image',
-      folder: 'products',
+      folder: 'novamax/ads',
       use_filename: true,
       unique_filename: true,
     });
@@ -53,13 +59,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ad: newAd });
   } catch (error: any) {
-    console.error('❌ Cloudinary upload failed:', {
-      message: error.message,
-      name: error.name,
-      http_code: error.http_code || 'N/A',
-      stack: error.stack,
-    });
-
+    console.error('❌ Cloudinary upload failed:', error);
     return NextResponse.json(
       { error: 'Upload failed', details: error.message || 'Unknown error' },
       { status: 500 }
@@ -69,8 +69,6 @@ export async function POST(req: NextRequest) {
 
 export const config = {
   api: {
-    bodyParser: {
-      sizeLimit: '50mb',
-    },
+    bodyParser: { sizeLimit: '50mb' },
   },
 };

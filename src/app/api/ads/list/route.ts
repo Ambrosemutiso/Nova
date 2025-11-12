@@ -2,19 +2,63 @@ import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
 import Ad from '@/app/models/Ads';
 
+// ✅ Lightweight interface for returned ads
+interface AdType {
+  _id: string;
+  sellerId: string;
+  title: string;
+  description?: string;
+  category?: string;
+  mediaUrl: string;
+  mediaType: 'video' | 'image';
+  views?: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+// ✅ GET: Fetch seller’s ads first, then others
 export async function GET(req: NextRequest) {
   await dbConnect();
 
   try {
-    const ads = await Ad.find().sort({ createdAt: -1 }).limit(50);
-    return NextResponse.json({ ads });
+    const { searchParams } = new URL(req.url);
+    const sellerId = searchParams.get('sellerId');
+
+    let sellerAds: AdType[] = [];
+    let otherAds: AdType[] = [];
+
+    if (sellerId) {
+      // 🔹 Fetch seller's own ads
+      sellerAds = (await Ad.find({ sellerId })
+        .sort({ createdAt: -1 })
+        .limit(20)
+        .lean()) as unknown as AdType[];
+
+      // 🔹 Fetch other ads (excluding seller’s)
+      otherAds = (await Ad.find({ sellerId: { $ne: sellerId } })
+        .sort({ createdAt: -1 })
+        .limit(30)
+        .lean()) as unknown as AdType[];
+    } else {
+      // 🔹 If no sellerId provided, return all ads
+      otherAds = (await Ad.find()
+        .sort({ createdAt: -1 })
+        .limit(50)
+        .lean()) as unknown as AdType[];
+    }
+
+    return NextResponse.json({
+      sellerAds,
+      otherAds,
+      total: sellerAds.length + otherAds.length,
+    });
   } catch (error) {
     console.error('❌ Error fetching ads:', error);
     return NextResponse.json({ error: 'Failed to fetch ads' }, { status: 500 });
   }
 }
 
-// ✅ Add POST for incrementing ad views
+// ✅ POST: Increment ad views
 export async function POST(req: NextRequest) {
   await dbConnect();
 
