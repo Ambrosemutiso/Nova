@@ -8,32 +8,33 @@ export const runtime = 'nodejs';
 export async function POST(req: NextRequest) {
   await dbConnect();
 
-  let body;
   try {
-    body = await req.json();
-  } catch (err) {
-    console.error('❌ Invalid JSON body:', err);
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
+    const formData = await req.formData();
 
-  const { sellerId, title, description, mediaType, category, country, fileBase64 } = body;
+    const sellerId = formData.get('sellerId')?.toString();
+    const title = formData.get('title')?.toString();
+    const description = formData.get('description')?.toString() || '';
+    const category = formData.get('category')?.toString();
+    const country = formData.get('country')?.toString() || 'Unknown';
+    const mediaType = formData.get('mediaType')?.toString(); // 'video' or 'image'
+    const file = formData.get('file') as File;
 
-  if (!fileBase64 || !mediaType || !title || !category || !sellerId) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-  }
-
-  try {
-    let uploadString = fileBase64;
-
-    // 🧠 If the file is raw base64, prepend MIME type
-    if (!fileBase64.startsWith('data:')) {
-      const mimePrefix =
-        mediaType === 'video'
-          ? 'data:video/mp4;base64,'
-          : 'data:image/jpeg;base64,';
-      uploadString = `${mimePrefix}${fileBase64}`;
+    if (!sellerId || !title || !category || !mediaType || !file) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    if (mediaType === 'video' && !file.type.startsWith('video/')) {
+      return NextResponse.json({ error: 'File must be a video' }, { status: 400 });
+    }
+
+    // Convert File to Buffer
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    // Build base64 string with MIME prefix
+    const mimeType = mediaType === 'video' ? 'video/mp4' : 'image/jpeg';
+    const uploadString = `data:${mimeType};base64,${buffer.toString('base64')}`;
+
+    // Upload to Cloudinary
     console.log('📤 Uploading to Cloudinary...');
     const uploadResult = await cloudinary.uploader.upload(uploadString, {
       resource_type: mediaType === 'video' ? 'video' : 'image',
@@ -46,6 +47,7 @@ export async function POST(req: NextRequest) {
 
     const cleanedUrl = uploadResult.secure_url.replace(/\/v\d+\//, '/');
 
+    // Save ad in DB
     const newAd = await Ad.create({
       sellerId,
       title,
@@ -57,7 +59,7 @@ export async function POST(req: NextRequest) {
       country,
     });
 
-    return NextResponse.json({ ad: newAd });
+    return NextResponse.json({ ad: newAd }, { status: 201 });
   } catch (error: any) {
     console.error('❌ Cloudinary upload failed:', error);
     return NextResponse.json(
@@ -69,6 +71,6 @@ export async function POST(req: NextRequest) {
 
 export const config = {
   api: {
-    bodyParser: { sizeLimit: '50mb' },
+    bodyParser: false,
   },
 };

@@ -40,84 +40,75 @@ export default function SellerAdsPage() {
     fetchAds();
   }, [sellerId]);
 
-  // 🔹 File handling
+  // 🔹 Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return;
+
     const file = e.target.files[0];
+
+    // Validate file type
+    if (!file.type.startsWith('video/')) {
+      setMessage('⚠️ Only video files are allowed.');
+      return;
+    }
+
+    // Validate file size (max 50 MB)
+    if (file.size > 50 * 1024 * 1024) {
+      setMessage('⚠️ File too large. Max 50MB allowed.');
+      return;
+    }
+
     setMediaFile(file);
-    setMediaType(file.type.startsWith('video') ? 'video' : 'image');
+    setMediaType('video');
     setPreviewUrl(URL.createObjectURL(file));
+    setMessage('');
   };
 
-  const fileToBase64 = (file: File): Promise<string> =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-    });
-
-  // 🔹 Upload ad
-// 🔹 Upload ad
-const handleUpload = async () => {
-  if (!mediaFile || !title || !category || !sellerId) {
-    setMessage('⚠️ Please fill all required fields.');
-    return;
-  }
-if (mediaFile.size > 50 * 1024 * 1024) { // 50 MB limit
-  setMessage('⚠️ File too large. Max 50MB allowed.');
-  return;
-}
-
-  setIsUploading(true);
-  setMessage('');
-
-  try {
-    let fileBase64 = await fileToBase64(mediaFile);
-
-    // 🧠 Ensure proper data URL format
-    if (!fileBase64.startsWith('data:')) {
-      const mimePrefix = mediaType === 'video'
-        ? 'data:video/mp4;base64,'
-        : 'data:image/jpeg;base64,';
-      fileBase64 = mimePrefix + fileBase64;
+  // 🔹 Upload ad using FormData
+  const handleUpload = async () => {
+    if (!mediaFile || !title || !category || !sellerId) {
+      setMessage('⚠️ Please fill all required fields.');
+      return;
     }
 
-    const res = await axios.post(
-      '/api/ads/upload',
-      {
-        sellerId,
-        title,
-        description,
-        category,
-        mediaType,
-        country: user?.country || 'Unknown',
-        fileBase64,
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-        onUploadProgress: (p) => {
-          if (p.total) setProgress(Math.round((p.loaded * 100) / p.total));
+    setIsUploading(true);
+    setProgress(0);
+    setMessage('');
+
+    try {
+      const formData = new FormData();
+      formData.append('sellerId', sellerId);
+      formData.append('title', title);
+      formData.append('description', description);
+      formData.append('category', category);
+      formData.append('mediaType', mediaType);
+      formData.append('country', user?.country || 'Unknown');
+      formData.append('file', mediaFile);
+
+      const res = await axios.post('/api/ads/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            setProgress(Math.round((progressEvent.loaded * 100) / progressEvent.total));
+          }
         },
+      });
+
+      if (res.status === 201 && res.data.ad) {
+        setMessage('✅ Ad uploaded successfully!');
+        setShowUpload(false);
+        setAds((prev) => [res.data.ad, ...prev]); // refresh ads instantly
+        resetForm();
+      } else {
+        setMessage('❌ Upload failed.');
       }
-    );
-
-    if (res.status === 200 && res.data.ad) {
-      setMessage('✅ Ad uploaded successfully!');
-      setShowUpload(false);
-      setAds((prev) => [res.data.ad, ...prev]); // instant refresh
-      resetForm();
-    } else {
-      setMessage('❌ Upload failed.');
+    } catch (err: any) {
+      console.error('❌ Upload error:', err);
+      setMessage('❌ Something went wrong during upload.');
+    } finally {
+      setIsUploading(false);
     }
-  } catch (err) {
-    console.error(err);
-    setMessage('❌ Something went wrong.');
-  } finally {
-    setIsUploading(false);
-  }
-};
-
+  };
 
   const resetForm = () => {
     setTitle('');
@@ -220,26 +211,18 @@ if (mediaFile.size > 50 * 1024 * 1024) { // 50 MB limit
 
             <input
               type="file"
-              accept="video/*,image/*"
+              accept="video/*"
               onChange={handleFileChange}
               className="mb-2"
             />
 
             {previewUrl && (
               <div className="mt-2 rounded-lg overflow-hidden">
-                {mediaType === 'video' ? (
-                  <video
-                    src={previewUrl}
-                    controls
-                    className="w-full rounded-lg"
-                  />
-                ) : (
-                  <img
-                    src={previewUrl}
-                    alt="Preview"
-                    className="w-full rounded-lg"
-                  />
-                )}
+                <video
+                  src={previewUrl}
+                  controls
+                  className="w-full rounded-lg"
+                />
               </div>
             )}
 
@@ -265,9 +248,7 @@ if (mediaFile.size > 50 * 1024 * 1024) { // 50 MB limit
             </button>
 
             {message && (
-              <p className="text-center text-sm mt-2 text-gray-600">
-                {message}
-              </p>
+              <p className="text-center text-sm mt-2 text-gray-600">{message}</p>
             )}
           </div>
         </div>
