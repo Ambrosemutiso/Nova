@@ -2,8 +2,12 @@
 
 import { useState } from 'react';
 import axios from 'axios';
+import { useAuth } from '@/app/context/AuthContext';
 
-export default function AdUploadPage({ sellerId }: { sellerId: string }) {
+export default function AdUploadPage() {
+  const { user, isSeller } = useAuth();
+  const sellerId = isSeller ? user?._id : null;
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
@@ -40,6 +44,11 @@ export default function AdUploadPage({ sellerId }: { sellerId: string }) {
 
   // 🔹 Upload handler with progress tracking
   const handleUpload = async () => {
+    if (!sellerId) {
+      setMessage('⚠️ Only sellers can upload ads.');
+      return;
+    }
+
     if (!mediaFile || !title || !category) {
       setMessage('⚠️ Please fill all required fields and select a file.');
       return;
@@ -100,75 +109,78 @@ export default function AdUploadPage({ sellerId }: { sellerId: string }) {
         Upload a New Ad
       </h1>
 
-      <div className="space-y-4">
-        <input
-          type="text"
-          placeholder="Ad Title"
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-          className="w-full p-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-        />
-        <textarea
-          placeholder="Description (optional)"
-          value={description}
-          onChange={e => setDescription(e.target.value)}
-          className="w-full p-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-          rows={3}
-        />
-        <input
-          type="text"
-          placeholder="Category (e.g. Electronics, Fashion)"
-          value={category}
-          onChange={e => setCategory(e.target.value)}
-          className="w-full p-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-        />
-
-        <div>
-          <label className="block mb-1 text-gray-700 font-medium">Select Ad File</label>
+      {!isSeller ? (
+        <p className="text-center text-red-500 font-semibold">
+          🚫 You must be logged in as a seller to upload ads.
+        </p>
+      ) : (
+        <div className="space-y-4">
           <input
-            type="file"
-            accept="video/*,image/*"
-            onChange={handleFileChange}
-            className="w-full text-sm text-gray-700"
+            type="text"
+            placeholder="Ad Title"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            className="w-full p-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
+          <textarea
+            placeholder="Description (optional)"
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            className="w-full p-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            rows={3}
+          />
+          <input
+            type="text"
+            placeholder="Category (e.g. Electronics, Fashion)"
+            value={category}
+            onChange={e => setCategory(e.target.value)}
+            className="w-full p-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+          />
+
+          <div>
+            <label className="block mb-1 text-gray-700 font-medium">Select Ad File</label>
+            <input
+              type="file"
+              accept="video/*,image/*"
+              onChange={handleFileChange}
+              className="w-full text-sm text-gray-700"
+            />
+          </div>
+
+          {previewUrl && (
+            <div className="mt-3 rounded-lg overflow-hidden border border-gray-200">
+              {mediaType === 'video' ? (
+                <video src={previewUrl} controls className="w-full rounded-lg" />
+              ) : (
+                <img src={previewUrl} alt="Preview" className="w-full rounded-lg" />
+              )}
+            </div>
+          )}
+
+          {isUploading && (
+            <div className="mt-3 w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+              <div
+                className="bg-orange-500 h-3 transition-all duration-200"
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+          )}
+
+          <button
+            onClick={handleUpload}
+            disabled={isUploading}
+            className={`w-full p-3 font-semibold rounded-lg text-white transition 
+              ${isUploading ? 'bg-gray-400 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-600'}
+            `}
+          >
+            {isUploading ? `Uploading... ${progress}%` : 'Upload Ad'}
+          </button>
+
+          {message && (
+            <p className="text-center text-sm mt-3 font-medium text-gray-700">{message}</p>
+          )}
         </div>
-
-        {/* Preview */}
-        {previewUrl && (
-          <div className="mt-3 rounded-lg overflow-hidden border border-gray-200">
-            {mediaType === 'video' ? (
-              <video src={previewUrl} controls className="w-full rounded-lg" />
-            ) : (
-              <img src={previewUrl} alt="Preview" className="w-full rounded-lg" />
-            )}
-          </div>
-        )}
-
-        {/* Progress Bar */}
-        {isUploading && (
-          <div className="mt-3 w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-            <div
-              className="bg-orange-500 h-3 transition-all duration-200"
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-        )}
-
-        {/* Upload Button */}
-        <button
-          onClick={handleUpload}
-          disabled={isUploading}
-          className={`w-full p-3 font-semibold rounded-lg text-white transition 
-            ${isUploading ? 'bg-gray-400 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-600'}
-          `}
-        >
-          {isUploading ? `Uploading... ${progress}%` : 'Upload Ad'}
-        </button>
-
-        {message && (
-          <p className="text-center text-sm mt-3 font-medium text-gray-700">{message}</p>
-        )}
-      </div>
+      )}
     </div>
   );
 }

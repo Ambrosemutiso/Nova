@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { v2 as cloudinary } from 'cloudinary';
+import cloudinary from '@/lib/cloudinary';
 import { dbConnect } from '@/lib/dbConnect';
 import Ad from '@/app/models/Ads';
-
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 export async function POST(req: NextRequest) {
   await dbConnect();
@@ -22,7 +16,7 @@ export async function POST(req: NextRequest) {
     // 🔹 Upload to Cloudinary
     const uploadResult = await cloudinary.uploader.upload(fileBase64, {
       resource_type: mediaType === 'video' ? 'video' : 'image',
-      folder: 'novaxmax/ads',
+      folder: 'ads',
       use_filename: true,
       unique_filename: true,
     });
