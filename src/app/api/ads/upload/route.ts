@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     console.log('📤 Uploading to Cloudinary...');
     const uploadResult = await cloudinary.uploader.upload(fileBase64, {
       resource_type: mediaType === 'video' ? 'video' : 'image',
-      folder: 'ads',
+      folder: 'products',
       use_filename: true,
       unique_filename: true,
     });
