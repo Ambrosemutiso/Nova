@@ -68,6 +68,7 @@ export default function AdUploadPage() {
           title,
           description,
           category,
+          country: user?.country || 'Unknown',
           mediaType,
           fileBase64,
         },
