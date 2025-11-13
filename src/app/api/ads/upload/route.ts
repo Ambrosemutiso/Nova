@@ -1,121 +1,85 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { v2 as cloudinary } from 'cloudinary';
-import { dbConnect } from '@/lib/dbConnect';
-import Ad from '@/app/models/Ads';
-import stream from 'stream';
+import { NextRequest, NextResponse } from "next/server";
+import { v2 as cloudinary } from "cloudinary";
+import crypto from "crypto";
+import { dbConnect } from "@/lib/dbConnect";
+import Ad from "@/app/models/Ads";
 
-export const runtime = 'nodejs';
+export const runtime = "nodejs";
+
 cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!,
+  api_key: process.env.CLOUDINARY_API_KEY!,
+  api_secret: process.env.CLOUDINARY_API_SECRET!,
 });
 
+// ----------- Generate Cloudinary upload signature -----------
 export async function POST(req: NextRequest) {
-  await dbConnect();
-
   try {
-    const formData = await req.formData();
+    const { sellerId, title, description, category, country, mediaType } =
+      await req.json();
 
-    const sellerId = formData.get('sellerId')?.toString();
-    const title = formData.get('title')?.toString();
-    const description = formData.get('description')?.toString() || '';
-    const category = formData.get('category')?.toString();
-    const country = formData.get('country')?.toString() || 'Unknown';
-    const mediaType = formData.get('mediaType')?.toString();
-    const file = formData.get('file') as File;
-
-    if (!sellerId || !title || !category || !mediaType || !file) {
-      console.error('❌ Missing required fields', { sellerId, title, category, mediaType, file });
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
-
-    console.log('📥 Received upload request:', {
-      name: file.name,
-      type: file.type,
-      size: file.size,
-      mediaType,
-    });
-
-    // Convert File to Node.js readable stream
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    const readable = stream.Readable.from(buffer);
-
-    console.log('📤 Starting Cloudinary upload...');
-
-    const uploadResult: any = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          resource_type: 'auto', // ✅ auto handles both image/video
-          folder: 'novamax/ads',
-          use_filename: true,
-          unique_filename: true,
-        },
-        (error, result) => {
-          if (error) {
-            console.error('❌ Cloudinary upload error:', error);
-            return reject(error);
-          }
-          console.log('✅ Cloudinary result received.');
-          resolve(result);
-        }
+    if (!sellerId || !title || !category || !mediaType) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
       );
-
-      readable.on('data', (chunk) => {
-        console.log(`⬆️ Uploading chunk of ${chunk.length} bytes...`);
-      });
-
-      readable.on('end', () => {
-        console.log('📦 Finished streaming to Cloudinary.');
-      });
-
-      readable.on('error', (err) => {
-        console.error('❌ Readable stream error:', err);
-        reject(err);
-      });
-
-      readable.pipe(uploadStream);
-    });
-
-    if (!uploadResult || !uploadResult.secure_url) {
-      console.error('❌ Cloudinary returned invalid response:', uploadResult);
-      return NextResponse.json({ error: 'Invalid Cloudinary response' }, { status: 500 });
     }
 
-    console.log('✅ Cloudinary upload success:', uploadResult.secure_url);
+    // Create signature for secure client upload
+    const timestamp = Math.round(Date.now() / 1000);
+    const paramsToSign = {
+      timestamp,
+      folder: "novamax/ads",
+      resource_type: "auto",
+    };
 
-    const cleanedUrl = uploadResult.secure_url.replace(/\/v\d+\//, '/');
+    const signature = cloudinary.utils.api_sign_request(
+      paramsToSign,
+      process.env.CLOUDINARY_API_SECRET!
+    );
 
-    // Save ad in DB
-    const newAd = await Ad.create({
-      sellerId,
-      title,
-      description,
-      mediaUrl: cleanedUrl,
-      mediaType,
-      thumbnailUrl: cleanedUrl,
-      category,
-      country,
+    return NextResponse.json({
+      timestamp,
+      signature,
+      apiKey: process.env.CLOUDINARY_API_KEY!,
+      cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!,
+      folder: "novamax/ads",
     });
-
-    console.log('🗄️ Ad saved to database:', newAd._id);
-
-    return NextResponse.json({ ad: newAd }, { status: 201 });
-  } catch (error: any) {
-    console.error('🔥 Unexpected upload error:', error);
+  } catch (err: any) {
+    console.error("❌ Error creating Cloudinary signature:", err);
     return NextResponse.json(
-      {
-        error: 'Upload failed',
-        details: error.message || JSON.stringify(error),
-      },
+      { error: "Failed to create signature", details: err.message },
       { status: 500 }
     );
   }
 }
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+// ----------- Save uploaded ad metadata -----------
+export async function PUT(req: NextRequest) {
+  await dbConnect();
+  try {
+    const body = await req.json();
+    const { sellerId, title, description, category, country, mediaType, mediaUrl } = body;
+
+    if (!mediaUrl) {
+      return NextResponse.json({ error: "Missing media URL" }, { status: 400 });
+    }
+
+    const ad = await Ad.create({
+      sellerId,
+      title,
+      description,
+      category,
+      country,
+      mediaType,
+      mediaUrl,
+      thumbnailUrl: mediaUrl,
+    });
+
+    console.log("✅ Ad saved to DB:", ad._id);
+    return NextResponse.json({ ad });
+  } catch (err: any) {
+    console.error("🔥 Error saving ad:", err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}

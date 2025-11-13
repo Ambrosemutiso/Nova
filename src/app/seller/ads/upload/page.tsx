@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '@/app/context/AuthContext';
 import { Eye, Plus } from 'lucide-react';
@@ -13,18 +13,17 @@ export default function SellerAdsPage() {
   const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
 
-  // Upload states
+  // Upload form state
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
   const [mediaFile, setMediaFile] = useState<File | null>(null);
-  const [mediaType, setMediaType] = useState<'video' | 'image'>('video');
   const [previewUrl, setPreviewUrl] = useState('');
-  const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const [message, setMessage] = useState('');
 
-  // 🔹 Fetch ads
+  // Fetch ads
   useEffect(() => {
     if (!sellerId) return;
     const fetchAds = async () => {
@@ -32,7 +31,7 @@ export default function SellerAdsPage() {
         const res = await axios.get(`/api/ads/list?sellerId=${sellerId}`);
         setAds(res.data.sellerAds || []);
       } catch (err) {
-        console.error('❌ Failed to fetch ads', err);
+        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -40,71 +39,84 @@ export default function SellerAdsPage() {
     fetchAds();
   }, [sellerId]);
 
-  // 🔹 Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.length) return;
-
-    const file = e.target.files[0];
-
-    // Validate file type
-    if (!file.type.startsWith('video/')) {
-      setMessage('⚠️ Only video files are allowed.');
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('video/') && !file.type.startsWith('image/')) {
+      setMessage('⚠️ Only video or image files allowed.');
       return;
     }
-
-    // Validate file size (max 50 MB)
-    if (file.size > 50 * 1024 * 1024) {
-      setMessage('⚠️ File too large. Max 50MB allowed.');
-      return;
-    }
-
     setMediaFile(file);
-    setMediaType('video');
     setPreviewUrl(URL.createObjectURL(file));
     setMessage('');
   };
 
-  // 🔹 Upload ad using FormData
   const handleUpload = async () => {
-    if (!mediaFile || !title || !category || !sellerId) {
-      setMessage('⚠️ Please fill all required fields.');
+    if (!sellerId || !mediaFile || !title || !category) {
+      setMessage('⚠️ Fill all required fields.');
       return;
     }
 
-    setIsUploading(true);
-    setProgress(0);
-    setMessage('');
-
     try {
-      const formData = new FormData();
-      formData.append('sellerId', sellerId);
-      formData.append('title', title);
-      formData.append('description', description);
-      formData.append('category', category);
-      formData.append('mediaType', mediaType);
-      formData.append('country', user?.country || 'Unknown');
-      formData.append('file', mediaFile);
+      setIsUploading(true);
+      setProgress(0);
+      setMessage('Requesting upload signature...');
 
-      const res = await axios.post('/api/ads/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        onUploadProgress: (progressEvent) => {
-          if (progressEvent.total) {
-            setProgress(Math.round((progressEvent.loaded * 100) / progressEvent.total));
-          }
-        },
+      // 1️⃣ Get signature from API
+      const sigRes = await axios.post('/api/ads/upload', {
+        sellerId,
+        title,
+        description,
+        category,
+        country: user?.country || 'Unknown',
+        mediaType: mediaFile.type.startsWith('video/') ? 'video' : 'image',
       });
 
-      if (res.status === 201 && res.data.ad) {
-        setMessage('✅ Ad uploaded successfully!');
-        setShowUpload(false);
-        setAds((prev) => [res.data.ad, ...prev]); // refresh ads instantly
+      const { timestamp, signature, apiKey, cloudName, folder } = sigRes.data;
+
+      // 2️⃣ Upload directly to Cloudinary
+      const formData = new FormData();
+      formData.append('file', mediaFile);
+      formData.append('api_key', apiKey);
+      formData.append('timestamp', timestamp);
+      formData.append('signature', signature);
+      formData.append('folder', folder);
+
+      const cloudRes = await axios.post(
+        `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
+        formData,
+        {
+          onUploadProgress: (evt) => {
+            if (evt.total) {
+              setProgress(Math.round((evt.loaded * 100) / evt.total));
+            }
+          },
+        }
+      );
+
+      const mediaUrl = cloudRes.data.secure_url;
+      setMessage('✅ Uploaded to Cloudinary. Saving ad...');
+
+      // 3️⃣ Save ad to DB
+      const saveRes = await axios.put('/api/ads/upload', {
+        sellerId,
+        title,
+        description,
+        category,
+        country: user?.country || 'Unknown',
+        mediaType: mediaFile.type.startsWith('video/') ? 'video' : 'image',
+        mediaUrl,
+      });
+
+      if (saveRes.data.ad) {
+        setAds((prev) => [saveRes.data.ad, ...prev]);
+        setMessage('✅ Ad created successfully!');
         resetForm();
-      } else {
-        setMessage('❌ Upload failed.');
+        setShowUpload(false);
       }
     } catch (err: any) {
-      console.error('❌ Upload error:', err);
-      setMessage('❌ Something went wrong during upload.');
+      console.error('Upload error:', err);
+      setMessage('❌ Upload failed. Check console.');
     } finally {
       setIsUploading(false);
     }
@@ -145,23 +157,11 @@ export default function SellerAdsPage() {
 
           {/* Ads List */}
           {ads.map((ad) => (
-            <div
-              key={ad._id}
-              className="relative aspect-[9/16] rounded-lg overflow-hidden bg-black"
-            >
+            <div key={ad._id} className="relative aspect-[9/16] rounded-lg overflow-hidden bg-black">
               {ad.mediaType === 'video' ? (
-                <video
-                  src={ad.mediaUrl}
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover"
-                />
+                <video src={ad.mediaUrl} muted playsInline className="w-full h-full object-cover" />
               ) : (
-                <img
-                  src={ad.mediaUrl}
-                  alt={ad.title}
-                  className="w-full h-full object-cover"
-                />
+                <img src={ad.mediaUrl} alt={ad.title} className="w-full h-full object-cover" />
               )}
               <div className="absolute bottom-2 left-2 flex items-center text-white text-sm bg-black/50 px-2 py-0.5 rounded-full">
                 <Eye className="w-4 h-4 mr-1" />
@@ -183,55 +183,26 @@ export default function SellerAdsPage() {
               ✕
             </button>
 
-            <h2 className="text-lg font-semibold mb-3 text-gray-800">
-              Upload New Ad
-            </h2>
+            <h2 className="text-lg font-semibold mb-3 text-gray-800">Upload New Ad</h2>
 
-            <input
-              type="text"
-              placeholder="Ad Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full border p-2 rounded mb-2"
-            />
-            <textarea
-              placeholder="Description (optional)"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full border p-2 rounded mb-2"
-              rows={2}
-            />
-            <input
-              type="text"
-              placeholder="Category"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full border p-2 rounded mb-2"
-            />
-
-            <input
-              type="file"
-              accept="video/*"
-              onChange={handleFileChange}
-              className="mb-2"
-            />
+            <input type="text" placeholder="Ad Title" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full border p-2 rounded mb-2" />
+            <textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} className="w-full border p-2 rounded mb-2" rows={2} />
+            <input type="text" placeholder="Category" value={category} onChange={(e) => setCategory(e.target.value)} className="w-full border p-2 rounded mb-2" />
+            <input type="file" accept="video/*,image/*" onChange={handleFileChange} className="mb-2" />
 
             {previewUrl && (
               <div className="mt-2 rounded-lg overflow-hidden">
-                <video
-                  src={previewUrl}
-                  controls
-                  className="w-full rounded-lg"
-                />
+                {mediaFile?.type.startsWith('video/') ? (
+                  <video src={previewUrl} controls className="w-full rounded-lg" />
+                ) : (
+                  <img src={previewUrl} className="w-full rounded-lg" />
+                )}
               </div>
             )}
 
             {isUploading && (
               <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-orange-500 h-2 rounded-full transition-all"
-                  style={{ width: `${progress}%` }}
-                />
+                <div className="bg-orange-500 h-2 rounded-full transition-all" style={{ width: `${progress}%` }} />
               </div>
             )}
 
@@ -239,17 +210,13 @@ export default function SellerAdsPage() {
               onClick={handleUpload}
               disabled={isUploading}
               className={`w-full mt-4 py-2 rounded-lg text-white font-semibold ${
-                isUploading
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-orange-500 hover:bg-orange-600'
+                isUploading ? 'bg-gray-400 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-600'
               }`}
             >
               {isUploading ? `Uploading... ${progress}%` : 'Upload Ad'}
             </button>
 
-            {message && (
-              <p className="text-center text-sm mt-2 text-gray-600">{message}</p>
-            )}
+            {message && <p className="text-center text-sm mt-2 text-gray-600">{message}</p>}
           </div>
         </div>
       )}
