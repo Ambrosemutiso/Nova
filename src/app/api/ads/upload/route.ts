@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import cloudinary from '@/lib/cloudinary';
+import { v2 as cloudinary } from 'cloudinary';
 import { dbConnect } from '@/lib/dbConnect';
 import Ad from '@/app/models/Ads';
 import stream from 'stream';
 
 export const runtime = 'nodejs';
+cloudinary.config({
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export async function POST(req: NextRequest) {
   await dbConnect();

@@ -87,7 +87,6 @@ export default function SellerAdsPage() {
 
       const res = await axios.post('/api/ads/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 120000,
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total) {
             setProgress(Math.round((progressEvent.loaded * 100) / progressEvent.total));
