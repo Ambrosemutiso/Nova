@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '@/app/context/AuthContext';
 import { Eye, Plus } from 'lucide-react';
@@ -12,19 +12,19 @@ export default function SellerAdsPage() {
   const [ads, setAds] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
-
-  // Upload states
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaType, setMediaType] = useState<'video' | 'image'>('video');
   const [previewUrl, setPreviewUrl] = useState('');
-  const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
 
-  // 🔹 Fetch ads
+  const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
+
+  // Fetch seller ads
   useEffect(() => {
     if (!sellerId) return;
     const fetchAds = async () => {
@@ -32,7 +32,7 @@ export default function SellerAdsPage() {
         const res = await axios.get(`/api/ads/list?sellerId=${sellerId}`);
         setAds(res.data.sellerAds || []);
       } catch (err) {
-        console.error('❌ Failed to fetch ads', err);
+        console.error('❌ Fetch ads error', err);
       } finally {
         setLoading(false);
       }
@@ -40,83 +40,121 @@ export default function SellerAdsPage() {
     fetchAds();
   }, [sellerId]);
 
-  // 🔹 Handle file selection
+  // Autoplay videos when visible
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const video = entry.target as HTMLVideoElement;
+          if (entry.isIntersecting) {
+            video.play().catch(() => {});
+          } else {
+            video.pause();
+          }
+        });
+      },
+      { threshold: 0.6 }
+    );
+
+    Object.values(videoRefs.current).forEach((v) => {
+      if (v) observer.observe(v);
+    });
+
+    return () => observer.disconnect();
+  }, [ads]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.length) return;
-
-    const file = e.target.files[0];
-
-    // Validate file type
-    if (!file.type.startsWith('video/')) {
-      setMessage('⚠️ Only video files are allowed.');
-      return;
-    }
-
-    // Validate file size (max 50 MB)
-    if (file.size > 50 * 1024 * 1024) {
-      setMessage('⚠️ File too large. Max 50MB allowed.');
-      return;
-    }
-
+    const file = e.target.files?.[0];
+    if (!file) return;
     setMediaFile(file);
-    setMediaType('video');
+    setMediaType(file.type.startsWith('video') ? 'video' : 'image');
     setPreviewUrl(URL.createObjectURL(file));
-    setMessage('');
   };
 
-  // 🔹 Upload ad using FormData
   const handleUpload = async () => {
-    if (!mediaFile || !title || !category || !sellerId) {
+    if (!sellerId || !mediaFile || !title || !category) {
       setMessage('⚠️ Please fill all required fields.');
       return;
     }
 
     setIsUploading(true);
-    setProgress(0);
     setMessage('');
 
     try {
-      const formData = new FormData();
-      formData.append('sellerId', sellerId);
-      formData.append('title', title);
-      formData.append('description', description);
-      formData.append('category', category);
-      formData.append('mediaType', mediaType);
-      formData.append('country', user?.country || 'Unknown');
-      formData.append('file', mediaFile);
+      // 1️⃣ Get signed upload data
+      const { data: signData } = await axios.post('/api/ads/upload');
+      const { signature, timestamp, cloudName, apiKey, folder } = signData;
 
-      const res = await axios.post('/api/ads/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        onUploadProgress: (progressEvent) => {
-          if (progressEvent.total) {
-            setProgress(Math.round((progressEvent.loaded * 100) / progressEvent.total));
-          }
-        },
+      // 2️⃣ Upload directly to Cloudinary
+      const formData = new FormData();
+      formData.append('file', mediaFile);
+      formData.append('api_key', apiKey);
+      formData.append('timestamp', timestamp);
+      formData.append('signature', signature);
+      formData.append('folder', folder);
+
+      const uploadRes = await axios.post(
+        `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
+        formData,
+        {
+          onUploadProgress: (p) => {
+            if (p.total) setProgress(Math.round((p.loaded * 100) / p.total));
+          },
+        }
+      );
+
+      const mediaUrl = uploadRes.data.secure_url;
+
+      // 3️⃣ Save ad record
+      const saveRes = await axios.post('/api/ads/save', {
+        sellerId,
+        title,
+        description,
+        category,
+        mediaUrl,
+        mediaType,
+        country: user?.country || 'Unknown',
       });
 
-      if (res.status === 201 && res.data.ad) {
+      if (saveRes.status === 201) {
         setMessage('✅ Ad uploaded successfully!');
         setShowUpload(false);
-        setAds((prev) => [res.data.ad, ...prev]); // refresh ads instantly
-        resetForm();
-      } else {
-        setMessage('❌ Upload failed.');
-      }
-    } catch (err: any) {
+        setAds((prev) => [saveRes.data.ad, ...prev]);
+      } else throw new Error('Failed to save ad');
+    } catch (err) {
       console.error('❌ Upload error:', err);
-      setMessage('❌ Something went wrong during upload.');
+      setMessage('❌ Upload failed.');
     } finally {
       setIsUploading(false);
+      setProgress(0);
     }
   };
 
-  const resetForm = () => {
-    setTitle('');
-    setDescription('');
-    setCategory('');
-    setMediaFile(null);
-    setPreviewUrl('');
-    setProgress(0);
+  const handleFullscreenPlay = async (id: string) => {
+    const video = videoRefs.current[id];
+    if (!video) return;
+
+    Object.values(videoRefs.current).forEach((v) => {
+      if (v && v !== video) v.pause();
+    });
+
+    try {
+      if (video.requestFullscreen) await video.requestFullscreen();
+      else if ((video as any).webkitEnterFullscreen) (video as any).webkitEnterFullscreen();
+
+      video.muted = false;
+      video.controls = true;
+      await video.play();
+
+      const exitHandler = () => {
+        video.controls = false;
+        video.muted = true;
+      };
+      video.addEventListener('fullscreenchange', exitHandler, { once: true });
+      video.addEventListener('webkitendfullscreen', exitHandler, { once: true });
+    } catch (err) {
+      console.error('⚠️ Fullscreen error:', err);
+    }
   };
 
   if (!isSeller)
@@ -134,7 +172,7 @@ export default function SellerAdsPage() {
         <p className="text-center text-gray-500">Loading ads...</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-          {/* Create Ad Tile */}
+          {/* Upload Button */}
           <div
             onClick={() => setShowUpload(true)}
             className="aspect-[9/16] bg-gradient-to-br from-orange-400 to-pink-500 flex flex-col justify-center items-center rounded-lg cursor-pointer hover:opacity-90 transition"
@@ -143,26 +181,29 @@ export default function SellerAdsPage() {
             <p className="text-white mt-2 font-semibold">Create Ad</p>
           </div>
 
-          {/* Ads List */}
+          {/* Ads */}
           {ads.map((ad) => (
             <div
               key={ad._id}
-              className="relative aspect-[9/16] rounded-lg overflow-hidden bg-black"
+              className="relative aspect-[9/16] rounded-lg overflow-hidden bg-black cursor-pointer"
+              onClick={() => ad.mediaType === 'video' && handleFullscreenPlay(ad._id)}
             >
               {ad.mediaType === 'video' ? (
                 <video
+                  ref={(el) => {
+                    videoRefs.current[ad._id] = el;
+                  }}
                   src={ad.mediaUrl}
                   muted
                   playsInline
+                  loop
+                  preload="metadata"
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <img
-                  src={ad.mediaUrl}
-                  alt={ad.title}
-                  className="w-full h-full object-cover"
-                />
+                <img src={ad.mediaUrl} alt={ad.title} className="w-full h-full object-cover" />
               )}
+
               <div className="absolute bottom-2 left-2 flex items-center text-white text-sm bg-black/50 px-2 py-0.5 rounded-full">
                 <Eye className="w-4 h-4 mr-1" />
                 {ad.views || 0}
@@ -183,9 +224,7 @@ export default function SellerAdsPage() {
               ✕
             </button>
 
-            <h2 className="text-lg font-semibold mb-3 text-gray-800">
-              Upload New Ad
-            </h2>
+            <h2 className="text-lg font-semibold mb-3 text-gray-800">Upload New Ad</h2>
 
             <input
               type="text"
@@ -208,21 +247,20 @@ export default function SellerAdsPage() {
               onChange={(e) => setCategory(e.target.value)}
               className="w-full border p-2 rounded mb-2"
             />
-
             <input
               type="file"
-              accept="video/*"
+              accept="video/*,image/*"
               onChange={handleFileChange}
               className="mb-2"
             />
 
             {previewUrl && (
               <div className="mt-2 rounded-lg overflow-hidden">
-                <video
-                  src={previewUrl}
-                  controls
-                  className="w-full rounded-lg"
-                />
+                {mediaType === 'video' ? (
+                  <video src={previewUrl} controls className="w-full rounded-lg" />
+                ) : (
+                  <img src={previewUrl} className="w-full rounded-lg" />
+                )}
               </div>
             )}
 
@@ -239,9 +277,7 @@ export default function SellerAdsPage() {
               onClick={handleUpload}
               disabled={isUploading}
               className={`w-full mt-4 py-2 rounded-lg text-white font-semibold ${
-                isUploading
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-orange-500 hover:bg-orange-600'
+                isUploading ? 'bg-gray-400 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-600'
               }`}
             >
               {isUploading ? `Uploading... ${progress}%` : 'Upload Ad'}
