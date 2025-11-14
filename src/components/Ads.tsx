@@ -306,7 +306,7 @@ export default function AdsFeedPage() {
 
   // ---------------- JSX ----------------
   return (
-    <div className="relative w-full h-screen overflow-y-scroll snap-y snap-mandatory bg-black z-[9999]">
+    <div className="relative w-full h-screen overflow-hidden snap-y snap-mandatory bg-black z-[9999]">
       <button
       onClick={() => router.back()}
       className="fixed top-4 left-4 z-[99999] p-2 rounded-full bg-black/40 backdrop-blur 
@@ -351,7 +351,7 @@ export default function AdsFeedPage() {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="absolute bottom-0 left-0 w-full p-6 pb-10 z-[30] bg-gradient-to-t from-black/80 to-transparent text-white"
+            className="absolute bottom-0 left-0 w-full p-6 pb-[calc(16px+env(safe-area-inset-bottom))] z-[30] bg-gradient-to-t from-black/80 to-transparent text-white"
           >
             <h2 className="text-xl font-bold">{ad.title}</h2>
             {ad.description && <p className="text-gray-300 text-sm mt-1 line-clamp-2">{ad.description}</p>}
@@ -359,7 +359,7 @@ export default function AdsFeedPage() {
           </motion.div>
 
           {/* Reactions */}
-          <div className="absolute right-4 bottom-11 flex flex-col gap-6 text-white">
+          <div className="absolute right-4 bottom-28 pb-[env(safe-area-inset-bottom)] flex flex-col gap-6 text-white">
             <motion.button
               whileTap={{ scale: 1.2 }}
               onClick={(e) => { e.stopPropagation(); toggleLike(ad, true); }}

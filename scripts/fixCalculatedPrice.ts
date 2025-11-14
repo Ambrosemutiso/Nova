@@ -1,63 +1,61 @@
-// injectMissingProductFields.ts
+// injectMissingAdFields.ts
 import * as dotenv from "dotenv";
 dotenv.config();
 
 import mongoose from "mongoose";
-import { dbConnect } from "@/lib/dbConnect";
+import { dbConnect } from "../lib/dbConnect";
 
-// Define a minimal product interface for typing
-interface ProductDoc {
+interface AdDoc {
   _id: mongoose.Types.ObjectId;
+  likes?: string[];
+  comments?: any[];
+  shares?: number;
   views?: number;
-  visits?: number;
-  bounce?: number;
 }
 
-async function injectMissingProductFields() {
+async function injectMissingAdFields() {
   try {
     await dbConnect();
 
     const db = mongoose.connection.db;
     if (!db) throw new Error("Database connection not established.");
 
-    const collection = db.collection<ProductDoc>("products");
-    console.log("🔍 Checking 'products' collection for missing fields...");
+    const collection = db.collection<AdDoc>("ads");
+    console.log("🔍 Checking 'ads' collection for missing fields...");
 
-    // Step 1: find products missing views, visits, or bounce
+    // Step 1: find ads missing ANY of the new fields
     const missingDocs = await collection
       .find({
         $or: [
-          { views: { $exists: false } },
-          { visits: { $exists: false } },
-          { bounce: { $exists: false } },
+          { likes: { $exists: false } },
+          { comments: { $exists: false } },
+          { shares: { $exists: false } },
         ],
       })
       .toArray();
 
-    console.log(`🧩 Found ${missingDocs.length} products missing metrics.`);
+    console.log(`🧩 Found ${missingDocs.length} ads missing new fields.`);
 
-    // Step 2: patch each missing product
+    // Step 2: Update each doc with missing fields ONLY
     for (const doc of missingDocs) {
-      const update: Partial<ProductDoc> = {};
+      const update: Partial<AdDoc> = {};
 
-      if (doc.views === undefined)
-        update.views = Math.floor(Math.random() * 500 + 50);
-      if (doc.visits === undefined)
-        update.visits = Math.floor(Math.random() * 300 + 30);
-      if (doc.bounce === undefined)
-        update.bounce = Math.floor(Math.random() * 60 + 20);
+      if (doc.likes === undefined) update.likes = [];
+      if (doc.comments === undefined) update.comments = [];
+      if (doc.shares === undefined) update.shares = 0;
+      if (doc.views === undefined) update.views = 0; // optional safe default
 
       await collection.updateOne({ _id: doc._id }, { $set: update });
 
-      console.log(`✅ Updated product ${doc._id} with fields:`, update);
+      console.log(`✅ Updated ad ${doc._id} with:`, update);
     }
 
-    console.log("🎯 All missing product metrics have been successfully patched!");
+    console.log("🎯 All missing ad fields have been successfully patched!");
     mongoose.connection.close();
   } catch (err) {
-    console.error("❌ Failed to inject missing product fields:", err);
+    console.error("❌ Failed to inject missing ad fields:", err);
     mongoose.connection.close();
   }
 }
 
-injectMissingProductFields();
+injectMissingAdFields();

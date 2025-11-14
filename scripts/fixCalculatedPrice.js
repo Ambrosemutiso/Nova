@@ -36,12 +36,12 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// injectMissingProductFields.ts
+// injectMissingAdFields.ts
 var dotenv = require("dotenv");
 dotenv.config();
 var mongoose_1 = require("mongoose");
 var dbConnect_1 = require("../lib/dbConnect");
-function injectMissingProductFields() {
+function injectMissingAdFields() {
     return __awaiter(this, void 0, void 0, function () {
         var db, collection, missingDocs, _i, missingDocs_1, doc, update, err_1;
         return __generator(this, function (_a) {
@@ -54,47 +54,49 @@ function injectMissingProductFields() {
                     db = mongoose_1.default.connection.db;
                     if (!db)
                         throw new Error("Database connection not established.");
-                    collection = db.collection("products");
-                    console.log("🔍 Checking 'products' collection for missing fields...");
+                    collection = db.collection("ads");
+                    console.log("🔍 Checking 'ads' collection for missing fields...");
                     return [4 /*yield*/, collection
                             .find({
                             $or: [
-                                { views: { $exists: false } },
-                                { visits: { $exists: false } },
-                                { bounce: { $exists: false } },
+                                { likes: { $exists: false } },
+                                { comments: { $exists: false } },
+                                { shares: { $exists: false } },
                             ],
                         })
                             .toArray()];
                 case 2:
                     missingDocs = _a.sent();
-                    console.log("\uD83E\uDDE9 Found ".concat(missingDocs.length, " products missing metrics."));
+                    console.log("\uD83E\uDDE9 Found ".concat(missingDocs.length, " ads missing new fields."));
                     _i = 0, missingDocs_1 = missingDocs;
                     _a.label = 3;
                 case 3:
                     if (!(_i < missingDocs_1.length)) return [3 /*break*/, 6];
                     doc = missingDocs_1[_i];
                     update = {};
+                    if (doc.likes === undefined)
+                        update.likes = [];
+                    if (doc.comments === undefined)
+                        update.comments = [];
+                    if (doc.shares === undefined)
+                        update.shares = 0;
                     if (doc.views === undefined)
-                        update.views = Math.floor(Math.random() * 500 + 50);
-                    if (doc.visits === undefined)
-                        update.visits = Math.floor(Math.random() * 300 + 30);
-                    if (doc.bounce === undefined)
-                        update.bounce = Math.floor(Math.random() * 60 + 20);
+                        update.views = 0; // optional safe default
                     return [4 /*yield*/, collection.updateOne({ _id: doc._id }, { $set: update })];
                 case 4:
                     _a.sent();
-                    console.log("\u2705 Updated product ".concat(doc._id, " with fields:"), update);
+                    console.log("\u2705 Updated ad ".concat(doc._id, " with:"), update);
                     _a.label = 5;
                 case 5:
                     _i++;
                     return [3 /*break*/, 3];
                 case 6:
-                    console.log("🎯 All missing product metrics have been successfully patched!");
+                    console.log("🎯 All missing ad fields have been successfully patched!");
                     mongoose_1.default.connection.close();
                     return [3 /*break*/, 8];
                 case 7:
                     err_1 = _a.sent();
-                    console.error("❌ Failed to inject missing product fields:", err_1);
+                    console.error("❌ Failed to inject missing ad fields:", err_1);
                     mongoose_1.default.connection.close();
                     return [3 /*break*/, 8];
                 case 8: return [2 /*return*/];
@@ -102,4 +104,4 @@ function injectMissingProductFields() {
         });
     });
 }
-injectMissingProductFields();
+injectMissingAdFields();
