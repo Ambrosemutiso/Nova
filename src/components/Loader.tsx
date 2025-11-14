@@ -6,7 +6,7 @@ import Image from 'next/image';
 export default function Loader() {
   return (
     <motion.div
-      className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-orange-50 via-orange-100 to-orange-200 relative overflow-hidden"
+      className="flex flex-col z-[9999] items-center justify-center min-h-screen bg-gradient-to-b from-orange-50 via-orange-100 to-orange-200 relative overflow-hidden"
       initial={{ opacity: 1 }}
       animate={{ opacity: 0 }}
       transition={{ delay: 3.5, duration: 1.2 }}

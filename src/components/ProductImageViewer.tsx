@@ -130,12 +130,11 @@ const ProductImageViewer = ({
           </div>
         ))}
       </div>
-
       {/* Modal View */}
       {zoomedImage && (
-        <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex flex-col items-center justify-center">
+        <div className="fixed inset-0 bg-black bg-opacity-90 z-[9999] flex flex-col items-center justify-center">
           <button
-            className="absolute top-4 right-4 text-white z-50"
+            className="absolute top-4 right-4 text-white z-[9999]"
             onClick={() => setZoomedImage(null)}
           >
             <X size={28} />

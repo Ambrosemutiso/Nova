@@ -26,6 +26,7 @@ const LogisticsSchema = new mongoose.Schema(
       type: String,
       default: 'logistics',
     },
+    status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' },
     date: {
       type: Date,
       default: Date.now,
