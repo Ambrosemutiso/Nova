@@ -4,8 +4,20 @@ import { useEffect, useState, useRef } from 'react';
 import { FaRegHeart, FaHeart, FaRegCommentAlt, FaShare } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/app/context/AuthContext';
+import { ChevronLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-type Comment = { userId: string; text: string };
+// ---------------- TYPES ----------------
+type Comment = {
+  _id: string;
+  userId: string;
+  username: string;
+  avatar: string;
+  text: string;
+  createdAt: string;
+  likes: string[];
+  replies?: Comment[];
+};
 
 type Ad = {
   _id: string;
@@ -16,32 +28,52 @@ type Ad = {
   sellerId: string;
   category?: string;
   views: number;
-  likes: string[]; // array of userIds
+  likes: string[];
   comments: Comment[];
   shares: number;
 };
 
+// ---------------- UTILS ----------------
+function timeAgo(dateString: string) {
+  const seconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
+  const intervals: any = {
+    year: 31536000,
+    month: 2592000,
+    week: 604800,
+    day: 86400,
+    hour: 3600,
+    minute: 60,
+  };
+  for (let key in intervals) {
+    const interval = Math.floor(seconds / intervals[key]);
+    if (interval >= 1) return interval + key[0];
+  }
+  return 'now';
+}
+
 export default function AdsFeedPage() {
   const { user } = useAuth();
-  const userId = user?._id ?? ''; // always a string
+  const userId = user?._id ?? '';
+  const router = useRouter();
 
   const [ads, setAds] = useState<Ad[]>([]);
   const [commentDrawer, setCommentDrawer] = useState<Ad | null>(null);
   const [shareDrawer, setShareDrawer] = useState<Ad | null>(null);
   const [commentText, setCommentText] = useState('');
   const [heartBurst, setHeartBurst] = useState<string | null>(null);
+  const [replyTo, setReplyTo] = useState<Comment | null>(null);
 
-  // allow null entries while mounting/unmounting
   const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
   const lastTapRef = useRef<number>(0);
 
-  // format numbers
   const shortNum = (num: number) =>
-    num >= 1_000_000 ? (num / 1_000_000).toFixed(1) + 'm'
-      : num >= 1000 ? (num / 1000).toFixed(1) + 'k'
+    num >= 1_000_000
+      ? (num / 1_000_000).toFixed(1) + 'm'
+      : num >= 1000
+      ? (num / 1000).toFixed(1) + 'k'
       : num.toString();
 
-  // fetch ads and normalize fields
+  // ---------------- FETCH ADS ----------------
   useEffect(() => {
     (async () => {
       try {
@@ -49,7 +81,6 @@ export default function AdsFeedPage() {
         const data = await res.json();
         const merged = [...(data.sellerAds || []), ...(data.otherAds || [])];
 
-        // Normalize each ad to ensure types are present
         const normalized: Ad[] = merged.map((a: any) => ({
           _id: String(a._id),
           title: String(a.title ?? ''),
@@ -61,7 +92,27 @@ export default function AdsFeedPage() {
           views: Number(a.views ?? 0),
           likes: Array.isArray(a.likes) ? a.likes.filter(Boolean).map(String) : [],
           comments: Array.isArray(a.comments)
-            ? a.comments.map((c: any) => ({ userId: String(c.userId ?? ''), text: String(c.text ?? '') }))
+            ? a.comments.map((c: any) => ({
+                _id: String(c._id ?? 'temp-' + Date.now()),
+                userId: String(c.userId ?? ''),
+                username: c.username ?? 'Unknown',
+                avatar: c.avatar ?? 'https://via.placeholder.com/40',
+                text: String(c.text ?? ''),
+                createdAt: c.createdAt ?? new Date().toISOString(),
+                likes: Array.isArray(c.likes) ? c.likes.map(String) : [],
+                replies: Array.isArray(c.replies)
+                  ? c.replies.map((r: any) => ({
+                      _id: String(r._id ?? 'temp-' + Date.now()),
+                      userId: String(r.userId ?? ''),
+                      username: r.username ?? 'Unknown',
+                      avatar: r.avatar ?? 'https://via.placeholder.com/40',
+                      text: String(r.text ?? ''),
+                      createdAt: r.createdAt ?? new Date().toISOString(),
+                      likes: Array.isArray(r.likes) ? r.likes.map(String) : [],
+                      replies: [],
+                    }))
+                  : [],
+              }))
             : [],
           shares: Number(a.shares ?? 0),
         }));
@@ -73,133 +124,164 @@ export default function AdsFeedPage() {
     })();
   }, []);
 
-  // auto-play & view counting using IntersectionObserver
+  // ---------------- VIDEO OBSERVER ----------------
   useEffect(() => {
     if (!ads.length) return;
 
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        const el = entry.target as HTMLVideoElement;
-        if (!el) return;
-        const adId = el.dataset.id ?? '';
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const el = entry.target as HTMLVideoElement;
+          if (!el) return;
+          const adId = el.dataset.id ?? '';
 
-        if (entry.isIntersecting) {
-          // play and record view
-          el.play().catch(() => {});
-          // fire view increment (non-blocking)
-          fetch('/api/ads/list', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ adId, type: 'view' }),
-          }).catch(() => {});
-        } else {
-          el.pause();
-        }
-      });
-    }, { threshold: 0.6 });
+          if (entry.isIntersecting) {
+            el.play().catch(() => {});
+            fetch('/api/ads/list', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ adId, type: 'view' }),
+            }).catch(() => {});
+          } else {
+            el.pause();
+          }
+        });
+      },
+      { threshold: 0.6 }
+    );
 
-    // observe current refs
-    videoRefs.current.forEach((v) => {
-      if (v) observer.observe(v);
-    });
-
+    videoRefs.current.forEach((v) => v && observer.observe(v));
     return () => {
-      videoRefs.current.forEach((v) => {
-        if (v) observer.unobserve(v);
-      });
+      videoRefs.current.forEach((v) => v && observer.unobserve(v));
       observer.disconnect();
     };
   }, [ads]);
 
-  // toggle like (server + local UI)
+  // ---------------- LIKE ----------------
   const toggleLike = async (ad: Ad, withAnim = false) => {
-    const adId = ad._id;
+    if (!userId) return;
 
-    // guard: require userId to be non-empty when liking
-    if (!userId) {
-      console.warn('User not logged in: cannot like');
-      return;
-    }
-
-    // request
     fetch('/api/ads/list', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ adId, type: 'like', userId }),
+      body: JSON.stringify({ adId: ad._id, type: 'like', userId }),
     }).catch(() => {});
 
-    // local optimistic update
     setAds((prev) =>
-      prev.map((a) => {
-        if (a._id !== adId) return a;
-        const already = a.likes.includes(userId);
-        const newLikes = already ? a.likes.filter((id) => id !== userId) : [...a.likes, userId];
-        return { ...a, likes: newLikes };
-      })
+      prev.map((a) =>
+        a._id !== ad._id
+          ? a
+          : {
+              ...a,
+              likes: a.likes.includes(userId)
+                ? a.likes.filter((id) => id !== userId)
+                : [...a.likes, userId],
+            }
+      )
     );
 
     if (withAnim) {
-      setHeartBurst(adId);
+      setHeartBurst(ad._id);
       setTimeout(() => setHeartBurst(null), 600);
     }
   };
 
-  // double-tap like detection
+  // ---------------- DOUBLE-TAP ----------------
   const handleDoubleTap = (ad: Ad) => {
     const now = Date.now();
     const diff = now - lastTapRef.current;
-    if (diff < 350) {
-      // double-tap detected
-      if (!ad.likes.includes(userId)) toggleLike(ad, true);
-    }
+    if (diff < 350 && !ad.likes.includes(userId)) toggleLike(ad, true);
     lastTapRef.current = now;
   };
 
-  // submit comment
+  // ---------------- COMMENTS ----------------
   const submitComment = async () => {
     if (!commentDrawer) return;
-    if (!commentText.trim()) return;
+    const text = commentText.trim();
+    if (!text) return;
+
+    const newComment: Comment = {
+      _id: 'temp-' + Date.now(),
+      userId,
+      username: user?.name || 'You',
+      avatar: user?.image || 'https://via.placeholder.com/40',
+      text,
+      createdAt: new Date().toISOString(),
+      likes: [],
+      replies: [],
+    };
 
     const adId = commentDrawer._id;
-    // send
-    fetch('/api/ads/list', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ adId, type: 'comment', userId, commentText }),
-    }).catch(() => {});
 
-    // optimistic UI update
-    setAds((prev) =>
-      prev.map((a) =>
-        a._id === adId ? { ...a, comments: [...a.comments, { userId, text: commentText }] } : a
-      )
-    );
+    if (replyTo) {
+      setAds((prev) =>
+        prev.map((a) =>
+          a._id !== adId
+            ? a
+            : {
+                ...a,
+                comments: a.comments.map((c) =>
+                  c._id === replyTo._id ? { ...c, replies: [...(c.replies || []), newComment] } : c
+                ),
+              }
+        )
+      );
+    } else {
+      setAds((prev) =>
+        prev.map((a) =>
+          a._id === adId ? { ...a, comments: [...a.comments, newComment] } : a
+        )
+      );
+    }
 
     setCommentText('');
-  };
+    setReplyTo(null);
 
-  // sharing (native fallback)
-  const shareAd = async (platform: string, ad: Ad) => {
-    const adId = ad._id;
-    // increment share count server-side (non-blocking)
     fetch('/api/ads/list', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ adId, type: 'share', userId }),
+      body: JSON.stringify({
+        adId,
+        type: 'comment',
+        userId,
+        text,
+        replyTo: replyTo?._id || null,
+      }),
+    }).catch(() => {});
+  };
+
+  const toggleCommentLike = (commentId: string) => {
+    if (!userId || !commentDrawer) return;
+
+    setAds((prev) =>
+      prev.map((ad) => {
+        if (ad._id !== commentDrawer._id) return ad;
+        const updateComments = (comments: Comment[]): Comment[] =>
+          comments.map((c) => {
+            if (c._id === commentId) {
+              const liked = c.likes.includes(userId);
+              return { ...c, likes: liked ? c.likes.filter((id) => id !== userId) : [...c.likes, userId] };
+            }
+            if (c.replies && c.replies.length) return { ...c, replies: updateComments(c.replies) };
+            return c;
+          });
+        return { ...ad, comments: updateComments(ad.comments) };
+      })
+    );
+  };
+
+  const shareAd = async (platform: string, ad: Ad) => {
+    fetch('/api/ads/list', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ adId: ad._id, type: 'share', userId }),
     }).catch(() => {});
 
-    // Use native share if available
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: ad.title,
-          text: ad.description,
-          url: ad.mediaUrl,
-        });
+        await navigator.share({ title: ad.title, text: ad.description, url: ad.mediaUrl });
         return;
-      } catch (err) {
-        console.warn('Native share failed', err);
-      }
+      } catch {}
     }
 
     const url = encodeURIComponent(ad.mediaUrl);
@@ -211,45 +293,32 @@ export default function AdsFeedPage() {
         window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
         break;
       case 'instagram':
-        // Instagram web does not accept external share URLs; fallback to copy
-        try {
-          await navigator.clipboard.writeText(ad.mediaUrl);
-          alert('Link copied. Paste into Instagram to share.');
-        } catch {
-          alert('Copy link: ' + ad.mediaUrl);
-        }
-        break;
       case 'tiktok':
-        // No public sharer for TikTok — copy fallback
         try {
           await navigator.clipboard.writeText(ad.mediaUrl);
-          alert('Link copied. Share on TikTok using the app.');
-        } catch {
-          alert('Copy link: ' + ad.mediaUrl);
-        }
+          alert('Link copied! Share it in the app.');
+        } catch {}
         break;
       default:
         window.open(ad.mediaUrl, '_blank');
     }
   };
 
+  // ---------------- JSX ----------------
   return (
-    <div className="relative w-full h-screen overflow-y-scroll snap-y snap-mandatory bg-black">
+    <div className="relative w-full h-screen overflow-y-scroll snap-y snap-mandatory bg-black z-[9999]">
+      <button
+      onClick={() => router.back()}
+      className="fixed top-4 left-4 z-[99999] p-2 rounded-full bg-black/40 backdrop-blur 
+             text-white hover:bg-black/60 transition">
+              <ChevronLeft size={26} />
+              </button>
+
       {ads.map((ad, index) => (
-        <div
-          key={ad._id}
-          className="h-screen snap-start relative"
-          // detect double-tap anywhere on the card
-          onClick={() => handleDoubleTap(ad)}
-        >
-          {/* Media */}
+        <div key={ad._id} className="h-screen snap-start relative" onClick={() => handleDoubleTap(ad)}>
           {ad.mediaType === 'video' ? (
             <video
-              // proper ref callback returning void
-              ref={(el) => {
-                // ensure array length
-                videoRefs.current[index] = el;
-              }}
+              ref={(el) => { videoRefs.current[index] = el ?? null; }}
               data-id={ad._id}
               src={ad.mediaUrl}
               className="w-full h-full object-cover"
@@ -262,7 +331,7 @@ export default function AdsFeedPage() {
             <img src={ad.mediaUrl} alt={ad.title} className="w-full h-full object-cover" />
           )}
 
-          {/* Double-tap heart burst */}
+          {/* Heart animation */}
           <AnimatePresence>
             {heartBurst === ad._id && (
               <motion.div
@@ -277,31 +346,24 @@ export default function AdsFeedPage() {
             )}
           </AnimatePresence>
 
-          {/* bottom info */}
+          {/* Bottom info */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black/90 to-transparent text-white"
+            className="absolute bottom-0 left-0 w-full p-6 pb-10 z-[30] bg-gradient-to-t from-black/80 to-transparent text-white"
           >
             <h2 className="text-xl font-bold">{ad.title}</h2>
-            {ad.description ? (
-              <p className="text-gray-300 text-sm mt-1 line-clamp-2">{ad.description}</p>
-            ) : null}
-            {ad.category ? <p className="text-orange-400 mt-1">#{ad.category}</p> : null}
+            {ad.description && <p className="text-gray-300 text-sm mt-1 line-clamp-2">{ad.description}</p>}
+            {ad.category && <p className="text-orange-400 mt-1">#{ad.category}</p>}
           </motion.div>
 
-          {/* reactions column */}
-          <div className="absolute right-4 bottom-32 flex flex-col gap-6 text-white">
-            {/* like */}
+          {/* Reactions */}
+          <div className="absolute right-4 bottom-11 flex flex-col gap-6 text-white">
             <motion.button
               whileTap={{ scale: 1.2 }}
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleLike(ad, true);
-              }}
+              onClick={(e) => { e.stopPropagation(); toggleLike(ad, true); }}
               className="flex flex-col items-center p-3 bg-white/20 rounded-full"
-              aria-label={ad.likes.includes(userId) ? 'Unlike' : 'Like'}
             >
               {ad.likes.includes(userId) ? (
                 <motion.div animate={{ scale: [1, 1.25, 1] }} transition={{ duration: 0.3 }}>
@@ -313,29 +375,19 @@ export default function AdsFeedPage() {
               <span className="text-xs mt-1">{shortNum(ad.likes.length)}</span>
             </motion.button>
 
-            {/* comment */}
             <motion.button
               whileTap={{ scale: 1.1 }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setCommentDrawer(ad);
-              }}
+              onClick={(e) => { e.stopPropagation(); setCommentDrawer(ad); }}
               className="flex flex-col items-center p-3 bg-white/20 rounded-full"
-              aria-label="Comments"
             >
               <FaRegCommentAlt size={24} />
               <span className="text-xs mt-1">{shortNum(ad.comments.length)}</span>
             </motion.button>
 
-            {/* share */}
             <motion.button
               whileTap={{ scale: 1.1 }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setShareDrawer(ad);
-              }}
+              onClick={(e) => { e.stopPropagation(); setShareDrawer(ad); }}
               className="flex flex-col items-center p-3 bg-white/20 rounded-full"
-              aria-label="Share"
             >
               <FaShare size={24} />
               <span className="text-xs mt-1">{shortNum(ad.shares)}</span>
@@ -351,48 +403,45 @@ export default function AdsFeedPage() {
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
-            transition={{ type: 'spring', bounce: 0.2 }}
-            className="fixed bottom-0 left-0 w-full h-1/2 bg-white rounded-t-3xl p-4 z-[9999]"
+            transition={{ type: 'spring', bounce: 0.15 }}
+            className="fixed bottom-0 left-0 w-full h-[75vh] bg-white rounded-t-3xl z-[99999] flex flex-col"
           >
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-bold">Comments</h3>
-              <button onClick={() => setCommentDrawer(null)}>Close</button>
+            <div className="flex items-center justify-between px-5 py-3 border-b">
+              <h3 className="text-lg font-semibold">Comments</h3>
+              <button onClick={() => setCommentDrawer(null)} className="text-gray-500 text-sm">Close</button>
             </div>
 
-            <div className="mt-2 h-[60%] overflow-y-auto">
-              {commentDrawer.comments.length === 0 ? (
-                <p className="text-gray-500">No comments yet — be the first!</p>
-              ) : (
-                commentDrawer.comments.map((c, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.18 }}
-                    className="py-2 border-b"
-                  >
-                    <div className="text-sm font-semibold">{c.userId}</div>
-                    <div className="text-gray-700 text-sm">{c.text}</div>
-                  </motion.div>
-                ))
-              )}
+            {replyTo && (
+              <div className="px-5 py-2 text-sm bg-gray-100 flex items-center justify-between">
+                <p>Replying to <b>@{replyTo.username}</b></p>
+                <button onClick={() => setReplyTo(null)} className="text-xs text-gray-500">Cancel</button>
+              </div>
+            )}
+
+            <div className="flex-1 overflow-y-auto px-5 py-3 space-y-5">
+              {commentDrawer.comments.map((c) => (
+                <CommentItem
+                  key={c._id}
+                  comment={c}
+                  onReply={setReplyTo}
+                  onLike={toggleCommentLike}
+                  userId={userId}
+                />
+              ))}
             </div>
 
-            <div className="flex items-center gap-2 mt-3">
-              <input
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                placeholder="Write a comment..."
-                className="flex-1 border rounded-full px-4 py-2"
-              />
-              <button
-                onClick={() => {
-                  submitComment();
-                }}
-                className="bg-orange-500 text-white px-4 py-2 rounded-full"
-              >
-                Send
-              </button>
+            <div className="p-3 border-t bg-white">
+              <div className="flex items-center gap-2">
+                <input
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  placeholder="Add a comment..."
+                  className="flex-1 p-3 bg-gray-100 rounded-full outline-none"
+                />
+                <button onClick={submitComment} className="bg-orange-500 text-white px-4 py-2 rounded-full">
+                  Send
+                </button>
+              </div>
             </div>
           </motion.div>
         )}
@@ -414,42 +463,53 @@ export default function AdsFeedPage() {
             </div>
 
             <div className="grid grid-cols-4 gap-4 text-center">
-              <button
-                onClick={() => {
-                  if (shareDrawer) shareAd('facebook', shareDrawer);
-                }}
-                className="py-2"
-              >
-                Facebook
-              </button>
-              <button
-                onClick={() => {
-                  if (shareDrawer) shareAd('instagram', shareDrawer);
-                }}
-                className="py-2"
-              >
-                Instagram
-              </button>
-              <button
-                onClick={() => {
-                  if (shareDrawer) shareAd('tiktok', shareDrawer);
-                }}
-                className="py-2"
-              >
-                TikTok
-              </button>
-              <button
-                onClick={() => {
-                  if (shareDrawer) shareAd('whatsapp', shareDrawer);
-                }}
-                className="py-2"
-              >
-                WhatsApp
-              </button>
+              {['facebook', 'instagram', 'tiktok', 'whatsapp'].map((plat) => (
+                <button key={plat} className="py-2" onClick={() => shareDrawer && shareAd(plat, shareDrawer)}>
+                  {plat.charAt(0).toUpperCase() + plat.slice(1)}
+                </button>
+              ))}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+// ---------------- COMMENT ITEM ----------------
+function CommentItem({
+  comment,
+  onReply,
+  onLike,
+  userId
+}: {
+  comment: Comment;
+  onReply: (c: Comment) => void;
+  onLike: (id: string) => void;
+  userId: string;
+}) {
+  return (
+    <div className="flex gap-3">
+      <img src={comment.avatar} className="w-10 h-10 rounded-full object-cover" />
+      <div className="flex-1">
+        <div className="flex items-center gap-2">
+          <p className="font-semibold text-sm">@{comment.username}</p>
+          <p className="text-xs text-gray-500">{timeAgo(comment.createdAt)}</p>
+        </div>
+        <p className="text-sm mt-1">{comment.text}</p>
+        <div className="flex items-center gap-4 mt-2 text-xs">
+          <button onClick={() => onReply(comment)} className="text-gray-600">Reply</button>
+          {comment.replies?.length ? (
+            <button className="text-gray-600">View replies ({comment.replies.length})</button>
+          ) : null}
+        </div>
+      </div>
+      <div className="flex flex-col items-center text-red-500">
+        <button onClick={() => onLike(comment._id)}>
+          <FaHeart className={comment.likes.includes(userId) ? 'text-red-600' : 'text-gray-400'} size={18} />
+        </button>
+        <p className="text-xs text-gray-600">{comment.likes.length}</p>
+      </div>
     </div>
   );
 }
