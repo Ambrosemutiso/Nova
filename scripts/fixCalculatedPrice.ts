@@ -3,7 +3,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 import mongoose from "mongoose";
-import { dbConnect } from "../lib/dbConnect";
+import { dbConnect } from "@/lib/dbConnect";
 
 interface AdDoc {
   _id: mongoose.Types.ObjectId;
