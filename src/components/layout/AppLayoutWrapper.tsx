@@ -28,7 +28,15 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="animate-pulse bg-white p-5 rounded-xl shadow-sm">
+              <div className="w-14 h-14 bg-gray-200 rounded-full mb-4"></div>
+              <div className="h-4 bg-gray-200 rounded w-2/3 mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

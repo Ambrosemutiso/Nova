@@ -26,5 +26,6 @@ export interface Product {
   createdAt: string;
   updatedAt: string;
   averageRating: number;
+  currency: string;
   reviewCount: number;
 }
