@@ -22,21 +22,25 @@ export default function ProductCard({ product, showSponsoredBadge, badge }: Prod
   const [displayCurrency, setDisplayCurrency] = useState(product.currency || "KES");
 
   // Convert price based on current user
-  useEffect(() => {
-    const convert = async () => {
-      if (!user?.currency || user.currency === product.currency) {
-        return; // same currency → no conversion needed
-      }
+useEffect(() => {
+  const convert = async () => {
+    if (!user?.currency || user.currency === product.currency) return;
 
-      const rate = await getExchangeRate(product.currency || "KES", user.currency);
+    const rate = await getExchangeRate(product.currency || "KES", user.currency);
 
-      setDisplayPrice(Math.round(product.calculatedPrice * rate));
-      setDisplayOldPrice(Math.round(product.oldPrice * rate));
-      setDisplayCurrency(user.currency);
-    };
+    setDisplayPrice(Math.round(product.calculatedPrice * rate));
+    setDisplayOldPrice(Math.round(product.oldPrice * rate));
+    setDisplayCurrency(user.currency);
+  };
 
-    convert();
-  }, [user, product]);
+  convert();
+}, [
+  user?.currency, 
+  product.calculatedPrice, 
+  product.oldPrice, 
+  product.currency
+]);
+
 
   const calculateDiscount = (oldPrice: number, calculatedPrice: number) =>
     Math.round(((oldPrice - calculatedPrice) / oldPrice) * 100);

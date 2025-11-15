@@ -1,61 +1,47 @@
-// injectMissingAdFields.ts
+// injectMissingProductCurrency.ts
 import * as dotenv from "dotenv";
 dotenv.config();
 
 import mongoose from "mongoose";
 import { dbConnect } from "@/lib/dbConnect";
 
-interface AdDoc {
+interface ProductDoc {
   _id: mongoose.Types.ObjectId;
-  likes?: string[];
-  comments?: any[];
-  shares?: number;
-  views?: number;
+  currency?: string;
 }
 
-async function injectMissingAdFields() {
+async function injectMissingProductCurrency() {
   try {
     await dbConnect();
 
     const db = mongoose.connection.db;
     if (!db) throw new Error("Database connection not established.");
 
-    const collection = db.collection<AdDoc>("ads");
-    console.log("🔍 Checking 'ads' collection for missing fields...");
+    const collection = db.collection<ProductDoc>("products");
+    console.log("🔍 Checking 'products' collection for missing 'currency' field...");
 
-    // Step 1: find ads missing ANY of the new fields
-    const missingDocs = await collection
-      .find({
-        $or: [
-          { likes: { $exists: false } },
-          { comments: { $exists: false } },
-          { shares: { $exists: false } },
-        ],
-      })
+    // Step 1: find products missing the currency field
+    const missingCurrencyDocs = await collection
+      .find({ currency: { $exists: false } })
       .toArray();
 
-    console.log(`🧩 Found ${missingDocs.length} ads missing new fields.`);
+    console.log(`🧩 Found ${missingCurrencyDocs.length} products missing 'currency'.`);
 
-    // Step 2: Update each doc with missing fields ONLY
-    for (const doc of missingDocs) {
-      const update: Partial<AdDoc> = {};
-
-      if (doc.likes === undefined) update.likes = [];
-      if (doc.comments === undefined) update.comments = [];
-      if (doc.shares === undefined) update.shares = 0;
-      if (doc.views === undefined) update.views = 0; // optional safe default
-
-      await collection.updateOne({ _id: doc._id }, { $set: update });
-
-      console.log(`✅ Updated ad ${doc._id} with:`, update);
+    // Step 2: Update each doc with default currency = "KES"
+    for (const doc of missingCurrencyDocs) {
+      await collection.updateOne(
+        { _id: doc._id },
+        { $set: { currency: "KES" } }
+      );
+      console.log(`✅ Updated product ${doc._id} with currency: KES`);
     }
 
-    console.log("🎯 All missing ad fields have been successfully patched!");
+    console.log("🎯 All missing product currency fields have been successfully patched!");
     mongoose.connection.close();
   } catch (err) {
-    console.error("❌ Failed to inject missing ad fields:", err);
+    console.error("❌ Failed to inject missing product currency:", err);
     mongoose.connection.close();
   }
 }
 
-injectMissingAdFields();
+injectMissingProductCurrency();

@@ -31,6 +31,7 @@ const productSchema = new Schema(
     views: { type: Number, default: 0 },
     visits: { type: Number, default: 0 },
     bounces: { type: Number, default: 0 },
+    currency: { type: String, default: 'KES'},
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },

@@ -145,6 +145,7 @@ const handleCountyChange = (selectedCounty: County | '') => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?._id) return toast.error('You are not logged in!');
+    if (!user?.currency) return toast. error('your currency is not updated!')
     if (!category) return toast.error('Please select a category!');
     if (!fulfillmentMode) return toast.error('Please select a fulfillment mode!');
     if (imageFiles.length === 0) return toast.error('Please upload at least one image!');
@@ -172,6 +173,7 @@ const handleCountyChange = (selectedCounty: County | '') => {
     formData.append('quantity', quantity);
     formData.append('sellerId', user._id);
     formData.append('fulfillmentMode', fulfillmentMode);
+    formData.append('currency', user.currency);
     imageFiles.forEach((file) => formData.append('images', file));
 
     try {
