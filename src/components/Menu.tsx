@@ -2,10 +2,6 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import Kids from './categories/Kids/page';
-import Skincare from './categories/Skincare/page';
-import Books from './categories/Books/page';
-import Machines from './categories/Machines/page';
 
 interface Category {
   name: string;

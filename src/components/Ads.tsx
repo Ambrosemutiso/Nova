@@ -161,7 +161,7 @@ export default function AdsFeedPage() {
   const toggleLike = async (ad: Ad, withAnim = false) => {
     if (!userId) return;
 
-    fetch('/api/ads/list', {
+    fetch('/api/ads/reaction', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ adId: ad._id, type: 'like', userId }),
@@ -237,7 +237,7 @@ export default function AdsFeedPage() {
     setCommentText('');
     setReplyTo(null);
 
-    fetch('/api/ads/list', {
+    fetch('/api/ads/reaction', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -271,7 +271,7 @@ export default function AdsFeedPage() {
   };
 
   const shareAd = async (platform: string, ad: Ad) => {
-    fetch('/api/ads/list', {
+    fetch('/api/ads/reaction', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ adId: ad._id, type: 'share', userId }),

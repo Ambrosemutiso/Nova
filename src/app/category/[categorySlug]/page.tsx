@@ -8,8 +8,6 @@ import { addToWishlist, isInWishlist } from '@/lib/wishlist';
 import type { Product } from '@/app/types/product';
 import { ChevronRight } from 'lucide-react';
 import Image from 'next/image';
-import { useAuth } from '@/app/context/AuthContext';
-import { getExchangeRate, formatCurrency } from '@/lib/convertCurrency';
 
 const LIMIT = 12;
 
@@ -52,9 +50,6 @@ export default function CategoryPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { addToCart, cartItems, increaseQuantity, decreaseQuantity } = useCart();
-  const { user } = useAuth();
-
-  const userCurrency = user?.currency || 'KES';
 
   const categorySlug = params.categorySlug as string;
   const safeCategory = categorySlug || 'default';
@@ -67,17 +62,14 @@ export default function CategoryPage() {
   const maxPrice = searchParams.get('maxPrice') || '';
 
   const [products, setProducts] = useState<Product[]>([]);
-  const [converted, setConverted] = useState<any[]>([]);
   const [brands, setBrands] = useState<string[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const totalPages = Math.ceil(total / LIMIT);
 
-  // Fetch products
   useEffect(() => {
     setLoading(true);
-
     fetchProducts(safeCategory, page, sort, brand, minPrice, maxPrice)
       .then(({ products, total, brands }) => {
         const lastPage = Math.ceil(total / LIMIT);
@@ -92,40 +84,6 @@ export default function CategoryPage() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [safeCategory, page, sort, brand, minPrice, maxPrice, router]);
-
-  // Currency conversion
-  useEffect(() => {
-    const convertPrices = async () => {
-      const convertedList = await Promise.all(
-        products.map(async (p) => {
-          const sellerCurrency = p.currency || 'KES';
-
-          // same currency → no conversion
-          if (sellerCurrency === userCurrency) {
-            return {
-              ...p,
-              displayPrice: p.calculatedPrice,
-              displayOldPrice: p.oldPrice,
-              displayCurrency: sellerCurrency,
-            };
-          }
-
-          const rate = await getExchangeRate(sellerCurrency, userCurrency);
-
-          return {
-            ...p,
-            displayPrice: Math.round(p.calculatedPrice * rate),
-            displayOldPrice: Math.round(p.oldPrice * rate),
-            displayCurrency: userCurrency,
-          };
-        })
-      );
-
-      setConverted(convertedList);
-    };
-
-    if (products.length > 0) convertPrices();
-  }, [products, userCurrency]);
 
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -142,7 +100,7 @@ export default function CategoryPage() {
     router.push(`/category/${safeCategory}?${params.toString()}`);
   };
 
-  const handleAddToCart = (product: any) => {
+  const handleAddToCart = (product: Product) => {
     addToCart({
       id: product._id,
       name: product.name,
@@ -152,7 +110,7 @@ export default function CategoryPage() {
       model: product.model,
       brand: product.brand,
       weight: product.weight,
-      calculatedPrice: product.displayPrice,
+      calculatedPrice: product.calculatedPrice,
       quantity: 1,
       fulfillmentMode: product.fulfillmentMode,
       sellerId: product.sellerId,
@@ -202,9 +160,11 @@ export default function CategoryPage() {
 
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-orange-50 to-white">
+      {/* Optional background pattern */}
       <div className="absolute inset-0 bg-[url('/bg-pattern.svg')] opacity-10 pointer-events-none"></div>
 
       <div className="relative md:px-8 lg:px-16 max-w-6xl mx-auto px-4 pt-28 pb-10">
+        {/* Breadcrumb */}
         <div className="mb-6 overflow-x-auto">
           <nav className="flex items-center text-sm text-gray-500 whitespace-nowrap flex-nowrap gap-1 px-1">
             <span>Home</span>
@@ -217,6 +177,7 @@ export default function CategoryPage() {
           </nav>
         </div>
 
+        {/* Banner */}
         <div className="w-full h-44 rounded-lg mb-6 overflow-hidden relative shadow-md">
           <Image src={bannerSrc} alt={`${safeCategory} banner`} fill className="object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
@@ -260,19 +221,18 @@ export default function CategoryPage() {
           >
             <option value="name-asc">Name (A–Z)</option>
             <option value="name-desc">Name (Z–A)</option>
-            <option value="price-asc">Price (Low → High)</option>
-            <option value="price-desc">Price (High → Low)</option>
+            <option value="price-asc">Price (Low to High)</option>
+            <option value="price-desc">Price (High to Low)</option>
           </select>
         </div>
 
-        {/* Products */}
+        {/* Product Grid */}
         {loading ? (
           <div className="text-center py-12 text-gray-600">Loading products...</div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
-            {converted.map((product) => {
+            {products.map((product) => {
               const inWishlist = isInWishlist(product._id);
-
               return (
                 <div key={product._id} className="border p-4 rounded-lg bg-white/90 shadow hover:shadow-md transition">
                   <div
@@ -289,22 +249,14 @@ export default function CategoryPage() {
                     />
                   </div>
 
-                  <h3 className="text-sm font-semibold text-gray-800 truncate mb-1">
-                    {product.name}
-                  </h3>
+                  <h3 className="text-sm font-semibold text-gray-800 truncate mb-1">{product.name}</h3>
 
                   {renderStars(product.rating || 4)}
+
                   {renderStockProgress(product.quantity)}
 
-                  <span className="text-gray-500 line-through text-sm">
-                    {product.displayOldPrice
-                      ? formatCurrency(product.displayOldPrice, product.displayCurrency)
-                      : ''}
-                  </span>
-
-                  <span className="text-red-600 font-bold block">
-                    {formatCurrency(product.displayPrice, product.displayCurrency)}
-                  </span>
+                  <span className="text-gray-500 line-through text-sm">Ksh.{product.oldPrice.toLocaleString()}</span>
+                  <span className="text-red-600 font-bold block">Ksh.{product.calculatedPrice.toLocaleString()}</span>
 
                   <div className="flex gap-2 mt-2">
                     {(() => {
