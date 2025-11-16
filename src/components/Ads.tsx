@@ -51,6 +51,7 @@ function timeAgo(dateString: string) {
   return 'now';
 }
 
+// ---------------- COMPONENT ----------------
 export default function AdsFeedPage() {
   const { user } = useAuth();
   const userId = user?._id ?? '';
@@ -157,36 +158,98 @@ export default function AdsFeedPage() {
     };
   }, [ads]);
 
-  // ---------------- LIKE ----------------
+  // ---------------- LIKE / UNLIKE AD ----------------
   const toggleLike = async (ad: Ad, withAnim = false) => {
     if (!userId) return;
 
-    fetch('/api/ads/reaction', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ adId: ad._id, type: 'like', userId }),
-    }).catch(() => {});
+    try {
+      const res = await fetch('/api/ads/reaction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adId: ad._id, action: 'like', userId }),
+      });
 
-    setAds((prev) =>
-      prev.map((a) =>
-        a._id !== ad._id
-          ? a
-          : {
-              ...a,
-              likes: a.likes.includes(userId)
-                ? a.likes.filter((id) => id !== userId)
-                : [...a.likes, userId],
-            }
-      )
-    );
+      const data = await res.json();
+      if (!res.ok) return console.error('Failed to like ad', data.error);
 
-    if (withAnim) {
-      setHeartBurst(ad._id);
-      setTimeout(() => setHeartBurst(null), 600);
+      setAds((prev) =>
+        prev.map((a) => (a._id === ad._id ? { ...a, likes: data.likes } : a))
+      );
+
+      if (withAnim && data.liked) {
+        setHeartBurst(ad._id);
+        setTimeout(() => setHeartBurst(null), 600);
+      }
+    } catch (err) {
+      console.error('Error liking ad:', err);
     }
   };
 
-  // ---------------- DOUBLE-TAP ----------------
+  // ---------------- LIKE / UNLIKE COMMENT ----------------
+  const toggleCommentLike = async (commentId: string) => {
+    if (!userId || !commentDrawer) return;
+
+    try {
+      const res = await fetch('/api/ads/reaction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          adId: commentDrawer._id,
+          action: 'comment_like',
+          userId,
+          commentId,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) return console.error('Failed to like comment', data.error);
+
+      setAds((prev) =>
+        prev.map((ad) => (ad._id === commentDrawer._id ? { ...ad, comments: data.comments } : ad))
+      );
+    } catch (err) {
+      console.error('Error liking comment:', err);
+    }
+  };
+
+  // ---------------- SUBMIT COMMENT ----------------
+  const submitComment = async () => {
+    if (!commentDrawer) return;
+    const text = commentText.trim();
+    if (!text || !userId) return;
+
+    try {
+      const body: any = {
+        adId: commentDrawer._id,
+        action: 'comment',
+        userId,
+        text,
+        username: user?.name || 'You',
+        avatar: user?.image || 'https://via.placeholder.com/40',
+      };
+      if (replyTo) body.replyTo = replyTo._id;
+
+      const res = await fetch('/api/ads/reaction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+      if (!res.ok) return console.error('Failed to submit comment', data.error);
+
+      setAds((prev) =>
+        prev.map((a) => (a._id === commentDrawer._id ? { ...a, comments: data.comments } : a))
+      );
+
+      setCommentText('');
+      setReplyTo(null);
+    } catch (err) {
+      console.error('Error submitting comment:', err);
+    }
+  };
+
+  // ---------------- DOUBLE TAP ----------------
   const handleDoubleTap = (ad: Ad) => {
     const now = Date.now();
     const diff = now - lastTapRef.current;
@@ -194,87 +257,12 @@ export default function AdsFeedPage() {
     lastTapRef.current = now;
   };
 
-  // ---------------- COMMENTS ----------------
-  const submitComment = async () => {
-    if (!commentDrawer) return;
-    const text = commentText.trim();
-    if (!text) return;
-
-    const newComment: Comment = {
-      _id: 'temp-' + Date.now(),
-      userId,
-      username: user?.name || 'You',
-      avatar: user?.image || 'https://via.placeholder.com/40',
-      text,
-      createdAt: new Date().toISOString(),
-      likes: [],
-      replies: [],
-    };
-
-    const adId = commentDrawer._id;
-
-    if (replyTo) {
-      setAds((prev) =>
-        prev.map((a) =>
-          a._id !== adId
-            ? a
-            : {
-                ...a,
-                comments: a.comments.map((c) =>
-                  c._id === replyTo._id ? { ...c, replies: [...(c.replies || []), newComment] } : c
-                ),
-              }
-        )
-      );
-    } else {
-      setAds((prev) =>
-        prev.map((a) =>
-          a._id === adId ? { ...a, comments: [...a.comments, newComment] } : a
-        )
-      );
-    }
-
-    setCommentText('');
-    setReplyTo(null);
-
-    fetch('/api/ads/reaction', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        adId,
-        type: 'comment',
-        userId,
-        text,
-        replyTo: replyTo?._id || null,
-      }),
-    }).catch(() => {});
-  };
-
-  const toggleCommentLike = (commentId: string) => {
-    if (!userId || !commentDrawer) return;
-
-    setAds((prev) =>
-      prev.map((ad) => {
-        if (ad._id !== commentDrawer._id) return ad;
-        const updateComments = (comments: Comment[]): Comment[] =>
-          comments.map((c) => {
-            if (c._id === commentId) {
-              const liked = c.likes.includes(userId);
-              return { ...c, likes: liked ? c.likes.filter((id) => id !== userId) : [...c.likes, userId] };
-            }
-            if (c.replies && c.replies.length) return { ...c, replies: updateComments(c.replies) };
-            return c;
-          });
-        return { ...ad, comments: updateComments(ad.comments) };
-      })
-    );
-  };
-
+  // ---------------- SHARE ----------------
   const shareAd = async (platform: string, ad: Ad) => {
     fetch('/api/ads/reaction', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ adId: ad._id, type: 'share', userId }),
+      body: JSON.stringify({ adId: ad._id, action: 'share', userId }),
     }).catch(() => {});
 
     if (navigator.share) {
