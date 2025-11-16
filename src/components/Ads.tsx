@@ -16,8 +16,9 @@ type Comment = {
   text: string;
   createdAt: string;
   likes: string[];
-  replies?: Comment[];
+  replies: Comment[]; // 🔥 remove optional
 };
+
 
 type Ad = {
   _id: string;
@@ -213,41 +214,52 @@ export default function AdsFeedPage() {
   };
 
   // ---------------- SUBMIT COMMENT ----------------
-  const submitComment = async () => {
-    if (!commentDrawer) return;
-    const text = commentText.trim();
-    if (!text || !userId) return;
+const submitComment = async () => {
+  if (!commentDrawer) return;
+  const text = commentText.trim();
+  if (!text || !userId) return;
 
-    try {
-      const body: any = {
-        adId: commentDrawer._id,
-        action: 'comment',
-        userId,
-        text,
-        username: user?.name || 'You',
-        avatar: user?.image || 'https://via.placeholder.com/40',
-      };
-      if (replyTo) body.replyTo = replyTo._id;
+  try {
+    const body: any = {
+      adId: commentDrawer._id,
+      action: "comment",
+      userId,
+      text,
+      username: user?.name || "You",
+      avatar: user?.image || "https://via.placeholder.com/40",
+    };
 
-      const res = await fetch('/api/ads/reaction', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
+    if (replyTo) body.replyTo = replyTo._id;
 
-      const data = await res.json();
-      if (!res.ok) return console.error('Failed to submit comment', data.error);
+    const res = await fetch("/api/ads/reaction", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
 
-      setAds((prev) =>
-        prev.map((a) => (a._id === commentDrawer._id ? { ...a, comments: data.comments } : a))
-      );
+    const data = await res.json();
+    if (!res.ok) return console.error("Failed to submit comment", data.error);
 
-      setCommentText('');
-      setReplyTo(null);
-    } catch (err) {
-      console.error('Error submitting comment:', err);
-    }
-  };
+    // UPDATE ADS LIST
+    setAds(prev =>
+      prev.map(a =>
+        a._id === commentDrawer._id ? { ...a, comments: data.comments } : a
+      )
+    );
+
+    // UPDATE COMMENT DRAWER INSTANTLY
+    setCommentDrawer(prev =>
+      prev ? { ...prev, comments: data.comments } : prev
+    );
+
+    setCommentText("");
+    setReplyTo(null);
+
+  } catch (err) {
+    console.error("Error submitting comment:", err);
+  }
+};
+
 
   // ---------------- DOUBLE TAP ----------------
   const handleDoubleTap = (ad: Ad) => {
@@ -339,8 +351,8 @@ export default function AdsFeedPage() {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="absolute bottom-0 left-0 w-full p-6 pb-10 z-[30] bg-gradient-to-t from-black/80 to-transparent text-white"
-          >
+            className="fixed bottom-0 left-0 w-full h-1/3 p-6 pb-10 z-[9999] bg-gradient-to-t from-black/80 to-transparent text-white"
+            >
             <h2 className="text-xl font-bold">{ad.title}</h2>
             {ad.description && <p className="text-gray-300 text-sm mt-1 line-clamp-2">{ad.description}</p>}
             {ad.category && <p className="text-orange-400 mt-1">#{ad.category}</p>}
@@ -463,41 +475,72 @@ export default function AdsFeedPage() {
     </div>
   );
 }
-
-// ---------------- COMMENT ITEM ----------------
-function CommentItem({
-  comment,
-  onReply,
-  onLike,
-  userId
-}: {
+function CommentItem({ comment, onReply, onLike, userId }: {
   comment: Comment;
   onReply: (c: Comment) => void;
   onLike: (id: string) => void;
   userId: string;
 }) {
+
+  const [showReplies, setShowReplies] = useState(false);
+
   return (
-    <div className="flex gap-3">
-      <img src={comment.avatar} className="w-10 h-10 rounded-full object-cover" />
-      <div className="flex-1">
-        <div className="flex items-center gap-2">
-          <p className="font-semibold text-sm">@{comment.username}</p>
-          <p className="text-xs text-gray-500">{timeAgo(comment.createdAt)}</p>
+    <div className="flex flex-col gap-3">
+
+      {/* MAIN COMMENT */}
+      <div className="flex gap-3">
+        <img src={comment.avatar} className="w-10 h-10 rounded-full object-cover" />
+        
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <p className="font-semibold text-sm">@{comment.username}</p>
+            <p className="text-xs text-gray-500">{timeAgo(comment.createdAt)}</p>
+          </div>
+
+          <p className="text-sm mt-1">{comment.text}</p>
+
+          <div className="flex items-center gap-4 mt-2 text-xs">
+            <button onClick={() => onReply(comment)} className="text-gray-600">Reply</button>
+
+            {comment.replies?.length > 0 && (
+              <button
+                onClick={() => setShowReplies(!showReplies)}
+                className="text-gray-600"
+              >
+                {showReplies
+                  ? `Hide replies`
+                  : `View replies (${comment.replies.length})`}
+              </button>
+            )}
+          </div>
         </div>
-        <p className="text-sm mt-1">{comment.text}</p>
-        <div className="flex items-center gap-4 mt-2 text-xs">
-          <button onClick={() => onReply(comment)} className="text-gray-600">Reply</button>
-          {comment.replies?.length ? (
-            <button className="text-gray-600">View replies ({comment.replies.length})</button>
-          ) : null}
+
+        <div className="flex flex-col items-center text-red-500">
+          <button onClick={() => onLike(comment._id)}>
+            <FaHeart 
+              className={comment.likes.includes(userId) ? 'text-red-600' : 'text-gray-400'} 
+              size={18} 
+            />
+          </button>
+          <p className="text-xs text-gray-600">{comment.likes.length}</p>
         </div>
       </div>
-      <div className="flex flex-col items-center text-red-500">
-        <button onClick={() => onLike(comment._id)}>
-          <FaHeart className={comment.likes.includes(userId) ? 'text-red-600' : 'text-gray-400'} size={18} />
-        </button>
-        <p className="text-xs text-gray-600">{comment.likes.length}</p>
-      </div>
+
+      {/* REPLIES */}
+      {showReplies && comment.replies?.length > 0 && (
+        <div className="ml-12 space-y-3">
+          {comment.replies.map((r) => (
+            <CommentItem
+              key={r._id}
+              comment={r}
+              onReply={onReply}
+              onLike={onLike}
+              userId={userId}
+            />
+          ))}
+        </div>
+      )}
+
     </div>
   );
 }

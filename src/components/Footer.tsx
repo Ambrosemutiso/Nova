@@ -27,9 +27,21 @@ export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () =>
         <div>
           <h4 className="font-bold mb-4">About Us</h4>
           <ul className="space-y-2">
-              <li><a href="/desc/about">About NovaXpress</a></li>
+              <li><a href="/desc/about">About NovaXmax</a></li>
               <li><a href="/desc/careers">Careers</a></li>
               <li><a href="/desc/terms">Terms & Conditions</a></li>
+              <li><a href="/desc/privacy">Privacy Policy</a></li>
+              <li><a href="/desc/delivery-policy">Shipping & Delivery Policy</a></li>
+              <li><a href="/desc/buyer-protection-policy">Buyer Protection Policy</a></li>
+              <li><a href="/desc/seller-policy">NovaXmax Seller Policy</a></li>
+              <li><a href="/desc/community-and-market-policy">Community & Market Policy</a></li>
+          </ul>
+        </div>
+
+                {/* Privacy Policy */}
+        <div>
+          <h4 className="font-bold mb-4">Policies</h4>
+          <ul className="space-y-2">
               <li><a href="/desc/privacy">Privacy Policy</a></li>
               <li><a href="/desc/delivery-policy">Shipping & Delivery Policy</a></li>
               <li><a href="/desc/buyer-protection-policy">Buyer Protection Policy</a></li>
@@ -53,7 +65,7 @@ export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () =>
         <div>
           <h4 className="font-bold mb-4">Make Money With Us</h4>
           <ul className="space-y-2">
-            <li><a href="/desc/sell-on-novaxpress">Sell on NovaXpress</a></li>
+            <li><a href="/desc/sell-on-novaxpress">Sell on NovaXmax</a></li>
             <li><a href="/desc/logistics-partner">Become a Logistics Partner</a></li>
             <li><a href="/desc/novaxpress-affilliate-marketing">Join Affiliate Program</a></li>
           </ul>
