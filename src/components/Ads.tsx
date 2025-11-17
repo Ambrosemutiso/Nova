@@ -351,7 +351,7 @@ const submitComment = async () => {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="fixed bottom-0 left-0 w-full h-1/3 p-6 pb-10 z-[9999] bg-gradient-to-t from-black/80 to-transparent text-white"
+            className="absolute bottom-0 left-0 w-full h-1/8 p-6 pb-10 z-[9999] bg-gradient-to-t from-black/80 to-transparent text-white"
             >
             <h2 className="text-xl font-bold">{ad.title}</h2>
             {ad.description && <p className="text-gray-300 text-sm mt-1 line-clamp-2">{ad.description}</p>}

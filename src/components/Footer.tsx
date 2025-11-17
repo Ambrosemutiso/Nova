@@ -30,11 +30,6 @@ export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () =>
               <li><a href="/desc/about">About NovaXmax</a></li>
               <li><a href="/desc/careers">Careers</a></li>
               <li><a href="/desc/terms">Terms & Conditions</a></li>
-              <li><a href="/desc/privacy">Privacy Policy</a></li>
-              <li><a href="/desc/delivery-policy">Shipping & Delivery Policy</a></li>
-              <li><a href="/desc/buyer-protection-policy">Buyer Protection Policy</a></li>
-              <li><a href="/desc/seller-policy">NovaXmax Seller Policy</a></li>
-              <li><a href="/desc/community-and-market-policy">Community & Market Policy</a></li>
           </ul>
         </div>
 
