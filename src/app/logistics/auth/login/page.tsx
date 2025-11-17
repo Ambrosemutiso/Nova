@@ -120,7 +120,7 @@ export default function LogisticsAuth() {
             {isLogin ? 'Logistics Partner Login' : 'Join NovaXpress Logistics'}
           </h2>
           <p className="text-sm text-gray-300 mt-1">
-            Deliver excellence with NovaXpress 🚚
+            Deliver excellence with NovaXmax 🚚
           </p>
         </div>
 
@@ -197,7 +197,7 @@ export default function LogisticsAuth() {
 
       {/* Subtle footer text */}
       <p className="absolute bottom-4 text-xs text-gray-400 z-10">
-        © {new Date().getFullYear()} NovaXpress Logistics — Speed. Reliability. Excellence.
+        © {new Date().getFullYear()} NovaXmax Logistics — Speed. Reliability. Excellence.
       </p>
     </div>
   );

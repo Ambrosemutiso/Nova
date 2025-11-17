@@ -77,10 +77,10 @@ export default function PartnerWithNovaXpress() {
           transition={{ duration: 0.6 }}
           className="text-4xl md:text-5xl font-bold text-orange-600 mb-4"
         >
-          Partner With NovaXpress Logistics
+          Partner With NovaXmax Logistics
         </motion.h1>
         <p className="text-gray-700 text-lg mb-6">
-          Join our growing network of trusted logistics companies and help us deliver smiles across Kenya. 
+          Join our growing network of trusted logistics companies and help us deliver smiles across Kenya and East Africa alt large. 
           Whether you’re an established courier or a regional transporter — let’s move together.
         </p>
         <button
@@ -113,7 +113,7 @@ export default function PartnerWithNovaXpress() {
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-2xl font-semibold text-orange-600 mb-4">
-            Why Partner With NovaXpress?
+            Why Partner With NovaXmax?
           </h2>
           <ul className="space-y-3 text-gray-700 leading-relaxed">
             <li className="flex items-center gap-2"><CheckCircle size={16} className="text-orange-500" /> Get access to a large marketplace of delivery requests daily.</li>

@@ -106,7 +106,7 @@ export default function AboutNovaXpress() {
           <h2 className="text-3xl font-bold mb-4">Join the NovaXmax Community</h2>
           <p className="text-lg mb-8">
             Whether you’re a seller looking to expand your reach or a buyer searching for trusted products,
-            NovaXpress is your gateway to a smarter, digital economy.
+            NovaXmax is your gateway to a smarter, digital economy.
           </p>
           <a
             href="/desc/sell-on-novaxmax"

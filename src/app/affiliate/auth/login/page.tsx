@@ -107,7 +107,7 @@ export default function AffiliateAuth() {
             {isLogin ? 'Affiliate Login' : 'Join NovaXpress Affiliates'}
           </h2>
           <p className="text-sm text-gray-300 mt-1">
-            Empower your earnings with NovaXpress 💼
+            Empower your earnings with NovaXmax 💼
           </p>
         </div>
 
@@ -195,7 +195,7 @@ export default function AffiliateAuth() {
 
       {/* Footer */}
       <p className="absolute bottom-4 text-xs text-gray-400 z-10">
-        © {new Date().getFullYear()} NovaXpress Affiliates — Connect. Earn. Grow.
+        © {new Date().getFullYear()} NovaXmax Affiliates — Connect. Earn. Grow.
       </p>
     </div>
   );

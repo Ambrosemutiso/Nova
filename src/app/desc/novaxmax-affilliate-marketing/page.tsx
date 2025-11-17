@@ -59,10 +59,10 @@ export default function AffiliateLanding() {
           transition={{ duration: 0.6 }}
           className="text-4xl md:text-5xl font-bold text-orange-600 mb-4"
         >
-          Become a NovaXpress Affiliate
+          Become a NovaXmax Affiliate
         </motion.h1>
         <p className="text-gray-700 text-lg mb-6">
-          Earn money by sharing products you love! Promote NovaXpress items across social media and earn up to <b>10% commission</b> for every purchase made through your referral link.
+          Earn money by sharing products you love! Promote NovaXmax items across social media and earn up to <b>10% commission</b> for every purchase made through your referral link.
         </p>
         <button
           onClick={handleOpenModal}
@@ -93,7 +93,7 @@ export default function AffiliateLanding() {
           whileInView={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-2xl font-semibold text-orange-600 mb-4">Why Join NovaXpress Affiliates?</h2>
+          <h2 className="text-2xl font-semibold text-orange-600 mb-4">Why Join NovaXmax Affiliates?</h2>
           <ul className="space-y-3 text-gray-700 leading-relaxed">
             <li className="flex items-center gap-2"><CheckCircle size={16} className="text-orange-500" /> Earn up to <b>10% commission</b> on every successful referral.</li>
             <li className="flex items-center gap-2"><CheckCircle size={16} className="text-orange-500" /> Track your clicks, sales, and earnings in real-time.</li>
@@ -158,7 +158,7 @@ export default function AffiliateLanding() {
           Start Earning From Your Influence
         </h2>
         <p className="text-gray-700 mb-6">
-          Join the NovaXpress Affiliate Program today and turn your content into cash.
+          Join the NovaXmax Affiliate Program today and turn your content into cash.
         </p>
         <button
           onClick={handleOpenModal}
@@ -178,7 +178,7 @@ export default function AffiliateLanding() {
             >
               ×
             </button>
-            <h3 className="text-xl font-semibold mb-3 text-orange-600">Join NovaXpress Affiliates</h3>
+            <h3 className="text-xl font-semibold mb-3 text-orange-600">Join NovaXmax Affiliates</h3>
             <p className="text-gray-600 mb-5">
               Log in or create an affiliate account to start earning commissions.
             </p>

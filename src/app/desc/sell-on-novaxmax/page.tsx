@@ -96,7 +96,7 @@ export default function SellOnNovaXpress() {
           transition={{ duration: 0.6 }}
           className="text-4xl md:text-5xl font-bold text-orange-600 mb-4"
         >
-          Start Selling on NovaXpress Today
+          Start Selling on NovaXmax Today
         </motion.h1>
         <p className="text-gray-700 text-lg mb-6">
           Join thousands of successful entrepreneurs who are growing their businesses through NovaXpress.
@@ -132,7 +132,7 @@ export default function SellOnNovaXpress() {
           whileInView={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-2xl font-semibold text-orange-600 mb-4">Why Sell on NovaXpress?</h2>
+          <h2 className="text-2xl font-semibold text-orange-600 mb-4">Why Sell on NovaXmax?</h2>
           <ul className="space-y-3 text-gray-700 leading-relaxed">
             <li className="flex items-center gap-2">
               <CheckCircle size={16} className="text-orange-500" />
@@ -208,7 +208,7 @@ export default function SellOnNovaXpress() {
           Ready to Grow Your Business?
         </h2>
         <p className="text-gray-700 mb-6">
-          Join NovaXpress today and take your products to every corner of Kenya.
+          Join NovaXmax today and take your products to every corner of Kenya.
         </p>
         <button
           onClick={() => setShowLogin(true)}

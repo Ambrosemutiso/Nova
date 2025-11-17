@@ -11,7 +11,6 @@ export async function POST(req: Request) {
     const { email, password } = await req.json();
 
     await dbConnect();
-
     const user = await Logistics.findOne({ email });
     if (!user) {
       return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
@@ -31,6 +30,7 @@ export async function POST(req: Request) {
     // Create response with cookie
     const res = NextResponse.json({
       message: 'Login successful',
+      token,
       user: {
         id: user._id,
         name: user.name,
