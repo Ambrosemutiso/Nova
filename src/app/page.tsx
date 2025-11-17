@@ -27,6 +27,15 @@ export default function Home() {
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
+  if (loading) {
+    document.body.classList.add('hide-footer');
+  } else {
+    document.body.classList.remove('hide-footer');
+  }
+}, [loading]);
+
+
+  useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 3000);
     return () => clearTimeout(timer);
   }, []);
@@ -44,7 +53,7 @@ export default function Home() {
       <div className="absolute top-4 right-4 z-50">
         <button
           onClick={() => setShowMain(true)}
-          className="bg-white/70 hover:bg-white text-orange-500 font-bold py-2 px-4 rounded-full shadow"
+          className="bg-white/70 hover:bg-white z-[9999] text-orange-500 font-bold py-2 px-4 rounded-full shadow"
         >
           Skip
         </button>
@@ -61,7 +70,7 @@ export default function Home() {
           <SwiperSlide>
             <Slide
               src="/slider1.jpg"
-              title="Welcome Novaxpress"
+              title="Welcome to NovaXmax"
               description="Best products, best prices, just for you!"
               isActive={activeIndex === 0}
             />

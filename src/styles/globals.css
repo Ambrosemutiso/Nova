@@ -212,3 +212,6 @@ button {
   }
   .animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
 
+.hide-footer footer {
+  display: none !important;
+}

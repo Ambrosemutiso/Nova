@@ -6,7 +6,7 @@ import Image from 'next/image';
 export default function Loader() {
   return (
     <motion.div
-      className="flex flex-col z-[9999] items-center justify-center min-h-screen bg-gradient-to-b from-orange-50 via-orange-100 to-orange-200 relative overflow-hidden"
+      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-gradient-to-b from-orange-50 via-orange-100 to-orange-200 overflow-hidden"
       initial={{ opacity: 1 }}
       animate={{ opacity: 0 }}
       transition={{ delay: 3.5, duration: 1.2 }}
@@ -36,7 +36,7 @@ export default function Loader() {
         </div>
       </motion.div>
 
-      {/* Brand text (like Meta’s splash) */}
+      {/* Brand text */}
       <motion.div
         className="absolute bottom-10 text-center text-gray-700 font-medium tracking-wide text-sm"
         initial={{ opacity: 0, y: 10 }}
@@ -45,7 +45,7 @@ export default function Loader() {
       >
         Powered by{' '}
         <span className="font-semibold text-orange-600">
-          Novaxpress Ventures
+          Novaxpress Ventures Ltd
         </span>
       </motion.div>
     </motion.div>
