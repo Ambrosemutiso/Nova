@@ -34,8 +34,8 @@ export async function POST(req: NextRequest) {
     const gradientEnd = isBuyer ? "#fb923c" : "#3b82f6";
 
     const subject = isBuyer
-      ? "Welcome to NovaXpress — Let’s Start Shopping!"
-      : "Welcome to NovaXpress Seller Hub — Time to Grow Your Business!";
+      ? "Welcome to NovaXmax — Let’s Start Shopping!"
+      : "Welcome to NovaXmax Seller Hub — Time to Grow Your Business!";
 
     // HTML Email Template
     const html = `
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <meta name="color-scheme" content="light dark" />
-      <title>Welcome to NovaXpress</title>
+      <title>Welcome to NovaXmax</title>
       <style>
         body {
           margin: 0;
@@ -185,7 +185,7 @@ export async function POST(req: NextRequest) {
       <div class="container">
         <!-- Header -->
         <div class="header">
-          <img src="/Logo.jpg" alt="NovaXpress Logo" width="120" />
+          <img src="/Logo.jpg" alt="NovaXmax Logo" width="120" />
           <h1>${isBuyer ? "Welcome to NovaXpress!" : "Welcome to NovaXpress Seller Hub!"}</h1>
         </div>
 
@@ -198,20 +198,20 @@ export async function POST(req: NextRequest) {
               <p>We’re thrilled to have you join <b>NovaXpress</b> — your one-stop marketplace for amazing products, great prices, and fast deliveries.</p>
               <p>Start browsing, discover exclusive deals, and experience a smarter way to shop.</p>
               <div class="cta">
-                <a href="https://novaxpress.co.ke">Start Shopping 🛍️</a>
+                <a href="https://novaxmax.com">Start Shopping 🛍️</a>
               </div>
             `
               : `
               <p>Welcome to the <b>NovaXpress Seller Hub</b> — the platform designed to help your business grow, connect with customers, and increase sales.</p>
               <p>Get started by adding your first products and building your storefront today.</p>
               <div class="cta">
-                <a href="https://novaxpress.co.ke/seller/dashboard">Go to Seller Dashboard 💼</a>
+                <a href="https://novaxmax.com/desc/sell-on-novaxmax">Go to Seller Dashboard 💼</a>
               </div>
             `
           }
           <p style="font-size: 14px; color: #666;">
             Need help? Our team is here for you. Contact us anytime at 
-            <a href="mailto:support@novaxpress.co.ke" style="color: ${primary}; text-decoration: none;">support@novaxpress.shop</a>.
+            <a href="mailto:support@novaxmax.com" style="color: ${primary}; text-decoration: none;">support@novaxpress.shop</a>.
           </p>
         </div>
 
@@ -220,7 +220,7 @@ export async function POST(req: NextRequest) {
           isBuyer
             ? `
             <div class="app-download">
-              <p>📱 Get the NovaXpress App for faster shopping</p>
+              <p>📱 Get the NovaXmax App for faster shopping</p>
             <div className="app-logos">
               <a href="#"><Image src="/play_store.png" alt="Google Play" width={135} height={40} /></a>
               <a href="#"><Image src="/app_store.png" alt="App Store" width={120} height={40} /></a>
@@ -235,25 +235,25 @@ export async function POST(req: NextRequest) {
           <div class="divider"></div>
           <p>Connect with us</p>
           <div class="social">
-            <a href="https://facebook.com/novaxpress">
+            <a href="https://facebook.com/novaxmax">
               <img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" width="22" height="22" alt="Facebook" />
             </a>
-            <a href="https://instagram.com/novaxpress">
+            <a href="https://instagram.com/novaxmax">
               <img src="https://cdn-icons-png.flaticon.com/512/733/733558.png" width="22" height="22" alt="Instagram" />
             </a>
-            <a href="https://twitter.com/novaxpress">
+            <a href="https://twitter.com/novaxmax">
               <img src="https://cdn-icons-png.flaticon.com/512/733/733579.png" width="22" height="22" alt="Twitter" />
             </a>
           </div>
 
           <div class="footer-links">
-            <a href="https://novaxpress.co.ke/privacy">Privacy Policy</a> |
-            <a href="https://novaxpress.co.ke/terms">Terms of Service</a> |
-            <a href="https://novaxpress.co.ke/contact">Contact</a>
+            <a href="https://novaxmax.com/desc/privacy">Privacy Policy</a> |
+            <a href="https://novaxmax.com/desc/terms">Terms of Service</a> |
+            <a href="https://novaxmax.com/desc/help/contact">Contact</a>
           </div>
 
           <p style="font-size: 12px; margin-top: 10px;">
-            © ${new Date().getFullYear()} <b>NovaXpress</b>. All rights reserved.
+            © ${new Date().getFullYear()} <b>NovaXmax</b>. All rights reserved.
           </p>
         </div>
       </div>
@@ -262,7 +262,7 @@ export async function POST(req: NextRequest) {
     `;
 
     await transporter.sendMail({
-      from: `"NovaXpress" <${process.env.GMAIL_USER}>`,
+      from: `"NovaXmax" <${process.env.GMAIL_USER}>`,
       to: email,
       subject,
       html,

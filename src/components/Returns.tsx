@@ -11,7 +11,7 @@ export default function ReturnsRefunds() {
         <div className="max-w-5xl mx-auto">
           <h1 className="text-4xl sm:text-5xl font-extrabold mb-4">Refunds & Returns Policy</h1>
           <p className="text-lg sm:text-xl max-w-3xl mx-auto">
-            We want you to shop with confidence. Learn how NovaXpress handles refunds, exchanges, and returns.
+            We want you to shop with confidence. Learn how NovaXmax handles refunds, exchanges, and returns.
           </p>
         </div>
       </section>
@@ -30,7 +30,7 @@ export default function ReturnsRefunds() {
             <h2 className="text-2xl font-semibold text-gray-900">1. Our Commitment</h2>
           </div>
           <p className="text-gray-700">
-            At NovaXpress, customer satisfaction is our top priority.  
+            At NovaXmax, customer satisfaction is our top priority.  
             If you’re not fully satisfied with your purchase, we’ll do our best to make it right.  
             Our refund and return policy outlines how we handle returns, replacements, and reimbursements for eligible orders.
           </p>
@@ -73,7 +73,7 @@ export default function ReturnsRefunds() {
           </p>
           <ul className="list-disc list-inside text-gray-700 space-y-2">
             <li>If approved, your refund will be processed within <strong>5–10 business days</strong>.</li>
-            <li>Refunds will be credited to your original payment method (mobile money, debit card, or NovaXpress wallet).</li>
+            <li>Refunds will be credited to your original payment method (mobile money, debit card, or NovaXmax wallet).</li>
             <li>Shipping fees are non-refundable unless the return is due to an error or defective item.</li>
           </ul>
         </motion.div>
@@ -91,7 +91,7 @@ export default function ReturnsRefunds() {
           </div>
           <p className="text-gray-700">
             If your item arrives damaged or defective, you may request an exchange for the same product or a replacement item.
-            NovaXpress sellers are required to handle replacements promptly to maintain high buyer satisfaction.
+            NovaXmax sellers are required to handle replacements promptly to maintain high buyer satisfaction.
           </p>
         </motion.div>
 
@@ -133,10 +133,10 @@ export default function ReturnsRefunds() {
           <p className="text-gray-700">
             For support or refund-related queries, contact our team at{' '}
             <a
-              href="mailto:support@novaxpress.africa"
+              href="mailto:support@novaxmax.com"
               className="text-orange-500 font-medium hover:underline"
             >
-              support@novaxpress.africa
+              support@novaxmax.com
             </a>.  
             Our support agents will respond within 24 hours.
           </p>
@@ -148,7 +148,7 @@ export default function ReturnsRefunds() {
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold mb-3">Shop with Confidence</h2>
           <p className="text-lg mb-8">
-            At NovaXpress, every order is backed by our trusted refund and return policy.
+            At NovaXmax, every order is backed by our trusted refund and return policy.
             Your satisfaction means everything to us.
           </p>
           <a

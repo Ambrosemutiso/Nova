@@ -10,7 +10,7 @@ export default function Careers() {
       <section className="relative bg-gradient-to-r from-orange-500 via-orange-400 to-yellow-400 text-white py-24 px-6 text-center">
         <div className="max-w-5xl mx-auto">
           <h1 className="text-4xl sm:text-5xl font-extrabold mb-4">
-            Careers at <span className="text-white">NovaXpress</span>
+            Careers at <span className="text-white">NovaXmax</span>
           </h1>
           <p className="text-lg sm:text-xl max-w-3xl mx-auto">
             Be part of the team shaping the future of eCommerce across East Africa — empowering sellers and connecting communities through technology.
@@ -31,7 +31,7 @@ export default function Careers() {
         <div>
           <h2 className="text-3xl font-bold text-orange-600 mb-4">Join Our Mission</h2>
           <p className="text-gray-700 leading-relaxed mb-4">
-            At NovaXpress, we’re not just building an online store — we’re redefining how East Africa buys,
+            At NovaXmax, we’re not just building an online store — we’re redefining how East Africa buys,
             sells, and grows digitally. Our mission is to empower entrepreneurs and deliver exceptional value
             to customers through technology, creativity, and collaboration.
           </p>
@@ -116,7 +116,7 @@ export default function Careers() {
             next digital frontier.
           </p>
           <a
-            href="mailto:careers@novaxpress.africa"
+            href="mailto:careers@novaxmax.com"
             className="inline-block bg-white text-orange-600 font-semibold py-3 px-8 rounded-full shadow hover:bg-gray-100 transition"
           >
             Get in Touch

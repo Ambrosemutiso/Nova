@@ -11,7 +11,7 @@ export default function TermsAndConditions() {
         <div className="max-w-5xl mx-auto">
           <h1 className="text-4xl sm:text-5xl font-extrabold mb-4">Terms & Conditions</h1>
           <p className="text-lg sm:text-xl max-w-3xl mx-auto">
-            Please read these terms carefully before using NovaXpress.  
+            Please read these terms carefully before using NovaXmax.  
             By accessing or creating an account, you agree to these terms of service.
           </p>
         </div>
@@ -30,7 +30,7 @@ export default function TermsAndConditions() {
             <h2 className="text-2xl font-semibold text-gray-900">1. Introduction</h2>
           </div>
           <p className="text-gray-700">
-            These Terms & Conditions govern your use of NovaXpress — an online multi-vendor marketplace
+            These Terms & Conditions govern your use of NovaXmax — an online multi-vendor marketplace
             connecting buyers and sellers across East Africa. By using our services, you confirm that you
             understand, accept, and agree to comply with these terms and all applicable laws.
           </p>
@@ -65,12 +65,12 @@ export default function TermsAndConditions() {
             <h2 className="text-2xl font-semibold text-gray-900">3. Prohibited Conduct</h2>
           </div>
           <p className="text-gray-700 mb-3">
-            Users are strictly prohibited from engaging in any conduct that disrupts the NovaXpress ecosystem or harms other users.
+            Users are strictly prohibited from engaging in any conduct that disrupts the NovaXmax ecosystem or harms other users.
             Examples include:
           </p>
           <ul className="list-disc list-inside text-gray-700 space-y-2">
             <li>Posting or selling counterfeit, stolen, or illegal goods.</li>
-            <li>Using NovaXpress for spam, phishing, or any unauthorized commercial solicitation.</li>
+            <li>Using NovaXmax for spam, phishing, or any unauthorized commercial solicitation.</li>
             <li>Manipulating pricing, ratings, or feedback mechanisms in bad faith.</li>
           </ul>
         </motion.div>
@@ -86,7 +86,7 @@ export default function TermsAndConditions() {
             <h2 className="text-2xl font-semibold text-gray-900">4. Account Suspension</h2>
           </div>
           <p className="text-gray-700">
-            NovaXpress reserves the right to suspend or terminate any account that violates these terms,
+            NovaXmax reserves the right to suspend or terminate any account that violates these terms,
             engages in suspicious activity, or causes harm to the platform or its users.  
             Suspensions may be temporary or permanent depending on the severity of the violation.
           </p>
@@ -100,7 +100,7 @@ export default function TermsAndConditions() {
         >
           <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Changes to the Terms</h2>
           <p className="text-gray-700">
-            NovaXpress may update these Terms & Conditions periodically to reflect changes in policies,
+            NovaXmax may update these Terms & Conditions periodically to reflect changes in policies,
             features, or regulatory requirements. Users will be notified of major updates, and continued
             use of the platform constitutes acceptance of the revised terms.
           </p>
@@ -116,10 +116,10 @@ export default function TermsAndConditions() {
           <p className="text-gray-700">
             If you have any questions or concerns about these Terms & Conditions, please contact us at:{' '}
             <a
-              href="mailto:support@novaxpress.africa"
+              href="mailto:support@novaxmax.com"
               className="text-orange-500 font-medium hover:underline"
             >
-              support@novaxpress.africa
+              support@novaxmax.com
             </a>.
           </p>
         </motion.div>
@@ -130,7 +130,7 @@ export default function TermsAndConditions() {
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold mb-3">Your Trust, Our Commitment</h2>
           <p className="text-lg mb-8">
-            At NovaXpress, we take your privacy, security, and satisfaction seriously.
+            At NovaXmax, we take your privacy, security, and satisfaction seriously.
             We’re committed to maintaining transparency in every transaction.
           </p>
           <a

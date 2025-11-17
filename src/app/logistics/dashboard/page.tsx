@@ -80,7 +80,7 @@ export default function LogisticsOrdersPage() {
         if (res.status === 401) {
           toast.error('Session expired. Please login again.');
           localStorage.removeItem('logisticsToken');
-          router.replace('/logistics/auth');
+          router.replace('/logistics/auth/login');
           return;
         }
 
@@ -98,7 +98,7 @@ export default function LogisticsOrdersPage() {
   const logout = () => {
     localStorage.removeItem('logisticsToken');
     toast.success('Logged out');
-    router.replace('/logistics/auth');
+    router.replace('/logistics/auth/login');
   };
 
   // ☁ Extract Cloudinary public ID

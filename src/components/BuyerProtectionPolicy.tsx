@@ -11,7 +11,7 @@ export default function BuyerProtectionPolicy() {
         <div className="max-w-5xl mx-auto">
           <h1 className="text-4xl sm:text-5xl font-extrabold mb-4">Buyer Protection & Safety Policy</h1>
           <p className="text-lg sm:text-xl max-w-3xl mx-auto">
-            At NovaXpress, your trust and safety come first. Our Buyer Protection Policy ensures you shop with total confidence.
+            At NovaXmax, your trust and safety come first. Our Buyer Protection Policy ensures you shop with total confidence.
           </p>
         </div>
       </section>
@@ -30,7 +30,7 @@ export default function BuyerProtectionPolicy() {
             <h2 className="text-2xl font-semibold text-gray-900">1. Our Commitment to Buyer Safety</h2>
           </div>
           <p className="text-gray-700">
-            NovaXpress guarantees a secure and transparent shopping environment. We ensure that every transaction, from order
+            NovaXmax guarantees a secure and transparent shopping environment. We ensure that every transaction, from order
             placement to delivery, is protected against fraud, misrepresentation, and unauthorized use. Our mission is to make
             online shopping as safe as it is enjoyable.
           </p>
@@ -53,7 +53,7 @@ export default function BuyerProtectionPolicy() {
           </p>
           <ul className="list-disc list-inside text-gray-700 space-y-2">
             <li>Payment verification helps protect against unauthorized transactions.</li>
-            <li>NovaXpress may hold funds temporarily until a transaction is confirmed successful.</li>
+            <li>NovaXmax may hold funds temporarily until a transaction is confirmed successful.</li>
             <li>Refunds are processed through the same secure channels.</li>
           </ul>
         </motion.div>
@@ -137,7 +137,7 @@ export default function BuyerProtectionPolicy() {
               href="mailto:support@novaxpress.africa"
               className="text-orange-500 font-medium hover:underline"
             >
-              support@novaxpress.africa
+              support@novaxmax.com
             </a>{' '}
             for any concerns, claims, or general questions.
           </p>
@@ -149,7 +149,7 @@ export default function BuyerProtectionPolicy() {
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold mb-3">Shop Confidently. We’ve Got You Covered.</h2>
           <p className="text-lg mb-8">
-            From payment protection to verified sellers, NovaXpress ensures a safe and trustworthy shopping experience for every buyer.
+            From payment protection to verified sellers, NovaXmax ensures a safe and trustworthy shopping experience for every buyer.
           </p>
           <a
             href="/"

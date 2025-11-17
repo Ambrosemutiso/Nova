@@ -11,7 +11,7 @@ export default function SellerPolicy() {
         <div className="max-w-5xl mx-auto">
           <h1 className="text-4xl sm:text-5xl font-extrabold mb-4">Seller Policy & Code of Conduct</h1>
           <p className="text-lg sm:text-xl max-w-3xl mx-auto">
-            At NovaXpress, we empower sellers to succeed — while maintaining fairness, trust, and transparency for every customer.
+            At NovaXmax, we empower sellers to succeed — while maintaining fairness, trust, and transparency for every customer.
           </p>
         </div>
       </section>
@@ -30,7 +30,7 @@ export default function SellerPolicy() {
             <h2 className="text-2xl font-semibold text-gray-900">1. Purpose of this Policy</h2>
           </div>
           <p className="text-gray-700">
-            This Seller Policy outlines the standards, responsibilities, and guidelines for all sellers operating on NovaXpress.
+            This Seller Policy outlines the standards, responsibilities, and guidelines for all sellers operating on NovaXmax.
             By registering as a seller, you agree to uphold the highest standards of honesty, product quality, and customer service.
           </p>
         </motion.div>
@@ -50,7 +50,7 @@ export default function SellerPolicy() {
             <li>Provide accurate and up-to-date product descriptions, images, and pricing.</li>
             <li>Ensure timely order processing, packaging, and shipping.</li>
             <li>Respond promptly and respectfully to buyer inquiries.</li>
-            <li>Comply with all NovaXpress platform policies and local business regulations.</li>
+            <li>Comply with all NovaXmax platform policies and local business regulations.</li>
           </ul>
         </motion.div>
 
@@ -104,7 +104,7 @@ export default function SellerPolicy() {
             <h2 className="text-2xl font-semibold text-gray-900">5. Payments, Fees & Settlements</h2>
           </div>
           <p className="text-gray-700">
-            NovaXpress handles payments securely and transparently. Sellers receive payouts after order confirmation and verification.
+            NovaXmax handles payments securely and transparently. Sellers receive payouts after order confirmation and verification.
           </p>
           <ul className="list-disc list-inside text-gray-700 space-y-2 mt-2">
             <li>Platform fees and commissions are communicated upfront.</li>
@@ -142,7 +142,7 @@ export default function SellerPolicy() {
             <h2 className="text-2xl font-semibold text-gray-900">7. Violations & Account Enforcement</h2>
           </div>
           <p className="text-gray-700">
-            Violating NovaXpress policies may result in warnings, temporary restrictions, listing removals, or permanent account
+            Violating NovaXmax policies may result in warnings, temporary restrictions, listing removals, or permanent account
             suspension. Repeat offenses or fraudulent activity may lead to legal action.
           </p>
         </motion.div>
@@ -153,7 +153,7 @@ export default function SellerPolicy() {
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold mb-3">Sell with Confidence. Build with Integrity.</h2>
           <p className="text-lg mb-8">
-            NovaXpress is built on trust. Follow our Seller Code of Conduct to grow your business sustainably and responsibly.
+            NovaXmax is built on trust. Follow our Seller Code of Conduct to grow your business sustainably and responsibly.
           </p>
           <a
             href="/"

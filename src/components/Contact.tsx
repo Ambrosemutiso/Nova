@@ -42,14 +42,14 @@ export default function ContactUs() {
               <Mail className="w-5 h-5 text-orange-500 mt-1" />
               <div>
                 <strong>Email:</strong>
-                <p>support@novaxpress.co.ke</p>
+                <p>support@novaxmax.com</p>
               </div>
             </li>
             <li className="flex items-start gap-3">
               <Phone className="w-5 h-5 text-orange-500 mt-1" />
               <div>
                 <strong>Phone:</strong>
-                <p>+254 712 345 678</p>
+                <p>+254 798 437 508</p>
               </div>
             </li>
             <li className="flex items-start gap-3">
@@ -63,7 +63,7 @@ export default function ContactUs() {
               <MapPin className="w-5 h-5 text-orange-500 mt-1" />
               <div>
                 <strong>Location:</strong>
-                <p>NovaXpress HQ, Nairobi, Kenya</p>
+                <p>NovaXmax HQ, Nairobi, Kenya</p>
               </div>
             </li>
             <li className="flex items-start gap-3">
@@ -151,7 +151,7 @@ export default function ContactUs() {
           Whether it’s feedback, partnership, or technical support — NovaXpress is just one message away.
         </p>
         <a
-          href="mailto:support@novaxpress.co.ke"
+          href="mailto:support@novaxmax.com"
           className="inline-block bg-orange-600 text-white py-3 px-8 rounded-full font-medium hover:bg-orange-700 transition"
         >
           Email Us Now

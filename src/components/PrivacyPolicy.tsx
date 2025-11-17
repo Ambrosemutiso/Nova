@@ -29,7 +29,7 @@ export default function PrivacyPolicy() {
             <h2 className="text-2xl font-semibold text-gray-900">1. Information We Collect</h2>
           </div>
           <p className="text-gray-700 mb-3">
-            To deliver a smooth and personalized experience, NovaXpress collects information that helps us serve you better, such as:
+            To deliver a smooth and personalized experience, NovaXmax collects information that helps us serve you better, such as:
           </p>
           <ul className="list-disc list-inside text-gray-700 space-y-2">
             <li>Personal details — your name, email address, phone number, and shipping information.</li>
@@ -88,7 +88,7 @@ export default function PrivacyPolicy() {
             <h2 className="text-2xl font-semibold text-gray-900">4. Sharing & Disclosure</h2>
           </div>
           <p className="text-gray-700">
-            NovaXpress does not sell, rent, or trade your personal information.  
+            NovaXmax does not sell, rent, or trade your personal information.  
             We may share limited data only with trusted service providers (such as payment gateways or logistics partners)
             to fulfill orders and improve platform performance — under strict confidentiality agreements.
           </p>
@@ -128,10 +128,10 @@ export default function PrivacyPolicy() {
           <p className="text-gray-700">
             For questions, data requests, or privacy concerns, please contact our support team at:{' '}
             <a
-              href="mailto:privacy@novaxpress.africa"
+              href="mailto:privacy@novaxmax.com"
               className="text-orange-500 font-medium hover:underline"
             >
-              privacy@novaxpress.africa
+              privacy@novaxmax.com
             </a>.
           </p>
         </motion.div>
@@ -142,7 +142,7 @@ export default function PrivacyPolicy() {
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold mb-3">Your Privacy, Our Priority</h2>
           <p className="text-lg mb-8">
-            NovaXpress is built on trust, transparency, and respect for your data.
+            NovaXmax is built on trust, transparency, and respect for your data.
             We’ll always protect your privacy as you shop and sell online.
           </p>
           <a

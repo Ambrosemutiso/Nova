@@ -11,7 +11,7 @@ export default function ShippingAndDelivery() {
         <div className="max-w-5xl mx-auto">
           <h1 className="text-4xl sm:text-5xl font-extrabold mb-4">Shipping & Delivery Policy</h1>
           <p className="text-lg sm:text-xl max-w-3xl mx-auto">
-            NovaXpress ensures your orders are delivered safely, quickly, and affordably across East Africa.
+            NovaXmax ensures your orders are delivered safely, quickly, and affordably across East Africa.
           </p>
         </div>
       </section>
@@ -30,7 +30,7 @@ export default function ShippingAndDelivery() {
             <h2 className="text-2xl font-semibold text-gray-900">1. Delivery Coverage</h2>
           </div>
           <p className="text-gray-700">
-            NovaXpress operates across <strong>Kenya, Uganda, Tanzania, Rwanda, Ethiopia, South Sudan, and Somalia</strong>.
+            NovaXmax operates across <strong>Kenya, Uganda, Tanzania, Rwanda, Ethiopia, South Sudan, and Somalia</strong>.
             Depending on the seller’s location, delivery times may vary.  
             We partner with trusted regional couriers and independent vendors to ensure smooth and timely delivery.
           </p>
@@ -48,7 +48,7 @@ export default function ShippingAndDelivery() {
             <h2 className="text-2xl font-semibold text-gray-900">2. Delivery Timelines</h2>
           </div>
           <ul className="list-disc list-inside text-gray-700 space-y-2">
-            <li><strong>Local Deliveries (within the same country):</strong> Typically take 1–3 business days.</li>
+            <li><strong>Local Deliveries (within the same country):</strong> Typically may take 1–3 business days.</li>
             <li><strong>Cross-Border Deliveries (between East African countries):</strong> Usually delivered within 5–10 business days.</li>
             <li>Public holidays and remote area deliveries may slightly extend the timeline.</li>
           </ul>
@@ -88,7 +88,7 @@ export default function ShippingAndDelivery() {
           </div>
           <p className="text-gray-700">
             Once your order is shipped, you’ll receive a tracking link or code via email or SMS.  
-            You can monitor your order’s progress directly through your NovaXpress account or the courier’s tracking system.
+            You can monitor your order’s progress directly through your NovaXmax account or the courier’s tracking system.
           </p>
         </motion.div>
 
@@ -108,7 +108,7 @@ export default function ShippingAndDelivery() {
             In such cases, we’ll keep you updated throughout the process.
           </p>
           <ul className="list-disc list-inside text-gray-700 space-y-2">
-            <li>If your package is lost or severely delayed, NovaXpress will investigate and assist with replacement or refund procedures.</li>
+            <li>If your package is lost or severely delayed, NovaXmax will investigate and assist with replacement or refund procedures.</li>
             <li>We encourage buyers to ensure accurate shipping details to avoid delivery issues.</li>
           </ul>
         </motion.div>
@@ -127,10 +127,10 @@ export default function ShippingAndDelivery() {
           <p className="text-gray-700">
             For questions regarding your shipment or delivery updates, reach out to our logistics support team at{' '}
             <a
-              href="mailto:support@novaxpress.africa"
+              href="mailto:support@novaxmax.com"
               className="text-orange-500 font-medium hover:underline"
             >
-              support@novaxpress.africa
+              support@novaxmax.com
             </a>.  
             Our team is available 7 days a week to assist with any shipping-related concerns.
           </p>
@@ -142,7 +142,7 @@ export default function ShippingAndDelivery() {
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold mb-3">Fast, Reliable & Transparent</h2>
           <p className="text-lg mb-8">
-            At NovaXpress, every delivery is handled with care and efficiency.  
+            At NovaXmax, every delivery is handled with care and efficiency.  
             Shop with peace of mind knowing your orders are always in safe hands.
           </p>
           <a

@@ -38,7 +38,7 @@ export default function TrackOrder() {
           Track Your Order
         </h1>
         <p className="text-gray-600 max-w-2xl mx-auto text-lg">
-          Stay informed about your NovaXpress orders in real-time. Enter your order ID to track your
+          Stay informed about your NovaXmax orders in real-time. Enter your order ID to track your
           package and view its latest status.
         </p>
       </motion.div>
@@ -65,7 +65,7 @@ export default function TrackOrder() {
           </button>
         </form>
         <p className="text-sm text-gray-500 mt-3 text-center">
-          You can also log into your NovaXpress account to track multiple orders.
+          You can also log into your NovaXmax account to track multiple orders.
         </p>
       </motion.div>
 
@@ -101,7 +101,7 @@ export default function TrackOrder() {
           If you’re unable to find your order or need assistance, contact our support team with your order number.
         </p>
         <a
-          href="mailto:support@novaxpress.co.ke"
+          href="mailto:support@novaxmax.com"
           className="inline-block bg-orange-600 text-white py-3 px-8 rounded-full font-medium hover:bg-orange-700 transition"
         >
           Contact Support

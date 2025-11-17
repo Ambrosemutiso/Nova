@@ -48,10 +48,10 @@ export default function HowToShop() {
         className="text-center px-6 mb-12"
       >
         <h1 className="text-4xl font-extrabold text-orange-600 mb-3">
-          How to Shop on NovaXpress
+          How to Shop on NovaXmax
         </h1>
         <p className="text-gray-600 max-w-2xl mx-auto text-lg">
-          Shopping with NovaXpress is easy, secure, and convenient. Follow these quick steps to get your
+          Shopping with NovaXmax is easy, secure, and convenient. Follow these quick steps to get your
           favorite items delivered right to your doorstep.
         </p>
       </motion.div>
@@ -83,7 +83,7 @@ export default function HowToShop() {
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Ready to Start Shopping?</h2>
         <p className="text-gray-600 max-w-xl mx-auto mb-8">
           Discover amazing deals and trusted sellers across East Africa. Join thousands of happy shoppers
-          who love NovaXpress for its reliability and convenience.
+          who love NovaXmax for its reliability and convenience.
         </p>
         <Link
           href="/shops"

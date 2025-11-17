@@ -1,16 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import Users from "@/app/NovaXpress/dashboard/components/users/page";
-import Products from "@/app/NovaXpress/dashboard/components/products/page";
-import Sellers from "@/app/NovaXpress/dashboard/components/sellers/page";
-import Orders from "@/app/NovaXpress/dashboard/components/orders/page";
-import Transactions from "@/app/NovaXpress/dashboard/components/transactions/page";
-import Reports from "@/app/NovaXpress/dashboard/components/reports/page";
-import Coupons from "@/app/NovaXpress/dashboard/components/orders/page";
-import Mailing from "@/app/NovaXpress/dashboard/components/mailing/page";
-import Settings from "@/app/NovaXpress/dashboard/components/orders/page";
-import Analytics from "@/app/NovaXpress/dashboard/components/orders/page";
+import Users from "@/app/NovaXmax/dashboard/components/users/page";
+import Products from "@/app/NovaXmax/dashboard/components/products/page";
+import Sellers from "@/app/NovaXmax/dashboard/components/sellers/page";
+import Orders from "@/app/NovaXmax/dashboard/components/orders/page";
+import Transactions from "@/app/NovaXmax/dashboard/components/transactions/page";
+import Reports from "@/app/NovaXmax/dashboard/components/reports/page";
+import Coupons from "@/app/NovaXmax/dashboard/components/orders/page";
+import Mailing from "@/app/NovaXmax/dashboard/components/mailing/page";
+import Settings from "@/app/NovaXmax/dashboard/components/orders/page";
+import Analytics from "@/app/NovaXmax/dashboard/components/orders/page";
 
 const navItems = [
   { name: "Dashboard", key: "dashboard" },

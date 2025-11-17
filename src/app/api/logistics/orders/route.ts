@@ -5,7 +5,7 @@ import Order from "@/app/models/orders";
 import LogisticsPartner from "@/app/models/Logistics"; // your logistics model
 
 // Secure logistics JWT secret
-const LOGISTICS_JWT_SECRET = process.env.LOGISTICS_JWT_SECRET || "supersecretlogisticskey";
+const LOGISTICS_JWT_SECRET = process.env.JWT_SECRET || "secret_ecom";
 
 // ---------------------------
 // Helper: Verify Logistics Token
@@ -22,7 +22,6 @@ const verifyLogisticsToken = (req: NextRequest) => {
     return null;
   }
 };
-
 // ---------------------------
 // GET → Fetch ALL Orders Assigned to Logistics Partner
 // ---------------------------

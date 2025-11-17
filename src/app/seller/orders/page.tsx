@@ -167,7 +167,7 @@ export default function SellerOrdersPage() {
 
   const handleViewLabel = async (order: Order) => {
     const trackingNumber = await getOrCreateTrackingNumber(order);
-    const qrData = await QRCode.toDataURL(`https://novake.vercel.app/orders?tracking=${trackingNumber}`);
+    const qrData = await QRCode.toDataURL(`https://novaxmax.com/orders?tracking=${trackingNumber}`);
 
     const canvas = document.createElement('canvas');
     JsBarcode(canvas, trackingNumber, { format: 'CODE128', width: 2, height: 50 });
@@ -182,7 +182,6 @@ export default function SellerOrdersPage() {
 const handleDownloadLabelPDF = () => {
   if (!selectedLabelOrder || !qrSrc || !barcodeSrc) return;
 
-  const seller = JSON.parse(localStorage.getItem('sellerUser') || '{}');
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a6' });
 
   // Header bar
@@ -190,17 +189,7 @@ const handleDownloadLabelPDF = () => {
   pdf.rect(0, 0, 105, 15, 'F');
   pdf.setTextColor(255, 255, 255);
   pdf.setFontSize(14);
-  pdf.text('NovaXpress Delivery Label', 10, 10);
-
-  // Seller details
-  pdf.setTextColor(0, 0, 0);
-  pdf.setFontSize(10);
-  pdf.text('Seller Details:', 10, 22);
-  pdf.setFontSize(9);
-  pdf.text(`Name: ${seller.name || 'N/A'}`, 10, 27);
-  pdf.text(`Shop: ${seller.shopName || 'N/A'}`, 10, 32);
-  pdf.text(`Phone: ${seller.phone || 'N/A'}`, 10, 37);
-  pdf.text(`City: ${seller.city || 'N/A'}`, 10, 42);
+  pdf.text('NovaXmax Delivery Label', 10, 10);
 
   // Buyer details
   const buyerY = 49;
@@ -444,10 +433,13 @@ const handleDownloadLabelPDF = () => {
           className="h-14 object-contain mb-2 dark:invert"
         />
         <h2 className="text-xl font-semibold text-orange-600">
-          NovaXpress Delivery Label
+          NovaXmax Delivery Label
         </h2>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          www.novaxpress.co.ke | support@novaxpress.co.ke
+          www.novaxmax.com | support@novaxmax.com
+        </p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          P.O BOX 8696-00300 | Ronald Ngala St | Nairobi, Kenya
         </p>
       </div>
 

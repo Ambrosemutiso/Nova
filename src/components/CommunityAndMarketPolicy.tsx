@@ -32,7 +32,7 @@ export default function CommunityEthics() {
             <h2 className="text-2xl font-semibold text-gray-900">1. Our Commitment to Fair Commerce</h2>
           </div>
           <p className="text-gray-700">
-            NovaXpress stands for fairness and transparency. We ensure that buyers and sellers operate within a space built on honesty,
+            NovaXmax stands for fairness and transparency. We ensure that buyers and sellers operate within a space built on honesty,
             integrity, and mutual respect. Every user is treated equally — regardless of location, background, or business size.
           </p>
         </motion.div>
@@ -49,7 +49,7 @@ export default function CommunityEthics() {
             <h2 className="text-2xl font-semibold text-gray-900">2. Inclusivity & Equal Opportunity</h2>
           </div>
           <p className="text-gray-700">
-            We celebrate diversity and believe everyone deserves access to opportunity. NovaXpress encourages sellers from every
+            We celebrate diversity and believe everyone deserves access to opportunity. NovaXmax encourages sellers from every
             background — from small rural entrepreneurs to large brands — to participate and thrive in the digital economy.
           </p>
         </motion.div>
@@ -66,7 +66,7 @@ export default function CommunityEthics() {
             <h2 className="text-2xl font-semibold text-gray-900">3. Integrity in Every Transaction</h2>
           </div>
           <p className="text-gray-700">
-            Trust is the foundation of NovaXpress. We promote authentic listings, clear communication, and reliable fulfillment.
+            Trust is the foundation of NovaXmax. We promote authentic listings, clear communication, and reliable fulfillment.
             Fraudulent behavior, misinformation, or exploitation will not be tolerated and may result in account suspension.
           </p>
         </motion.div>
@@ -83,7 +83,7 @@ export default function CommunityEthics() {
             <h2 className="text-2xl font-semibold text-gray-900">4. Respect & Responsible Communication</h2>
           </div>
           <p className="text-gray-700">
-            We expect all members of the NovaXpress community to engage respectfully. Discrimination, hate speech, harassment, or
+            We expect all members of the NovaXmax community to engage respectfully. Discrimination, hate speech, harassment, or
             intimidation have no place on our platform. Our support team is available to handle reports of misconduct quickly and fairly.
           </p>
         </motion.div>
@@ -100,7 +100,7 @@ export default function CommunityEthics() {
             <h2 className="text-2xl font-semibold text-gray-900">5. Sustainability & Local Empowerment</h2>
           </div>
           <p className="text-gray-700">
-            We’re committed to supporting sustainable businesses and promoting local growth. By choosing NovaXpress, you help build
+            We’re committed to supporting sustainable businesses and promoting local growth. By choosing NovaXmax, you help build
             stronger economies and empower communities across East Africa.
           </p>
         </motion.div>
@@ -117,7 +117,7 @@ export default function CommunityEthics() {
             <h2 className="text-2xl font-semibold text-gray-900">6. Shared Growth & Collaboration</h2>
           </div>
           <p className="text-gray-700">
-            NovaXpress thrives on collaboration. We continuously work with sellers, buyers, and partners to improve the marketplace,
+            NovaXmax thrives on collaboration. We continuously work with sellers, buyers, and partners to improve the marketplace,
             innovate, and share success stories that inspire more people to join the digital economy.
           </p>
         </motion.div>
@@ -128,7 +128,7 @@ export default function CommunityEthics() {
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold mb-3">Together, We Build a Trusted Marketplace</h2>
           <p className="text-lg mb-8">
-            NovaXpress isn’t just an online store — it’s a movement for ethical commerce and community empowerment.
+            NovaXmax isn’t just an online store — it’s a movement for ethical commerce and community empowerment.
           </p>
           <a
             href="/"

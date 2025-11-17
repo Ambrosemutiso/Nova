@@ -9,7 +9,7 @@ export default function AboutNovaXpress() {
       <section className="relative bg-gradient-to-r from-orange-500 via-orange-400 to-yellow-400 text-white py-24 px-6 text-center">
         <div className="max-w-5xl mx-auto">
           <h1 className="text-4xl sm:text-5xl font-extrabold mb-4">
-            About <span className="text-white">NovaXpress</span>
+            About <span className="text-white">NovaXmax</span>
           </h1>
           <p className="text-lg sm:text-xl max-w-3xl mx-auto">
             Empowering East Africa’s digital marketplace — connecting buyers and sellers across Kenya,
@@ -31,7 +31,7 @@ export default function AboutNovaXpress() {
         <div>
           <h2 className="text-3xl font-bold text-orange-600 mb-4">Who We Are</h2>
           <p className="text-gray-700 leading-relaxed mb-4">
-            NovaXpress is a next-generation multi-vendor eCommerce platform built to enable seamless
+            NovaXmax is a next-generation multi-vendor eCommerce platform built to enable seamless
             buying and selling across East Africa. We bring together individuals, entrepreneurs, and
             businesses — providing the digital tools and infrastructure needed to thrive online.
           </p>
@@ -63,7 +63,7 @@ export default function AboutNovaXpress() {
               },
               {
                 title: 'Accessibility',
-                text: 'NovaXpress is designed for everyone — intuitive, mobile-friendly, and inclusive for users across different regions.',
+                text: 'NovaXmax is designed for everyone — intuitive, mobile-friendly, and inclusive for users across different regions.',
               },
               {
                 title: 'Community Growth',
@@ -95,7 +95,7 @@ export default function AboutNovaXpress() {
       <section className="max-w-5xl mx-auto px-6 py-16 text-center">
         <h2 className="text-3xl font-bold text-orange-600 mb-4">Our Vision</h2>
         <p className="text-lg text-gray-700 leading-relaxed max-w-3xl mx-auto">
-          To become East Africa’s leading online marketplace — where technology, trust, and opportunity
+          To become world leading online marketplace — where technology, trust, and opportunity
           meet to empower millions of digital entrepreneurs and simplify shopping for everyone.
         </p>
       </section>
@@ -103,13 +103,13 @@ export default function AboutNovaXpress() {
       {/* CTA Section */}
       <section className="bg-orange-500 text-white py-16 px-6 text-center">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold mb-4">Join the NovaXpress Community</h2>
+          <h2 className="text-3xl font-bold mb-4">Join the NovaXmax Community</h2>
           <p className="text-lg mb-8">
             Whether you’re a seller looking to expand your reach or a buyer searching for trusted products,
             NovaXpress is your gateway to a smarter, digital economy.
           </p>
           <a
-            href="/seller/register"
+            href="/desc/sell-on-novaxmax"
             className="inline-block bg-white text-orange-600 font-semibold py-3 px-8 rounded-full shadow hover:bg-gray-100 transition"
           >
             Start Selling Today

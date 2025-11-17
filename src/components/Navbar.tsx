@@ -245,15 +245,18 @@ useEffect(() => {
         exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.25 }}
         className="
-          absolute 
+          fixed 
           right-0
-          top-10
-          w-[90vw]
-          max-w-[350px]
+          left-1/2
+          top-16
+          w-[92vw]
+          max-w-[420px]
           md:w-[240px]
           md:top-0
           md:-right-8
-          z-[60]
+          z-[9999]
+          md: translate-x-0
+          md: fixed-none
         "
       >
         <input

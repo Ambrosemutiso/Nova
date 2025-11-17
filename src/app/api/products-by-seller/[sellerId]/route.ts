@@ -8,7 +8,7 @@ export async function GET(req: Request, { params }: { params: { sellerId: string
   const { sellerId } = params;
 
   try {
-    const products = await Product.find({ sellerId }).limit(6);
+    const products = await Product.find({ sellerId }).limit(15);
     return NextResponse.json({ products });
     } catch (error) {
     console.error('Error fetching products:', error);
