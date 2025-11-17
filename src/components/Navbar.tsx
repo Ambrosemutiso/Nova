@@ -233,77 +233,85 @@ useEffect(() => {
         {/* Right Section */}
         <div className="flex items-center gap-4 relative ml-auto">
           {/* Search */}
-          <div ref={searchRef} className="relative flex items-center">
-            <AnimatePresence>
-              {showSearch && (
-                <motion.div
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: 240, opacity: 1 }}
-                  exit={{ width: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="absolute right-8"
-                >
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && searchTerm.trim()) {
-                        router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
-                        setShowSearch(false);
-                      }
-                    }}
-                    placeholder="Search products..."
-                    className="w-full border border-orange-300 rounded-full py-1.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
-                  />
+<div
+  ref={searchRef}
+  className="relative flex items-center"
+>
+  <AnimatePresence>
+    {showSearch && (
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.25 }}
+        className="
+          absolute 
+          right-0
+          top-10
+          w-[90vw]
+          max-w-[350px]
+          md:w-[240px]
+          md:top-0
+          md:-right-8
+          z-[60]
+        "
+      >
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search products..."
+          className="w-full border border-orange-300 rounded-full py-1.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
+        />
 
-                  {/* Suggestions */}
-                  {suggestions.length > 0 && (
-                    <ul className="absolute top-9 left-0 w-full bg-white border border-orange-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
-                      {suggestions.map((product: any, i) => (
-                        <li
-                          key={i}
-                          onClick={() => {
-                            router.push(`/product/${product._id}`);
-                            setSearchTerm('');
-                            setShowSearch(false);
-                          }}
-                          className="flex items-center gap-3 px-3 py-2 hover:bg-orange-50 cursor-pointer"
-                        >
-                          <CldImage
-                            src={getPublicId(product.images[0])}
-                            alt={product.name}
-                            width="40"
-                            height="40"
-                            className="rounded-md object-cover"
-                          />
-                          <div className="flex flex-col">
-                            <span className="text-sm text-gray-800 font-medium truncate max-w-[130px]">
-                              {product.name}
-                            </span>
-                            <span className="text-xs text-orange-600 font-semibold">
-                              Ksh {product.calculatedPrice?.toLocaleString()}
-                            </span>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
+        {/* Suggestions */}
+        {suggestions.length > 0 && (
+          <ul className="absolute top-10 left-0 w-full bg-white border border-orange-200 rounded-lg shadow-lg z-[70] max-h-80 overflow-y-auto">
+            {suggestions.map((product: any, i) => (
+              <li
+                key={i}
+                onClick={() => {
+                  router.push(`/product/${product._id}`);
+                  setSearchTerm('');
+                  setShowSearch(false);
+                }}
+                className="flex items-center gap-3 px-3 py-2 hover:bg-orange-50 cursor-pointer"
+              >
+                <CldImage
+                  src={getPublicId(product.images[0])}
+                  alt={product.name}
+                  width="40"
+                  height="40"
+                  className="rounded-md object-cover"
+                />
+                <div className="flex flex-col">
+                  <span className="text-sm text-gray-800 font-medium truncate max-w-[130px]">
+                    {product.name}
+                  </span>
+                  <span className="text-xs text-orange-600 font-semibold">
+                    Ksh {product.calculatedPrice?.toLocaleString()}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </motion.div>
+    )}
+  </AnimatePresence>
 
-            <button
-              onClick={() => {
-                setShowSearch((prev) => !prev);
-                setShowDropdown(false);
-                setShowNotifModal(false);
-              }}
-              className="text-2xl text-orange-500 relative z-10"
-            >
-              <FiSearch />
-            </button>
-          </div>
+  <button
+    onClick={() => {
+      setShowSearch((prev) => !prev);
+      setShowDropdown(false);
+      setShowNotifModal(false);
+    }}
+    className="text-2xl text-orange-500 relative z-[50]"
+  >
+    <FiSearch />
+  </button>
+</div>
+
 
       {/* Country Flag & Currency */}
           {user && (
