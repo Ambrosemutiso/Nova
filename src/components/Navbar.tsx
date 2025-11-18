@@ -220,8 +220,8 @@ useEffect(() => {
         {/* Logo */}
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/')}>
       <img
-      src="/Logo.png"
-      alt="Novaxpress Logo"
+      src="/Logo.jpg"
+      alt="NovaXmax Logo"
       className="h-10 w-auto object-contain object-center scale-110 hover:scale-115 transition-transform duration-300 rounded-none
         dark:invert dark:brightness-110 dark:contrast-105 dark:drop-shadow-[0_0_6px_rgba(255,255,255,0.25)]"
       style={{
