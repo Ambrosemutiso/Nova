@@ -433,7 +433,7 @@ const submitComment = async () => {
 <div className="flex-1 overflow-y-auto px-5 py-6 space-y-5">
 {/* FALLBACK WHEN NO COMMENTS */}
 {commentDrawer.comments.length === 0 && (
-  <div className="w-full flex flex-col items-center justify-center py-12 animate-fadeIn opacity-0">
+  <div className="w-full flex flex-col items-center justify-center py-12 animate-fadeIn">
 
     {/* Illustration */}
     <div className="w-32 h-32 mb-6">

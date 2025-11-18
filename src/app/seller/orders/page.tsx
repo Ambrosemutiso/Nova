@@ -427,7 +427,7 @@ const handleDownloadLabelPDF = () => {
       {/* Company Header */}
       <div className="flex flex-col items-center border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
         <img
-          src="/Logo.jpg"
+          src="/Logo.png"
           alt="NovaXmax Logo"
           className="h-14 object-contain mb-2 dark:invert"
         />

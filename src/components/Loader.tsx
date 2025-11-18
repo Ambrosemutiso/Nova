@@ -27,7 +27,7 @@ export default function Loader() {
         <div className="rounded-full shadow-lg shadow-orange-300/40 p-3 bg-white/80 backdrop-blur-md">
           <Image
             src="/Logo.png"
-            alt="Novaxpress Logo"
+            alt="NovaXmax Logo"
             width={120}
             height={120}
             priority
