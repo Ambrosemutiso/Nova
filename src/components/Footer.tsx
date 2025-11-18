@@ -15,7 +15,7 @@ export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () =>
   if (isSeller) {
     return (
       <footer className="bg-white shadow-md p-4 text-center text-gray-600">
-        &copy; {new Date().getFullYear()}NovaXpress. All rights reserved.
+        &copy; {new Date().getFullYear()}NovaXmax. All rights reserved.
       </footer>
     );
   }

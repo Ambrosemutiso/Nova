@@ -186,7 +186,7 @@ export async function POST(req: NextRequest) {
         <!-- Header -->
         <div class="header">
           <img src="/Logo.jpg" alt="NovaXmax Logo" width="120" />
-          <h1>${isBuyer ? "Welcome to NovaXpress!" : "Welcome to NovaXpress Seller Hub!"}</h1>
+          <h1>${isBuyer ? "Welcome to NovaXmax!" : "Welcome to NovaXmax Seller Hub!"}</h1>
         </div>
 
         <!-- Body -->

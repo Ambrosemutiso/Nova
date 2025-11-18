@@ -244,7 +244,6 @@ const handleDownloadLabelPDF = () => {
 
   return (
     <div className="md:ml-64 px-6 pt-28 pb-10">
-      <h1 className="text-2xl font-bold text-orange-600 mb-4">Seller Orders</h1>
 
       {/* Filters Row (non-intrusive) */}
       <div className="mb-6 flex flex-wrap gap-3 items-center">
@@ -438,9 +437,6 @@ const handleDownloadLabelPDF = () => {
         <p className="text-sm text-gray-500 dark:text-gray-400">
           www.novaxmax.com | support@novaxmax.com
         </p>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          P.O BOX 8696-00300 | Ronald Ngala St | Nairobi, Kenya
-        </p>
       </div>
 
       {/* Customer Information */}
@@ -522,7 +518,7 @@ const handleDownloadLabelPDF = () => {
       </div>
 
       <p className="text-center text-xs text-gray-500 mt-3">
-        © {new Date().getFullYear()} NovaXpress Ltd. All rights reserved.
+        © {new Date().getFullYear()} NovaXmax. All rights reserved.
       </p>
     </div>
   </div>

@@ -125,7 +125,7 @@ export default function SellerPolicy() {
             <h2 className="text-2xl font-semibold text-gray-900">6. Communication & Professional Conduct</h2>
           </div>
           <p className="text-gray-700">
-            All sellers are expected to maintain respectful and professional communication with buyers and NovaXpress support staff.
+            All sellers are expected to maintain respectful and professional communication with buyers and NovaXmax support staff.
             Abusive, discriminatory, or unprofessional behavior is not tolerated.
           </p>
         </motion.div>

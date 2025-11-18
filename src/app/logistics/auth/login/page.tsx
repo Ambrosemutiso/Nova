@@ -117,7 +117,7 @@ export default function LogisticsAuth() {
             className="h-16 w-auto mx-auto rounded-lg mb-2"
           />
           <h2 className="text-2xl font-bold text-white">
-            {isLogin ? 'Logistics Partner Login' : 'Join NovaXpress Logistics'}
+            {isLogin ? 'Logistics Partner Login' : 'Join NovaXmax Logistics'}
           </h2>
           <p className="text-sm text-gray-300 mt-1">
             Deliver excellence with NovaXmax 🚚

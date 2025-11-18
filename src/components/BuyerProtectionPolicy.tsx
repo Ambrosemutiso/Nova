@@ -48,7 +48,7 @@ export default function BuyerProtectionPolicy() {
             <h2 className="text-2xl font-semibold text-gray-900">2. Secure & Verified Payments</h2>
           </div>
           <p className="text-gray-700 mb-3">
-            All payments on NovaXpress are processed through verified, encrypted gateways. We never store sensitive payment
+            All payments on NovaXmax are processed through verified, encrypted gateways. We never store sensitive payment
             details like card numbers or banking credentials.
           </p>
           <ul className="list-disc list-inside text-gray-700 space-y-2">
@@ -70,7 +70,7 @@ export default function BuyerProtectionPolicy() {
             <h2 className="text-2xl font-semibold text-gray-900">3. Authentic Sellers & Verified Listings</h2>
           </div>
           <p className="text-gray-700">
-            We thoroughly review sellers before they list products on NovaXpress. Only verified sellers are allowed to operate,
+            We thoroughly review sellers before they list products on NovaXmax. Only verified sellers are allowed to operate,
             ensuring genuine listings and trustworthy experiences.
           </p>
           <ul className="list-disc list-inside text-gray-700 space-y-2 mt-2">
@@ -93,7 +93,7 @@ export default function BuyerProtectionPolicy() {
           </div>
           <p className="text-gray-700 mb-3">
             In case of damaged, missing, or incorrect items, buyers can file a dispute within the allowed return window.
-            NovaXpress mediates disputes fairly to ensure both parties reach a satisfactory resolution.
+            NovaXmax mediates disputes fairly to ensure both parties reach a satisfactory resolution.
           </p>
           <ul className="list-disc list-inside text-gray-700 space-y-2">
             <li>Refunds are issued once the issue is verified.</li>
@@ -115,7 +115,7 @@ export default function BuyerProtectionPolicy() {
           </div>
           <p className="text-gray-700">
             We encourage buyers to report any unethical activity, fake listings, or seller misconduct.  
-            NovaXpress actively monitors reports to maintain transparency and safety across the marketplace.
+            NovaXmax actively monitors reports to maintain transparency and safety across the marketplace.
           </p>
         </motion.div>
 
@@ -134,7 +134,7 @@ export default function BuyerProtectionPolicy() {
             Our Buyer Protection team is available 7 days a week.  
             Reach us via{' '}
             <a
-              href="mailto:support@novaxpress.africa"
+              href="mailto:support@novaxmax.com"
               className="text-orange-500 font-medium hover:underline"
             >
               support@novaxmax.com

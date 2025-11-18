@@ -37,7 +37,7 @@ export default function Careers() {
           </p>
           <p className="text-gray-700 leading-relaxed">
             We’re looking for bold thinkers, builders, and problem-solvers who share our passion for innovation.
-            If you love challenges, thrive in fast-paced environments, and believe in making a real impact, NovaXpress is the place for you.
+            If you love challenges, thrive in fast-paced environments, and believe in making a real impact, NovaXmax is the place for you.
           </p>
         </div>
       </section>
@@ -103,7 +103,7 @@ export default function Careers() {
           If you don’t see a role that fits, feel free to reach out; we’re always on the lookout for exceptional talent.
         </p>
         <div className="bg-gray-50 border border-dashed border-gray-300 rounded-2xl p-10 text-gray-500">
-          <p>No open positions at the moment. Please check back soon or email your resume to <a href="mailto:careers@novaxpress.africa" className="text-orange-500 font-medium hover:underline">careers@novaxpress.africa</a>.</p>
+          <p>No open positions at the moment. Please check back soon or email your resume to <a href="mailto:careers@novaxmax.com" className="text-orange-500 font-medium hover:underline">careers@novaxpress.africa</a>.</p>
         </div>
       </section>
 

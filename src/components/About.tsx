@@ -37,7 +37,7 @@ export default function AboutNovaXpress() {
           </p>
           <p className="text-gray-700 leading-relaxed">
             Our mission is simple: to make online commerce more accessible, affordable, and reliable for
-            everyone — from local artisans and startups to large-scale retailers. NovaXpress gives every
+            everyone — from local artisans and startups to large-scale retailers. NovaXmax gives every
             seller the chance to reach new audiences and scale beyond borders.
           </p>
         </div>

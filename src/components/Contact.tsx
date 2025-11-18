@@ -148,7 +148,7 @@ export default function ContactUs() {
       >
         <h3 className="text-2xl font-bold text-gray-800 mb-4">We’re Here for You</h3>
         <p className="text-gray-600 max-w-2xl mx-auto mb-8">
-          Whether it’s feedback, partnership, or technical support — NovaXpress is just one message away.
+          Whether it’s feedback, partnership, or technical support — NovaXmax is just one message away.
         </p>
         <a
           href="mailto:support@novaxmax.com"

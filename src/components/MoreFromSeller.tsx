@@ -35,7 +35,7 @@ export default function MoreFromSeller({ sellerId, currentProductId }: { sellerI
    <div className="mt-10">
       <h2 className="text-xl font-semibold mb-4">More from this seller</h2>
       <div className="flex gap-4 overflow-x-auto pb-2">
-        {products.slice(0, 10).map((product) => (
+        {products.slice(0, 15).map((product) => (
           <ProductCard key={product._id} product={product} />
           ))}
       </div>

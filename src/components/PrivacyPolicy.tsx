@@ -11,7 +11,7 @@ export default function PrivacyPolicy() {
         <div className="max-w-5xl mx-auto">
           <h1 className="text-4xl sm:text-5xl font-extrabold mb-4">Privacy Policy</h1>
           <p className="text-lg sm:text-xl max-w-3xl mx-auto">
-            Your privacy matters to us. This policy explains how NovaXpress collects, uses, and protects your information.
+            Your privacy matters to us. This policy explains how NovaXmax collects, uses, and protects your information.
           </p>
         </div>
       </section>
