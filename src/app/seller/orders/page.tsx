@@ -234,9 +234,9 @@ const handleDownloadLabelPDF = () => {
   // Footer
   pdf.setFontSize(8);
   pdf.setTextColor(120);
-  pdf.text('Thank you for using NovaXpress 🚚', 10, afterTableY + 36);
+  pdf.text('Thank you for using NovaXmax 🚚', 10, afterTableY + 36);
 
-  pdf.save(`NovaXpress_Label_${selectedLabelOrder._id.slice(-6)}.pdf`);
+  pdf.save(`NovaXmax_Label_${selectedLabelOrder._id.slice(-6)}.pdf`);
 };
 
   // ✅ Extract available cities dynamically
@@ -427,8 +427,8 @@ const handleDownloadLabelPDF = () => {
       {/* Company Header */}
       <div className="flex flex-col items-center border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
         <img
-          src="/Logo.jpg"
-          alt="NovaXpress Logo"
+          src="/Logo.png"
+          alt="NovaXmax Logo"
           className="h-14 object-contain mb-2 dark:invert"
         />
         <h2 className="text-xl font-semibold text-orange-600">

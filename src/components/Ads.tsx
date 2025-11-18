@@ -187,31 +187,43 @@ export default function AdsFeedPage() {
   };
 
   // ---------------- LIKE / UNLIKE COMMENT ----------------
-  const toggleCommentLike = async (commentId: string) => {
-    if (!userId || !commentDrawer) return;
+const toggleCommentLike = async (commentId: string) => {
+  if (!userId || !commentDrawer) return;
 
-    try {
-      const res = await fetch('/api/ads/reaction', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          adId: commentDrawer._id,
-          action: 'comment_like',
-          userId,
-          commentId,
-        }),
-      });
+  try {
+    const res = await fetch("/api/ads/reaction", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        adId: commentDrawer._id,
+        action: "comment_like",
+        userId,
+        commentId,
+      }),
+    });
 
-      const data = await res.json();
-      if (!res.ok) return console.error('Failed to like comment', data.error);
+    const data = await res.json();
+    if (!res.ok) return console.error("Failed to like comment", data.error);
 
-      setAds((prev) =>
-        prev.map((ad) => (ad._id === commentDrawer._id ? { ...ad, comments: data.comments } : ad))
-      );
-    } catch (err) {
-      console.error('Error liking comment:', err);
-    }
-  };
+    // --- Update ADS feed ---
+    setAds(prev =>
+      prev.map(ad =>
+        ad._id === commentDrawer._id
+          ? { ...ad, comments: data.comments }
+          : ad
+      )
+    );
+
+    // --- Update comment drawer (🔥 fixes real-time like on both comments & replies) ---
+    setCommentDrawer(prev =>
+      prev ? { ...prev, comments: data.comments } : prev
+    );
+
+  } catch (err) {
+    console.error("Error liking comment:", err);
+  }
+};
+
 
   // ---------------- SUBMIT COMMENT ----------------
 const submitComment = async () => {
@@ -351,7 +363,7 @@ const submitComment = async () => {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="absolute bottom-0 left-0 w-full h-1/6 p-6 pb-10 z-[9999] bg-gradient-to-t from-black/80 to-transparent text-white"
+            className="absolute bottom-32 left-0 w-full p-6 pb-10 bg-gradient-to-t from-black/80 to-transparent text-white"
             >
             <h2 className="text-xl font-bold">{ad.title}</h2>
             {ad.description && <p className="text-gray-300 text-sm mt-1 line-clamp-2">{ad.description}</p>}
@@ -418,17 +430,74 @@ const submitComment = async () => {
               </div>
             )}
 
-            <div className="flex-1 overflow-y-auto px-5 py-3 space-y-5">
-              {commentDrawer.comments.map((c) => (
-                <CommentItem
-                  key={c._id}
-                  comment={c}
-                  onReply={setReplyTo}
-                  onLike={toggleCommentLike}
-                  userId={userId}
-                />
-              ))}
-            </div>
+<div className="flex-1 overflow-y-auto px-5 py-6 space-y-5">
+{/* FALLBACK WHEN NO COMMENTS */}
+{commentDrawer.comments.length === 0 && (
+  <div className="w-full flex flex-col items-center justify-center py-12 animate-fadeIn opacity-0">
+
+    {/* Illustration */}
+    <div className="w-32 h-32 mb-6">
+      <svg
+        viewBox="0 0 200 200"
+        className="w-full h-full"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle cx="100" cy="100" r="80" fill="#f3f4f6" />
+        <path
+          d="M60 90h80M60 115h55"
+          stroke="#9ca3af"
+          strokeWidth="6"
+          strokeLinecap="round"
+        />
+        <circle cx="75" cy="70" r="6" fill="#9ca3af" />
+      </svg>
+    </div>
+
+    {/* Message */}
+    <p className="text-gray-500 text-sm">
+      No comments yet —{" "}
+      <span className="font-semibold text-gray-700">be the first to comment</span>
+    </p>
+
+    {/* Pulsing arrow */}
+    <div className="mt-8 flex flex-col items-center">
+      <div className="animate-bounce">
+        <svg
+          width="28"
+          height="28"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#9ca3af"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M12 5v14" />
+          <path d="M5 12l7 7 7-7" />
+        </svg>
+      </div>
+
+      <p className="text-xs text-gray-400 mt-2">
+        Type below to add a comment
+      </p>
+    </div>
+  </div>
+)}
+
+
+  {/* COMMENTS LIST */}
+  {commentDrawer.comments.length > 0 &&
+    commentDrawer.comments.map((c) => (
+      <CommentItem
+        key={c._id}
+        comment={c}
+        onReply={setReplyTo}
+        onLike={toggleCommentLike}
+        userId={userId}
+      />
+    ))}
+</div>
+
 
             <div className="p-3 border-t bg-white">
               <div className="flex items-center gap-2">
