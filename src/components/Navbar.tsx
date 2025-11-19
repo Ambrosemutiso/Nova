@@ -370,14 +370,22 @@ useEffect(() => {
           {/* User or Sign-in */}
           {user ? (
             <div className="relative" ref={dropdownRef}>
+              {user.image ? (
                 <Image
-                  src={user.image  || `https://api.dicebear.com/7.x/thumbs/png?seed=${encodeURIComponent(user.name || 'guest')}`}
+                  src={user.image}
                   alt="Profile"
                   width={38}
                   height={38}
                   className="rounded-full cursor-pointer border"
                   onClick={() => setShowDropdown((prev) => !prev)}
                 />
+              ) : (
+                <FiUser
+                  size={18}
+                  className="text-orange-500 cursor-pointer hover:text-orange-600"
+                  onClick={() => setShowDropdown((prev) => !prev)}
+                />
+              )}
 
               <AnimatePresence>
                 {showDropdown && (

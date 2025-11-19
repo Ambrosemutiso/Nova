@@ -143,7 +143,7 @@ function BannerCard({ banner }: { banner: Banner }) {
         </h2>
 
         {/* Product info */}
-        <div className="flex justify-between items-center bg-white/90 p-2 rounded shadow">
+        <div className="flex justify-between items-center bg-white p-2 rounded shadow">
           {/* Product details */}
           <div className="w-2/3">
             <p className="text-gray-800 font-semibold text-sm truncate">
