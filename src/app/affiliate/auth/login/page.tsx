@@ -102,7 +102,7 @@ export default function AffiliateAuth() {
         className="relative z-10 backdrop-blur-md bg-white/10 border border-white/20 shadow-2xl rounded-2xl p-8 w-full max-w-md"
       >
         <div className="text-center mb-6">
-          <img src="/Logo.jpg" alt="Novaxpress Logo" className="h-16 w-auto mx-auto rounded-lg mb-2" />
+          <img src="/Logo.png" alt="NovaXmax Logo" className="h-16 w-auto mx-auto rounded-lg mb-2" />
           <h2 className="text-2xl font-bold text-white">
             {isLogin ? 'Affiliate Login' : 'Join NovaXmax Affiliates'}
           </h2>

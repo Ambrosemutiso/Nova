@@ -142,7 +142,7 @@ const handleForgotPassword = async () => {
         <button onClick={onClose} className="absolute top-3 right-3 text-gray-300 hover:text-orange-400">✕</button>
 
         <div className="text-center mb-6">
-          <img src="/Logo.jpg" alt="Novaxpress Logo" className="h-16 w-auto mx-auto rounded-lg mb-2" />
+          <img src="/Logo.png" alt="NovaXmax Logo" className="h-16 w-auto mx-auto rounded-lg mb-2" />
           <h2 className="text-2xl font-bold text-white">
             {isForgot
               ? 'Reset Password'

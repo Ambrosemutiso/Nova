@@ -112,8 +112,8 @@ export default function LogisticsAuth() {
       >
         <div className="text-center mb-6">
           <img
-            src="/Logo.jpg"
-            alt="NovaXpress Logo"
+            src="/Logo.png"
+            alt="NovaXmax Logo"
             className="h-16 w-auto mx-auto rounded-lg mb-2"
           />
           <h2 className="text-2xl font-bold text-white">
