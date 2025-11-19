@@ -16,10 +16,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://novaxpress.co.ke"),
-  title: "Novaxpress — Kenya’s Trusted Multi-Seller E-Commerce Marketplace",
+  metadataBase: new URL("https://novaxmax.com"),
+  title: "NovaXmax — Kenya’s Trusted Multi-Seller E-Commerce Marketplace",
   description:
-    "Buy, sell, and advertise products across Kenya with Novaxpress — a powerful multi-seller e-commerce platform connecting local vendors and buyers. Enjoy secure M-Pesa payments, fast delivery, and video ad promotions that help your business grow online.",
+    "Buy, sell, and advertise products across Kenya with Novaxmax — a powerful multi-seller e-commerce platform connecting local vendors and buyers. Enjoy secure M-Pesa payments, fast delivery, and video ad promotions that help your business grow online.",
   keywords: [
     "Kenya e-commerce",
     "online marketplace Kenya",
@@ -33,17 +33,17 @@ export const metadata: Metadata = {
     "Kenya delivery platform",
   ],
   openGraph: {
-    title: "Novaxmax — Kenya’s Trusted Multi-Seller E-Commerce Marketplace",
+    title: "NovaXmax — Kenya’s Trusted Multi-Seller E-Commerce Marketplace",
     description:
-      "Join Novaxpress to buy and sell across Kenya. Secure payments, fast delivery, and engaging video ads that boost your product visibility.",
-    url: "https://novaxpress.co.ke",
+      "Join NovaXmax to buy and sell across Kenya. Secure payments, fast delivery, and engaging video ads that boost your product visibility.",
+    url: "https://novaxmax.com",
     siteName: "Novaxpress",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Novaxpress Kenya Marketplace",
+        alt: "NovaXmax Kenya Marketplace",
       },
     ],
     locale: "en_KE",
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Novaxpress — Empowering Sellers, Connecting Kenya.",
+    title: "NovaXmax — Empowering Sellers, Connecting Kenya.",
     description:
       "Kenya’s leading multi-seller e-commerce marketplace. Promote your products with video ads, reach more buyers, and grow your business with Novaxpress.",
     images: ["/og-image.png"],

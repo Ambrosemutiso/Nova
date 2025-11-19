@@ -98,7 +98,7 @@ export default function AdsFeedPage() {
                 _id: String(c._id ?? 'temp-' + Date.now()),
                 userId: String(c.userId ?? ''),
                 username: c.username ?? 'Unknown',
-                avatar: c.avatar ?? 'https://ui-avatars.com/api/?name=User&background=random',
+                avatar: c.avatar ?? `https://api.dicebear.com/7.x/thumbs/png?seed=${encodeURIComponent(c.username || 'guest')}`,
                 text: String(c.text ?? ''),
                 createdAt: c.createdAt ?? new Date().toISOString(),
                 likes: Array.isArray(c.likes) ? c.likes.map(String) : [],
@@ -107,7 +107,7 @@ export default function AdsFeedPage() {
                       _id: String(r._id ?? 'temp-' + Date.now()),
                       userId: String(r.userId ?? ''),
                       username: r.username ?? 'Unknown',
-                      avatar: r.avatar ?? 'https://ui-avatars.com/api/?name=User&background=random',
+                      avatar: r.avatar ?? `https://api.dicebear.com/7.x/thumbs/png?seed=${encodeURIComponent(r.username || 'guest')}`,
                       text: String(r.text ?? ''),
                       createdAt: r.createdAt ?? new Date().toISOString(),
                       likes: Array.isArray(r.likes) ? r.likes.map(String) : [],
@@ -363,7 +363,7 @@ const submitComment = async () => {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="absolute bottom-10 left-0 w-full p-6 pb-10 bg-gradient-to-t from-black/80 to-transparent text-white"
+            className="absolute bottom-25 left-0 w-full p-6 pb-10 bg-gradient-to-t from-black/80 to-transparent text-white"
             >
             <h2 className="text-xl font-bold">{ad.title}</h2>
             {ad.description && <p className="text-gray-300 text-sm mt-1 line-clamp-2">{ad.description}</p>}

@@ -115,7 +115,7 @@ export default function ActiveShops() {
             >
               <div className="flex items-center gap-4">
                 <img
-                  src={seller.image || 'https://ui-avatars.com/api/?name=User&background=random'}
+                  src={seller.image || `https://api.dicebear.com/7.x/thumbs/png?seed=${encodeURIComponent(seller.name || 'guest')}`}
                   alt={seller.name}
                   loading="lazy"
                   className="w-14 h-14 rounded-full object-cover border border-gray-200"

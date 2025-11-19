@@ -370,9 +370,8 @@ useEffect(() => {
           {/* User or Sign-in */}
           {user ? (
             <div className="relative" ref={dropdownRef}>
-
                 <Image
-                  src={user.image || 'https://ui-avatars.com/api/?name=User&background=random'}
+                  src={user.image  || `https://api.dicebear.com/7.x/thumbs/png?seed=${encodeURIComponent(user.name || 'guest')}`}
                   alt="Profile"
                   width={38}
                   height={38}
