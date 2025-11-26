@@ -10,8 +10,8 @@ const sellerSchema = new mongoose.Schema({
   lowercase: true,
 },
   image: { type: String , default: null},
-  logo: { type: String },
-  banner: { type: String },
+  logo: { type: String , default: "" },
+  banner: { type: String , default: ""},
   phoneNumber: {
   type: String,
   default: null,   
