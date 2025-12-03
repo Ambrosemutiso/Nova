@@ -1,59 +1,36 @@
-import { NextResponse } from "next/server";
-import Withdrawal from "@/app/models/withdrawRequest";
+import { NextRequest, NextResponse } from "next/server";
+import AffiliateWithdrawRequest from "@/app/models/Withdrawal";
 import {dbConnect} from "@/lib/dbConnect";
 import { initiateB2CPayment } from "@/lib/mpesab2c";
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+
   try {
     await dbConnect();
-
     const { status } = await req.json();
-    const withdrawal = await Withdrawal.findById(params.id);
 
-    if (!withdrawal) {
-      return NextResponse.json(
-        { message: "Withdrawal request not found" },
-        { status: 404 }
-      );
+    const request = await AffiliateWithdrawRequest.findById(params.id);
+    if (!request) return NextResponse.json({ message: "Not found" }, { status: 404 });
+
+    if (status === "approved") {
+      const mpesa = await initiateB2CPayment(request.phoneNumber, request.amount);
+      request.status = "approved";
+      await request.save();
+      return NextResponse.json({ message: "Affiliate approved & B2C initiated", mpesa });
     }
 
-    // APPROVE → trigger B2C payment
-    if (status === "Approved") {
-      const mpesaResponse = await initiateB2CPayment(
-        withdrawal.phone, // affiliate field
-        withdrawal.amount
-      );
-
-      withdrawal.status = "Approved";
-      withdrawal.processedAt = new Date();
-      await withdrawal.save();
-
-      return NextResponse.json({
-        message: "Affiliate withdrawal approved and B2C initiated",
-        mpesaResponse,
-      });
+    if (status === "rejected") {
+      request.status = "rejected";
+      await request.save();
+      return NextResponse.json({ message: "Affiliate withdrawal rejected" });
     }
 
-    // REJECT
-    if (status === "Rejected") {
-      withdrawal.status = "Rejected";
-      withdrawal.processedAt = new Date();
-      await withdrawal.save();
-
-      return NextResponse.json({
-        message: "Affiliate withdrawal rejected",
-      });
-    }
-
-    return NextResponse.json(
-      { message: "Invalid status" },
-      { status: 400 }
-    );
-  } catch (error: any) {
-    console.error("Affiliate Withdraw Update Error:", error);
-    return NextResponse.json(
-      { message: "Server error", error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: "Invalid status" }, { status: 400 });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }
