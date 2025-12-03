@@ -414,7 +414,7 @@ const handleDownloadLabelPDF = () => {
       )}
 
 {showLabelModal && selectedLabelOrder && (
-  <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center backdrop-blur-sm transition-all">
+  <div className="fixed inset-0 z-[9999] bg-black bg-opacity-50 flex items-center justify-center backdrop-blur-sm transition-all">
     <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-xl p-6 relative overflow-hidden animate-fade-in">
       {/* Close Button */}
       <button
