@@ -1,4 +1,4 @@
-// lib/mpesaB2C.ts
+// lib/mpesab2c.ts
 import axios from "axios";
 
 export async function initiateB2CPayment(

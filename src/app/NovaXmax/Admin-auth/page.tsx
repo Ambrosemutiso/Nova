@@ -60,7 +60,7 @@ const AdminAuth = () => {
     toast.success(data.message);
 
     if (!isSignup) {
-      router.push('/NovaXpress/dashboard');
+      router.push('/NovaXmax/dashboard');
     } else {
       setIsSignup(false);
       setForm({

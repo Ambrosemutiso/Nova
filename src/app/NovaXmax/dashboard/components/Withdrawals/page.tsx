@@ -36,7 +36,7 @@ export default function Withdrawals() {
   const fetchRequests = async () => {
     const url =
       mode === "seller"
-        ? "/api/admin/withdraw/seller"
+        ? "/api/admin/withdraw/list"
         : "/api/admin/withdraw/affiliate";
 
     const res = await fetch(url);
@@ -54,7 +54,7 @@ export default function Withdrawals() {
   ) => {
     const url =
       mode === "seller"
-        ? `/api/admin/withdraw/seller/${id}`
+        ? `/api/admin/withdraw/${id}`
         : `/api/admin/withdraw/affiliate/${id}`;
 
     const res = await fetch(url, {
