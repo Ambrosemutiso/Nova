@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import WithdrawRequest from "@/app/models/Withdrawal";
+import WithdrawRequest from "@/app/models/withdrawRequest";
 import {dbConnect} from "@/lib/dbConnect";
 import { initiateB2CPayment } from "@/lib/mpesab2c";
 
