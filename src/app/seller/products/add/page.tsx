@@ -266,7 +266,33 @@ const handleCountyChange = (selectedCounty: County | '') => {
         <input type="number" className="w-full border px-4 py-2 rounded" placeholder="Old Price" value={oldPrice} onChange={(e) => setOldPrice(e.target.value)} required/>
         <input type="number" className="w-full border px-4 py-2 rounded" placeholder="Quantity" value={quantity} onChange={(e) => setQuantity(e.target.value)} required />
         <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="w-full border px-4 py-2 rounded"/>
- 
+ {/* Image Previews */}
+{imageFiles.length > 0 && (
+  <div className="grid grid-cols-4 gap-2 mt-3">
+    {imageFiles.map((file, index) => {
+      const previewUrl = URL.createObjectURL(file);
+      return (
+        <div key={index} className="relative w-20 h-20 border rounded overflow-hidden">
+          <img
+            src={previewUrl}
+            alt="Preview"
+            className="object-cover w-full h-full"
+          />
+          <button
+            type="button"
+            onClick={() =>
+              setImageFiles((prev) => prev.filter((_, i) => i !== index))
+            }
+            className="absolute top-1 right-1 bg-black bg-opacity-60 text-white text-xs px-1 rounded"
+          >
+            ✕
+          </button>
+        </div>
+      );
+    })}
+  </div>
+)}
+
         {/* 🧭 Fulfillment Mode */}
         <div>
           <label className="block font-semibold mb-1 text-gray-700">

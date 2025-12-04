@@ -117,7 +117,7 @@ export default function SellerShopPage() {
       <div className="px-6 flex justify-between items-start gap-6 mb-8 -mt-10">
         <div className="flex items-center gap-4">
           <img
-            src={seller.image || '/default-avatar.png'}
+            src={seller.image || `https://api.dicebear.com/7.x/thumbs/png?seed=${encodeURIComponent(seller.name || 'guest')}`}
             alt={seller.name}
             className="w-20 h-20 rounded-full object-cover border-4 border-white bg-white"
           />

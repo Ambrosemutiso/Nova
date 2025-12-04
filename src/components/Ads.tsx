@@ -64,6 +64,9 @@ export default function AdsFeedPage() {
   const [commentText, setCommentText] = useState('');
   const [heartBurst, setHeartBurst] = useState<string | null>(null);
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
+  // --- Scroll control for hiding search bar ---
+const [showSearchBar, setShowSearchBar] = useState(true);
+const lastScroll = useRef(0);
 
   const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
   const lastTapRef = useRef<number>(0);
@@ -98,7 +101,7 @@ export default function AdsFeedPage() {
                 _id: String(c._id ?? 'temp-' + Date.now()),
                 userId: String(c.userId ?? ''),
                 username: c.username ?? 'Unknown',
-                avatar: c.avatar ?? `https://api.dicebear.com/7.x/thumbs/png?seed=${encodeURIComponent(c.username || 'guest')}`,
+                avatar: c.avatar || `https://api.dicebear.com/7.x/thumbs/png?seed=${encodeURIComponent(c.username || 'guest')}`,
                 text: String(c.text ?? ''),
                 createdAt: c.createdAt ?? new Date().toISOString(),
                 likes: Array.isArray(c.likes) ? c.likes.map(String) : [],
@@ -107,7 +110,7 @@ export default function AdsFeedPage() {
                       _id: String(r._id ?? 'temp-' + Date.now()),
                       userId: String(r.userId ?? ''),
                       username: r.username ?? 'Unknown',
-                      avatar: r.avatar ?? `https://api.dicebear.com/7.x/thumbs/png?seed=${encodeURIComponent(r.username || 'guest')}`,
+                      avatar: r.avatar || `https://api.dicebear.com/7.x/thumbs/png?seed=${encodeURIComponent(r.username || 'guest')}`,
                       text: String(r.text ?? ''),
                       createdAt: r.createdAt ?? new Date().toISOString(),
                       likes: Array.isArray(r.likes) ? r.likes.map(String) : [],
@@ -158,6 +161,74 @@ export default function AdsFeedPage() {
       observer.disconnect();
     };
   }, [ads]);
+
+// --- Handle scroll up/down to hide/show search bar ---
+useEffect(() => {
+  const handleScroll = () => {
+    const current = window.scrollY;
+
+    if (current > lastScroll.current && current > 50) {
+      // scrolling down
+      setShowSearchBar(false);
+    } else {
+      // scrolling up
+      setShowSearchBar(true);
+    }
+
+    lastScroll.current = current;
+  };
+
+  window.addEventListener("scroll", handleScroll);
+  return () => window.removeEventListener("scroll", handleScroll);
+}, []);
+
+const FacebookIcon = () => (
+  <svg width="50" height="50" viewBox="0 0 50 50">
+    <circle cx="25" cy="25" r="25" fill="#1877F2" />
+    <path
+      d="M28.3 15.6h3.3V10.4c-.6-.1-2.6-.3-4.9-.3-4.8 0-8.1 2.9-8.1 8.3v4.6H14v5.7h4.6V40h5.7V28.7h4.6l.7-5.7h-5.3v-3.9c0-1.6.4-2.6 2.7-2.6Z"
+      fill="#fff"
+    />
+  </svg>
+);
+const InstagramIcon = () => (
+  <svg width="50" height="50" viewBox="0 0 50 50">
+    <defs>
+      <radialGradient id="instaGradient" cx="50%" cy="50%" r="70%">
+        <stop offset="0%" stopColor="#fdf497" />
+        <stop offset="30%" stopColor="#fd5949" />
+        <stop offset="60%" stopColor="#d6249f" />
+        <stop offset="100%" stopColor="#285AEB" />
+      </radialGradient>
+    </defs>
+
+    <circle cx="25" cy="25" r="25" fill="url(#instaGradient)" />
+
+    <path
+      fill="#fff"
+      d="M31.5 15h-13A3.5 3.5 0 0 0 15 18.5v13A3.5 3.5 0 0 0 18.5 35h13a3.5 3.5 0 0 0 3.5-3.5v-13A3.5 3.5 0 0 0 31.5 15Zm-6.5 15.3A5.8 5.8 0 1 1 31 24.5a5.8 5.8 0 0 1-5.8 5.8Zm6.8-10.6a1.3 1.3 0 1 1 1.3-1.3 1.3 1.3 0 0 1-1.3 1.3Z"
+    />
+  </svg>
+);
+const TikTokIcon = () => (
+  <svg width="50" height="50" viewBox="0 0 50 50">
+    <circle cx="25" cy="25" r="25" fill="#000" />
+
+    <path
+      fill="#fff"
+      d="M34 19.2a8 8 0 0 1-4.8-1.6v10.1a7 7 0 1 1-7-7 7.2 7.2 0 0 1 1.1.1v3.8a3.4 3.4 0 1 0 2.8 3.3V10h3.8a7.7 7.7 0 0 0 4.1 6.8Z"
+    />
+  </svg>
+);
+const WhatsappIcon = () => (
+  <svg width="50" height="50" viewBox="0 0 50 50">
+    <circle cx="25" cy="25" r="25" fill="#25D366" />
+    <path
+      fill="#fff"
+      d="M25 13a12 12 0 0 0-10.6 18l-1.4 5 5.2-1.3A12 12 0 1 0 25 13Zm6.9 16.9c-.3.8-1.7 1.6-2.4 1.7s-1.2.8-7-.9a11.9 11.9 0 0 1-4.4-3.8 5 5 0 0 1-1-2.9 3 3 0 0 1 1-2c.2-.3.5-.4.8-.4h.6c.2 0 .5 0 .7.6s.9 2.2 1 2.3a.6.6 0 0 1 0 .7c-.1.2-.2.3-.3.5l-.5.6c-.2.2-.3.3-.2.6a9.2 9.2 0 0 0 3.4 2.8c1.7.7 2 .6 2.3.3l.8-1c.2-.3.4-.4.7-.3s1.8.8 2.1 1 .5.4.4.7Z"
+    />
+  </svg>
+);
 
   // ---------------- LIKE / UNLIKE AD ----------------
   const toggleLike = async (ad: Ad, withAnim = false) => {
@@ -238,7 +309,7 @@ const submitComment = async () => {
       userId,
       text,
       username: user?.name || "You",
-      avatar: user?.image || "https://ui-avatars.com/api/?name=User&background=random",
+      avatar: user?.image || `https://api.dicebear.com/7.x/thumbs/png?seed=${encodeURIComponent(user?.name || 'guest')}`,
     };
 
     if (replyTo) body.replyTo = replyTo._id;
@@ -325,6 +396,54 @@ const submitComment = async () => {
              text-white hover:bg-black/60 transition">
               <ChevronLeft size={26} />
               </button>
+              {/* Floating Search Bar */}
+<motion.div
+  animate={{
+    y: showSearchBar ? 0 : -80,
+    opacity: showSearchBar ? 1 : 0
+  }}
+  transition={{ duration: 0.3 }}
+  className="
+    fixed top-4 left-1/2 -translate-x-1/2 
+    z-[99999] w-[75%] max-w-md
+  "
+>
+  <div className="
+    flex items-center gap-3 
+    bg-white/20 backdrop-blur-md 
+    rounded-full px-4 py-2 
+    border border-white/20
+  ">
+    <svg
+      xmlns='http://www.w3.org/2000/svg'
+      fill='none'
+      viewBox='0 0 24 24'
+      strokeWidth='1.8'
+      stroke='white'
+      className='w-5 h-5 opacity-90'
+    >
+      <path
+        strokeLinecap='round'
+        strokeLinejoin='round'
+        d='m21 21-3.5-3.5M10 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16z'
+      />
+    </svg>
+
+    <input
+      type="text"
+      placeholder="Search ads..."
+      className="
+        w-full bg-transparent outline-none 
+        text-white placeholder-white/70 
+        text-sm
+      "
+      onChange={(e) => console.log("Searching:", e.target.value)}
+    />
+  </div>
+</motion.div>
+
+
+
 
       {ads.map((ad, index) => (
         <div key={ad._id} className="h-screen snap-start relative" onClick={() => handleDoubleTap(ad)}>
@@ -531,13 +650,24 @@ const submitComment = async () => {
               <button onClick={() => setShareDrawer(null)}>Close</button>
             </div>
 
-            <div className="grid grid-cols-4 gap-4 text-center">
-              {['facebook', 'instagram', 'tiktok', 'whatsapp'].map((plat) => (
-                <button key={plat} className="py-2" onClick={() => shareDrawer && shareAd(plat, shareDrawer)}>
-                  {plat.charAt(0).toUpperCase() + plat.slice(1)}
-                </button>
-              ))}
-            </div>
+<div className="grid grid-cols-4 gap-4 text-center">
+  <button onClick={() => shareAd("facebook", shareDrawer)}>
+    <FacebookIcon />
+  </button>
+
+  <button onClick={() => shareAd("instagram", shareDrawer)}>
+    <InstagramIcon />
+  </button>
+
+  <button onClick={() => shareAd("tiktok", shareDrawer)}>
+    <TikTokIcon />
+  </button>
+
+  <button onClick={() => shareAd("whatsapp", shareDrawer)}>
+    <WhatsappIcon />
+  </button>
+</div>
+
           </motion.div>
         )}
       </AnimatePresence>
