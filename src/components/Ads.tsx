@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { FaRegHeart, FaHeart, FaRegCommentAlt, FaShare } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/app/context/AuthContext';
-import { ChevronLeft } from "lucide-react";
+import { ArrowBigLeft, ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 // ---------------- TYPES ----------------
@@ -474,15 +474,15 @@ const submitComment = async () => {
     <div className="relative w-full h-screen overflow-y-scroll snap-y snap-mandatory bg-black z-[9999]">
       <button
       onClick={() => router.back()}
-      className="fixed top-4 left-4 z-[99999] p-2 rounded-full bg-black/40 backdrop-blur 
+      className="fixed top-4 left-0 z-[99999] p-2 rounded-full bg-black/40 backdrop-blur 
              text-white hover:bg-black/60 transition">
-              <ChevronLeft size={26} />
+              <ArrowBigLeft size={26} />
               </button>
 {/* Floating Search Bar */}
 <motion.div
   animate={{ y: showSearchBar ? 0 : -90, opacity: showSearchBar ? 1 : 0 }}
   transition={{ duration: 0.25 }}
-  className="fixed top-4 left-1/2 -translate-x-1/2 z-[99999] w-[90%] max-w-lg"
+  className="fixed top-4 left-4 right-4 z-[99999] w-[90%] max-w-lg"
 >
   <div className="flex items-center gap-3 bg-white/20 backdrop-blur-md rounded-full px-4 py-2 border border-white/20 shadow-lg">
     
@@ -522,7 +522,7 @@ const submitComment = async () => {
     {/* AI Search Button */}
     <button
       onClick={handleAISearch}
-      className="text-white bg-indigo-500 px-3 py-1 rounded-full text-xs"
+      className="text-white bg-orange-500 px-3 py-1 rounded-full text-xs"
     >
       AI
     </button>
@@ -595,7 +595,7 @@ const submitComment = async () => {
           </motion.div>
 
           {/* Reactions */}
-          <div className="absolute right-4 bottom-32 flex flex-col gap-6 text-white">
+          <div className="absolute right-4 bottom-4 flex flex-col gap-6 text-white">
             <motion.button
               whileTap={{ scale: 1.2 }}
               onClick={(e) => { e.stopPropagation(); toggleLike(ad, true); }}

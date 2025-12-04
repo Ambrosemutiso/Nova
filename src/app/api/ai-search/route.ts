@@ -23,7 +23,7 @@ User searched for: "${query}"
 Return a JSON with:
 {
   "refinedQuery": "clean improved search phrase",
-  "category": "one of: Electronics, Fashion, Mobiles, Vehicles, Home, Sports, Services"
+  "category": "one of: Electronics, Fashion, Mobiles, Motors, Home, Sports, Services"
 }
 
 Respond ONLY with valid JSON.
