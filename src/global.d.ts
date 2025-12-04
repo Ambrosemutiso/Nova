@@ -2,6 +2,8 @@ export {};
 
 declare global {
   interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
     google: {
       accounts: {
         oauth2: {
@@ -15,3 +17,6 @@ declare global {
     };
   }
 }
+
+
+

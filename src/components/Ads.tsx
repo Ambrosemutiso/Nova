@@ -19,6 +19,15 @@ type Comment = {
   replies: Comment[]; // 🔥 remove optional
 };
 
+interface SpeechRecognitionEvent {
+  results: {
+    [index: number]: {
+      [index: number]: {
+        transcript: string;
+      };
+    };
+  };
+}
 
 type Ad = {
   _id: string;
@@ -67,6 +76,21 @@ export default function AdsFeedPage() {
   // --- Scroll control for hiding search bar ---
 const [showSearchBar, setShowSearchBar] = useState(true);
 const lastScroll = useRef(0);
+
+const [searchQuery, setSearchQuery] = useState("");
+const [selectedCategory, setSelectedCategory] = useState("All");
+const [isListening, setIsListening] = useState(false);
+
+const categories = [
+  "All", 
+  "Electronics", 
+  "Fashion", 
+  "Mobiles", 
+  "Vehicles",
+  "Home",
+  "Sports",
+  "Services"
+];
 
   const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
   const lastTapRef = useRef<number>(0);
@@ -168,11 +192,9 @@ useEffect(() => {
     const current = window.scrollY;
 
     if (current > lastScroll.current && current > 50) {
-      // scrolling down
-      setShowSearchBar(false);
+      setShowSearchBar(false); // scrolling down
     } else {
-      // scrolling up
-      setShowSearchBar(true);
+      setShowSearchBar(true); // scrolling up
     }
 
     lastScroll.current = current;
@@ -181,6 +203,55 @@ useEffect(() => {
   window.addEventListener("scroll", handleScroll);
   return () => window.removeEventListener("scroll", handleScroll);
 }, []);
+
+const startVoiceRecognition = () => {
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    alert("Voice search is not supported on this device.");
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = "en-US";
+  recognition.interimResults = false;
+
+  recognition.onstart = () => setIsListening(true);
+  recognition.onend = () => setIsListening(false);
+
+  recognition.onresult = (event: SpeechRecognitionEvent) => {
+    const transcript = event.results[0][0].transcript;
+    setSearchQuery(transcript);
+  };
+
+  recognition.start();
+};
+
+const handleAISearch = async () => {
+  if (!searchQuery.trim()) return;
+
+  try {
+    const res = await fetch("/api/ai-search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: searchQuery })
+    });
+
+    const data = await res.json();
+
+    // Expecting AI returns refined search or product matches
+    setSearchQuery(data.refinedQuery || searchQuery);
+
+    if (data.category) {
+      setSelectedCategory(data.category);
+    }
+
+  } catch (error) {
+    console.error("AI Search Error:", error);
+  }
+};
+
 
 const FacebookIcon = () => (
   <svg width="50" height="50" viewBox="0 0 50 50">
@@ -229,6 +300,17 @@ const WhatsappIcon = () => (
     />
   </svg>
 );
+
+const filteredAds = ads
+  .filter((ad) =>
+    ad.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    ad.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+  .filter((ad) =>
+    selectedCategory === "All"
+      ? true
+      : ad.category === selectedCategory
+  );
 
   // ---------------- LIKE / UNLIKE AD ----------------
   const toggleLike = async (ad: Ad, withAnim = false) => {
@@ -396,56 +478,79 @@ const submitComment = async () => {
              text-white hover:bg-black/60 transition">
               <ChevronLeft size={26} />
               </button>
-              {/* Floating Search Bar */}
+{/* Floating Search Bar */}
 <motion.div
-  animate={{
-    y: showSearchBar ? 0 : -80,
-    opacity: showSearchBar ? 1 : 0
-  }}
-  transition={{ duration: 0.3 }}
-  className="
-    fixed top-4 left-1/2 -translate-x-1/2 
-    z-[99999] w-[75%] max-w-md
-  "
+  animate={{ y: showSearchBar ? 0 : -90, opacity: showSearchBar ? 1 : 0 }}
+  transition={{ duration: 0.25 }}
+  className="fixed top-4 left-1/2 -translate-x-1/2 z-[99999] w-[90%] max-w-lg"
 >
-  <div className="
-    flex items-center gap-3 
-    bg-white/20 backdrop-blur-md 
-    rounded-full px-4 py-2 
-    border border-white/20
-  ">
+  <div className="flex items-center gap-3 bg-white/20 backdrop-blur-md rounded-full px-4 py-2 border border-white/20 shadow-lg">
+    
+    {/* Search Icon */}
     <svg
-      xmlns='http://www.w3.org/2000/svg'
-      fill='none'
-      viewBox='0 0 24 24'
-      strokeWidth='1.8'
-      stroke='white'
-      className='w-5 h-5 opacity-90'
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth="1.8"
+      stroke="white"
+      className="w-5 h-5 opacity-90"
     >
       <path
-        strokeLinecap='round'
-        strokeLinejoin='round'
-        d='m21 21-3.5-3.5M10 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16z'
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="m21 21-3.5-3.5M10 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16z"
       />
     </svg>
 
+    {/* Input */}
     <input
       type="text"
-      placeholder="Search ads..."
-      className="
-        w-full bg-transparent outline-none 
-        text-white placeholder-white/70 
-        text-sm
-      "
-      onChange={(e) => console.log("Searching:", e.target.value)}
+      placeholder="Search ads, categories, brands..."
+      className="w-full bg-transparent outline-none text-white placeholder-white/70 text-sm"
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
     />
+
+    {/* Voice Search Button */}
+    <button
+      className="text-white"
+      onClick={startVoiceRecognition}
+    >
+      🎤
+    </button>
+
+    {/* AI Search Button */}
+    <button
+      onClick={handleAISearch}
+      className="text-white bg-indigo-500 px-3 py-1 rounded-full text-xs"
+    >
+      AI
+    </button>
+
+  </div>
+
+  {/* Category Filters */}
+  <div className="mt-3 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+    {categories.map((cat) => (
+      <button
+        key={cat}
+        className={`px-3 py-1 rounded-full text-xs whitespace-nowrap border ${
+          selectedCategory === cat
+            ? "bg-white text-black"
+            : "bg-white/20 text-white border-white/20"
+        }`}
+        onClick={() => setSelectedCategory(cat)}
+      >
+        {cat}
+      </button>
+    ))}
   </div>
 </motion.div>
 
 
 
 
-      {ads.map((ad, index) => (
+      {filteredAds.map((ad, index) => (
         <div key={ad._id} className="h-screen snap-start relative" onClick={() => handleDoubleTap(ad)}>
           {ad.mediaType === 'video' ? (
             <video
