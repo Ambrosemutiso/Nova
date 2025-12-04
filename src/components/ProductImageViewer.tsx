@@ -36,6 +36,38 @@ const ProductImageViewer = ({
     return match ? match[1] : url;
   };
 
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+const handleScroll = () => {
+  const container = scrollContainerRef.current;
+  if (!container) return;
+
+  const containerCenter = container.scrollLeft + container.clientWidth / 2;
+
+  let bestIndex = 0;
+  let smallestCenterDiff = Infinity;
+
+  imageRefs.current.forEach((ref, index) => {
+    if (!ref) return;
+
+    const rect = ref.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+
+    const imageCenter =
+      rect.left - containerRect.left + rect.width / 2 + container.scrollLeft;
+
+    const diff = Math.abs(imageCenter - containerCenter);
+
+    if (diff < smallestCenterDiff) {
+      smallestCenterDiff = diff;
+      bestIndex = index;
+    }
+  });
+
+  setCurrentIndex(bestIndex);
+};
+
+
+
   const handleShare = async () => {
     if (navigator.share) {
       await navigator.share({
@@ -161,7 +193,12 @@ const ProductImageViewer = ({
             {zoomed ? <ZoomOut size={24} /> : <ZoomIn size={24} />}
           </button>
 
-          <div className="flex overflow-x-auto gap-4 w-full h-[80vh] px-4 pt-8 snap-x snap-mandatory items-center justify-start scrollbar-hide">
+<div
+  ref={scrollContainerRef}
+  onScroll={handleScroll}
+  className="flex overflow-x-auto gap-4 w-full h-[80vh] px-4 pt-8 snap-x snap-mandatory items-center justify-start scrollbar-hide"
+>
+
             {images.map((image, index) => (
               <div
                 key={index}
@@ -213,9 +250,10 @@ const ProductImageViewer = ({
               </div>
             ))}
           </div>
-          <div className="absolute bottom-4 text-white text-sm">
-            {currentIndex + 1} / {images.length}
-          </div>
+<div className="absolute top-4 left-4 text-white text-sm bg-black/40 px-3 py-1 rounded-full z-50">
+  {currentIndex + 1} / {images.length}
+</div>
+
         </div>
       )}
     </div>
