@@ -472,61 +472,66 @@ const submitComment = async () => {
   // ---------------- JSX ----------------
   return (
     <div className="relative w-full h-screen overflow-y-scroll snap-y snap-mandatory bg-black z-[9999]">
-      <button
-      onClick={() => router.back()}
-      className="fixed top-4 left-0 z-[99999] p-2 rounded-full bg-black/40 backdrop-blur 
-             text-white hover:bg-black/60 transition">
-              <ArrowBigLeft size={26} />
-              </button>
+
 {/* Floating Search Bar */}
+{/* Floating Search Bar Header */}
 <motion.div
   animate={{ y: showSearchBar ? 0 : -90, opacity: showSearchBar ? 1 : 0 }}
   transition={{ duration: 0.25 }}
-  className="fixed top-4 left-4 right-4 z-[99999] w-[90%] max-w-lg"
+  className="fixed top-4 left-0 right-0 z-[99999] px-4"
 >
-  <div className="flex items-center gap-3 bg-white/20 backdrop-blur-md rounded-full px-4 py-2 border border-white/20 shadow-lg">
+  {/* Top Row: Back Arrow + Search Bar */}
+  <div className="grid grid-cols-[40px_1fr] items-center gap-3">
     
-    {/* Search Icon */}
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth="1.8"
-      stroke="white"
-      className="w-5 h-5 opacity-90"
+    {/* Back Button */}
+    <button
+      onClick={() => router.back()}
+      className="p-2 rounded-full bg-black/40 backdrop-blur 
+                 text-white hover:bg-black/60 transition flex items-center justify-center"
     >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="m21 21-3.5-3.5M10 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16z"
+      <ChevronLeft size={24} />
+    </button>
+
+    {/* Search Bar */}
+    <div className="flex items-center gap-3 bg-white/20 backdrop-blur-md 
+                    rounded-full px-4 py-2 border border-white/20 shadow-lg w-full">
+      
+      {/* Search Icon */}
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth="1.8"
+        stroke="white"
+        className="w-5 h-5 opacity-90"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="m21 21-3.5-3.5M10 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16z"
+        />
+      </svg>
+
+      {/* Input */}
+      <input
+        type="text"
+        placeholder="Search ads, categories, brands..."
+        className="w-full bg-transparent outline-none text-white placeholder-white/70 text-sm"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
       />
-    </svg>
 
-    {/* Input */}
-    <input
-      type="text"
-      placeholder="Search ads, categories, brands..."
-      className="w-full bg-transparent outline-none text-white placeholder-white/70 text-sm"
-      value={searchQuery}
-      onChange={(e) => setSearchQuery(e.target.value)}
-    />
+      {/* Voice Search */}
+      <button className="text-white" onClick={startVoiceRecognition}>🎤</button>
 
-    {/* Voice Search Button */}
-    <button
-      className="text-white"
-      onClick={startVoiceRecognition}
-    >
-      🎤
-    </button>
-
-    {/* AI Search Button */}
-    <button
-      onClick={handleAISearch}
-      className="text-white bg-orange-500 px-3 py-1 rounded-full text-xs"
-    >
-      AI
-    </button>
-
+      {/* AI Search */}
+      <button
+        onClick={handleAISearch}
+        className="text-white bg-orange-500 px-3 py-1 rounded-full text-xs"
+      >
+        AI
+      </button>
+    </div>
   </div>
 
   {/* Category Filters */}
@@ -595,7 +600,7 @@ const submitComment = async () => {
           </motion.div>
 
           {/* Reactions */}
-          <div className="absolute right-4 bottom-4 flex flex-col gap-6 text-white">
+          <div className="absolute right-4 bottom-32 flex flex-col gap-6 text-white">
             <motion.button
               whileTap={{ scale: 1.2 }}
               onClick={(e) => { e.stopPropagation(); toggleLike(ad, true); }}
