@@ -587,17 +587,27 @@ const submitComment = async () => {
             )}
           </AnimatePresence>
 
-          {/* Bottom info */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="absolute bottom-32 left-0 w-full p-6 pb-10 bg-gradient-to-t from-black/80 to-transparent text-white"
-            >
-            <h2 className="text-xl font-bold">{ad.title}</h2>
-            {ad.description && <p className="text-gray-300 text-sm mt-1 line-clamp-2">{ad.description}</p>}
-            {ad.category && <p className="text-orange-400 mt-1">#{ad.category}</p>}
-          </motion.div>
+{/* Bottom Content Overlay */}
+<motion.div
+  initial={{ opacity: 0, y: 40 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.4 }}
+  className="absolute bottom-0 left-0 w-full px-5 pb-8 pt-20
+             bg-gradient-to-t from-black/95 via-black/40 to-transparent
+             text-white pointer-events-none"
+>
+  <h2 className="text-lg font-bold">{ad.title}</h2>
+
+  {ad.description && (
+    <p className="text-gray-200 text-sm mt-1 line-clamp-2">
+      {ad.description}
+    </p>
+  )}
+
+  {ad.category && (
+    <p className="text-orange-400 mt-1">#{ad.category}</p>
+  )}
+</motion.div>
 
           {/* Reactions */}
           <div className="absolute right-4 bottom-32 flex flex-col gap-6 text-white">
