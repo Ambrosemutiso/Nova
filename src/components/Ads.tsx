@@ -73,6 +73,7 @@ export default function AdsFeedPage() {
   const [commentText, setCommentText] = useState('');
   const [heartBurst, setHeartBurst] = useState<string | null>(null);
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
+  
   // --- Scroll control for hiding search bar ---
 const [showSearchBar, setShowSearchBar] = useState(true);
 const lastScroll = useRef(0);
@@ -93,6 +94,8 @@ const categories = [
 ];
 
   const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
+  const fullscreenRef = useRef<HTMLVideoElement | null>(null);
+
   const lastTapRef = useRef<number>(0);
 
   const shortNum = (num: number) =>
@@ -227,6 +230,42 @@ const startVoiceRecognition = () => {
 
   recognition.start();
 };
+
+const playFullscreen = async () => {
+  const video = fullscreenRef.current;
+  if (!video) return;
+
+  try {
+    // iOS special fullscreen
+    if ((video as any).webkitEnterFullscreen) {
+      (video as any).webkitEnterFullscreen();
+      video.muted = false;
+      return;
+    }
+
+    // Normal fullscreen
+    if (video.requestFullscreen) {
+      await video.requestFullscreen();
+    }
+
+    video.muted = false;
+    video.controls = true;
+    await video.play();
+
+    const exitFullscreen = () => {
+      video.controls = false;
+      video.muted = true;
+    };
+
+    document.addEventListener("fullscreenchange", () => {
+      if (!document.fullscreenElement) exitFullscreen();
+    }, { once: true });
+
+  } catch (error) {
+    console.log("Fullscreen Error:", error);
+  }
+};
+
 
 const handleAISearch = async () => {
   if (!searchQuery.trim()) return;
@@ -474,7 +513,6 @@ const submitComment = async () => {
     <div className="relative w-full h-screen overflow-y-scroll snap-y snap-mandatory bg-black z-[9999]">
 
 {/* Floating Search Bar */}
-{/* Floating Search Bar Header */}
 <motion.div
   animate={{ y: showSearchBar ? 0 : -90, opacity: showSearchBar ? 1 : 0 }}
   transition={{ duration: 0.25 }}
@@ -558,16 +596,24 @@ const submitComment = async () => {
       {filteredAds.map((ad, index) => (
         <div key={ad._id} className="h-screen snap-start relative" onClick={() => handleDoubleTap(ad)}>
           {ad.mediaType === 'video' ? (
-            <video
-              ref={(el) => { videoRefs.current[index] = el ?? null; }}
-              data-id={ad._id}
-              src={ad.mediaUrl}
-              className="w-full h-full object-cover"
-              loop
-              playsInline
-              muted={false}
-              controls={false}
-            />
+<video
+  ref={(el) => {
+    videoRefs.current[index] = el ?? null;
+  }}
+  onClick={() => {
+    fullscreenRef.current = videoRefs.current[index];
+    handleDoubleTap(ad);
+    playFullscreen();
+  }}
+  data-id={ad._id}
+  src={ad.mediaUrl}
+  className="w-full h-full object-cover"
+  loop
+  playsInline
+  muted={true}
+  controls={false}
+/>
+
           ) : (
             <img src={ad.mediaUrl} alt={ad.title} className="w-full h-full object-cover" />
           )}
