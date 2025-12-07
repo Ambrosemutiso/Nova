@@ -638,9 +638,12 @@ const submitComment = async () => {
   initial={{ opacity: 0, y: 40 }}
   animate={{ opacity: 1, y: 0 }}
   transition={{ duration: 0.4 }}
-  className="absolute bottom-0 left-0 w-full px-5 pb-8 pt-20
-             bg-gradient-to-t from-black/95 via-black/40 to-transparent
-             text-white pointer-events-none"
+  className="
+    absolute left-0 bottom-0 w-full 
+    px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-12
+    bg-gradient-to-t from-black/95 via-black/40 to-transparent
+    text-white pointer-events-none
+  "
 >
   <h2 className="text-lg font-bold">{ad.title}</h2>
 
@@ -654,6 +657,7 @@ const submitComment = async () => {
     <p className="text-orange-400 mt-1">#{ad.category}</p>
   )}
 </motion.div>
+
 
           {/* Reactions */}
           <div className="absolute right-4 bottom-32 flex flex-col gap-6 text-white">
