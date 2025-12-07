@@ -4,3 +4,4 @@ declare module 'nodemailer';
 declare module 'jwt-decode';
 declare module 'country-data';
 declare module 'twilio';
+declare module 'lucide-react';

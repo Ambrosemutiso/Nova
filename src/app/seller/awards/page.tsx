@@ -44,7 +44,7 @@ interface ApiResponse {
 // ✅ Badge structure for UI
 interface Badge {
   name: string;
-  icon: JSX.Element;
+  icon: React.ReactNode;
   date: string;
   desc: string;
   type: 'Monthly' | 'All-Time' | 'Other';

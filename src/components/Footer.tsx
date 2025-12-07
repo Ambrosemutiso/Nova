@@ -21,7 +21,7 @@ export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () =>
   }
 
   return (
-    <footer className="bg-gray-100 text-gray-700 pt-10 pb-6 px-6">
+    <footer className="bg-gray-100 text-gray-700 pt-10 pb-6 px-6 z-50">
       <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
         {/* About Us */}
         <div>

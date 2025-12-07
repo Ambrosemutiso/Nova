@@ -5,7 +5,6 @@ import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
 import { Bold, Italic, Heading1, Heading2, Image as ImageIcon, Link as LinkIcon } from 'lucide-react'
-import React from 'react'
 
 export default function TiptapEditor({ content, onChange }: { content: string, onChange: (value: string) => void }) {
   const editor = useEditor({

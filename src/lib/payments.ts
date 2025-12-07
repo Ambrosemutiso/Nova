@@ -1,5 +1,6 @@
 // lib/payments.ts
 import axios from "axios";
+import moment from 'moment';
 
 const baseUrl = "https://sandbox.safaricom.co.ke"; // change to live when you go live
 
@@ -24,11 +25,7 @@ export async function initiateMpesaPush(phone: string, amount: number) {
 
     const shortcode = process.env.MPESA_SHORTCODE!; // till or paybill
     const passkey = process.env.MPESA_PASSKEY!;
-    const timestamp = new Date()
-      .toISOString()
-      .replace(/[-:.TZ]/g, "")
-      .slice(0, 14);
-
+   const timestamp = moment().format('YYYYMMDDHHmmss');
     const password = Buffer.from(shortcode + passkey + timestamp).toString("base64");
 
     const payload = {

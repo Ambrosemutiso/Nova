@@ -1,14 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { FiSearch, FiMessageCircle, FiPlus, FiX } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Player } from '@lottiefiles/react-lottie-player';
 
 export default function Chat() {
-  const router = useRouter();
 
   // 💬 Start with no chats
   const [chats, setChats] = useState<any[]>([]);

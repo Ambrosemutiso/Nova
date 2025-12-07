@@ -643,7 +643,7 @@ const AffiliateCard = ({
 }: {
   title: string;
   value: string;
-  icon: JSX.Element;
+  icon: React.ReactNode;
   gradient: string;
 }) => (
   <motion.div

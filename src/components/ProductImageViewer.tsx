@@ -142,20 +142,22 @@ const handleScroll = () => {
               <Share2
                 size={18}
                 className="text-gray-700 cursor-pointer hover:text-orange-600"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleShare();
-                }}
+onClick={(e: React.MouseEvent<SVGElement>) => {
+  e.stopPropagation();
+  handleShare();
+}}
+
               />
               <Heart
                 size={18}
                 className={`cursor-pointer ${
                   wishlist ? 'text-orange-500' : 'text-gray-700'
                 }`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleWishlist();
-                }}
+onClick={(e: React.MouseEvent<SVGElement>) => {
+  e.stopPropagation();
+  toggleWishlist();
+}}
+
               />
               <Eye size={18} className="text-orange-700 hover:text-orange-600" />
             </div>

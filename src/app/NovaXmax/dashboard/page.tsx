@@ -29,7 +29,7 @@ const navItems = [
 ];
 
 // map component keys to actual components
-const components: Record<string, JSX.Element> = {
+const components: Record<string, React.ReactNode> = {
   dashboard: <h1 className="text-xl font-bold">Welcome Admin Dashboard</h1>,
   users: <Users />,
   sellers: <Sellers />,

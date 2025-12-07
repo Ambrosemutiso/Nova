@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
 import Seller from '@/app/models/seller';
+import moment from 'moment';
 
 const DARAJA_CONSUMER_KEY = process.env.DARAJA_CONSUMER_KEY!;
 const DARAJA_CONSUMER_SECRET = process.env.DARAJA_CONSUMER_SECRET!;
@@ -56,7 +57,7 @@ export async function POST(req: NextRequest) {
     }
 
     const token = await getAccessToken();
-    const timestamp = new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 14);
+    const timestamp = moment().format('YYYYMMDDHHmmss');
 
     const password = Buffer.from(`${SHORTCODE}${DARAJA_PASSKEY}${timestamp}`).toString('base64');
 

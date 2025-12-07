@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     "multi-seller platform Kenya",
     "sell products online Kenya",
     "M-Pesa payments",
-    "Novaxpress Kenya",
+    "NovaXmax Kenya",
     "online shop Kenya",
     "digital marketplace Kenya",
     "local business Kenya",

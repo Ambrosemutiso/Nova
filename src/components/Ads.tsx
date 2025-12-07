@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { FaRegHeart, FaHeart, FaRegCommentAlt, FaShare } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/app/context/AuthContext';
-import { ArrowBigLeft, ChevronLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 // ---------------- TYPES ----------------
