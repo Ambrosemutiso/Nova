@@ -8,6 +8,7 @@ import TopPicksForYou from '@/components/TopPicksForYou';
 import SuggestedForYou from '@/components/SuggestedForYou';
 import SponsoredProducts from '@/components/SponsoredProducts';
 import FlashSales from '@/components/FlashSales';
+import InstallmentProducts from '@/components/InstallmentProducts'
 
 export default function Main() {
   const [category, setCategory] = useState('Shop');
@@ -17,6 +18,7 @@ export default function Main() {
       <Menu onSelectCategory={setCategory}/>
       <FlashSales/>
       <ProductsList category={category} />
+      <InstallmentProducts />
       <SponsoredProducts/>
       <SuggestedForYou/>
       <TopPicksForYou/>

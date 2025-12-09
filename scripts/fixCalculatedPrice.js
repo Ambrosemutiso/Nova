@@ -36,14 +36,14 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// injectMissingProductCurrency.ts
+// injectMissingProductInstallments.ts
 var dotenv = require("dotenv");
 dotenv.config();
 var mongoose_1 = require("mongoose");
 var dbConnect_1 = require("../lib/dbConnect");
-function injectMissingProductCurrency() {
+function injectMissingProductInstallments() {
     return __awaiter(this, void 0, void 0, function () {
-        var db, collection, missingCurrencyDocs, _i, missingCurrencyDocs_1, doc, err_1;
+        var db, collection, missingInstallmentDocs, _i, missingInstallmentDocs_1, doc, err_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -55,33 +55,47 @@ function injectMissingProductCurrency() {
                     if (!db)
                         throw new Error("Database connection not established.");
                     collection = db.collection("products");
-                    console.log("🔍 Checking 'products' collection for missing 'currency' field...");
+                    console.log("🔍 Checking 'products' collection for missing installment fields...");
                     return [4 /*yield*/, collection
-                            .find({ currency: { $exists: false } })
+                            .find({
+                            $or: [
+                                { installmentEnabled: { $exists: false } },
+                                { installmentDepositPercent: { $exists: false } },
+                                { installmentMonths: { $exists: false } },
+                                { installmentPolicy: { $exists: false } },
+                            ],
+                        })
                             .toArray()];
                 case 2:
-                    missingCurrencyDocs = _a.sent();
-                    console.log("\uD83E\uDDE9 Found ".concat(missingCurrencyDocs.length, " products missing 'currency'."));
-                    _i = 0, missingCurrencyDocs_1 = missingCurrencyDocs;
+                    missingInstallmentDocs = _a.sent();
+                    console.log("\uD83E\uDDE9 Found ".concat(missingInstallmentDocs.length, " products missing installment fields."));
+                    _i = 0, missingInstallmentDocs_1 = missingInstallmentDocs;
                     _a.label = 3;
                 case 3:
-                    if (!(_i < missingCurrencyDocs_1.length)) return [3 /*break*/, 6];
-                    doc = missingCurrencyDocs_1[_i];
-                    return [4 /*yield*/, collection.updateOne({ _id: doc._id }, { $set: { currency: "KES" } })];
+                    if (!(_i < missingInstallmentDocs_1.length)) return [3 /*break*/, 6];
+                    doc = missingInstallmentDocs_1[_i];
+                    return [4 /*yield*/, collection.updateOne({ _id: doc._id }, {
+                            $set: {
+                                installmentEnabled: false,
+                                installmentDepositPercent: 0,
+                                installmentMonths: 0,
+                                installmentPolicy: "",
+                            },
+                        })];
                 case 4:
                     _a.sent();
-                    console.log("\u2705 Updated product ".concat(doc._id, " with currency: KES"));
+                    console.log("\u2705 Updated product ".concat(doc._id, " with default installment fields"));
                     _a.label = 5;
                 case 5:
                     _i++;
                     return [3 /*break*/, 3];
                 case 6:
-                    console.log("🎯 All missing product currency fields have been successfully patched!");
+                    console.log("🎯 All missing installment fields have been successfully patched!");
                     mongoose_1.default.connection.close();
                     return [3 /*break*/, 8];
                 case 7:
                     err_1 = _a.sent();
-                    console.error("❌ Failed to inject missing product currency:", err_1);
+                    console.error("❌ Failed to inject missing installment fields:", err_1);
                     mongoose_1.default.connection.close();
                     return [3 /*break*/, 8];
                 case 8: return [2 /*return*/];
@@ -89,4 +103,4 @@ function injectMissingProductCurrency() {
         });
     });
 }
-injectMissingProductCurrency();
+injectMissingProductInstallments();

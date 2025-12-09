@@ -8,9 +8,10 @@ interface ProductCardProps {
   product: Product;
   showSponsoredBadge?: boolean;
   badge?: React.ReactNode;
+  redirectAllTo?: string;
 }
 
-export default function ProductCard({ product, showSponsoredBadge, badge }: ProductCardProps) {
+export default function ProductCard({ product, showSponsoredBadge, badge, redirectAllTo }: ProductCardProps) {
   const router = useRouter();
 
   const calculateDiscount = (oldPrice: number, calculatedPrice: number) =>
@@ -48,7 +49,14 @@ export default function ProductCard({ product, showSponsoredBadge, badge }: Prod
         {calculateDiscount(product.oldPrice, product.calculatedPrice)}% OFF
       </div>
 
-      <div onClick={() => router.push(`/product/${product._id}`)} className="cursor-pointer">
+      <div
+  onClick={() =>
+    redirectAllTo
+      ? router.push(redirectAllTo)
+      : router.push(`/product/${product._id}`)
+  }
+  className="cursor-pointer"
+>
         <CldImage
           src={getPublicId(product.images[0])}
           alt={product.name}

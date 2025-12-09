@@ -8,7 +8,8 @@ import {
   FiTv, FiWatch, FiGift, FiTruck, FiBook, FiTool,
   FiGrid, FiZoomIn, FiZoomOut, FiPackage, FiLayout,
   FiLoader, FiSend, FiSun, FiMoon, FiGlobe,
-  FiFilm
+  FiFilm,
+  FiPhone
 } from 'react-icons/fi';
 
 export default function Sidebar({ onClose }: { onClose: () => void }) {
@@ -38,6 +39,7 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
     { label: 'Wishlist', icon: <FiHeart />, route: '/wishlist' },
     { label: 'My Orders', icon: <FiPackage />, route: '/orders' },
     { label: 'My Vouchers', icon: <FiGift />, route: '/vouchers' },
+    { label: 'My Installments', icon: <FiPhone />, route: '/installments' },
     { label: 'Phones & Tablets', icon: <FiSmartphone />, route: '/category/Phones' },
     { label: 'Computing', icon: <FiMonitor />, route: '/category/Laptops' },
     { label: 'Electronics', icon: <FiTv />, route: '/category/Electronics' },

@@ -1,4 +1,4 @@
-// injectMissingProductCurrency.ts
+// injectMissingProductInstallments.ts
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -7,10 +7,13 @@ import { dbConnect } from "@/lib/dbConnect";
 
 interface ProductDoc {
   _id: mongoose.Types.ObjectId;
-  currency?: string;
+  installmentEnabled?: boolean;
+  installmentDepositPercent?: number;
+  installmentMonths?: number;
+  installmentPolicy?: string;
 }
 
-async function injectMissingProductCurrency() {
+async function injectMissingProductInstallments() {
   try {
     await dbConnect();
 
@@ -18,30 +21,44 @@ async function injectMissingProductCurrency() {
     if (!db) throw new Error("Database connection not established.");
 
     const collection = db.collection<ProductDoc>("products");
-    console.log("🔍 Checking 'products' collection for missing 'currency' field...");
+    console.log("🔍 Checking 'products' collection for missing installment fields...");
 
-    // Step 1: find products missing the currency field
-    const missingCurrencyDocs = await collection
-      .find({ currency: { $exists: false } })
+    // Step 1: find products missing any of the installment fields
+    const missingInstallmentDocs = await collection
+      .find({
+        $or: [
+          { installmentEnabled: { $exists: false } },
+          { installmentDepositPercent: { $exists: false } },
+          { installmentMonths: { $exists: false } },
+          { installmentPolicy: { $exists: false } },
+        ],
+      })
       .toArray();
 
-    console.log(`🧩 Found ${missingCurrencyDocs.length} products missing 'currency'.`);
+    console.log(`🧩 Found ${missingInstallmentDocs.length} products missing installment fields.`);
 
-    // Step 2: Update each doc with default currency = "KES"
-    for (const doc of missingCurrencyDocs) {
+    // Step 2: Update each doc with default values
+    for (const doc of missingInstallmentDocs) {
       await collection.updateOne(
         { _id: doc._id },
-        { $set: { currency: "KES" } }
+        {
+          $set: {
+            installmentEnabled: false,
+            installmentDepositPercent: 0,
+            installmentMonths: 0,
+            installmentPolicy: "",
+          },
+        }
       );
-      console.log(`✅ Updated product ${doc._id} with currency: KES`);
+      console.log(`✅ Updated product ${doc._id} with default installment fields`);
     }
 
-    console.log("🎯 All missing product currency fields have been successfully patched!");
+    console.log("🎯 All missing installment fields have been successfully patched!");
     mongoose.connection.close();
   } catch (err) {
-    console.error("❌ Failed to inject missing product currency:", err);
+    console.error("❌ Failed to inject missing installment fields:", err);
     mongoose.connection.close();
   }
 }
 
-injectMissingProductCurrency();
+injectMissingProductInstallments();
