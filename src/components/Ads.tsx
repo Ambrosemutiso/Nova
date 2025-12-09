@@ -510,7 +510,7 @@ const submitComment = async () => {
 
   // ---------------- JSX ----------------
   return (
-    <div className="relative w-full h-screen overflow-y-scroll snap-y snap-mandatory bg-black z-[9999]">
+    <div className="relative w-full h-[100vh] overflow-y-scroll snap-y snap-mandatory bg-black z-[9999]">
 
 {/* Floating Search Bar */}
 <motion.div
@@ -594,7 +594,7 @@ const submitComment = async () => {
 
 
       {filteredAds.map((ad, index) => (
-        <div key={ad._id} className="h-screen snap-start relative" onClick={() => handleDoubleTap(ad)}>
+        <div key={ad._id} className="h-[100vh] snap-start relative" onClick={() => handleDoubleTap(ad)}>
           {ad.mediaType === 'video' ? (
 <video
   ref={(el) => {
@@ -638,13 +638,7 @@ const submitComment = async () => {
   initial={{ opacity: 0, y: 40 }}
   animate={{ opacity: 1, y: 0 }}
   transition={{ duration: 0.4 }}
-  className="
-    absolute left-0 bottom-0 w-full 
-    px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-12
-    bg-gradient-to-t from-black/95 via-black/40 to-transparent
-    text-white pointer-events-none
-  "
->
+  className="absolute left-0 bottom-0 w-full px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-12 bg-gradient-to-t from-black/95 via-black/40 to-transparent text-white pointer-events-none">
   <h2 className="text-lg font-bold">{ad.title}</h2>
 
   {ad.description && (
@@ -657,6 +651,7 @@ const submitComment = async () => {
     <p className="text-orange-400 mt-1">#{ad.category}</p>
   )}
 </motion.div>
+
 
 
           {/* Reactions */}
