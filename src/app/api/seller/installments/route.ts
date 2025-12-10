@@ -1,14 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { dbConnect } from "@/lib/dbConnect";
 import Product from "@/app/models/product";
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   try {
     await dbConnect();
 
-    const { searchParams } = new URL(req.url);
-    const sellerId = searchParams.get("sellerId");
-
+    const sellerId = req.nextUrl.searchParams.get("sellerId");
     if (!sellerId) {
       return NextResponse.json(
         { success: false, message: "Missing sellerId" },
@@ -18,10 +16,12 @@ export async function GET(req: Request) {
 
     const products = await Product.find({ sellerId }).sort({ createdAt: -1 });
 
-    // DO NOT override _id — send products exactly as they are
     return NextResponse.json({ success: true, data: products });
-  } catch (err) {
-    console.error("Fetch seller products error:", err);
-    return NextResponse.json({ success: false, message: "Server error" });
+  } catch (error) {
+    console.error("Installment products fetch error", error);
+    return NextResponse.json(
+      { success: false, message: "Server Error" },
+      { status: 500 }
+    );
   }
 }
