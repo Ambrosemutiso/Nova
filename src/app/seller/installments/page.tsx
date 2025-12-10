@@ -40,37 +40,40 @@ export default function SellerInstallmentsPage() {
     fetchProducts();
   }, []);
 
-  const saveSettings = async () => {
-    if (!editing) return;
+const saveSettings = async () => {
+  if (!editing) return;
 
-    try {
-      const res = await fetch(`/api/seller/installments/${editing._id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          installmentEnabled: editing.installmentEnabled,
-          depositPercent: editing.installmentDepositPercent,
-          months: editing.installmentMonths,
-          policy: editing.installmentPolicy,
-        }),
-      });
+  try {
+    const res = await fetch(`/api/seller/installments/${editing._id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        installmentEnabled: editing.installmentEnabled,
+        installmentDepositPercent: editing.installmentDepositPercent,
+        installmentMonths: editing.installmentMonths,
+        installmentPolicy: editing.installmentPolicy,
+      }),
+    });
 
-      const json = await res.json();
+    const json = await res.json();
 
-      if (json.success) {
-        toast.success("Updated!");
-        setEditing(null);
-        setProducts((prev) =>
-          prev.map((p) => (p._id === json.product._id ? json.product : p))
-        );
-      } else {
-        toast.error("Failed to update");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Error saving");
+    if (json.success && json.product) {
+      toast.success("Updated!");
+
+      setProducts((prev) =>
+        prev.map((p) => (p._id === json.product._id ? json.product : p))
+      );
+
+      setEditing(null);
+    } else {
+      toast.error(json.message || "Failed to update");
     }
-  };
+  } catch (err) {
+    console.error(err);
+    toast.error("Error saving");
+  }
+};
+
 
   if (loading) return <p>Loading Installment Products...</p>;
 
