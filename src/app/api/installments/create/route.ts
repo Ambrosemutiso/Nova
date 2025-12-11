@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   try {
     await dbConnect();
 
-    const { productId, months, buyerId } = await req.json();
+    const { productId, months, buyerId, deposit } = await req.json();
 
     if (!productId || !months || !buyerId) {
       return NextResponse.json(
@@ -21,12 +21,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
+    if (!product.sellerId) {
+      return NextResponse.json({ error: "Product missing sellerId" }, { status: 400 });
+    }
+
     const totalAmount = product.calculatedPrice;
-    const monthlyAmount = Math.round(totalAmount / months);
+    const monthlyAmount = Math.round((totalAmount - Number(deposit || 0)) / months);
 
     const installment = await Installment.create({
       buyerId,
-      sellerId: product.storeId,
+      sellerId: product.sellerId,
       productId,
       totalAmount,
       monthlyAmount,
@@ -47,3 +51,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
+

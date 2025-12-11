@@ -39,7 +39,7 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
     { label: 'Wishlist', icon: <FiHeart />, route: '/wishlist' },
     { label: 'My Orders', icon: <FiPackage />, route: '/orders' },
     { label: 'My Vouchers', icon: <FiGift />, route: '/vouchers' },
-    { label: 'My Installments', icon: <FiPhone />, route: '/installments' },
+    { label: 'My Installments', icon: <FiPhone />, route: '/installments/progress' },
     { label: 'Phones & Tablets', icon: <FiSmartphone />, route: '/category/Phones' },
     { label: 'Computing', icon: <FiMonitor />, route: '/category/Laptops' },
     { label: 'Electronics', icon: <FiTv />, route: '/category/Electronics' },
