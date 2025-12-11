@@ -48,8 +48,8 @@ export default function InstallmentsPage() {
             <tr>
               <th className="px-4 py-2 text-left">Product</th>
               <th className="px-4 py-2 text-left">Price</th>
-              <th className="px-4 py-2 text-left">Monthly Payment</th>
-              <th className="px-4 py-2 text-left">Duration</th>
+              <th className="px-4 py-2 text-left">Deposit (%)</th>
+              <th className="px-4 py-2 text-left">Months</th>
               <th className="px-4 py-2">Actions</th>
             </tr>
           </thead>
@@ -59,8 +59,8 @@ export default function InstallmentsPage() {
               <tr key={p._id}>
                 <td className="px-4 py-2">{p.name}</td>
                 <td className="px-4 py-2">Ksh {p.calculatedPrice}</td>
-                <td className="px-4 py-2">Ksh {p.installmentMonthlyAmount}</td>
-                <td className="px-4 py-2">{p.installmentDuration} months</td>
+                <td className="px-4 py-2">{p.installmentDepositPercent}%</td>
+                <td className="px-4 py-2">{p.installmentMonths} months</td>
 
                 <td className="px-4 py-2">
                   <Link

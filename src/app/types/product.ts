@@ -28,4 +28,9 @@ export interface Product {
   averageRating: number;
   currency: string;
   reviewCount: number;
+  installmentEnabled: boolean;
+  installmentDepositPercent: number;
+  installmentMonths: number;
+  installmentPolicy: string;
 }
+

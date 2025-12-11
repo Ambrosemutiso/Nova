@@ -29,7 +29,7 @@ export default function InstallmentModal({ product, onClose }: any) {
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center z-[9999]"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       >
         <motion.div

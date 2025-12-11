@@ -18,7 +18,7 @@ export default function InstallmentsPage() {
 
   return (
     <div className="pt-24 px-4 md:ml-64">
-      <h1 className="text-2xl font-semibold mb-6">Products You Can Buy on Installments</h1>
+      <h1 className="text-2xl font-semibold mb-6">Buy on Installments</h1>
 
       {items.length === 0 ? (
         <p>No installment products available yet.</p>

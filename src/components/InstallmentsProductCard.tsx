@@ -18,16 +18,20 @@ export default function InstallmentProductCard({ product }: InstallmentProductCa
     return match ? match[1] : url;
   };
 
-  const monthlyPayment = Math.round(product.calculatedPrice / 6); // default preview
+  // Safe fallback values
+  const oldPrice = product.oldPrice ?? product.calculatedPrice ?? 0;
+  const currentPrice = product.calculatedPrice ?? 0;
+
+  // Monthly payment preview
+  const monthlyPayment = Math.round(currentPrice / (product.installmentMonths || 6));
 
   return (
     <>
-      {/* PRODUCT CARD */}
       <div className="border rounded-lg p-3 shadow hover:shadow-lg transition bg-white">
         {/* Image */}
         <div onClick={() => setShowModal(true)} className="cursor-pointer">
           <CldImage
-            src={getPublicId(product.images[0])}
+            src={getPublicId(product.images?.[0] || "")}
             alt={product.name}
             width="300"
             height="300"
@@ -45,23 +49,24 @@ export default function InstallmentProductCard({ product }: InstallmentProductCa
         <div className="mt-2 text-sm">
           <div className="flex items-center gap-2">
             <span className="line-through text-gray-400 text-xs">
-              Ksh.{product.oldPrice.toLocaleString()}
+              Ksh.{oldPrice.toLocaleString()}
             </span>
             <span className="text-red-600 font-bold">
-              Ksh.{product.calculatedPrice.toLocaleString()}
+              Ksh.{currentPrice.toLocaleString()}
             </span>
           </div>
         </div>
 
         {/* Monthly Payment Preview */}
         <p className="text-xs text-gray-600 mt-1">
-          From <span className="text-black font-semibold">
+          From{" "}
+          <span className="text-black font-semibold">
             Ksh.{monthlyPayment.toLocaleString()}
           </span>{" "}
           / month
         </p>
 
-        {/* ACTIVATE INSTALLMENT BUTTON */}
+        {/* Button */}
         <button
           onClick={() => setShowModal(true)}
           className="mt-3 w-full bg-orange-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-orange-700 transition"
@@ -70,12 +75,9 @@ export default function InstallmentProductCard({ product }: InstallmentProductCa
         </button>
       </div>
 
-      {/* INSTALLMENT MODAL */}
+      {/* Modal */}
       {showModal && (
-        <InstallmentModal
-          product={product}
-          onClose={() => setShowModal(false)}
-        />
+        <InstallmentModal product={product} onClose={() => setShowModal(false)} />
       )}
     </>
   );
