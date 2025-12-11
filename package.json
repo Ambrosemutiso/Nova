@@ -10,7 +10,6 @@
   "dependencies": {
     "@headlessui/react": "^2.2.4",
     "@lottiefiles/react-lottie-player": "^3.6.0",
-    "@next/swc-win32-x64-msvc": "^16.0.8",
     "@prisma/client": "^6.18.0",
     "@radix-ui/react-dialog": "^1.1.14",
     "@remirror/core": "^3.0.2",
