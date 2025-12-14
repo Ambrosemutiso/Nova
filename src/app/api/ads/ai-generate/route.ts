@@ -87,11 +87,23 @@ Modern, realistic, professional, product-focused.
       videoScript,
       aiGenerated: true,
     });
-  } catch (error) {
-    console.error('AI Ad Generation Error:', error);
+} catch (error: any) {
+  console.error('AI Ad Generation Error:', error);
+
+  if (error?.status === 429) {
     return NextResponse.json(
-      { error: 'Failed to generate AI ad' },
-      { status: 500 }
+      {
+        error: 'AI quota exceeded',
+        message:
+          'AI ad generation is temporarily unavailable. Please try again later or contact support.',
+      },
+      { status: 429 }
     );
   }
+
+  return NextResponse.json(
+    { error: 'Failed to generate AI ad' },
+    { status: 500 }
+  );
+}
 }
