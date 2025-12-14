@@ -1,21 +1,16 @@
-// app/api/seller/[sellerId]/route.ts
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
 import Seller from '@/app/models/seller';
 
 export async function GET(
-  req: Request,
-  { params }: { params: { sellerId: string } }
+  _req: NextRequest,
+  context: { params: Promise<{ sellerId: string }> }
 ) {
-  await dbConnect();
-
-  const { sellerId } = params;
-
-  if (!sellerId) {
-    return NextResponse.json({ success: false, message: 'Missing sellerId' }, { status: 400 });
-  }
-
   try {
+    const { sellerId } = await context.params;
+
+    await dbConnect();
+
     const seller = await Seller.findById(sellerId).lean();
 
     if (!seller) {

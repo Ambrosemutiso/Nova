@@ -1,17 +1,31 @@
 // /app/api/products-by-seller/[sellerId]/route.ts
 import { dbConnect } from '@/lib/dbConnect';
 import Product from '@/app/models/product';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(req: Request, { params }: { params: { sellerId: string } }) {
-  await dbConnect();
-  const { sellerId } = params;
-
+export async function GET(
+  _req: NextRequest,
+  context: { params: Promise<{ sellerId: string }> }
+) {
   try {
-    const products = await Product.find({ sellerId }).limit(15);
-    return NextResponse.json({ products });
-    } catch (error) {
-    console.error('Error fetching products:', error);
-    return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
+    const { sellerId } = await context.params;
+
+    await dbConnect();
+
+    const product = await Product.findById(sellerId);
+    if (!product) {
+      return NextResponse.json(
+        { success: false, message: "Product not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true, product });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json(
+      { success: false, message: "Server error" },
+      { status: 500 }
+    );
   }
 }
