@@ -9,7 +9,7 @@ import {
   FiGrid, FiZoomIn, FiZoomOut, FiPackage, FiLayout,
   FiLoader, FiSend, FiSun, FiMoon, FiGlobe,
   FiFilm,
-  FiPhone
+  FiPhone, FiCreditCard
 } from 'react-icons/fi';
 
 export default function Sidebar({ onClose }: { onClose: () => void }) {
@@ -37,6 +37,7 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
   const categories = [
     { label: 'Home', icon: <FiHome />, route: '/' },
     { label: 'Wishlist', icon: <FiHeart />, route: '/wishlist' },
+    { label: 'My Wallet', icon: <FiCreditCard />, route: '/wallet' },
     { label: 'My Orders', icon: <FiPackage />, route: '/orders' },
     { label: 'My Vouchers', icon: <FiGift />, route: '/vouchers' },
     { label: 'My Installments', icon: <FiPhone />, route: '/installments/progress' },

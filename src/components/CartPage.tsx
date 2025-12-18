@@ -10,6 +10,7 @@ import SuggestedForYou from '@/components/SuggestedForYou';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import { Player } from '@lottiefiles/react-lottie-player';
+import GlobalPayModal from '@/components/payments/GlobalPayModal';
 
 type CartProps = {
   onOpenBuyerLogin?: () => void;
@@ -119,7 +120,7 @@ const baseCountyFees: Record<string, number> = {
   Vihiga: 170,
 };
 
-export default function CartPage({ onOpenBuyerLogin, onOpenSellerLogin }: CartProps) {
+export default function CartPage({ onOpenBuyerLogin }: CartProps) {
   const { cartItems, removeFromCart, increaseQuantity, decreaseQuantity, clearCart } = useCart();
   const router = useRouter();
 
@@ -127,14 +128,10 @@ export default function CartPage({ onOpenBuyerLogin, onOpenSellerLogin }: CartPr
   const [town, setTown] = useState('');
   const [towns, setTowns] = useState<string[]>([]);
   const [deliveryFee, setDeliveryFee] = useState(0);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [paymentPhone, setPaymentPhone] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'mpesa' | 'airtel' | ''>('');
-  const [processingPayment, setProcessingPayment] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [itemToRemove, setItemToRemove] = useState<string | null>(null);
-
+  const [showGlobalPay, setShowGlobalPay] = useState(false);
 
   useEffect(() => {
     const storedUserId = localStorage.getItem('userId');
@@ -155,142 +152,18 @@ export default function CartPage({ onOpenBuyerLogin, onOpenSellerLogin }: CartPr
   const subtotal = cartItems.reduce((sum, item) => sum + item.calculatedPrice * item.quantity, 0);
   const total = subtotal + deliveryFee;
 
-  const handleCheckout = () => {
-    if (!county || !town) {
-      toast.warn('Please select your delivery location first');
-      return;
-    }
-    setShowPaymentModal(true);
-  };
+const handleCheckout = () => {
+  if (!county || !town) {
+    toast.warn('Please select delivery location');
+    return;
+  }
+  setShowGlobalPay(true);
+};
 
 const getPublicId = (url?: string) => {
    if (!url || typeof url !== 'string') 
    return ''; const match = url.match(/\/upload\/(?:v\d+\/)?([^\.]+)/);
    return match ? match[1] : url; };
-
-  const handleConfirmPayment = async () => {
-    if (!paymentPhone || !paymentMethod) {
-      toast.warn('Please enter phone and select payment method');
-      return;
-    }
-
-    if (!userId) {
-      toast.error('User not logged in.');
-      return;
-    }
-
-    setProcessingPayment(true);
-    toast.loading(`Waiting for ${paymentMethod === 'mpesa' ? 'M-Pesa' : 'Airtel'} confirmation...`);
-
-    try {
-      const normalizedPhone = paymentPhone.replace(/^0/, '254');
-      const endpoint = paymentMethod === 'mpesa' ? '/api/checkout/mpesa' : '/api/checkout/airtel';
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone: normalizedPhone,
-          totalAmount: total,
-          items: cartItems.map(item => ({
-            name: item.name,
-            quantity: item.quantity,
-            price: item.calculatedPrice,
-            images: item.images,
-            productId: item.productId || item.id,
-            sellerId: item.sellerId,
-          })),
-          deliveryFee,
-          county,
-          town,
-          userId,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        toast.dismiss();
-        toast.error(result.message || 'Payment initiation failed.');
-        setProcessingPayment(false);
-        return;
-      }
-
-      const orderId = result.orderId;
-      let attempts = 0;
-      const maxAttempts = 10;
-
-      const interval = setInterval(async () => {
-        attempts++;
-        const statusRes = await fetch(`/api/orders/status?orderId=${orderId}`);
-        const statusData = await statusRes.json();
-
-        if (statusData.status === 'Paid') {
-          clearInterval(interval);
-          toast.dismiss();
-          toast.success('Payment successful!');
-          clearCart();
-          setShowPaymentModal(false);
-
-          // ✅ Lottie success animation
-          const successPopup = document.createElement('div');
-          successPopup.className = 'fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50';
-          successPopup.innerHTML = `
-            <div class="bg-white p-6 rounded-xl shadow-lg flex flex-col items-center">
-              <lottie-player
-                src="https://assets2.lottiefiles.com/packages/lf20_jbrw3hcz.json"
-                background="transparent"
-                speed="1"
-                style="width: 180px; height: 180px;"
-                autoplay
-              ></lottie-player>
-              <p class="text-green-600 font-semibold text-lg mt-3">Payment Successful!</p>
-            </div>
-          `;
-          document.body.appendChild(successPopup);
-          setTimeout(() => {
-            document.body.removeChild(successPopup);
-            router.push('/orders');
-          }, 4000);
-        } else if (statusData.status === 'Cancelled') {
-          clearInterval(interval);
-          toast.dismiss();
-          toast.error('Payment cancelled.');
-
-          // ❌ Lottie failure animation
-          const failPopup = document.createElement('div');
-          failPopup.className = 'fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50';
-          failPopup.innerHTML = `
-            <div class="bg-white p-6 rounded-xl shadow-lg flex flex-col items-center">
-              <lottie-player
-                src="https://assets10.lottiefiles.com/packages/lf20_qp1q7mct.json"
-                background="transparent"
-                speed="1"
-                style="width: 180px; height: 180px;"
-                autoplay
-              ></lottie-player>
-              <p class="text-red-600 font-semibold text-lg mt-3">Payment Cancelled!</p>
-            </div>
-          `;
-          document.body.appendChild(failPopup);
-          setTimeout(() => document.body.removeChild(failPopup), 4000);
-
-          setShowPaymentModal(false);
-        } else if (attempts >= maxAttempts) {
-          clearInterval(interval);
-          toast.dismiss();
-          toast.error('Transaction timed out. Try again.');
-          setShowPaymentModal(false);
-        }
-      }, 3000);
-    } catch (error) {
-      console.error('Payment error:', error);
-      toast.dismiss();
-      toast.error('Error processing payment.');
-    } finally {
-      setProcessingPayment(false);
-    }
-  };
 
   if (cartItems.length === 0)
     return (
@@ -308,67 +181,31 @@ const getPublicId = (url?: string) => {
   return (
     <div className="max-w-6xl mx-auto px-4 pt-28 pb-10 relative">
       {/* 🟠 Payment Modal */}
-      {showPaymentModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-xl w-full max-w-md relative shadow-xl">
-            <button
-              onClick={() => setShowPaymentModal(false)}
-              className="absolute top-2 right-4 text-gray-500 text-2xl font-bold"
-            >
-              ×
-            </button>
+{showGlobalPay && userId && (
+  <GlobalPayModal
+    payload={{
+      amount: total,
+      items: cartItems.map(item => ({
+        name: item.name,
+        quantity: item.quantity,
+        price: item.calculatedPrice,
+        images: item.images,
+        productId: item.productId || item.id,
+        sellerId: item.sellerId,
+      })),
+      deliveryFee,
+      county,
+      town,
+      userId,
+    }}
+    onClose={() => setShowGlobalPay(false)}
+    onSuccess={() => {
+      clearCart();
+      router.push('/orders');
+    }}
+  />
+)}
 
-            <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">Checkout Payment</h2>
-            <p className="text-center text-lg font-semibold text-orange-600 mb-4">
-              Total: Ksh {total.toLocaleString()}
-            </p>
-
-            <label className="block mb-2 text-sm text-orange-600">Phone Number</label>
-            <input
-              type="text"
-              value={paymentPhone}
-              onChange={(e) => setPaymentPhone(e.target.value)}
-              className="w-full border px-3 py-2 rounded mb-4"
-              placeholder="Enter M-Pesa or Airtel number"
-            />
-
-            <label className="block mb-2 text-sm text-orange-600">Payment Method</label>
-            <div className="flex items-center gap-4 mb-4">
-              <button
-                onClick={() => setPaymentMethod('mpesa')}
-                className={`flex-1 flex items-center gap-2 border px-3 py-2 rounded-lg transition ${
-                  paymentMethod === 'mpesa'
-                    ? 'border-green-500 bg-green-50'
-                    : 'hover:border-green-400'
-                }`}
-              >
-                <img src="/mpesa.png" alt="M-Pesa" className="h-6" />
-                <span className="font-medium text-gray-700">M-Pesa</span>
-              </button>
-
-              <button
-                onClick={() => setPaymentMethod('airtel')}
-                className={`flex-1 flex items-center gap-2 border px-3 py-2 rounded-lg transition ${
-                  paymentMethod === 'airtel'
-                    ? 'border-red-500 bg-red-50'
-                    : 'hover:border-red-400'
-                }`}
-              >
-                <img src="/airtel.png" alt="Airtel" className="h-6" />
-                <span className="font-medium text-gray-700">Airtel Money</span>
-              </button>
-            </div>
-
-            <button
-              onClick={handleConfirmPayment}
-              disabled={processingPayment}
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded transition"
-            >
-              {processingPayment ? 'Processing...' : 'Confirm & Pay'}
-            </button>
-          </div>
-        </div>
-      )}
 
 {/* 🗑️ Remove Item Confirmation Modal */}
 {showRemoveModal && (
