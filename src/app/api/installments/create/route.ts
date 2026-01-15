@@ -7,11 +7,11 @@ export async function POST(req: Request) {
   try {
     await dbConnect();
 
-    const { productId, months, buyerId, deposit } = await req.json();
+    const { buyerId, productId } = await req.json();
 
-    if (!productId || !months || !buyerId) {
+    if (!buyerId || !productId) {
       return NextResponse.json(
-        { error: "Missing fields (buyerId, productId, months required)" },
+        { error: "Missing buyerId or productId" },
         { status: 400 }
       );
     }
@@ -21,12 +21,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    if (!product.sellerId) {
-      return NextResponse.json({ error: "Product missing sellerId" }, { status: 400 });
+    const months = product.installmentMonths;
+    const deposit = product.depositAmount || 0;
+    const totalAmount = product.calculatedPrice;
+
+    if (!months || months <= 0) {
+      return NextResponse.json(
+        { error: "Installments not enabled for this product" },
+        { status: 400 }
+      );
     }
 
-    const totalAmount = product.calculatedPrice;
-    const monthlyAmount = Math.round((totalAmount - Number(deposit || 0)) / months);
+    const monthlyAmount = Math.round(
+      (totalAmount - deposit) / months
+    );
 
     const installment = await Installment.create({
       buyerId,
@@ -42,13 +50,11 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       installmentId: installment._id,
-      totalAmount,
-      monthlyAmount,
     });
-
   } catch (error) {
-    console.error("Installment create error:", error);
+    console.error(error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
+
 

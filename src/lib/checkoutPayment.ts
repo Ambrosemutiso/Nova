@@ -9,6 +9,8 @@ type CheckoutPayload = {
   county: string;
   town: string;
   userId: string;
+  purpose: 'order' | 'installment-deposit' | 'installment-monthly';
+  refId: string; 
   onSuccess: () => void;
   onFailure?: () => void;
 };
@@ -23,6 +25,8 @@ export async function initiateCheckoutPayment(payload: CheckoutPayload) {
     county,
     town,
     userId,
+    purpose,
+    refId,
     onSuccess,
     onFailure,
   } = payload;
@@ -56,6 +60,8 @@ const endpoint =
         county,
         town,
         userId,
+        purpose,
+        refId,
       }),
     });
 

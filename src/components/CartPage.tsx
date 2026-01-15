@@ -197,6 +197,10 @@ const getPublicId = (url?: string) => {
       county,
       town,
       userId,
+
+      // ✅ REQUIRED BY GLOBAL PAYMENT SYSTEM
+      purpose: 'order',
+      refId: 'cart', // backend will generate actual orderId
     }}
     onClose={() => setShowGlobalPay(false)}
     onSuccess={() => {
@@ -205,6 +209,7 @@ const getPublicId = (url?: string) => {
     }}
   />
 )}
+
 
 
 {/* 🗑️ Remove Item Confirmation Modal */}

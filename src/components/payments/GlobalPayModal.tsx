@@ -13,6 +13,8 @@ type Props = {
     county: string;
     town: string;
     userId: string;
+    purpose: 'order' | 'installment-deposit' | 'installment-monthly';
+    refId: string;
   };
   onClose: () => void;
   onSuccess: () => void;
@@ -56,6 +58,8 @@ export default function GlobalPayModal({ payload, onClose, onSuccess }: Props) {
       county: payload.county,
       town: payload.town,
       userId: payload.userId,
+      purpose: payload.purpose,
+      refId: payload.refId,
       onSuccess: () => {
         setProcessing(false);
         onClose();

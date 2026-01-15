@@ -4,8 +4,21 @@ import jwt from 'jsonwebtoken';
 
 const SECRET_KEY = process.env.JWT_SECRET || 'secret_ecom';
 
+// ✅ Public affiliate routes (NO AUTH REQUIRED)
+const AFFILIATE_PUBLIC_ROUTES = [
+  '/api/affiliate/auth/login',
+  '/api/affiliate/auth/register',
+  '/affiliate/auth/login',
+  '/affiliate/auth/register',
+];
+
 export function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
+
+  // 🔓 Allow public affiliate auth routes
+  if (AFFILIATE_PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
+    return NextResponse.next();
+  }
 
   // Token sources
   const logisticsToken = req.cookies.get('logisticsToken')?.value;
@@ -15,11 +28,14 @@ export function middleware(req: NextRequest) {
   const logisticsProtected = ['/logistics/dashboard'];
   const affiliateProtected = ['/affiliate/dashboard', '/api/affiliate/'];
 
-  // Check if path is protected
-  const isLogisticsPath = logisticsProtected.some((path) => pathname.startsWith(path));
-  const isAffiliatePath = affiliateProtected.some((path) => pathname.startsWith(path));
+  const isLogisticsPath = logisticsProtected.some(path =>
+    pathname.startsWith(path)
+  );
+  const isAffiliatePath = affiliateProtected.some(path =>
+    pathname.startsWith(path)
+  );
 
-  // Logistics route protection
+  // 🚚 Logistics protection
   if (isLogisticsPath) {
     if (!logisticsToken) {
       return NextResponse.redirect(new URL('/logistics/login', req.url));
@@ -33,10 +49,9 @@ export function middleware(req: NextRequest) {
     }
   }
 
-  // Affiliate route & API protection
+  // 🤝 Affiliate protection
   if (isAffiliatePath) {
     if (!affiliateToken) {
-      // Redirect pages; block APIs
       if (pathname.startsWith('/affiliate/dashboard')) {
         return NextResponse.redirect(new URL('/affiliate/auth/login', req.url));
       }
