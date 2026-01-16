@@ -9,7 +9,7 @@ const PaymentIntentSchema = new mongoose.Schema(
 
     purpose: {
       type: String,
-      enum: ['order', 'installment-deposit', 'installment-monthly'],
+      enum: ['order', 'installment-deposit', 'installment-monthly','wallet'],
       required: true,
     },
 

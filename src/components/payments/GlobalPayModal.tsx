@@ -52,7 +52,7 @@ export default function GlobalPayModal({ payload, onClose, onSuccess }: Props) {
     await initiateCheckoutPayment({
       phone: method === 'npay' ? '' : normalizePhone(phone),
       method,
-      totalAmount: safeAmount,
+      amount: safeAmount,
       items: payload.items,
       deliveryFee: payload.deliveryFee,
       county: payload.county,

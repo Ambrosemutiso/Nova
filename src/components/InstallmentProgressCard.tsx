@@ -83,7 +83,6 @@ export default function InstallmentProgressCard({ plan }: any) {
         )}
       </div>
 
-      {/* 🔥 GLOBAL PAYMENT MODAL (CORRECT PLACE) */}
       {showPay && buyerId && (
         <GlobalPayModal
           payload={{

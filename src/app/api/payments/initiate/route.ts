@@ -1,105 +1,87 @@
-import { NextResponse } from 'next/server';
+// /app/api/payments/initiate/route.ts
+import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
 import PaymentIntent from '@/app/models/paymentIntent';
 import { initiateSTKPush } from '@/lib/mpesa';
 
-export async function POST(req: Request) {
-  try {
-    await dbConnect();
+export async function POST(req: NextRequest) {
+  await dbConnect();
 
+  try {
     const {
-      userId,
       phone,
+      method,
       amount,
-      method,      // 'mpesa' | 'airtel' | 'npay'
-      purpose,     // 'order' | 'installment-deposit' | 'installment-monthly' | 'wallet'
-      refId,       // orderId | installmentId | walletId | etc
+      userId,
+      purpose,
+      refId,   
+      items,
+      deliveryFee,
+      county,
+      town,
     } = await req.json();
 
-    // 🔐 Validation
-    if (!userId || !amount || !method || !purpose || !refId) {
+    if (!phone || !amount || !userId || !purpose || !refId) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { message: 'Missing required payment fields' },
         { status: 400 }
       );
     }
 
-    if (method !== 'npay' && !phone) {
-      return NextResponse.json(
-        { error: 'Phone number required for mobile payments' },
-        { status: 400 }
-      );
-    }
-
-    const safeAmount = Math.round(Number(amount));
-    if (safeAmount < 1) {
-      return NextResponse.json(
-        { error: 'Invalid payment amount' },
-        { status: 400 }
-      );
-    }
-
-    // 🧾 Create Payment Intent (single source of truth)
-    const intent = await PaymentIntent.create({
+    // 1️⃣ Create payment intent
+    const paymentIntent = await PaymentIntent.create({
       userId,
-      amount: safeAmount,
+      amount,
       method,
       purpose,
       refId,
-      status: 'pending',
+      status: 'PENDING',
+      metadata: {
+        items,
+        deliveryFee,
+        county,
+        town,
+      },
     });
 
-    // 🟣 N-PAY (internal wallet / instant success)
-    if (method === 'npay') {
-      intent.status = 'paid';
-      await intent.save();
-
-      return NextResponse.json({
-        success: true,
-        intentId: intent._id,
-        status: 'paid',
+    // 2️⃣ Trigger STK Push (MPesa only)
+    if (method === 'mpesa') {
+      const stk = await initiateSTKPush({
+        phone,
+        amount,
+        accountReference: `PAY-${paymentIntent._id}`,
+        description:
+          purpose === 'order'
+            ? 'Order Payment'
+            : purpose === 'installment-deposit'
+            ? 'Installment Deposit'
+            : 'Installment Monthly Payment',
       });
+
+      if (!stk.success) {
+        paymentIntent.status = 'FAILED';
+        await paymentIntent.save();
+
+        return NextResponse.json(
+          { message: 'Failed to initiate STK push' },
+          { status: 500 }
+        );
+      }
+
+      paymentIntent.providerCheckoutId = stk.CheckoutRequestID;
+      await paymentIntent.save();
     }
 
-    // 📲 M-PESA / AIRTEL STK PUSH
-    const stk = await initiateSTKPush({
-      phone,
-      amount: safeAmount,
-      accountReference: intent._id.toString(), // 🔥 universal reference
-      description:
-        purpose === 'order'
-          ? 'Order Payment'
-          : purpose === 'installment-deposit'
-          ? 'Installment Deposit'
-          : purpose === 'installment-monthly'
-          ? 'Installment Payment'
-          : 'Wallet Top-up',
-    });
-
-    if (!stk.success) {
-      intent.status = 'failed';
-      await intent.save();
-
-      return NextResponse.json(
-        { error: 'STK push failed' },
-        { status: 500 }
-      );
-    }
-
-    // Save M-Pesa IDs for callback tracking
-    intent.checkoutRequestId = stk.CheckoutRequestID;
-    intent.merchantRequestId = stk.MerchantRequestID;
-    await intent.save();
+    // (Airtel & NPay handled later if needed)
 
     return NextResponse.json({
       success: true,
-      intentId: intent._id,
-      checkoutRequestId: stk.CheckoutRequestID,
+      paymentIntentId: paymentIntent._id,
     });
   } catch (error) {
-    console.error('Payment initiation error:', error);
+    console.error('[PAYMENT INITIATE ERROR]', error);
     return NextResponse.json(
-      { error: 'Server error' },
+      { message: 'Payment initiation failed' },
       { status: 500 }
     );
   }

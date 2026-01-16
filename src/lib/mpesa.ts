@@ -6,12 +6,14 @@ const consumerKey = process.env.MPESA_CONSUMER_KEY!;
 const consumerSecret = process.env.MPESA_CONSUMER_SECRET!;
 const shortCode = process.env.MPESA_SHORTCODE!;
 const passkey = process.env.MPESA_PASSKEY!;
-const callbackURL = 'https://yourdomain.com/api/payments/callback/mpesa';
+const callbackURL =
+  process.env.MPESA_CALLBACK_URL ||
+  'https://yourdomain.com/api/payments/callback/mpesa';
 
-type STKPayload = {
+export type STKPayload = {
   phone: string;
   amount: number;
-  accountReference: string;
+  accountReference: string; // e.g. PAY-<paymentIntentId>
   description?: string;
 };
 
@@ -22,6 +24,7 @@ export async function initiateSTKPush({
   description = 'Payment',
 }: STKPayload) {
   try {
+    // 🔐 Get access token
     const auth = Buffer.from(
       `${consumerKey}:${consumerSecret}`
     ).toString('base64');
@@ -37,6 +40,7 @@ export async function initiateSTKPush({
 
     const accessToken = tokenRes.data.access_token;
 
+    // ⏱️ Generate password
     const timestamp = moment().format('YYYYMMDDHHmmss');
     const password = Buffer.from(
       `${shortCode}${passkey}${timestamp}`
@@ -46,6 +50,7 @@ export async function initiateSTKPush({
       ? phone
       : phone.replace(/^0/, '254');
 
+    // 🚀 STK Push
     const stkRes = await axios.post(
       'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest',
       {
@@ -74,7 +79,10 @@ export async function initiateSTKPush({
       MerchantRequestID: stkRes.data.MerchantRequestID,
     };
   } catch (error: any) {
-    console.error('STK Push error:', error.response?.data || error.message);
+    console.error(
+      'STK Push error:',
+      error.response?.data || error.message
+    );
     return { success: false, error: error.message };
   }
 }
