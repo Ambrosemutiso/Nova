@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       method,
       purpose,
       refId,
-      status: 'PENDING',
+      status: 'pending',
       metadata: {
         items,
         deliveryFee,
@@ -71,8 +71,6 @@ export async function POST(req: NextRequest) {
       paymentIntent.providerCheckoutId = stk.CheckoutRequestID;
       await paymentIntent.save();
     }
-
-    // (Airtel & NPay handled later if needed)
 
     return NextResponse.json({
       success: true,
