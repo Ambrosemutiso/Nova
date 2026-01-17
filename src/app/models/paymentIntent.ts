@@ -14,8 +14,8 @@ const PaymentIntentSchema = new mongoose.Schema(
     },
 
     refId: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true, // orderId OR installmentId
+      type: String,
+      required: true, 
     },
 
     status: {
