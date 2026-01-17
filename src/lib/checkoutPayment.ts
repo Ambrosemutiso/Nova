@@ -16,7 +16,7 @@ export type CheckoutPayload = {
   userId: string;
 
   // 🔑 What is being paid for
-  purpose: 'order' | 'installment-deposit' | 'installment-monthly';
+  purpose: 'order' | 'installment-deposit' | 'installment-monthly' | 'wallet';
 
   // 🔗 Reference ID
   // orderId OR installmentId

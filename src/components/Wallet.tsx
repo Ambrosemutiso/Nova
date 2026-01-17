@@ -9,7 +9,10 @@ import {
   FiCreditCard,
   FiActivity,
   FiRepeat,
+  FiLock,
 } from 'react-icons/fi';
+import GlobalPayModal from '@/components/payments/GlobalPayModal';
+import { toast } from 'react-toastify';
 
 /* ---------------- Utils ---------------- */
 
@@ -31,8 +34,6 @@ const formatDateGroup = (date: string) => {
   return 'Earlier';
 };
 
-/* ---------------- Types ---------------- */
-
 type Transaction = {
   id: string;
   type: 'credit' | 'debit';
@@ -40,6 +41,7 @@ type Transaction = {
   label: string;
   date: string;
 };
+/* ---------------- Types ---------------- */
 
 type Currency = 'NC' | 'KES';
 
@@ -49,27 +51,31 @@ export default function WalletPage() {
   const [showBalance, setShowBalance] = useState(true);
   const [currency, setCurrency] = useState<Currency>('NC');
 
+  const [showAmountModal, setShowAmountModal] = useState(false);
+  const [showPayModal, setShowPayModal] = useState(false);
+  const [topUpAmount, setTopUpAmount] = useState<number | null>(null);
+
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pin, setPin] = useState('');
+
   const hideTimer = useRef<NodeJS.Timeout | null>(null);
+  const lastPaymentRef = useRef<number | null>(null);
 
   const userName = 'Ambrose';
   const balanceNC = 1250;
-  const conversionRate = 1; // 1 NC = 1 KES (adjust later)
 
-  const balance =
-    currency === 'NC'
-      ? balanceNC
-      : balanceNC * conversionRate;
+  const buyerId =
+    typeof window !== 'undefined'
+      ? localStorage.getItem('userId')
+      : null;
 
-  const transactions: Transaction[] = [];
+       const transactions: Transaction[] = [];
 
-  /* 🔐 Auto-hide balance after inactivity */
+  /* 🔐 Auto-hide balance */
   useEffect(() => {
     const resetTimer = () => {
       if (hideTimer.current) clearTimeout(hideTimer.current);
-      hideTimer.current = setTimeout(
-        () => setShowBalance(false),
-        15000
-      );
+      hideTimer.current = setTimeout(() => setShowBalance(false), 15000);
     };
 
     window.addEventListener('mousemove', resetTimer);
@@ -82,8 +88,26 @@ export default function WalletPage() {
     };
   }, []);
 
-  /* 🧾 Group transactions */
-  const groupedTx = transactions.reduce((acc, tx) => {
+  /* 🧠 Duplicate payment prevention */
+  const canInitiatePayment = () => {
+    const now = Date.now();
+    if (lastPaymentRef.current && now - lastPaymentRef.current < 10000) {
+      toast.error('Please wait before initiating another payment.');
+      return false;
+    }
+    lastPaymentRef.current = now;
+    return true;
+  };
+
+  /* 🔐 Withdraw PIN */
+  const confirmWithdraw = async () => {
+    if (pin.length !== 4) return alert('Enter 4-digit PIN');
+    setShowPinModal(false);
+    setPin('');
+    alert('Withdrawal initiated');
+  };
+
+    const groupedTx = transactions.reduce((acc, tx) => {
     const key = formatDateGroup(tx.date);
     acc[key] = acc[key] || [];
     acc[key].push(tx);
@@ -126,7 +150,7 @@ export default function WalletPage() {
 
         <div className="mt-6">
           <h2 className="text-4xl font-bold">
-            {showBalance ? balance.toLocaleString() : '•••••'} {currency}
+            {showBalance ? balanceNC.toLocaleString() : '•••••'} {currency}
           </h2>
           {currency === 'NC' && (
             <p className="text-sm opacity-80 mt-1">
@@ -144,20 +168,20 @@ export default function WalletPage() {
           <FiActivity /> Weekly Activity
         </h3>
 
-        <div className="flex items-end gap-3 h-24">
-          {[20, 40, 30, 60, 45, 80, 55].map((v, i) => (
-            <div
-              key={i}
-              className="flex-1 bg-orange-100 rounded-lg relative"
-            >
-              <div
-                className="bg-orange-500 rounded-lg absolute bottom-0 w-full"
-                style={{ height: `${v}%` }}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
+<div className="flex items-end gap-3 h-24">
+  {[20, 40, 30, 60, 45, 80, 55].map((v, i) => (
+    <div
+      key={i}
+      className="flex-1 h-full bg-orange-100 rounded-lg relative"
+    >
+      <div
+  className="bg-orange-500 rounded-lg absolute bottom-0 w-full transition-all duration-500"
+        style={{ height: `${v}%` }}
+      />
+    </div>
+  ))}
+</div>
+</div>
 
       {/* Actions */}
       <div className="grid grid-cols-3 gap-4">
@@ -166,13 +190,20 @@ export default function WalletPage() {
           title="Deposit"
           subtitle="Top up wallet"
           color="green"
+          onClick={() => {
+            if (!canInitiatePayment()) return;
+            setShowAmountModal(true);
+          }}
         />
+
         <WalletAction
           icon={<FiArrowUp />}
           title="Withdraw"
           subtitle="Cash out"
           color="red"
+          onClick={() => setShowPinModal(true)}
         />
+
         <WalletAction
           icon={<FiCreditCard />}
           title="Pay"
@@ -180,7 +211,6 @@ export default function WalletPage() {
           color="orange"
         />
       </div>
-
       {/* Saved Payment Methods */}
       <div className="bg-white rounded-3xl p-6 shadow">
         <h3 className="font-semibold mb-4">Saved Payment Methods</h3>
@@ -188,6 +218,7 @@ export default function WalletPage() {
         <div className="flex gap-4">
           <PaymentMethod label="M-Pesa" />
           <PaymentMethod label="Airtel Money" />
+          <PaymentMethod label="Card" />
         </div>
       </div>
 
@@ -234,6 +265,62 @@ export default function WalletPage() {
           ))
         )}
       </div>
+      {/* 🔢 Amount Entry Modal */}
+      {showAmountModal && (
+        <AmountModal
+          onClose={() => setShowAmountModal(false)}
+          onConfirm={amount => {
+            setTopUpAmount(amount);
+            setShowAmountModal(false);
+            setShowPayModal(true);
+          }}
+        />
+      )}
+
+      {/* 📲 GlobalPayModal */}
+      {showPayModal && topUpAmount && (
+        <GlobalPayModal
+          payload={{
+            amount: topUpAmount,
+            items: [],
+            deliveryFee: 0,
+            county: '',
+            town: '',
+            userId: buyerId!,
+            purpose: 'wallet',
+            refId: buyerId!, // wallet reference
+          }}
+          onClose={() => setShowPayModal(false)}
+          onSuccess={() => {
+            setShowPayModal(false);
+            window.location.reload();
+          }}
+        />
+      )}
+
+      {/* 🔐 PIN Modal */}
+      {showPinModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-2xl w-80 space-y-4">
+            <h3 className="font-semibold flex items-center gap-2">
+              <FiLock /> Enter PIN
+            </h3>
+            <input
+              type="password"
+              maxLength={4}
+              value={pin}
+              onChange={e => setPin(e.target.value)}
+              className="w-full border rounded-xl p-2 text-center text-lg"
+            />
+            <button
+              onClick={confirmWithdraw}
+              className="w-full bg-orange-600 text-white py-2 rounded-xl"
+            >
+              Confirm Withdraw
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -245,15 +332,25 @@ function WalletAction({
   title,
   subtitle,
   color,
-}: any) {
-  const colorMap: any = {
+  onClick,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+  color: 'green' | 'red' | 'orange';
+  onClick?: () => void;
+}) {
+  const colorMap = {
     green: 'bg-green-50 text-green-600',
     red: 'bg-red-50 text-red-600',
     orange: 'bg-orange-50 text-orange-600',
   };
 
   return (
-    <button className="bg-white border rounded-2xl p-4 shadow hover:shadow-md transition">
+    <button
+      onClick={onClick}
+      className="bg-white border rounded-2xl p-4 shadow hover:shadow-md transition active:scale-[0.98]"
+    >
       <div
         className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${colorMap[color]}`}
       >
@@ -265,11 +362,52 @@ function WalletAction({
   );
 }
 
+
 function PaymentMethod({ label }: { label: string }) {
   return (
     <div className="border rounded-xl px-4 py-3 flex items-center gap-3">
       <FiCreditCard />
       <p className="font-medium">{label}</p>
+    </div>
+  );
+}
+
+/* 🔢 Amount Modal */
+function AmountModal({
+  onClose,
+  onConfirm,
+}: {
+  onClose: () => void;
+  onConfirm: (amount: number) => void;
+}) {
+  const [amount, setAmount] = useState('');
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+      <div className="bg-white p-6 rounded-2xl w-80 space-y-4">
+        <h3 className="font-semibold">Enter Amount</h3>
+        <input
+          type="number"
+          placeholder="e.g. 500"
+          value={amount}
+          onChange={e => setAmount(e.target.value)}
+          className="w-full border rounded-xl p-2"
+        />
+        <div className="flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 border rounded-xl py-2"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => onConfirm(Number(amount))}
+            className="flex-1 bg-orange-600 text-white rounded-xl py-2"
+          >
+            Continue
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

@@ -13,7 +13,7 @@ type Props = {
     county: string;
     town: string;
     userId: string;
-    purpose: 'order' | 'installment-deposit' | 'installment-monthly';
+    purpose: 'order' | 'installment-deposit' | 'installment-monthly' | 'wallet';
     refId: string;
   };
   onClose: () => void;
