@@ -8,7 +8,7 @@ const shortCode = process.env.MPESA_SHORTCODE!;
 const passkey = process.env.MPESA_PASSKEY!;
 const callbackURL =
   process.env.MPESA_CALLBACK_URL ||
-  'https://yourdomain.com/api/payments/callback/mpesa';
+  'https://novaxmax.com/api/payments/callback/mpesa';
 
 export type STKPayload = {
   phone: string;

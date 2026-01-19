@@ -13,6 +13,7 @@ import {
 } from 'react-icons/fi';
 import GlobalPayModal from '@/components/payments/GlobalPayModal';
 import { toast } from 'react-toastify';
+import { useAuth } from '@/app/context/AuthContext';
 
 /* ---------------- Utils ---------------- */
 
@@ -48,6 +49,8 @@ type Currency = 'NC' | 'KES';
 /* ---------------- Component ---------------- */
 
 export default function WalletPage() {
+  const { user } = useAuth();
+
   const [showBalance, setShowBalance] = useState(true);
   const [currency, setCurrency] = useState<Currency>('NC');
 
@@ -57,19 +60,23 @@ export default function WalletPage() {
 
   const [showPinModal, setShowPinModal] = useState(false);
   const [pin, setPin] = useState('');
+  const [hasPin, setHasPin] = useState<boolean | null>(null);
+  const [showSetPinModal, setShowSetPinModal] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState<number | null>(null);
+  const [withdrawMethod, setWithdrawMethod] = useState<'mpesa'>('mpesa');
+  const [balanceNC, setBalanceNC] = useState(0);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   const hideTimer = useRef<NodeJS.Timeout | null>(null);
   const lastPaymentRef = useRef<number | null>(null);
-
-  const userName = 'Ambrose';
-  const balanceNC = 1250;
+  
+  const userName = user?.name || 'Welcome';
 
   const buyerId =
     typeof window !== 'undefined'
       ? localStorage.getItem('userId')
       : null;
-
-       const transactions: Transaction[] = [];
 
   /* 🔐 Auto-hide balance */
   useEffect(() => {
@@ -88,6 +95,20 @@ export default function WalletPage() {
     };
   }, []);
 
+  useEffect(() => {
+  if (!user?._id) return;
+
+  fetch(`/api/wallet/balance?userId=${user._id}`)
+    .then(res => res.json())
+    .then(data => setBalanceNC(data.balance));
+
+  fetch(`/api/wallet/transactions?userId=${user._id}`)
+    .then(res => res.json())
+    .then(setTransactions);
+}, [user]);
+
+
+
   /* 🧠 Duplicate payment prevention */
   const canInitiatePayment = () => {
     const now = Date.now();
@@ -100,12 +121,41 @@ export default function WalletPage() {
   };
 
   /* 🔐 Withdraw PIN */
-  const confirmWithdraw = async () => {
-    if (pin.length !== 4) return alert('Enter 4-digit PIN');
+const confirmWithdraw = async () => {
+  if (pin.length !== 4 || !withdrawAmount) {
+    toast.error('Invalid PIN or amount');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/wallet/withdraw', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: user!._id,
+        pin,
+        amount: withdrawAmount,
+        method: withdrawMethod,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      toast.error(data.message);
+      return;
+    }
+
+    toast.success('Withdrawal initiated');
+
     setShowPinModal(false);
     setPin('');
-    alert('Withdrawal initiated');
-  };
+    setWithdrawAmount(null);
+
+  } catch {
+    toast.error('Withdrawal failed');
+  }
+};
 
     const groupedTx = transactions.reduce((acc, tx) => {
     const key = formatDateGroup(tx.date);
@@ -196,14 +246,13 @@ export default function WalletPage() {
           }}
         />
 
-        <WalletAction
-          icon={<FiArrowUp />}
-          title="Withdraw"
-          subtitle="Cash out"
-          color="red"
-          onClick={() => setShowPinModal(true)}
-        />
-
+<WalletAction
+  icon={<FiArrowUp />}
+  title="Withdraw"
+  subtitle="Cash out"
+  color="red"
+  onClick={() => setShowWithdrawModal(true)}
+/>
         <WalletAction
           icon={<FiCreditCard />}
           title="Pay"
@@ -276,6 +325,29 @@ export default function WalletPage() {
           }}
         />
       )}
+
+      {showSetPinModal && (
+  <SetPinModal
+    userId={user!._id}
+    onClose={() => setShowSetPinModal(false)}
+    onSuccess={() => {
+      setShowSetPinModal(false);
+      setShowPinModal(true);
+    }}
+  />
+)}
+
+{showWithdrawModal && (
+  <WithdrawModal
+    onClose={() => setShowWithdrawModal(false)}
+    onConfirm={(amount, method) => {
+      setWithdrawAmount(amount);
+      setWithdrawMethod(method);
+      setShowWithdrawModal(false);
+      setShowPinModal(true);
+    }}
+  />
+)}
 
       {/* 📲 GlobalPayModal */}
       {showPayModal && topUpAmount && (
@@ -402,6 +474,139 @@ function AmountModal({
           </button>
           <button
             onClick={() => onConfirm(Number(amount))}
+            className="flex-1 bg-orange-600 text-white rounded-xl py-2"
+          >
+            Continue
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SetPinModal({
+  userId,
+  onClose,
+  onSuccess,
+}: {
+  userId: string;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [pin, setPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const submit = async () => {
+    if (pin.length !== 4) {
+      toast.error('PIN must be 4 digits');
+      return;
+    }
+
+    if (pin !== confirmPin) {
+      toast.error('PINs do not match');
+      return;
+    }
+
+    setLoading(true);
+
+    const res = await fetch('/api/wallet/set-pin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, pin }),
+    });
+
+    setLoading(false);
+
+    if (!res.ok) {
+      toast.error('Failed to set PIN');
+      return;
+    }
+
+    toast.success('PIN set successfully');
+    onSuccess();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-2xl w-80 space-y-4">
+        <h3 className="font-semibold flex items-center gap-2">
+          <FiLock /> Set Wallet PIN
+        </h3>
+
+        <input
+          type="password"
+          maxLength={4}
+          placeholder="Enter 4-digit PIN"
+          value={pin}
+          onChange={e => setPin(e.target.value)}
+          className="w-full border rounded-xl p-2 text-center"
+        />
+
+        <input
+          type="password"
+          maxLength={4}
+          placeholder="Confirm PIN"
+          value={confirmPin}
+          onChange={e => setConfirmPin(e.target.value)}
+          className="w-full border rounded-xl p-2 text-center"
+        />
+
+        <div className="flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 border rounded-xl py-2"
+          >
+            Cancel
+          </button>
+
+          <button
+            disabled={loading}
+            onClick={submit}
+            className="flex-1 bg-orange-600 text-white rounded-xl py-2"
+          >
+            {loading ? 'Saving...' : 'Save PIN'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WithdrawModal({
+  onClose,
+  onConfirm,
+}: {
+  onClose: () => void;
+  onConfirm: (amount: number, method: 'mpesa') => void;
+}) {
+  const [amount, setAmount] = useState('');
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+      <div className="bg-white p-6 rounded-2xl w-80 space-y-4">
+        <h3 className="font-semibold">Withdraw Funds</h3>
+
+        <select className="w-full border rounded-xl p-2" disabled>
+          <option value="mpesa">M-Pesa (Available)</option>
+          <option>Airtel Money (Coming soon)</option>
+          <option>Card (Coming soon)</option>
+        </select>
+
+        <input
+          type="number"
+          placeholder="Amount"
+          value={amount}
+          onChange={e => setAmount(e.target.value)}
+          className="w-full border rounded-xl p-2"
+        />
+
+        <div className="flex gap-2">
+          <button onClick={onClose} className="flex-1 border rounded-xl py-2">
+            Cancel
+          </button>
+          <button
+            onClick={() => onConfirm(Number(amount), 'mpesa')}
             className="flex-1 bg-orange-600 text-white rounded-xl py-2"
           >
             Continue

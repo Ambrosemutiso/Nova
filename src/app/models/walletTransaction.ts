@@ -1,42 +1,45 @@
-import mongoose from 'mongoose';
+import mongoose, { Schema, Types } from 'mongoose';
 
-const WalletTransactionSchema = new mongoose.Schema(
+export interface IWalletTransaction {
+  walletId: Types.ObjectId;
+  type: 'credit' | 'debit';
+  amount: number;
+  purpose: 'wallet-topup' | 'withdrawal' | 'order-payment';
+  refId?: string;
+  balanceBefore: number;
+  balanceAfter: number;
+  createdAt: Date;
+}
+
+const WalletTransactionSchema = new Schema<IWalletTransaction>(
   {
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+    walletId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Wallet',
       required: true,
     },
-
     type: {
       type: String,
       enum: ['credit', 'debit'],
       required: true,
     },
-
     amount: {
       type: Number,
       required: true,
     },
-
-    method: {
+    purpose: {
       type: String,
-      enum: ['MPESA', 'N-PAY', 'WITHDRAW'],
       required: true,
     },
-
-    reference: String, // orderId, mpesaReceipt, etc
-
-    description: String,
-
-    status: {
-      type: String,
-      enum: ['Pending', 'Completed', 'Failed'],
-      default: 'Completed',
-    },
+    refId: String,
+    balanceBefore: Number,
+    balanceAfter: Number,
   },
   { timestamps: true }
 );
 
 export default mongoose.models.WalletTransaction ||
-  mongoose.model('WalletTransaction', WalletTransactionSchema);
+  mongoose.model<IWalletTransaction>(
+    'WalletTransaction',
+    WalletTransactionSchema
+  );

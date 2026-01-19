@@ -4,83 +4,124 @@ import { dbConnect } from '@/lib/dbConnect';
 import PaymentIntent from '@/app/models/paymentIntent';
 import Order from '@/app/models/orders';
 import Installment from '@/app/models/InstallmentOrder';
+import Wallet from '@/app/models/wallet';
+import WalletTransaction from '@/app/models/walletTransaction';
+import { notifyClient } from '@/lib/paymentStream';
 
 export async function POST(req: NextRequest) {
   await dbConnect();
 
   try {
-    const body = await req.json();
-    const stkCallback = body.Body?.stkCallback;
+    console.log('🔥 MPESA CALLBACK RECEIVED');
 
-    if (!stkCallback) {
+    const body = await req.json();
+    const stkCallback = body?.Body?.stkCallback;
+
+    // ✅ 1. Structure validation
+    if (
+      !stkCallback ||
+      !stkCallback.CheckoutRequestID ||
+      typeof stkCallback.ResultCode !== 'number'
+    ) {
+      console.error('Invalid callback payload', body);
       return NextResponse.json({ message: 'Invalid callback' }, { status: 400 });
     }
 
-    const checkoutId = stkCallback.CheckoutRequestID;
+    const checkoutRequestId = stkCallback.CheckoutRequestID;
     const resultCode = stkCallback.ResultCode;
 
+    // ✅ 2. Find intent
     const paymentIntent = await PaymentIntent.findOne({
-      providerCheckoutId: checkoutId,
+      checkoutRequestId,
     });
 
     if (!paymentIntent) {
-      console.error('PaymentIntent not found for checkout ID:', checkoutId);
+      console.error('PaymentIntent not found:', checkoutRequestId);
       return NextResponse.json({ message: 'Payment not found' }, { status: 404 });
+    }
+
+    // ✅ 3. Idempotency
+    if (paymentIntent.status === 'paid') {
+      return NextResponse.json({ success: true });
     }
 
     // ❌ Payment failed
     if (resultCode !== 0) {
-      paymentIntent.status = 'FAILED';
+      paymentIntent.status = 'failed';
       await paymentIntent.save();
+
+      notifyClient(paymentIntent._id.toString(), {
+        status: 'failed',
+      });
 
       return NextResponse.json({ success: false });
     }
 
-    // ✅ Payment successful
-    paymentIntent.status = 'SUCCESS';
+    // ✅ Payment success
+    paymentIntent.status = 'paid';
     await paymentIntent.save();
 
-    // 🔁 Resolve business logic
+    // ✅ 4. Business logic
     switch (paymentIntent.purpose) {
-      case 'order': {
+      case 'order':
         await Order.findByIdAndUpdate(paymentIntent.refId, {
           status: 'Paid',
           paidAt: new Date(),
         });
         break;
-      }
 
-      case 'installment-deposit': {
+      case 'installment-deposit':
         await Installment.findByIdAndUpdate(paymentIntent.refId, {
           depositPaid: true,
           status: 'active',
-          depositPaidAt: new Date(),
         });
+        break;
+
+      case 'installment-monthly': {
+        const inst = await Installment.findById(paymentIntent.refId);
+        if (inst) {
+          inst.paidMonths += 1;
+          inst.paidAmount += paymentIntent.amount;
+          if (inst.paidMonths >= inst.months) {
+            inst.status = 'completed';
+          }
+          await inst.save();
+        }
         break;
       }
 
-      case 'installment-monthly': {
-        const installment = await Installment.findById(
-          paymentIntent.refId
-        );
+      case 'wallet': {
+        const userId = paymentIntent.refId;
 
-        if (installment) {
-          installment.paidMonths += 1;
-          installment.paidAmount += paymentIntent.amount;
-
-          if (installment.paidMonths >= installment.months) {
-            installment.status = 'completed';
-          }
-
-          await installment.save();
+        let wallet = await Wallet.findOne({ userId });
+        if (!wallet) {
+          wallet = await Wallet.create({ userId, balance: 0 });
         }
+
+        wallet.balance += paymentIntent.amount;
+        await wallet.save();
+
+        await WalletTransaction.create({
+          userId,
+          type: 'credit',
+          amount: paymentIntent.amount,
+          label: 'Wallet top-up (M-Pesa)',
+          reference: checkoutRequestId,
+          balanceAfter: wallet.balance,
+        });
         break;
       }
     }
 
+    // ✅ 5. Notify frontend instantly
+    notifyClient(paymentIntent._id.toString(), {
+      status: 'paid',
+      amount: paymentIntent.amount,
+    });
+
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('[MPESA CALLBACK ERROR]', error);
+  } catch (err) {
+    console.error('[MPESA CALLBACK ERROR]', err);
     return NextResponse.json(
       { message: 'Callback processing failed' },
       { status: 500 }

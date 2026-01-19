@@ -9,13 +9,18 @@ const PaymentIntentSchema = new mongoose.Schema(
 
     purpose: {
       type: String,
-      enum: ['order', 'installment-deposit', 'installment-monthly','wallet'],
+      enum: [
+        'order',
+        'installment-deposit',
+        'installment-monthly',
+        'wallet',
+      ],
       required: true,
     },
 
     refId: {
       type: String,
-      required: true, 
+      required: true,
     },
 
     status: {
@@ -24,7 +29,13 @@ const PaymentIntentSchema = new mongoose.Schema(
       default: 'pending',
     },
 
-    checkoutRequestId: String,
+    // ✅ MUST MATCH WHAT YOU USE
+    checkoutRequestId: {
+      type: String,
+      index: true,
+    },
+
+    metadata: mongoose.Schema.Types.Mixed,
   },
   { timestamps: true }
 );

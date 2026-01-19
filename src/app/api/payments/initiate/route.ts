@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
       });
 
       if (!stk.success) {
-        paymentIntent.status = 'FAILED';
+        paymentIntent.status = 'failed';
         await paymentIntent.save();
 
         return NextResponse.json(
@@ -68,8 +68,8 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      paymentIntent.providerCheckoutId = stk.CheckoutRequestID;
-      await paymentIntent.save();
+     paymentIntent.checkoutRequestId = stk.CheckoutRequestID;
+     await paymentIntent.save();
     }
 
     return NextResponse.json({
