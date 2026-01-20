@@ -1,4 +1,3 @@
-// /lib/mpesa.ts
 import axios from 'axios';
 import moment from 'moment';
 
@@ -7,6 +6,10 @@ const consumerSecret = process.env.MPESA_CONSUMER_SECRET!;
 const shortCode = process.env.MPESA_SHORTCODE!;
 const passkey = process.env.MPESA_PASSKEY!;
 const callbackURL = process.env.MPESA_CALLBACK_URL!;
+
+if (!callbackURL) {
+  throw new Error('❌ MPESA_CALLBACK_URL is not set');
+}
 
 export async function initiateSTKPush({
   phone,
@@ -19,50 +22,66 @@ export async function initiateSTKPush({
   accountReference: string;
   description?: string;
 }) {
-  const auth = Buffer.from(
-    `${consumerKey}:${consumerSecret}`
-  ).toString('base64');
+  try {
+    // 🔐 Auth
+    const auth = Buffer.from(
+      `${consumerKey}:${consumerSecret}`
+    ).toString('base64');
 
-  const tokenRes = await axios.get(
-    'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials',
-    {
-      headers: { Authorization: `Basic ${auth}` },
-      timeout: 5000,
-    }
-  );
+    const tokenRes = await axios.get(
+      'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials',
+      {
+        headers: { Authorization: `Basic ${auth}` },
+        timeout: 5000,
+      }
+    );
 
-  const accessToken = tokenRes.data.access_token;
-  const timestamp = moment().format('YYYYMMDDHHmmss');
-  const password = Buffer.from(
-    `${shortCode}${passkey}${timestamp}`
-  ).toString('base64');
+    const accessToken = tokenRes.data.access_token;
 
-  const formattedPhone = phone.startsWith('254')
-    ? phone
-    : phone.replace(/^0/, '254');
+    // ⏱ Password
+    const timestamp = moment().format('YYYYMMDDHHmmss');
+    const password = Buffer.from(
+      `${shortCode}${passkey}${timestamp}`
+    ).toString('base64');
 
-  const stkRes = await axios.post(
-    'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest',
-    {
-      BusinessShortCode: shortCode,
-      Password: password,
-      Timestamp: timestamp,
-      TransactionType: 'CustomerPayBillOnline',
-      Amount: amount,
-      PartyA: formattedPhone,
-      PartyB: shortCode,
-      PhoneNumber: formattedPhone,
-      CallBackURL: callbackURL,
-      AccountReference: accountReference,
-      TransactionDesc: description,
-    },
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
-      timeout: 5000,
-    }
-  );
+    const formattedPhone = phone.startsWith('254')
+      ? phone
+      : phone.replace(/^0/, '254');
 
-  console.log('STK RESPONSE:', stkRes.data);
+    const stkRes = await axios.post(
+      'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest',
+      {
+        BusinessShortCode: shortCode,
+        Password: password,
+        Timestamp: timestamp,
+        TransactionType: 'CustomerPayBillOnline',
+        Amount: amount,
+        PartyA: formattedPhone,
+        PartyB: shortCode,
+        PhoneNumber: formattedPhone,
+        CallBackURL: callbackURL,
+        AccountReference: accountReference,
+        TransactionDesc: description,
+      },
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        timeout: 5000,
+      }
+    );
 
-  return stkRes.data;
+    console.log('✅ STK PUSH ACCEPTED:', stkRes.data);
+
+    return {
+      ok: true,
+      CheckoutRequestID: stkRes.data.CheckoutRequestID,
+      MerchantRequestID: stkRes.data.MerchantRequestID,
+      raw: stkRes.data,
+    };
+  } catch (err: any) {
+    console.error('❌ STK PUSH ERROR:', err.response?.data || err.message);
+    return {
+      ok: false,
+      error: err.response?.data || err.message,
+    };
+  }
 }

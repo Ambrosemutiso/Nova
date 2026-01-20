@@ -1,4 +1,3 @@
-// /app/api/payments/initiate/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
 import PaymentIntent from '@/app/models/paymentIntent';
@@ -14,7 +13,7 @@ export async function POST(req: NextRequest) {
       amount,
       userId,
       purpose,
-      refId,   
+      refId,
       items,
       deliveryFee,
       county,
@@ -28,7 +27,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 1️⃣ Create payment intent
     const paymentIntent = await PaymentIntent.create({
       userId,
       amount,
@@ -36,29 +34,19 @@ export async function POST(req: NextRequest) {
       purpose,
       refId,
       status: 'pending',
-      metadata: {
-        items,
-        deliveryFee,
-        county,
-        town,
-      },
+      metadata: { items, deliveryFee, county, town },
     });
 
-    // 2️⃣ Trigger STK Push (MPesa only)
     if (method === 'mpesa') {
       const stk = await initiateSTKPush({
         phone,
         amount,
         accountReference: `PAY-${paymentIntent._id}`,
-        description:
-          purpose === 'order'
-            ? 'Order Payment'
-            : purpose === 'installment-deposit'
-            ? 'Installment Deposit'
-            : 'Installment Monthly Payment',
+        description: 'Payment',
       });
 
-      if (!stk.success) {
+      // ✅ FIXED CHECK
+      if (!stk.ok || !stk.CheckoutRequestID) {
         paymentIntent.status = 'failed';
         await paymentIntent.save();
 
@@ -68,8 +56,8 @@ export async function POST(req: NextRequest) {
         );
       }
 
-     paymentIntent.checkoutRequestId = stk.CheckoutRequestID;
-     await paymentIntent.save();
+      paymentIntent.checkoutRequestId = stk.CheckoutRequestID;
+      await paymentIntent.save();
     }
 
     return NextResponse.json({
