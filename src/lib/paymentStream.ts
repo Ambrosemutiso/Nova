@@ -1,13 +1,14 @@
-// /lib/paymentStream.ts
 type Client = {
-  id: string;
   controller: ReadableStreamDefaultController;
 };
 
 const clients = new Map<string, Client>();
 
-export function registerClient(paymentIntentId: string, controller: ReadableStreamDefaultController) {
-  clients.set(paymentIntentId, { id: paymentIntentId, controller });
+export function registerClient(
+  paymentIntentId: string,
+  controller: ReadableStreamDefaultController
+) {
+  clients.set(paymentIntentId, { controller });
 }
 
 export function notifyClient(paymentIntentId: string, data: any) {
@@ -15,10 +16,12 @@ export function notifyClient(paymentIntentId: string, data: any) {
   if (!client) return;
 
   try {
-    client.controller.enqueue(`event: payment\ndata: ${JSON.stringify(data)}\n\n`);
+    client.controller.enqueue(
+      `event: payment\ndata: ${JSON.stringify(data)}\n\n`
+    );
     client.controller.close();
   } catch (err) {
-    console.error('Failed to notify client', err);
+    console.error('SSE notify failed', err);
   } finally {
     clients.delete(paymentIntentId);
   }

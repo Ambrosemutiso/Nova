@@ -1,73 +1,100 @@
 import { toast } from 'react-toastify';
 
-export type CheckoutPayload = {
-  phone: string;
-  method: 'mpesa' | 'airtel' | 'npay';
-  amount: number;
-  items?: any[];
-  deliveryFee?: number;
-  county?: string;
-  town?: string;
-  userId: string;
-  purpose: 'order' | 'installment-deposit' | 'installment-monthly' | 'wallet';
-  refId: string;
-  onSuccess: () => void;
+type PaymentCallbacks = {
+  onSuccess?: () => void;
   onFailure?: () => void;
 };
 
-export async function initiateCheckoutPayment(payload: CheckoutPayload) {
-  const { phone, method, amount, items, deliveryFee, county, town, userId, purpose, refId, onSuccess, onFailure } = payload;
+export async function initiateCheckoutPayment(
+  payload: any & PaymentCallbacks
+) {
+  const toastId = toast.loading('Waiting for M-Pesa confirmation...');
 
   try {
-    toast.loading(`Waiting for ${method === 'mpesa' ? 'M-Pesa' : method === 'airtel' ? 'Airtel' : 'N-Pay'} confirmation...`);
-    const normalizedPhone = phone.replace(/^0/, '254');
-
-    if (method === 'npay') {
-      toast.dismiss();
-      toast.success('Payment successful via N-PAY');
-      onSuccess();
-      return;
-    }
-
-    // 1️⃣ Initiate payment intent
     const res = await fetch('/api/payments/initiate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: normalizedPhone, method, amount, items, deliveryFee, county, town, userId, purpose, refId }),
+      body: JSON.stringify(payload),
     });
 
     const result = await res.json();
-    if (!res.ok) throw new Error(result.message || 'Payment initiation failed');
+    if (!res.ok) throw new Error(result.message);
 
     const paymentIntentId = result.paymentIntentId;
+    let resolved = false;
 
-    // 2️⃣ SSE listener for real-time updates
-    const eventSource = new EventSource(`/api/payments/stream?paymentIntentId=${paymentIntentId}`);
-
-    eventSource.addEventListener('payment', (event) => {
-      const data = JSON.parse((event as MessageEvent).data);
-      toast.dismiss();
-
-      if (data.status === 'paid') {
-        toast.success('Payment successful!');
-        onSuccess(); // wallet balance can refresh here
-      } else {
-        toast.error('Payment failed');
-        onFailure?.();
+    const safeSuccess = () => {
+      if (typeof payload.onSuccess === 'function') {
+        payload.onSuccess();
       }
+    };
 
-      eventSource.close();
+    const safeFailure = () => {
+      if (typeof payload.onFailure === 'function') {
+        payload.onFailure();
+      }
+    };
+
+    // 🔥 SSE
+    const es = new EventSource(
+      `/api/payments/stream?paymentIntentId=${paymentIntentId}`
+    );
+
+    es.addEventListener('payment', (e) => {
+      if (resolved) return;
+      resolved = true;
+
+      const data = JSON.parse(e.data);
+
+      toast.update(toastId, {
+        render: data.status === 'paid'
+          ? 'Payment successful!'
+          : 'Payment failed',
+        type: data.status === 'paid' ? 'success' : 'error',
+        isLoading: false,
+        autoClose: 3000,
+      });
+
+      data.status === 'paid' ? safeSuccess() : safeFailure();
+      es.close();
     });
 
-    eventSource.onerror = () => {
-      eventSource.close();
-      toast.dismiss();
-      toast.error('Connection lost');
-      onFailure?.();
-    };
+    // ⏱️ POLLING FALLBACK
+    const poll = setInterval(async () => {
+      if (resolved) return clearInterval(poll);
+
+      const r = await fetch(
+        `/api/payments/status?id=${paymentIntentId}`
+      );
+      const { status } = await r.json();
+
+      if (status === 'paid' || status === 'failed') {
+        resolved = true;
+        clearInterval(poll);
+        es.close();
+
+        toast.update(toastId, {
+          render: status === 'paid'
+            ? 'Payment successful!'
+            : 'Payment failed',
+          type: status === 'paid' ? 'success' : 'error',
+          isLoading: false,
+          autoClose: 3000,
+        });
+
+        status === 'paid' ? safeSuccess() : safeFailure();
+      }
+    }, 4000);
   } catch (err: any) {
-    toast.dismiss();
-    toast.error(err.message || 'Payment error');
-    onFailure?.();
+    toast.update(toastId, {
+      render: err.message || 'Payment error',
+      type: 'error',
+      isLoading: false,
+      autoClose: 3000,
+    });
+
+    if (typeof payload.onFailure === 'function') {
+      payload.onFailure();
+    }
   }
 }
