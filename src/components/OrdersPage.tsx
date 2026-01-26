@@ -20,6 +20,7 @@ interface Order {
   items: OrderItem[];
   totalAmount: number;
   deliveryFee: number;
+  trackingNumber: string;
   createdAt: string;
   status?: string;
   customerInfo?: {
@@ -29,6 +30,23 @@ interface Order {
     town?: string;
   };
 }
+const DELIVERY_STEPS = [
+  {
+    key: 'processing',
+    title: 'Processing',
+    description: 'Your order is being prepared',
+  },
+  {
+    key: 'out_for_delivery',
+    title: 'Out for delivery',
+    description: 'Your package is on the way to your location',
+  },
+  {
+    key: 'delivered',
+    title: 'Delivered',
+    description: 'Order delivered successfully',
+  },
+];
 
 export default function MyOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -103,14 +121,36 @@ export default function MyOrdersPage() {
     fetchOrders(1);
   };
 
-  const getOrderDeliveryStage = (items: OrderItem[]) => {
-    const statuses = items.map((i) => i.status || 'Pending');
-    if (statuses.every((s) => s === 'Delivered'))
-      return { label: 'Delivered', color: 'text-gray-500', icon: <PackageCheck className="w-4 h-4" /> };
-    if (statuses.some((s) => s === 'Out for delivery'))
-      return { label: 'Out for delivery', color: 'text-orange-600', icon: <Truck className="w-4 h-4" /> };
-    return { label: 'Processing', color: 'text-green-600', pulse: true };
+const getOrderDeliveryStage = (order: Order) => {
+  if (order.items.every((i) => i.status === 'Delivered')) {
+    return {
+      label: 'Delivered',
+      color: 'text-gray-500',
+      icon: <PackageCheck className="w-4 h-4" />,
+    };
+  }
+
+  if (order.trackingNumber) {
+    return {
+      label: 'Out for delivery',
+      color: 'text-orange-600',
+      icon: <Truck className="w-4 h-4" />,
+    };
+  }
+
+  return {
+    label: 'Processing',
+    color: 'text-orange-500',
+    pulse: true,
   };
+};
+
+const getDeliveryStepIndex = (order: Order) => {
+  if (order.items.every((i) => i.status === 'Delivered')) return 2;
+  if (order.trackingNumber) return 1;
+  return 0;
+};
+
 
   return (
     <motion.div
@@ -201,7 +241,8 @@ export default function MyOrdersPage() {
       ) : (
         <div className="grid gap-6">
           {orders.map((order) => {
-            const deliveryStage = getOrderDeliveryStage(order.items);
+            const deliveryStage = getOrderDeliveryStage(order);
+            const stepIndex = getDeliveryStepIndex(order);
             return (
               <motion.div
                 key={order._id}
@@ -216,6 +257,12 @@ export default function MyOrdersPage() {
                       Order ID:{' '}
                       <span className="font-medium text-gray-700">
                         {order._id.slice(0, 8)}
+                      </span>
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Tracking NO:{' '}
+                      <span className="font-medium text-gray-700">
+                        {order.trackingNumber}
                       </span>
                     </p>
                     <p className="text-sm text-gray-500">
@@ -239,6 +286,7 @@ export default function MyOrdersPage() {
                     <span>{deliveryStage.label}</span>
                   </div>
                 </div>
+                <DeliveryTimeline currentStep={stepIndex} />
 
                 <div className="border-t pt-3 space-y-4">
                   {order.items.map((item, i) => (
@@ -301,5 +349,53 @@ export default function MyOrdersPage() {
         </div>
       )}
     </motion.div>
+  );
+}
+function DeliveryTimeline({ currentStep }: { currentStep: number }) {
+  return (
+    <div className="mt-5">
+      <div className="flex items-start justify-between relative">
+        {/* Connecting line */}
+        <div className="absolute top-3 left-0 right-0 h-[2px] bg-gray-200" />
+
+        {DELIVERY_STEPS.map((step, index) => {
+          const isCompleted = index < currentStep;
+          const isActive = index === currentStep;
+
+          return (
+            <div key={step.key} className="relative z-10 flex-1 text-center">
+              {/* Dot */}
+              <div
+                className={`mx-auto w-4 h-4 rounded-full transition
+                  ${
+                    isCompleted
+                      ? 'bg-green-500'
+                      : isActive
+                      ? 'bg-orange-500 animate-pulse'
+                      : 'bg-gray-300'
+                  }`}
+              />
+
+              {/* Title */}
+              <p
+                className={`mt-2 text-sm font-medium
+                  ${
+                    isCompleted || isActive
+                      ? 'text-gray-800'
+                      : 'text-gray-400'
+                  }`}
+              >
+                {step.title}
+              </p>
+
+              {/* Description */}
+              <p className="text-xs text-gray-400 max-w-[140px] mx-auto">
+                {step.description}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

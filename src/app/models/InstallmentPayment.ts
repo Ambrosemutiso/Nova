@@ -4,7 +4,7 @@ export interface InstallmentPaymentDoc extends Document {
   planId: string;
   amount: number;
   phone: string;
-  status: "pending" | "success" | "failed";
+  status: "pending" | "paid" | "failed";
   merchantRequestId?: string;
   checkoutRequestId?: string;
   mpesaReceipt?: string;
@@ -19,7 +19,7 @@ const InstallmentPaymentSchema = new Schema<InstallmentPaymentDoc>(
 
     status: {
       type: String,
-      enum: ["pending", "success", "failed"],
+      enum: ["pending", "paid", "failed"],
       default: "pending",
     },
 

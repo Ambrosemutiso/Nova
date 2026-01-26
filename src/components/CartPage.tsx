@@ -71,7 +71,7 @@ export const countyTownMap: Record<string, string[]> = {
 
 // 🚚 Base County Delivery Fees
 const baseCountyFees: Record<string, number> = {
-  Nairobi: 150,
+  Nairobi: 0,
   Mombasa: 180,
   Kisumu: 160,
   Nakuru: 170,

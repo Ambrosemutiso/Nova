@@ -16,6 +16,26 @@ import { toast } from 'react-toastify';
 import { useAuth } from '@/app/context/AuthContext';
 
 /* ---------------- Utils ---------------- */
+type WeeklyStat = {
+  day: string;
+  total: number;
+};
+
+const getLast7Days = (): string[] => {
+  const days: string[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push(d.toISOString().split('T')[0]); // YYYY-MM-DD
+  }
+  return days;
+};
+
+const formatDayLabel = (dateStr: string) => {
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    weekday: 'short',
+  });
+};
 
 const getGreeting = () => {
   const hour = new Date().getHours();
@@ -164,6 +184,36 @@ const confirmWithdraw = async () => {
     return acc;
   }, {} as Record<string, Transaction[]>);
 
+  const weeklyActivity: WeeklyStat[] = (() => {
+  const last7Days = getLast7Days();
+
+  const dailyTotals: Record<string, number> = {};
+
+  last7Days.forEach(day => {
+    dailyTotals[day] = 0;
+  });
+
+  transactions.forEach(tx => {
+    const dayKey = new Date(tx.date).toISOString().split('T')[0];
+
+    if (dailyTotals[dayKey] !== undefined) {
+      dailyTotals[dayKey] += tx.amount;
+    }
+  });
+
+  return last7Days.map(day => ({
+    day: formatDayLabel(day),
+    total: dailyTotals[day],
+  }));
+})();
+
+const maxWeeklyValue = Math.max(
+  ...weeklyActivity.map(d => d.total),
+  1 // prevent division by zero
+);
+
+
+
   return (
     <div className="max-w-5xl mx-auto px-4 pt-24 pb-12 space-y-10">
 
@@ -217,19 +267,27 @@ const confirmWithdraw = async () => {
         <h3 className="font-semibold mb-4 flex items-center gap-2">
           <FiActivity /> Weekly Activity
         </h3>
-
 <div className="flex items-end gap-3 h-24">
-  {[20, 40, 30, 60, 45, 80, 55].map((v, i) => (
-    <div
-      key={i}
-      className="flex-1 h-full bg-orange-100 rounded-lg relative"
-    >
-      <div
-  className="bg-orange-500 rounded-lg absolute bottom-0 w-full transition-all duration-500"
-        style={{ height: `${v}%` }}
-      />
-    </div>
-  ))}
+  {weeklyActivity.map((day, i) => {
+  const height =
+  day.total === 0
+    ? 0
+    : Math.max((day.total / maxWeeklyValue) * 100, 8);
+
+
+    return (
+      <div key={i} className="flex-1 flex flex-col items-center">
+        <div className="relative w-full h-20 bg-orange-100 rounded-lg overflow-hidden">
+          <div
+            className="absolute bottom-0 w-full bg-orange-500 rounded-lg transition-all duration-500"
+            style={{ height: `${height}%` }}
+          />
+        </div>
+
+        <span className="text-xs text-gray-500 mt-1">{day.day}</span>
+      </div>
+    );
+  })}
 </div>
 </div>
 

@@ -1,11 +1,28 @@
-// models/PaymentIntent.ts
-import mongoose from 'mongoose';
+import mongoose, { Schema, Types, Model } from 'mongoose';
 
-const PaymentIntentSchema = new mongoose.Schema(
+export interface IPaymentIntent {
+  _id: Types.ObjectId;
+  userId: Types.ObjectId;
+  amount: number;
+  method: 'mpesa' | 'airtel' | 'npay';
+  purpose: 'order' | 'installment-deposit' | 'installment-monthly' | 'wallet';
+  refId: string;
+  status: 'pending' | 'paid' | 'failed';
+  checkoutRequestId?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const PaymentIntentSchema = new Schema<IPaymentIntent>(
   {
-    userId: { type: mongoose.Schema.Types.ObjectId, required: true },
+    userId: { type: Schema.Types.ObjectId, required: true },
     amount: { type: Number, required: true },
-    method: { type: String, enum: ['mpesa', 'airtel', 'npay'], required: true },
+
+    method: {
+      type: String,
+      enum: ['mpesa', 'airtel', 'npay'],
+      required: true,
+    },
 
     purpose: {
       type: String,
@@ -29,16 +46,16 @@ const PaymentIntentSchema = new mongoose.Schema(
       default: 'pending',
     },
 
-    // ✅ MUST MATCH WHAT YOU USE
     checkoutRequestId: {
       type: String,
       index: true,
     },
-
-    metadata: mongoose.Schema.Types.Mixed,
   },
   { timestamps: true }
 );
 
-export default mongoose.models.PaymentIntent ||
-  mongoose.model('PaymentIntent', PaymentIntentSchema);
+const PaymentIntent: Model<IPaymentIntent> =
+  mongoose.models.PaymentIntent ||
+  mongoose.model<IPaymentIntent>('PaymentIntent', PaymentIntentSchema);
+
+export default PaymentIntent;

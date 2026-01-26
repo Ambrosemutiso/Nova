@@ -1,3 +1,4 @@
+//app/api/payments/status/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import PaymentIntent from '@/app/models/paymentIntent';
 import { dbConnect } from '@/lib/dbConnect';

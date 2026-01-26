@@ -2,27 +2,31 @@ type Client = {
   controller: ReadableStreamDefaultController;
 };
 
-const clients = new Map<string, Client>();
+const clients = new Map<string, Set<Client>>();
 
 export function registerClient(
   paymentIntentId: string,
   controller: ReadableStreamDefaultController
 ) {
-  clients.set(paymentIntentId, { controller });
+  const set = clients.get(paymentIntentId) ?? new Set<Client>();
+  set.add({ controller });
+  clients.set(paymentIntentId, set);
 }
 
 export function notifyClient(paymentIntentId: string, data: any) {
-  const client = clients.get(paymentIntentId);
-  if (!client) return;
+  const set = clients.get(paymentIntentId);
+  if (!set) return;
 
-  try {
-    client.controller.enqueue(
-      `event: payment\ndata: ${JSON.stringify(data)}\n\n`
-    );
-    client.controller.close();
-  } catch (err) {
-    console.error('SSE notify failed', err);
-  } finally {
-    clients.delete(paymentIntentId);
+  for (const client of set) {
+    try {
+      client.controller.enqueue(
+        `event: payment\ndata: ${JSON.stringify(data)}\n\n`
+      );
+      client.controller.close();
+    } catch (err) {
+      // controller may already be closed — safe to ignore
+    }
   }
+
+  clients.delete(paymentIntentId);
 }

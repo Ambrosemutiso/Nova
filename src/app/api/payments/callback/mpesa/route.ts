@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
 import PaymentIntent from '@/app/models/paymentIntent';
 import Wallet from '@/app/models/wallet';
-import WalletTransaction from '@/app/models/walletTransaction';
+import Order from '@/app/models/orders';
+import Installment from '@/app/models/InstallmentOrder';
 import { notifyClient } from '@/lib/paymentStream';
 
 export async function POST(req: NextRequest) {
@@ -12,7 +13,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const stk = body?.Body?.stkCallback;
 
-    if (!stk || !stk.CheckoutRequestID) {
+    if (!stk?.CheckoutRequestID) {
       return NextResponse.json({ message: 'Invalid callback' }, { status: 400 });
     }
 
@@ -22,10 +23,12 @@ export async function POST(req: NextRequest) {
 
     if (!intent) return NextResponse.json({ success: true });
 
-    if (intent.status === 'paid') {
+    // 🛑 Idempotency guard
+    if (intent.status === 'paid' || intent.status === 'failed') {
       return NextResponse.json({ success: true });
     }
 
+    // ❌ FAILED PAYMENT
     if (stk.ResultCode !== 0) {
       intent.status = 'failed';
       await intent.save();
@@ -34,29 +37,60 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false });
     }
 
-    // ✅ Success
+    // ✅ SUCCESS
     intent.status = 'paid';
     await intent.save();
 
-    // Wallet credit
-    if (intent.purpose === 'wallet') {
-      let wallet = await Wallet.findOne({ userId: intent.refId });
-      if (!wallet) wallet = await Wallet.create({ userId: intent.refId, balance: 0 });
+    /* ===============================
+       💰 WALLET TOP-UP
+    ================================ */
+if (intent.purpose === 'wallet') {
+  const wallet = await Wallet.findById(intent.refId);
+  if (!wallet) throw new Error('Wallet not found');
 
-      wallet.balance += intent.amount;
-      await wallet.save();
+  const balanceBefore = wallet.balance;
+  wallet.balance += intent.amount;
+  await wallet.save();
+}
 
-      await WalletTransaction.create({
-        userId: intent.refId,
-        type: 'credit',
-        amount: intent.amount,
-        label: 'Wallet top-up (M-Pesa)',
-        reference: stk.CheckoutRequestID,
-        balanceAfter: wallet.balance,
+    /* ===============================
+       🧾 ORDER PAYMENT
+    ================================ */
+    if (intent.purpose === 'order') {
+      await Order.findByIdAndUpdate(intent.refId, {
+        status: 'paid',
+        paymentInfo: {
+          method: 'mpesa',
+          checkoutRequestId: stk.CheckoutRequestID,
+          paidAt: new Date(),
+        },
       });
     }
 
-    // 🔥 Notify frontend
+    /* ===============================
+       📆 INSTALLMENT MONTHLY PAYMENT
+    ================================ */
+    if (intent.purpose === 'installment-monthly') {
+      const installment = await Installment.findById(intent.refId);
+      if (!installment) throw new Error('Installment not found');
+
+      installment.paidAmount += intent.amount;
+
+      // ✅ Deposit auto-flag (if first payment)
+      if (!installment.depositPaid) {
+        installment.depositPaid = true;
+        installment.status = 'active';
+      }
+
+      // ✅ Fully paid
+      if (installment.paidAmount >= installment.totalAmount) {
+        installment.status = 'completed';
+      }
+
+      await installment.save();
+    }
+
+    // 🔔 Notify frontend
     notifyClient(intent._id.toString(), {
       status: 'paid',
       amount: intent.amount,
@@ -65,6 +99,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error('MPESA CALLBACK ERROR', err);
-    return NextResponse.json({ message: 'Callback failed' }, { status: 500 });
+    return NextResponse.json(
+      { message: 'Callback failed' },
+      { status: 500 }
+    );
   }
 }

@@ -10,18 +10,30 @@ export async function POST(req: NextRequest) {
     const { sellerId } = await req.json();
 
     if (!sellerId) {
-      return NextResponse.json({ error: 'Seller ID is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Seller ID is required' },
+        { status: 400 }
+      );
     }
 
-    // Find all orders that contain items belonging to this seller AND fulfillmentMode = 'seller'
+    /**
+     * ✅ Order-level filter:
+     * - status MUST be paid
+     * - must contain items for this seller
+     * - fulfillment mode remains seller
+     */
     const allOrders = await Order.find({
+      status: 'paid',
       'items.sellerId': sellerId,
-      'items.fulfillmentMode': 'seller'
+      'items.fulfillmentMode': 'seller',
     }).lean();
 
-    // Filter each order to only include items that match both sellerId and fulfillmentMode
+    /**
+     * ✅ Item-level filter:
+     * - return ONLY the seller’s items
+     */
     const sellerOrders = allOrders
-      .map((order) => {
+      .map((order: any) => {
         const sellerItems = order.items.filter(
           (item: any) =>
             item.sellerId?.toString() === sellerId &&
@@ -33,11 +45,17 @@ export async function POST(req: NextRequest) {
           items: sellerItems,
         };
       })
-      .filter((order) => order.items.length > 0); // Only return orders with valid seller items
+      .filter((order) => order.items.length > 0);
 
-    return NextResponse.json({ orders: sellerOrders }, { status: 200 });
+    return NextResponse.json(
+      { orders: sellerOrders },
+      { status: 200 }
+    );
   } catch (error) {
     console.error('❌ Error fetching seller orders:', error);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Server error' },
+      { status: 500 }
+    );
   }
 }

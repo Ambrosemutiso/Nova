@@ -16,7 +16,7 @@ const orderSchema = new mongoose.Schema({
   totalAmount: Number,
   deliveryFee: Number,
   customerInfo: Object,
-  status: { type: String, enum: ['Pending', 'Paid', 'Cancelled'], default: 'Pending' },
+  status: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
   trackingNumber: { type: String, unique: true, sparse: true },
   paymentInfo: Object,
   checkoutRequestID: String,
