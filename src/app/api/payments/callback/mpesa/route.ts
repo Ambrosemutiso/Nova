@@ -25,9 +25,15 @@ export async function POST(req: NextRequest) {
     if (!intent) return NextResponse.json({ success: true });
 
     // 🛑 Idempotency guard
-    if (intent.processed) {
-      return NextResponse.json({ success: true });
-    }
+if (intent.processed) {
+  return NextResponse.json({ success: true });
+}
+
+// process EVERYTHING first
+
+intent.status = 'paid';
+intent.processed = true;
+await intent.save();
 
     // ❌ FAILED PAYMENT
     if (stk.ResultCode !== 0) {
@@ -38,32 +44,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false });
     }
 
-    // ✅ SUCCESS
-    intent.status = 'paid';
-    intent.processed = true;
-    await intent.save();
-
     /* ===============================
        💰 WALLET TOP-UP
     ================================ */
-if (intent.purpose === 'wallet') {
-  const wallet = await Wallet.findById(intent.refId);
-  if (!wallet) throw new Error('Wallet not found');
-
-  const balanceBefore = wallet.balance;
-  wallet.balance += intent.amount;
-  await wallet.save();
-
+if (intent.purpose === 'wallet') { 
+  const wallet = await Wallet.findById(intent.refId); 
+  if (!wallet) throw new Error('Wallet not found'); 
+  const balanceBefore = wallet.balance; 
+  wallet.balance += intent.amount; 
+  await wallet.save(); 
+  
   await WalletTransaction.create({ 
     walletId: wallet._id, 
+    type: 'credit', 
     amount: intent.amount, 
     purpose: 'wallet', 
-    status: intent.status, 
     refId: intent._id.toString(), 
     balanceBefore, 
     balanceAfter: wallet.balance, 
   });
-}
+ }
 
     /* ===============================
        🧾 ORDER PAYMENT
@@ -86,22 +86,25 @@ if (intent.purpose === 'installment-monthly') {
   const installment = await Installment.findById(intent.refId);
   if (!installment) throw new Error('Installment not found');
 
-  const newPaidAmount = installment.paidAmount + intent.amount;
-
   const update: any = {
-    paidAmount: newPaidAmount,
+    $inc: { paidAmount: intent.amount },
   };
 
   if (!installment.depositPaid) {
-    update.depositPaid = true;
-    update.status = 'active';
+    update.$set = {
+      depositPaid: true,
+      status: 'active',
+    };
   }
 
-  if (newPaidAmount >= installment.totalAmount) {
-    update.status = 'completed';
+  if (installment.paidAmount + intent.amount >= installment.totalAmount) {
+    update.$set = {
+      ...(update.$set || {}),
+      status: 'completed',
+    };
   }
 
-  await Installment.findByIdAndUpdate(intent.refId, update, { new: true });
+  await Installment.findByIdAndUpdate(intent.refId, update);
 }
 
     // 🔔 Notify frontend

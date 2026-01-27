@@ -1,6 +1,26 @@
-import mongoose, { Schema, Types } from 'mongoose';
+import mongoose, { Schema, Types, Model } from 'mongoose';
 
-const WalletTransactionSchema = new Schema(
+export interface IWalletTransaction {
+  _id: Types.ObjectId;
+  walletId: Types.ObjectId;
+  amount: number;
+  type: 'credit' | 'debit';
+  purpose:
+    | 'order'
+    | 'wallet'
+    | 'refund'
+    | 'installment-deposit'
+    | 'installment-monthly';
+  refId: string;
+  status: 'pending' | 'paid' | 'failed';
+  processed: boolean;
+  balanceBefore: number;
+  balanceAfter: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const WalletTransactionSchema = new Schema<IWalletTransaction>(
   {
     walletId: {
       type: Schema.Types.ObjectId,
@@ -9,45 +29,48 @@ const WalletTransactionSchema = new Schema(
       index: true,
     },
 
-    userId: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-      index: true,
-    },
-
-    type: {
-      type: String,
-      enum: ['credit', 'debit'],
-      required: true,
-    },
-
-    source: {
-      type: String,
-      enum: ['payment', 'order', 'refund', 'admin'],
-      required: true,
-    },
-
     amount: {
       type: Number,
       required: true,
       min: 0,
     },
 
-    paymentIntentId: {
-      type: Schema.Types.ObjectId,
-      ref: 'PaymentIntent',
+    type: {
+      type: String,
+      enum: ['credit', 'debit'],
+      required: true,
       index: true,
+    },
+
+    purpose: {
+      type: String,
+      enum: [
+        'order',
+        'wallet',
+        'refund',
+        'installment-deposit',
+        'installment-monthly',
+      ],
+      required: true,
     },
 
     refId: {
       type: String,
+      required: true,
+      index: true,
     },
 
     status: {
       type: String,
       enum: ['pending', 'paid', 'failed'],
       default: 'pending',
+      index: true,
+    },
+
+    processed: {
+      type: Boolean,
+      default: false,
+      index: true,
     },
 
     balanceBefore: {
@@ -63,5 +86,11 @@ const WalletTransactionSchema = new Schema(
   { timestamps: true }
 );
 
-export default mongoose.models.WalletTransaction ||
-  mongoose.model('WalletTransaction', WalletTransactionSchema);
+const WalletTransaction: Model<IWalletTransaction> =
+  mongoose.models.WalletTransaction ||
+  mongoose.model<IWalletTransaction>(
+    'WalletTransaction',
+    WalletTransactionSchema
+  );
+
+export default WalletTransaction;

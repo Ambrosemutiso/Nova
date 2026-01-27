@@ -1,6 +1,8 @@
+// /api/seller/orders.ts
 import { NextRequest, NextResponse } from 'next/server';
 import Order from '@/app/models/orders';
 import { dbConnect } from '@/lib/dbConnect';
+import mongoose from 'mongoose';
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,20 +17,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const sellerObjectId = new mongoose.Types.ObjectId(sellerId);
+
     /**
-     * ✅ ONLY fetch PAID orders
-     * ✅ Only seller-fulfilled items
+     * ✅ Correct MongoDB query using $elemMatch
+     * - Order must be PAID
+     * - Same item must match sellerId + fulfillmentMode
      */
     const orders = await Order.find({
       status: 'paid',
-      'items.sellerId': sellerId,
-      'items.fulfillmentMode': 'seller',
+      items: {
+        $elemMatch: {
+          sellerId: sellerObjectId,
+          fulfillmentMode: 'seller',
+        },
+      },
     })
       .sort({ createdAt: -1 })
       .lean();
 
     /**
-     * ✅ Keep ONLY this seller’s items
+     * ✅ Reduce items to ONLY this seller
      */
     const sellerOrders = orders
       .map((order: any) => {
