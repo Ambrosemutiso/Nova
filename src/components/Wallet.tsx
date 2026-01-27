@@ -423,9 +423,12 @@ const maxWeeklyValue = Math.max(
           onClose={() => setShowPayModal(false)}
           onSuccess={() => {
             setShowPayModal(false);
-            window.location.reload();
-          }}
-        />
+            // Give MPESA callback time to complete
+            setTimeout(() => {
+              window.location.reload();
+            }, 4000); // 3–5 seconds is safe
+              }}
+          />
       )}
 
       {/* 🔐 PIN Modal */}

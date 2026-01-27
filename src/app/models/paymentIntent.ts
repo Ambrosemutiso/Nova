@@ -5,6 +5,7 @@ export interface IPaymentIntent {
   userId: Types.ObjectId;
   amount: number;
   method: 'mpesa' | 'airtel' | 'npay';
+  processed: boolean;
   purpose: 'order' | 'installment-deposit' | 'installment-monthly' | 'wallet';
   refId: string;
   status: 'pending' | 'paid' | 'failed';
@@ -23,7 +24,10 @@ const PaymentIntentSchema = new Schema<IPaymentIntent>(
       enum: ['mpesa', 'airtel', 'npay'],
       required: true,
     },
-
+    processed: {
+      type: Boolean,
+      default: false,
+    },
     purpose: {
       type: String,
       enum: [

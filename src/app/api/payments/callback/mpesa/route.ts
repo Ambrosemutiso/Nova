@@ -4,6 +4,7 @@ import PaymentIntent from '@/app/models/paymentIntent';
 import Wallet from '@/app/models/wallet';
 import Order from '@/app/models/orders';
 import Installment from '@/app/models/InstallmentOrder';
+import WalletTransaction from '@/app/models/walletTransaction';
 import { notifyClient } from '@/lib/paymentStream';
 
 export async function POST(req: NextRequest) {
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
     if (!intent) return NextResponse.json({ success: true });
 
     // 🛑 Idempotency guard
-    if (intent.status === 'paid' || intent.status === 'failed') {
+    if (intent.processed) {
       return NextResponse.json({ success: true });
     }
 
@@ -39,6 +40,7 @@ export async function POST(req: NextRequest) {
 
     // ✅ SUCCESS
     intent.status = 'paid';
+    intent.processed = true;
     await intent.save();
 
     /* ===============================
@@ -51,6 +53,16 @@ if (intent.purpose === 'wallet') {
   const balanceBefore = wallet.balance;
   wallet.balance += intent.amount;
   await wallet.save();
+
+  await WalletTransaction.create({ 
+    walletId: wallet._id, 
+    amount: intent.amount, 
+    purpose: 'wallet', 
+    status: intent.status, 
+    refId: intent._id.toString(), 
+    balanceBefore, 
+    balanceAfter: wallet.balance, 
+  });
 }
 
     /* ===============================
@@ -70,25 +82,27 @@ if (intent.purpose === 'wallet') {
     /* ===============================
        📆 INSTALLMENT MONTHLY PAYMENT
     ================================ */
-    if (intent.purpose === 'installment-monthly') {
-      const installment = await Installment.findById(intent.refId);
-      if (!installment) throw new Error('Installment not found');
+if (intent.purpose === 'installment-monthly') {
+  const installment = await Installment.findById(intent.refId);
+  if (!installment) throw new Error('Installment not found');
 
-      installment.paidAmount += intent.amount;
+  const newPaidAmount = installment.paidAmount + intent.amount;
 
-      // ✅ Deposit auto-flag (if first payment)
-      if (!installment.depositPaid) {
-        installment.depositPaid = true;
-        installment.status = 'active';
-      }
+  const update: any = {
+    paidAmount: newPaidAmount,
+  };
 
-      // ✅ Fully paid
-      if (installment.paidAmount >= installment.totalAmount) {
-        installment.status = 'completed';
-      }
+  if (!installment.depositPaid) {
+    update.depositPaid = true;
+    update.status = 'active';
+  }
 
-      await installment.save();
-    }
+  if (newPaidAmount >= installment.totalAmount) {
+    update.status = 'completed';
+  }
+
+  await Installment.findByIdAndUpdate(intent.refId, update, { new: true });
+}
 
     // 🔔 Notify frontend
     notifyClient(intent._id.toString(), {
@@ -105,3 +119,20 @@ if (intent.purpose === 'wallet') {
     );
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

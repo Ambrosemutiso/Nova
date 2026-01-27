@@ -1,4 +1,3 @@
-// /api/seller/orders.ts
 import { NextRequest, NextResponse } from 'next/server';
 import Order from '@/app/models/orders';
 import { dbConnect } from '@/lib/dbConnect';
@@ -17,22 +16,21 @@ export async function POST(req: NextRequest) {
     }
 
     /**
-     * ✅ Order-level filter:
-     * - status MUST be paid
-     * - must contain items for this seller
-     * - fulfillment mode remains seller
+     * ✅ ONLY fetch PAID orders
+     * ✅ Only seller-fulfilled items
      */
-    const allOrders = await Order.find({
+    const orders = await Order.find({
       status: 'paid',
       'items.sellerId': sellerId,
       'items.fulfillmentMode': 'seller',
-    }).lean();
+    })
+      .sort({ createdAt: -1 })
+      .lean();
 
     /**
-     * ✅ Item-level filter:
-     * - return ONLY the seller’s items
+     * ✅ Keep ONLY this seller’s items
      */
-    const sellerOrders = allOrders
+    const sellerOrders = orders
       .map((order: any) => {
         const sellerItems = order.items.filter(
           (item: any) =>
@@ -47,10 +45,7 @@ export async function POST(req: NextRequest) {
       })
       .filter((order) => order.items.length > 0);
 
-    return NextResponse.json(
-      { orders: sellerOrders },
-      { status: 200 }
-    );
+    return NextResponse.json({ orders: sellerOrders }, { status: 200 });
   } catch (error) {
     console.error('❌ Error fetching seller orders:', error);
     return NextResponse.json(

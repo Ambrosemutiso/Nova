@@ -98,7 +98,14 @@ export default function InstallmentProgressCard({ plan }: any) {
           onClose={() => setShowPay(false)}
           onSuccess={() => {
             setShowPay(false);
-            window.location.reload();
+            const poll = setInterval(async () => {
+              const res = await fetch(`/api/installments/${plan._id}`);
+              const updated = await res.json();
+              if (updated.paidAmount > plan.paidAmount) {
+                clearInterval(poll);
+                window.location.reload();
+              }
+            }, 2000);
           }}
         />
       )}

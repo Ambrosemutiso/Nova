@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -84,28 +85,32 @@ export default function SellerOrdersPage() {
   };
 
   // ✅ Combined filtering logic (status, city, date, search)
-  const filteredOrders = orders.filter((order) => {
-    const orderDate = new Date(order.createdAt);
+const filteredOrders = orders.filter((order) => {
+  const orderDate = new Date(order.createdAt);
 
-    const matchesStatus =
-      statusFilter === 'All' || order.status.toLowerCase() === statusFilter.toLowerCase();
+  const matchesCity =
+    cityFilter === 'All' ||
+    order.customerInfo.county?.toLowerCase() === cityFilter.toLowerCase();
 
-    const matchesCity =
-      cityFilter === 'All' ||
-      order.customerInfo.county?.toLowerCase() === cityFilter.toLowerCase();
+  const matchesSearch =
+    searchTerm === '' ||
+    order.customerInfo.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.customerInfo.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.customerInfo.phone.includes(searchTerm);
 
-    const matchesSearch =
-      searchTerm === '' ||
-      order.customerInfo.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customerInfo.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customerInfo.phone.includes(searchTerm);
+  const matchesDate =
+    (!startDate || orderDate >= new Date(startDate)) &&
+    (!endDate || orderDate <= new Date(endDate));
 
-    const matchesDate =
-      (!startDate || orderDate >= new Date(startDate)) &&
-      (!endDate || orderDate <= new Date(endDate));
+  /**
+   * ✅ STATUS FILTER MOVED TO ITEM LEVEL
+   */
+  const matchesItemStatus =
+    statusFilter === 'All' ||
+    order.items.some((item) => item.status === statusFilter);
 
-    return matchesStatus && matchesCity && matchesSearch && matchesDate;
-  });
+  return matchesCity && matchesSearch && matchesDate && matchesItemStatus;
+});
 
   const paginatedOrders = filteredOrders.slice((page - 1) * pageSize, page * pageSize);
 
