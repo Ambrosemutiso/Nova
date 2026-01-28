@@ -2,7 +2,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Order from '@/app/models/orders';
 import { dbConnect } from '@/lib/dbConnect';
-import mongoose from 'mongoose';
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,30 +16,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const sellerObjectId = new mongoose.Types.ObjectId(sellerId);
+    // ✅ ADD ORDER STATUS FILTER HERE
+    const allOrders = await Order.find({
+      status: 'paid', // 🔥 THIS IS THE ONLY ADDITION
+      'items.sellerId': sellerId,
+      'items.fulfillmentMode': 'seller',
+    }).lean();
 
-    /**
-     * ✅ Correct MongoDB query using $elemMatch
-     * - Order must be PAID
-     * - Same item must match sellerId + fulfillmentMode
-     */
-    const orders = await Order.find({
-      status: 'paid',
-      items: {
-        $elemMatch: {
-          sellerId: sellerObjectId,
-          fulfillmentMode: 'seller',
-        },
-      },
-    })
-      .sort({ createdAt: -1 })
-      .lean();
-
-    /**
-     * ✅ Reduce items to ONLY this seller
-     */
-    const sellerOrders = orders
-      .map((order: any) => {
+    // ✅ KEEP EXISTING ITEM FILTER (unchanged)
+    const sellerOrders = allOrders
+      .map((order) => {
         const sellerItems = order.items.filter(
           (item: any) =>
             item.sellerId?.toString() === sellerId &&

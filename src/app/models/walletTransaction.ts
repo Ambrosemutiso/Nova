@@ -1,21 +1,22 @@
+// app/models/walletTransaction.ts
 import mongoose, { Schema, Types, Model } from 'mongoose';
 
 export interface IWalletTransaction {
   _id: Types.ObjectId;
   walletId: Types.ObjectId;
-  amount: number;
+  userId: Types.ObjectId;
+
   type: 'credit' | 'debit';
-  purpose:
-    | 'order'
-    | 'wallet'
-    | 'refund'
-    | 'installment-deposit'
-    | 'installment-monthly';
-  refId: string;
+  purpose: 'wallet' | 'order' | 'installment-deposit' | 'installment-monthly';
+
   status: 'pending' | 'paid' | 'failed';
-  processed: boolean;
-  balanceBefore: number;
+
+  amount: number;
   balanceAfter: number;
+
+  label: string;
+  reference?: string; // MPESA CheckoutRequestID / Txn ID
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,61 +30,72 @@ const WalletTransactionSchema = new Schema<IWalletTransaction>(
       index: true,
     },
 
-    amount: {
-      type: Number,
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
       required: true,
-      min: 0,
+      index: true,
     },
 
     type: {
       type: String,
       enum: ['credit', 'debit'],
       required: true,
-      index: true,
     },
 
     purpose: {
       type: String,
       enum: [
-        'order',
         'wallet',
-        'refund',
+        'order',
         'installment-deposit',
         'installment-monthly',
       ],
       required: true,
     },
 
-    refId: {
-      type: String,
-      required: true,
-      index: true,
-    },
-
     status: {
       type: String,
       enum: ['pending', 'paid', 'failed'],
-      default: 'pending',
+      default: 'paid',
       index: true,
     },
 
-    processed: {
-      type: Boolean,
-      default: false,
-      index: true,
-    },
-
-    balanceBefore: {
+    amount: {
       type: Number,
       required: true,
+      min: 1,
     },
 
     balanceAfter: {
       type: Number,
       required: true,
+      min: 0,
+    },
+
+    label: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    reference: {
+      type: String,
+      index: true,
+      sparse: true,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
+);
+
+/* ===============================
+   🔐 SAFETY: PREVENT DOUBLE CREDIT
+================================ */
+WalletTransactionSchema.index(
+  { reference: 1, type: 1 },
+  { unique: true, sparse: true }
 );
 
 const WalletTransaction: Model<IWalletTransaction> =

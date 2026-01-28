@@ -5,7 +5,21 @@ import { CldImage } from 'next-cloudinary';
 import GlobalPayModal from '@/components/payments/GlobalPayModal';
 
 export default function InstallmentProgressCard({ plan }: any) {
-  const product = plan.product;
+  const product = plan?.product ?? {};
+
+  const totalAmount = Number(plan?.totalAmount ?? 0);
+  const paidAmount = Number(plan?.paidAmount ?? 0);
+  const monthlyAmount = Number(plan?.monthlyAmount ?? 0);
+
+  const balance = Math.max(totalAmount - paidAmount, 0);
+
+  const progress =
+    totalAmount > 0
+      ? Math.min((paidAmount / totalAmount) * 100, 100)
+      : 0;
+
+  const fullyPaid = plan?.status === 'completed';
+
   const [showPay, setShowPay] = useState(false);
 
   const buyerId =
@@ -13,50 +27,50 @@ export default function InstallmentProgressCard({ plan }: any) {
       ? localStorage.getItem('userId')
       : null;
 
-  const getPublicId = (url: string) => {
-    const regex = /\/upload\/(?:v\d+\/)?([^\.]+)/;
-    const match = url?.match(regex);
+  const getPublicId = (url?: string) => {
+    if (!url) return '';
+    const match = url.match(/\/upload\/(?:v\d+\/)?([^\.]+)/);
     return match ? match[1] : url;
   };
 
-  const progress = Math.min(
-    (plan.paidAmount / plan.totalAmount) * 100,
-    100
-  );
-
-  const fullyPaid = progress >= 100;
-
   return (
     <>
-      <div className="bg-white rounded-xl p-4 shadow border">
+      <div className="bg-white rounded-xl p-4 shadow border space-y-4">
 
-        {/* PRODUCT INFO */}
+        {/* PRODUCT */}
         <div className="flex gap-4">
-          <CldImage
-            src={getPublicId(product.images[0])}
-            width="120"
-            height="120"
-            crop="fill"
-            alt={product.name}
-            className="rounded"
-          />
+          {product?.images?.[0] && (
+            <CldImage
+              src={getPublicId(product.images[0])}
+              width="120"
+              height="120"
+              crop="fill"
+              alt={product?.name ?? 'Product'}
+              className="rounded"
+            />
+          )}
 
           <div>
-            <h3 className="font-semibold text-gray-800">{product.name}</h3>
+            <h3 className="font-semibold text-gray-800">
+              {product?.name ?? 'Product'}
+            </h3>
+
             <p className="text-sm text-gray-600">
-              Total: Ksh {plan.totalAmount.toLocaleString()}
+              Total: Ksh {totalAmount.toLocaleString()}
             </p>
+
             <p className="text-sm text-gray-600">
-              Paid: Ksh {plan.paidAmount.toLocaleString()}
+              Paid: Ksh {paidAmount.toLocaleString()}
             </p>
+
             <p className="text-sm text-gray-600">
-              Balance: Ksh {(plan.totalAmount - plan.paidAmount).toLocaleString()}
+              Balance: Ksh {balance.toLocaleString()}
             </p>
           </div>
         </div>
 
-        {/* PROGRESS BAR */}
-        <div className="w-full bg-gray-200 rounded-full h-3 mt-4">
+        {/* PROGRESS */}
+        <div className="w-full bg-gray-200 rounded-full h-3">
           <div
             className={`h-3 rounded-full ${
               fullyPaid ? 'bg-green-600' : 'bg-orange-600'
@@ -65,17 +79,14 @@ export default function InstallmentProgressCard({ plan }: any) {
           />
         </div>
 
-        {/* FULLY PAID MESSAGE */}
-        {fullyPaid && (
-          <p className="text-green-600 mt-3 font-semibold text-sm">
-            🎉 Fully Paid! Ready for delivery.
+        {/* ACTION */}
+        {fullyPaid ? (
+          <p className="text-green-600 font-semibold text-sm">
+            🎉 Fully Paid — Awaiting delivery
           </p>
-        )}
-
-        {/* PAY BUTTON */}
-        {!fullyPaid && (
+        ) : (
           <button
-            className="w-full mt-4 bg-orange-600 text-white py-2 rounded-xl"
+            className="w-full bg-orange-600 text-white py-2 rounded-xl"
             onClick={() => setShowPay(true)}
           >
             Pay Installment
@@ -86,10 +97,10 @@ export default function InstallmentProgressCard({ plan }: any) {
       {showPay && buyerId && (
         <GlobalPayModal
           payload={{
-            amount: plan.monthlyAmount,
+            amount: monthlyAmount,
             items: [],
             deliveryFee: 0,
-            county: '',
+            county:'',
             town: '',
             userId: buyerId,
             purpose: 'installment-monthly',
@@ -98,14 +109,7 @@ export default function InstallmentProgressCard({ plan }: any) {
           onClose={() => setShowPay(false)}
           onSuccess={() => {
             setShowPay(false);
-            const poll = setInterval(async () => {
-              const res = await fetch(`/api/installments/${plan._id}`);
-              const updated = await res.json();
-              if (updated.paidAmount > plan.paidAmount) {
-                clearInterval(poll);
-                window.location.reload();
-              }
-            }, 2000);
+            setTimeout(() => window.location.reload(), 3000);
           }}
         />
       )}

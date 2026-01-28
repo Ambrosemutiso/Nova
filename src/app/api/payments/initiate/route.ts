@@ -1,7 +1,8 @@
-
 import { NextRequest, NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import { dbConnect } from '@/lib/dbConnect';
 import PaymentIntent from '@/app/models/paymentIntent';
+import Wallet from '@/app/models/wallet';
 import Order from '@/app/models/orders';
 import { initiateSTKPush } from '@/lib/mpesa';
 
@@ -15,31 +16,52 @@ export async function POST(req: NextRequest) {
       amount,
       userId,
       purpose,
+      refId, // frontend placeholder
       items,
       deliveryFee,
       county,
       town,
     } = await req.json();
 
-    /* ===============================
-       🔍 VALIDATION
-    ================================ */
-    if (!phone || !amount || !userId || !purpose) {
+    if (!phone || !amount || !userId || !method || !purpose || !refId) {
       return NextResponse.json(
         { message: 'Missing required payment fields' },
         { status: 400 }
       );
     }
 
-    let orderId: string | null = null;
+    let normalizedRefId: string;
 
     /* ===============================
-       🧾 CREATE ORDER (ORDER PAYMENTS)
+       💰 WALLET
     ================================ */
-    if (purpose === 'order') {
-      if (!items || !Array.isArray(items) || items.length === 0) {
+    if (purpose === 'wallet') {
+      let wallet = await Wallet.findOne({ userId: refId });
+
+      if (!wallet) {
+        wallet = await Wallet.create({
+          userId: new mongoose.Types.ObjectId(refId),
+          balance: 0,
+        });
+      }
+
+      normalizedRefId = wallet._id.toString();
+    }
+
+    /* ===============================
+       📆 INSTALLMENT
+    ================================ */
+    else if (purpose === 'installment-monthly') {
+      normalizedRefId = refId; // already a planId
+    }
+
+    /* ===============================
+       🛒 ORDER (FIXED)
+    ================================ */
+    else if (purpose === 'order') {
+      if (!items || !county || !town) {
         return NextResponse.json(
-          { message: 'Order items are required' },
+          { message: 'Missing order details' },
           { status: 400 }
         );
       }
@@ -49,48 +71,54 @@ export async function POST(req: NextRequest) {
         items,
         deliveryFee,
         totalAmount: amount,
-        customerInfo: { county, town },
-        status: 'pending',
+        customerInfo: { county, town, phone },
+        paymentStatus: 'pending',
       });
 
-      orderId = order._id.toString();
+      normalizedRefId = order._id.toString();
     }
 
     /* ===============================
-       💳 CREATE PAYMENT INTENT
+       ❌ INVALID PURPOSE
+    ================================ */
+    else {
+      return NextResponse.json(
+        { message: 'Invalid payment purpose' },
+        { status: 400 }
+      );
+    }
+
+    /* ===============================
+       💳 PAYMENT INTENT
     ================================ */
     const paymentIntent = await PaymentIntent.create({
       userId,
       amount,
       method,
       purpose,
-      refId: purpose === 'order' ? orderId : userId, // 🔑 CRITICAL
+      refId: normalizedRefId,
       status: 'pending',
     });
 
     /* ===============================
-       📲 INITIATE STK PUSH
+       📲 MPESA STK PUSH
     ================================ */
     if (method === 'mpesa') {
       const stk = await initiateSTKPush({
         phone,
         amount,
         accountReference: `PAY-${paymentIntent._id}`,
-        description: purpose === 'order'
-          ? 'Order payment'
-          : 'Wallet',
+        description:
+          purpose === 'wallet'
+            ? 'Wallet top-up'
+            : purpose === 'order'
+            ? 'Order payment'
+            : 'Installment payment',
       });
 
       if (!stk?.CheckoutRequestID) {
         paymentIntent.status = 'failed';
         await paymentIntent.save();
-
-        // ❌ Cancel order if STK failed
-        if (orderId) {
-          await Order.findByIdAndUpdate(orderId, {
-            status: 'failed',
-          });
-        }
 
         return NextResponse.json(
           { message: 'Failed to initiate STK push' },
@@ -102,17 +130,13 @@ export async function POST(req: NextRequest) {
       await paymentIntent.save();
     }
 
-    /* ===============================
-       ✅ RESPONSE
-    ================================ */
     return NextResponse.json({
       success: true,
       paymentIntentId: paymentIntent._id,
-      orderId,
+      refId: normalizedRefId, // 🔑 useful for debugging
     });
   } catch (error) {
     console.error('[PAYMENT INITIATE ERROR]', error);
-
     return NextResponse.json(
       { message: 'Payment initiation failed' },
       { status: 500 }
