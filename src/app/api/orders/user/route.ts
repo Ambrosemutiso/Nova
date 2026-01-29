@@ -11,23 +11,38 @@ export async function GET(req: NextRequest) {
     const userId = searchParams.get('userId');
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = 6;
-    const status = searchParams.get('status') || 'All';
+    const status = searchParams.get('status') || 'All'; // delivery status
     const search = searchParams.get('search')?.trim() || '';
     const from = searchParams.get('from');
     const to = searchParams.get('to');
 
     if (!userId) {
-      return NextResponse.json({ message: 'User ID is required' }, { status: 400 });
+      return NextResponse.json(
+        { message: 'User ID is required' },
+        { status: 400 }
+      );
     }
 
-    const query: any = { userId };
+    /* ===============================
+       ✅ BASE QUERY (IMPORTANT)
+       Only PAID orders for this user
+    ================================ */
+    const query: any = {
+      userId,
+      status: 'paid', // 🔐 PAYMENT STATUS (CRITICAL FIX)
+    };
 
-    // 🔍 Filter by status
+    /* ===============================
+       🚚 DELIVERY STATUS FILTER
+       (NOT payment status)
+    ================================ */
     if (status !== 'All') {
-      query.status = status;
+      query['items.status'] = status;
     }
 
-    // 🔎 Search in item name, county, or town
+    /* ===============================
+       🔎 SEARCH FILTER
+    ================================ */
     if (search) {
       query.$or = [
         { 'items.name': { $regex: search, $options: 'i' } },
@@ -36,13 +51,15 @@ export async function GET(req: NextRequest) {
       ];
     }
 
-    // 📅 Date filter (createdAt)
+    /* ===============================
+       📅 DATE FILTER
+    ================================ */
     if (from || to) {
       query.createdAt = {};
       if (from) query.createdAt.$gte = new Date(from);
       if (to) {
         const toDate = new Date(to);
-        toDate.setHours(23, 59, 59, 999); // include the full day
+        toDate.setHours(23, 59, 59, 999);
         query.createdAt.$lte = toDate;
       }
     }
@@ -58,7 +75,7 @@ export async function GET(req: NextRequest) {
       Order.countDocuments(query),
     ]);
 
-    // 🧾 Ensure structure for customerInfo
+    // 🧾 Normalize customerInfo
     orders.forEach((order: any) => {
       order.customerInfo = order.customerInfo || {
         name: '',
@@ -76,6 +93,9 @@ export async function GET(req: NextRequest) {
     });
   } catch (err) {
     console.error('❌ Error fetching user orders:', err);
-    return NextResponse.json({ message: 'Server error' }, { status: 500 });
+    return NextResponse.json(
+      { message: 'Server error' },
+      { status: 500 }
+    );
   }
 }

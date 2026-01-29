@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import Image from 'next/image';
 import {
   FiEye,
   FiEyeOff,
@@ -325,15 +326,37 @@ const maxWeeklyValue = Math.max(
         />
       </div>
       {/* Saved Payment Methods */}
-      <div className="bg-white rounded-3xl p-6 shadow">
-        <h3 className="font-semibold mb-4">Saved Payment Methods</h3>
+{/* Saved Payment Methods */}
+<div className="bg-white rounded-3xl p-6 shadow">
+  <h3 className="font-semibold mb-4">Saved Payment Methods</h3>
 
-        <div className="flex gap-4">
-          <PaymentMethod label="M-Pesa" />
-          <PaymentMethod label="Airtel Money" />
-          <PaymentMethod label="Card" />
-        </div>
-      </div>
+  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <PaymentMethod
+      image="/mpesa.png"
+      alt="M-Pesa"
+      label="M-Pesa"
+    />
+
+    <PaymentMethod
+      image="/airtel.png"
+      alt="Airtel Money"
+      label="Airtel Money"
+    />
+
+    <PaymentMethod
+      image="/visa.png"
+      alt="Visa Card"
+      label="Visa"
+    />
+
+    <PaymentMethod
+      image="/mastercard.png"
+      alt="MasterCard"
+      label="Mastercard"
+    />
+  </div>
+</div>
+
 {/* Transactions */}
 <div className="bg-white rounded-3xl shadow p-6">
   {/* Header */}
@@ -595,15 +618,35 @@ function WalletAction({
   );
 }
 
-
-function PaymentMethod({ label }: { label: string }) {
+function PaymentMethod({
+  image,
+  alt,
+  label,
+}: {
+  image: string;
+  alt: string;
+  label: string;
+}) {
   return (
-    <div className="border rounded-xl px-4 py-3 flex items-center gap-3">
-      <FiCreditCard />
-      <p className="font-medium">{label}</p>
+    <div className="border rounded-2xl p-4 flex flex-col items-center justify-center gap-2
+      hover:shadow-md transition cursor-pointer bg-gray-50"
+    >
+      <Image
+        src={image}
+        alt={alt}
+        width={48}
+        height={30}
+        className="object-contain"
+      />
+
+      <p className="text-sm font-medium text-gray-700">
+        {label}
+      </p>
     </div>
   );
 }
+
+
 
 /* 🔢 Amount Modal */
 function AmountModal({

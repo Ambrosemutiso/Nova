@@ -1,41 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
 import Order from '@/app/models/orders';
-import mongoose from 'mongoose';
 
 export async function GET(req: NextRequest) {
   await dbConnect();
 
-  const { searchParams } = new URL(req.url);
+  const url = new URL(req.url);
+  const userId = url.searchParams.get('userId');
+  const page = parseInt(url.searchParams.get('page') || '1');
+  const limit = parseInt(url.searchParams.get('limit') || '10');
+  const sort = url.searchParams.get('sort') || 'createdAt';
+  const order = url.searchParams.get('order') === 'asc' ? 1 : -1;
+  const status = url.searchParams.get('status');
 
-  const userId = searchParams.get('userId');
-  const page = Number(searchParams.get('page') || 1);
-  const limit = Number(searchParams.get('limit') || 10);
-
-  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-    return NextResponse.json({ error: 'Invalid userId' }, { status: 400 });
+  if (!userId) {
+    return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
   }
 
-  // 🔐 HARD RULE: USER SEES ONLY PAID ORDERS
-  const query: any = {
-    userId: new mongoose.Types.ObjectId(userId),
-    status: 'paid',
-  };
+  const query: any = { userId };
+
+  if (status && status !== 'all') {
+    query.status = status;
+  }
 
   const totalOrders = await Order.countDocuments(query);
+  const totalPages = Math.ceil(totalOrders / limit);
 
-  const orders = await Order.find(query)
-    .sort({ createdAt: -1 })
-    .skip((page - 1) * limit)
-    .limit(limit)
-    .select(
-      '_id createdAt items totalAmount deliveryFee trackingNumber customerInfo'
-    )
-    .lean();
+const orders = await Order.find(query)
+  .sort({ [sort]: order })
+  .skip((page - 1) * limit)
+  .limit(limit)
+  .select('_id createdAt status paymentInfo items deliveryFee');
 
-  return NextResponse.json({
-    orders,
-    totalPages: Math.ceil(totalOrders / limit),
-    currentPage: page,
-  });
+  return NextResponse.json({ orders, totalPages });
 }
