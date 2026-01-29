@@ -190,7 +190,6 @@ const getDeliveryStepIndex = (order: Order) => {
           >
             <option value="All">All Orders</option>
             <option value="Pending">Processing</option>
-            <option value="Out for delivery">Out for Delivery</option>
             <option value="Delivered">Delivered</option>
           </select>
 

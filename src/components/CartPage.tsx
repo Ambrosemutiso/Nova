@@ -192,6 +192,7 @@ const getPublicId = (url?: string) => {
         images: item.images,
         productId: item.productId || item.id,
         sellerId: item.sellerId,
+        fulfillmentMode: item.fulfillmentMode,
       })),
       deliveryFee,
       county,

@@ -87,6 +87,8 @@ export default function WalletPage() {
   const [withdrawMethod, setWithdrawMethod] = useState<'mpesa'>('mpesa');
   const [balanceNC, setBalanceNC] = useState(0);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [activeFilter, setActiveFilter] = useState<'Today' | 'Yesterday' | 'Earlier'>('Today');
+  const [showAllTx, setShowAllTx] = useState(false);
 
   const hideTimer = useRef<NodeJS.Timeout | null>(null);
   const lastPaymentRef = useRef<number | null>(null);
@@ -176,13 +178,17 @@ const confirmWithdraw = async () => {
     toast.error('Withdrawal failed');
   }
 };
+const filteredTx = transactions.filter(tx => {
+  const group = formatDateGroup(tx.date);
+  return group === activeFilter;
+});
 
-    const groupedTx = transactions.reduce((acc, tx) => {
-    const key = formatDateGroup(tx.date);
-    acc[key] = acc[key] || [];
-    acc[key].push(tx);
-    return acc;
-  }, {} as Record<string, Transaction[]>);
+const groupedTx = filteredTx.reduce((acc, tx) => {
+  const key = formatDateGroup(tx.date);
+  acc[key] = acc[key] || [];
+  acc[key].push(tx);
+  return acc;
+}, {} as Record<string, Transaction[]>);
 
   const weeklyActivity: WeeklyStat[] = (() => {
   const last7Days = getLast7Days();
@@ -241,7 +247,7 @@ const maxWeeklyValue = Math.max(
 
             <button
               onClick={() => setShowBalance(!showBalance)}
-              className="p-2 rounded-full bg-white/10"
+              className="p-2 rounded-full bg-white/10 cursor-pointer"
             >
               {showBalance ? <FiEyeOff /> : <FiEye />}
             </button>
@@ -254,7 +260,7 @@ const maxWeeklyValue = Math.max(
           </h2>
           {currency === 'NC' && (
             <p className="text-sm opacity-80 mt-1">
-              ≈ KES {balanceNC.toLocaleString()}
+              ≈ KES {showBalance? balanceNC.toLocaleString() : '•••••'}
             </p>
           )}
         </div>
@@ -328,50 +334,100 @@ const maxWeeklyValue = Math.max(
           <PaymentMethod label="Card" />
         </div>
       </div>
+{/* Transactions */}
+<div className="bg-white rounded-3xl shadow p-6">
+  {/* Header */}
+  <div className="flex items-center justify-between mb-4">
+    <h3 className="font-semibold">Transactions</h3>
 
-      {/* Transactions */}
-      <div className="bg-white rounded-3xl shadow p-6">
-        <h3 className="font-semibold mb-4">Transactions</h3>
+    <button
+      onClick={() => setShowAllTx(true)}
+      className="text-sm text-orange-600 hover:underline"
+    >
+      View all
+    </button>
+  </div>
 
-        {Object.keys(groupedTx).length === 0 ? (
-<div className="text-center py-12 text-gray-500">
-   <p className="font-medium"> No transactions yet </p>
-    <p className="text-sm mt-1">
-       Your deposits, payments, and withdrawals will appear here 
-       </p>
- </div>
-        ) : (
-          Object.entries(groupedTx).map(([group, txs]) => (
-            <div key={group} className="mb-6">
-              <p className="text-sm text-gray-500 mb-2">{group}</p>
-              <ul className="space-y-4">
-                {txs.map(tx => (
-                  <li
-                    key={tx.id}
-                    className="flex justify-between items-center"
-                  >
-                    <div>
-                      <p className="font-medium">{tx.label}</p>
-                      <p className="text-xs text-gray-500">{tx.date}</p>
-                    </div>
+  {/* Filters */}
+  <div className="flex gap-2 mb-5">
+    {(['Today', 'Yesterday', 'Earlier'] as const).map(label => (
+      <button
+        key={label}
+        onClick={() => setActiveFilter(label)}
+        className={`px-4 py-1.5 rounded-full text-sm font-medium transition
+          ${
+            activeFilter === label
+              ? 'bg-orange-500 text-white'
+              : 'bg-orange-50 text-orange-600'
+          }`}
+      >
+        {label}
+      </button>
+    ))}
+  </div>
 
-                    <p
-                      className={`font-semibold ${
-                        tx.type === 'credit'
-                          ? 'text-green-600'
-                          : 'text-red-600'
-                      }`}
-                    >
-                      {tx.type === 'credit' ? '+' : '-'}
-                      {tx.amount} NC
-                    </p>
-                  </li>
-                ))}
-              </ul>
+  {/* Empty */}
+  {filteredTx.length === 0 ? (
+    <div className="text-center py-10 text-gray-500">
+      <p className="font-medium">No transactions</p>
+      <p className="text-sm mt-1">
+        Your wallet activity will appear here
+      </p>
+    </div>
+  ) : (
+    <ul className="space-y-4">
+      {filteredTx.map(tx => (
+        <li
+          key={tx.id}
+          className={`flex items-center justify-between p-4 rounded-2xl
+            ${
+              tx.type === 'credit'
+                ? 'bg-green-50'
+                : 'bg-orange-50'
+            }`}
+        >
+          {/* LEFT */}
+          <div className="flex items-center gap-4">
+            <div
+              className={`w-10 h-10 rounded-full flex items-center justify-center
+                ${
+                  tx.type === 'credit'
+                    ? 'bg-green-100 text-green-600'
+                    : 'bg-orange-100 text-orange-600'
+                }`}
+            >
+              {tx.type === 'credit' ? <FiArrowDown /> : <FiArrowUp />}
             </div>
-          ))
-        )}
-      </div>
+
+            <div>
+              <p className="font-medium">{tx.label}</p>
+              <p className="text-xs text-gray-500">
+                {new Date(tx.date).toLocaleString()}
+              </p>
+            </div>
+          </div>
+
+          {/* RIGHT */}
+          <div className="text-right">
+            <p
+              className={`font-semibold flex items-center gap-1 justify-end
+                ${
+                  tx.type === 'credit'
+                    ? 'text-green-600'
+                    : 'text-orange-600'
+                }`}
+            >
+              <span className="text-lg">🪙</span>
+              {tx.type === 'credit' ? '+' : '-'}
+              {tx.amount} NC
+            </p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )}
+</div>
+
       {/* 🔢 Amount Entry Modal */}
       {showAmountModal && (
         <AmountModal
@@ -406,6 +462,50 @@ const maxWeeklyValue = Math.max(
     }}
   />
 )}
+
+{showAllTx && (
+  <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+    <div className="bg-white rounded-3xl w-full max-w-lg max-h-[80vh] overflow-y-auto p-6">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="font-semibold text-lg">All Transactions</h3>
+        <button
+          onClick={() => setShowAllTx(false)}
+          className="text-gray-400 hover:text-gray-600"
+        >
+          ✕
+        </button>
+      </div>
+
+      <ul className="space-y-4">
+        {transactions.map(tx => (
+          <li
+            key={tx.id}
+            className="flex justify-between items-center border-b pb-3"
+          >
+            <div>
+              <p className="font-medium">{tx.label}</p>
+              <p className="text-xs text-gray-500">
+                {new Date(tx.date).toLocaleString()}
+              </p>
+            </div>
+
+            <p
+              className={`font-semibold ${
+                tx.type === 'credit'
+                  ? 'text-green-600'
+                  : 'text-orange-600'
+              }`}
+            >
+              {tx.type === 'credit' ? '+' : '-'}
+              {tx.amount} NC
+            </p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+)}
+
 
       {/* 📲 GlobalPayModal */}
       {showPayModal && topUpAmount && (

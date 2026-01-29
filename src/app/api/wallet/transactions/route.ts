@@ -19,26 +19,26 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const intents = await PaymentIntent.find({
-    userId: new Types.ObjectId(userId),
-    status: 'paid',
-    purpose: { $in: ['wallet', 'order'] },
-  })
-    .sort({ createdAt: -1 })
-    .limit(50)
-    .lean<LeanPaymentIntent[]>();
+ const intents = await PaymentIntent.find({
+  userId: new Types.ObjectId(userId),
+  status: 'paid',
+  purpose: { $in: ['wallet', 'order'] },
+})
+  .sort({ createdAt: -1 })
+  .limit(15) // 🔥 SHOW ONLY 5 MOST RECENT
+  .lean<LeanPaymentIntent[]>();
 
-  const transactions = intents.map((tx) => {
-    const isCredit = tx.purpose === 'wallet';
+const transactions = intents.map(tx => {
+  const isCredit = tx.purpose === 'wallet';
 
-    return {
-      id: tx._id.toString(), // ✅ no TS error
-      type: isCredit ? 'credit' : 'debit',
-      amount: tx.amount,
-      label: isCredit ? 'Wallet Top Up' : 'Order Payment',
-      date: tx.createdAt,
-    };
-  });
+  return {
+    id: tx._id.toString(),
+    type: isCredit ? 'credit' : 'debit',
+    amount: tx.amount,
+    label: isCredit ? 'Wallet Top Up' : 'Order Payment',
+    date: tx.createdAt,
+  };
+});
 
   return NextResponse.json(transactions);
 }
