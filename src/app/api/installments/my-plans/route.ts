@@ -1,3 +1,4 @@
+//app/api/installments/my -plans/route.ts
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/dbConnect";
 import Installment from "@/app/models/InstallmentOrder";

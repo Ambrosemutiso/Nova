@@ -1,17 +1,24 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Types } from 'mongoose';
 
 export interface InstallmentDoc extends Document {
   buyerId: string;
   productId: string;
   sellerId: string;
+
   totalAmount: number;
   monthlyAmount: number;
   months: number;
-  paidAmount: number; // ✅ ADD THIS
+
+  paidAmount: number;
+  paidMonths: number;
+
   status: 'active' | 'completed' | 'defaulted' | 'pending-deposit';
   depositPaid: boolean;
 
+  orderId?: Types.ObjectId; // ✅ LINK TO ORDER (AFTER COMPLETION)
+
   createdAt: Date;
+  updatedAt: Date;
 }
 
 const InstallmentSchema = new Schema<InstallmentDoc>(
@@ -26,7 +33,12 @@ const InstallmentSchema = new Schema<InstallmentDoc>(
 
     paidAmount: {
       type: Number,
-      default: 0, // ✅ START FROM 0
+      default: 0,
+    },
+
+    paidMonths: {
+      type: Number,
+      default: 0,
     },
 
     status: {
@@ -38,6 +50,12 @@ const InstallmentSchema = new Schema<InstallmentDoc>(
     depositPaid: {
       type: Boolean,
       default: false,
+    },
+
+    orderId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Order',
+      default: null,
     },
   },
   { timestamps: true }

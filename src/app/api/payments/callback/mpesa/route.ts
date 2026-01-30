@@ -77,18 +77,29 @@ export async function POST(req: NextRequest) {
         });
         break;
 
-      case 'installment-monthly': {
-        const inst = await Installment.findById(paymentIntent.refId);
-        if (inst) {
-          inst.paidMonths += 1;
-          inst.paidAmount += paymentIntent.amount;
-          if (inst.paidMonths >= inst.months) {
-            inst.status = 'completed';
-          }
-          await inst.save();
-        }
-        break;
-      }
+case 'installment-monthly': {
+  const inst = await Installment.findById(paymentIntent.refId);
+
+  if (!inst) break;
+
+  const paidAmount =
+    Number(inst.paidAmount ?? 0) + Number(paymentIntent.amount ?? 0);
+
+  const isCompleted = paidAmount >= inst.totalAmount;
+
+  await Installment.findByIdAndUpdate(
+    paymentIntent.refId,
+    {
+      $set: {
+        paidAmount,
+        status: isCompleted ? 'completed' : inst.status,
+      },
+    },
+    { new: true }
+  );
+
+  break;
+}
 
       case 'wallet': {
 const walletId = paymentIntent.refId;
