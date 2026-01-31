@@ -15,7 +15,7 @@ export interface InstallmentDoc extends Document {
   status: 'active' | 'completed' | 'defaulted' | 'pending-deposit';
   depositPaid: boolean;
 
-  orderId?: Types.ObjectId; // ✅ LINK TO ORDER (AFTER COMPLETION)
+  orderId?: Types.ObjectId;
 
   createdAt: Date;
   updatedAt: Date;

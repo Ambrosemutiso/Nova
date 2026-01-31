@@ -235,13 +235,13 @@ export default function InstallmentProgressCard({ plan }: Props) {
         {/* ACTION */}
         {fullyPaid ? (
           hasOrder ? (
-            <p className="text-green-600 font-semibold text-sm">
-              ✅ Order placed — Awaiting delivery
+            <p className="text-orange-500 font-semibold text-sm">
+              Order placed — Awaiting delivery
             </p>
           ) : (
             <button
               onClick={() => setShowOrderModal(true)}
-              className="w-full bg-green-600 text-white py-2 rounded-xl hover:bg-green-700 transition"
+              className="w-full bg-orange-600 text-white py-2 rounded-xl hover:bg-orange-700 transition"
             >
               Place Order
             </button>
@@ -315,22 +315,34 @@ export default function InstallmentProgressCard({ plan }: Props) {
             <button
               disabled={!county || !town}
               onClick={async () => {
-                await fetch('/api/orders/from-installment', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    installmentId: plan._id,
-                    county,
-                    town,
-                    deliveryFee,
-                    userId: buyerId,
-                  }),
-                });
+                try {
+                  const res = await fetch('/api/orders/from-installment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      installmentId: plan._id,
+                      county,
+                      town,
+                      deliveryFee,
+                      userId: buyerId,
+                    }),
+                  });
+                  
+                const data = await res.json();
+                
+                if (!res.ok) {
+                  alert(data.error || 'Failed to place order');
+                  
+                  return;
+                }
 
-                setShowOrderModal(false);
-                window.location.reload();
-              }}
-              className="w-full bg-green-600 text-white py-2 rounded disabled:opacity-50"
+    setShowOrderModal(false);
+    window.location.reload();
+  } catch (err) {
+    alert('Something went wrong. Please try again.');
+  }
+}}
+              className="w-full bg-orange-600 text-white py-2 rounded disabled:opacity-50"
             >
               Order Now
             </button>

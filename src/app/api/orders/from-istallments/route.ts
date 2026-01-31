@@ -19,20 +19,10 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!mongoose.Types.ObjectId.isValid(installmentId)) {
-      return NextResponse.json(
-        { error: 'Invalid installment ID' },
-        { status: 400 }
-      );
-    }
-
-    const installment = await Installment.findById(installmentId).lean<{
-      _id: mongoose.Types.ObjectId;
-      status: string;
-      orderId?: mongoose.Types.ObjectId;
-      product?: any;
-      productId?: any;
-    }>();
+    /* =========================
+       📦 Fetch installment (NO LEAN)
+       ========================= */
+    const installment = await Installment.findById(installmentId);
 
     if (!installment) {
       return NextResponse.json(
@@ -41,7 +31,6 @@ export async function POST(req: Request) {
       );
     }
 
-    /* ✅ Must be fully paid */
     if (installment.status !== 'completed') {
       return NextResponse.json(
         { error: 'Installment not fully paid' },
@@ -49,7 +38,6 @@ export async function POST(req: Request) {
       );
     }
 
-    /* ✅ Prevent duplicate orders */
     if (installment.orderId) {
       return NextResponse.json(
         { error: 'Order already created' },
@@ -57,43 +45,41 @@ export async function POST(req: Request) {
       );
     }
 
-    /* ======================================================
-       🧩 Normalize product (matches frontend normalization)
-       ====================================================== */
-    let product: any | null = null;
-
-    if (installment.product) {
-      product = installment.product;
-    } else if (
-      installment.productId &&
-      mongoose.Types.ObjectId.isValid(installment.productId)
-    ) {
-      product = await Product.findById(installment.productId).lean();
-    }
+    /* =========================
+       🛒 Fetch product (LEAN OK)
+       ========================= */
+    const product = (await Product.findById(
+      installment.productId
+    ).lean()) as any;
 
     if (!product) {
       return NextResponse.json(
-        { error: 'Product not found for installment' },
+        { error: 'Product not found' },
         { status: 404 }
       );
     }
 
-    /* ======================================================
+    /* =========================
+       🧾 Build items (cart-compatible)
+       ========================= */
+    const items = [
+      {
+        name: String(product.name),
+        quantity: 1,
+        price: Number(product.price),
+        images: Array.isArray(product.images) ? product.images : [],
+        productId: product._id.toString(),
+        sellerId: product.sellerId,
+        fulfillmentMode: product.fulfillmentMode,
+      },
+    ];
+
+    /* =========================
        🧾 Create order
-       ====================================================== */
+       ========================= */
     const order = await Order.create({
-      userId,
-      items: [
-        {
-          productId: product._id,
-          name: product.name,
-          quantity: 1,
-          price: product.price,
-          images: product.images ?? [],
-          sellerId: product.sellerId,
-          fulfillmentMode: product.fulfillmentMode,
-        },
-      ],
+      userId: new mongoose.Types.ObjectId(userId),
+      items,
       totalAmount: Number(product.price),
       deliveryFee: Number(deliveryFee),
       customerInfo: { county, town },
@@ -104,12 +90,11 @@ export async function POST(req: Request) {
       },
     });
 
-    /* ======================================================
-       🔗 Link order back to installment
-       ====================================================== */
-    await Installment.findByIdAndUpdate(installmentId, {
-      orderId: order._id,
-    });
+    /* =========================
+       🔗 Link order to installment
+       ========================= */
+    installment.orderId = order._id;
+    await installment.save();
 
     return NextResponse.json({
       success: true,
