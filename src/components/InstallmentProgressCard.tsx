@@ -316,7 +316,7 @@ export default function InstallmentProgressCard({ plan }: Props) {
               disabled={!county || !town}
               onClick={async () => {
                 try {
-                  const res = await fetch('/api/orders/from-installment', {
+                  const res = await fetch('/api/orders/from-installments', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
