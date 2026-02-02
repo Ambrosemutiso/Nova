@@ -24,20 +24,26 @@ export async function POST(req: NextRequest) {
     }).lean();
 
     // ✅ KEEP EXISTING ITEM FILTER (unchanged)
-    const sellerOrders = allOrders
-      .map((order) => {
-        const sellerItems = order.items.filter(
-          (item: any) =>
-            item.sellerId?.toString() === sellerId &&
-            item.fulfillmentMode === 'seller'
-        );
+const sellerOrders = allOrders
+  .map((order: any) => {
+    const itemsArray = Array.isArray(order.items) ? order.items : [];
 
-        return {
-          ...order,
-          items: sellerItems,
-        };
-      })
-      .filter((order) => order.items.length > 0);
+    const sellerItems = itemsArray.filter(
+      (item: any) =>
+        item?.sellerId?.toString() === sellerId &&
+        item?.fulfillmentMode === 'seller'
+    );
+
+    return {
+      ...order,
+      items: sellerItems.map((item: any) => ({
+    ...item,
+    images: Array.isArray(item.images) ? item.images : [],
+    status: item.status || 'Pending',
+  })),
+};
+  })
+  .filter((order) => Array.isArray(order.items) && order.items.length > 0);
 
     return NextResponse.json({ orders: sellerOrders }, { status: 200 });
   } catch (error) {

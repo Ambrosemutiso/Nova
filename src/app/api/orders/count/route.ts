@@ -9,19 +9,28 @@ export async function POST(req: NextRequest) {
 
     const { sellerId } = await req.json();
     if (!sellerId) {
-      return NextResponse.json({ message: 'sellerId is required' }, { status: 400 });
+      return NextResponse.json(
+        { message: 'sellerId is required' },
+        { status: 400 }
+      );
     }
 
-    // Count orders where at least one item has the given sellerId
     const count = await Order.countDocuments({
+      status: 'paid', // ✅ order must be paid
       items: {
-        $elemMatch: { sellerId },
+        $elemMatch: {
+          sellerId,
+          status: { $ne: 'Delivered' }, // ✅ pending / in-progress
+        },
       },
     });
 
     return NextResponse.json({ count });
   } catch (err) {
     console.error('❌ Error counting seller orders:', err);
-    return NextResponse.json({ message: 'Failed to count orders' }, { status: 500 });
+    return NextResponse.json(
+      { message: 'Failed to count orders' },
+      { status: 500 }
+    );
   }
 }

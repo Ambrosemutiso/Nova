@@ -1,12 +1,13 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
 import { CldImage } from 'next-cloudinary';
 import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import QRCode from 'qrcode';
 import JsBarcode from 'jsbarcode';
 import { toast } from 'react-toastify';
+import { NOVAXMAX_LOGO_BASE64 } from '@/lib/logoBase'
 
 interface OrderItem {
   name: string;
@@ -35,6 +36,7 @@ interface Order {
   createdAt: string;
 }
 
+
 export default function SellerOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,6 +53,8 @@ export default function SellerOrdersPage() {
   const [barcodeSrc, setBarcodeSrc] = useState<string | null>(null);
 
   const pageSize = 5;
+
+  // utils/logoBase64.ts
 
   useEffect(() => {
     const storedUser = localStorage.getItem('sellerUser');
@@ -79,10 +83,11 @@ export default function SellerOrdersPage() {
     return match ? match[1] : url;
   };
 
-  const maskPhone = (phone: string) => {
-    if (phone.length !== 10) return phone;
-    return phone.slice(0, 4) + '***' + phone.slice(-3);
-  };
+const maskPhone = (phone?: string) => {
+  if (!phone) return 'N/A';
+  if (phone.length !== 10) return phone;
+  return phone.slice(0, 4) + '***' + phone.slice(-3);
+};
 
   // ✅ Combined filtering logic (status, city, date, search)
 const filteredOrders = orders.filter((order) => {
@@ -185,64 +190,170 @@ const filteredOrders = orders.filter((order) => {
   };
 
 const handleDownloadLabelPDF = () => {
-  if (!selectedLabelOrder || !qrSrc || !barcodeSrc) return;
+  if (!selectedLabelOrder || !qrSrc || !barcodeSrc) {
+    toast.error('Label data not ready');
+    return;
+  }
 
-  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a6' });
+  try {
+const pdf = new jsPDF({
+  orientation: 'portrait',
+  unit: 'mm',
+  format: 'a5', // ✅ switch from 'a6' to 'a5'
+});
 
-  // Header bar
-  pdf.setFillColor(255, 128, 0);
-  pdf.rect(0, 0, 105, 15, 'F');
-  pdf.setTextColor(255, 255, 255);
-  pdf.setFontSize(14);
-  pdf.text('NovaXmax Delivery Label', 10, 10);
+    const pageWidth = 105;
+    let y = 8;
 
-  // Buyer details
-  const buyerY = 49;
-  pdf.setFontSize(10);
-  pdf.text('Buyer Details:', 10, buyerY);
-  pdf.setFontSize(9);
-  pdf.text(`Name: ${selectedLabelOrder.customerInfo.firstName} ${selectedLabelOrder.customerInfo.lastName}`, 10, buyerY + 5);
-  pdf.text(`Phone: ${selectedLabelOrder.customerInfo.phone}`, 10, buyerY + 10);
-  pdf.text(`City: ${selectedLabelOrder.customerInfo.county || 'N/A'}`, 10, buyerY + 15);
-  pdf.text(`Address: ${selectedLabelOrder.customerInfo.town || 'N/A'}`, 10, buyerY + 20);
+/* =========================
+   🟧 HEADER (Logo + Contact)
+   ========================= */
+pdf.setFillColor(255, 128, 0);
+pdf.roundedRect(5, y, pageWidth - 10, 20, 3, 3, 'F');
 
-  // Order details table
-  const tableY = buyerY + 27;
-  const tableData = selectedLabelOrder.items.map(item => [
+// Logo (left)
+pdf.addImage(
+  NOVAXMAX_LOGO_BASE64,
+  'PNG',
+  8,
+  y + 4,
+  18,
+  12
+);
+
+// Company Info (right)
+pdf.setTextColor(255);
+pdf.setFontSize(15);
+pdf.setFont('helvetica', 'bold');
+pdf.text('NOVAXMAX DELIVERY LABEL', 30, y + 9);
+
+pdf.setFontSize(7);
+pdf.setFont('helvetica', 'normal');
+pdf.text('www.novaxmax.com | support@novaxmax.com', 30, y + 13);
+pdf.text('+254798437808 | +254787055840', 30, y + 17);
+
+    /* =========================
+       👤 CUSTOMER CARD
+       ========================= */
+    pdf.setTextColor(0);
+    pdf.setFontSize(9);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Customer Information', 7, y);
+
+    y += 2;
+    pdf.setDrawColor(220);
+    pdf.roundedRect(5, y + 2, pageWidth - 10, 26, 3, 3);
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(
+      `Name: ${selectedLabelOrder.customerInfo.firstName} ${selectedLabelOrder.customerInfo.lastName}`,
+      8,
+      y + 9
+    );
+    pdf.text(
+      `Phone: ${selectedLabelOrder.customerInfo.phone}`,
+      8,
+      y + 14
+    );
+    pdf.text(
+      `County: ${selectedLabelOrder.customerInfo.county || 'N/A'}`,
+      8,
+      y + 19
+    );
+    pdf.text(
+      `Town: ${selectedLabelOrder.customerInfo.town || 'N/A'}`,
+      8,
+      y + 24
+    );
+
+    y += 34;
+
+/* =========================
+   📦 ITEMS TABLE (autoTable)
+   ========================= */
+pdf.setFont('helvetica', 'bold');
+pdf.setFontSize(9);
+pdf.text('Order Items', 7, y);
+
+autoTable(pdf, {
+  startY: y + 4,
+  margin: { left: 5, right: 5 },
+  head: [['Item', 'Qty', 'Subtotal']],
+  body: selectedLabelOrder.items.map((item) => [
     item.name,
     item.quantity.toString(),
-    `Ksh ${item.price.toLocaleString()}`,
-    `Ksh ${(item.price * item.quantity).toLocaleString()}`
-  ]);
+    `Ksh ${(item.price * item.quantity).toLocaleString()}`,
+  ]),
+  theme: 'grid',
+  styles: {
+    fontSize: 8,
+    cellPadding: 2,
+  },
+  headStyles: {
+    fillColor: [255, 128, 0],
+    textColor: 255,
+    fontStyle: 'bold',
+  },
+});
 
-  (pdf as any).autoTable({
-    startY: tableY,
-    head: [['Item', 'Qty', 'Price', 'Subtotal']],
-    body: tableData,
-    theme: 'grid',
-    styles: { fontSize: 8, cellPadding: 1.5 },
-    headStyles: { fillColor: [255, 128, 0] },
-  });
+y = (pdf as any).lastAutoTable.finalY + 6;
 
-  const afterTableY = (pdf as any).lastAutoTable.finalY + 5;
+pdf.setFont('helvetica', 'bold');
+pdf.setFontSize(9);
+pdf.text(
+  `Total: Ksh ${selectedLabelOrder.totalAmount.toLocaleString()}`,
+  pageWidth - 8,
+  y,
+  { align: 'right' }
+);
 
-  // Tracking details
-  pdf.setFontSize(10);
-  pdf.text(`Tracking: ${selectedLabelOrder.trackingNumber}`, 10, afterTableY);
-  pdf.text(`Order ID: ${selectedLabelOrder._id.slice(-6)}`, 10, afterTableY + 5);
-  pdf.text(`Total: Ksh ${selectedLabelOrder.totalAmount.toLocaleString()}`, 10, afterTableY + 10);
+y += 6;
 
-  // Barcode and QR
-  pdf.addImage(barcodeSrc, 'PNG', 10, afterTableY + 15, 70, 15);
-  pdf.addImage(qrSrc, 'PNG', 85, afterTableY + 15, 18, 18);
 
-  // Footer
-  pdf.setFontSize(8);
-  pdf.setTextColor(120);
-  pdf.text('Thank you for using NovaXmax 🚚', 10, afterTableY + 36);
+    /* =========================
+       🚚 TRACKING CARD
+       ========================= */
+    pdf.setFontSize(9);
+    pdf.text('Tracking Information', 7, y);
 
-  pdf.save(`NovaXmax_Label_${selectedLabelOrder._id.slice(-6)}.pdf`);
+    y += 2;
+    pdf.roundedRect(5, y + 2, pageWidth - 10, 34, 3, 3);
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(
+      `Tracking: ${selectedLabelOrder.trackingNumber}`,
+      8,
+      y + 10
+    );
+    pdf.text(
+      `Order ID: ${selectedLabelOrder._id.slice(-6)}`,
+      8,
+      y + 15
+    );
+
+    pdf.addImage(barcodeSrc, 'PNG', 8, y + 18, 60, 12);
+    pdf.addImage(qrSrc, 'PNG', pageWidth - 28, y + 18, 18, 18);
+
+    /* =========================
+       🧾 FOOTER
+       ========================= */
+    pdf.setFontSize(7);
+    pdf.setTextColor(120);
+    pdf.text(
+      'www.novaxmax.com • support@novaxmax.com',
+      pageWidth / 2,
+      145,
+      { align: 'center' }
+    );
+
+    pdf.save(`NovaXmax_Label_${selectedLabelOrder._id.slice(-6)}.pdf`);
+  } catch (err) {
+    console.error(err);
+    toast.error('Failed to generate PDF');
+  }
 };
+
+
 
   // ✅ Extract available cities dynamically
   const cities = Array.from(new Set(orders.map((o) => o.customerInfo.county).filter(Boolean)));
@@ -316,12 +427,11 @@ const handleDownloadLabelPDF = () => {
         <>
           <div className="space-y-6">
             {paginatedOrders.map((order) => {
-              const visibleItems =
-                statusFilter === 'All'
-                  ? order.items
-                  : order.items.filter((item) => item.status === statusFilter);
-
-              if (visibleItems.length === 0) return null;
+              const visibleItems = Array.isArray(order.items)
+              ? statusFilter === 'All'
+              ? order.items
+              : order.items.filter((item) => item.status === statusFilter)
+              : [];
 
               return (
                 <div key={order._id} className="bg-white p-4 rounded shadow border border-gray-100">
