@@ -6,7 +6,7 @@ export interface IPaymentIntent {
   amount: number;
   method: 'mpesa' | 'airtel' | 'npay';
   processed: boolean;
-  purpose: 'order' | 'installment-deposit' | 'installment-monthly' | 'wallet';
+  purpose: 'order' | 'installment-deposit' | 'installment-monthly' | 'wallet' |'shop-upgrade';
   refId: string;
   status: 'pending' | 'paid' | 'failed';
   checkoutRequestId?: string;
@@ -35,6 +35,7 @@ const PaymentIntentSchema = new Schema<IPaymentIntent>(
         'installment-deposit',
         'installment-monthly',
         'wallet',
+        'shop-upgrade',
       ],
       required: true,
     },

@@ -56,6 +56,15 @@ export async function POST(req: NextRequest) {
     }
 
     /* ===============================
+       📆 SHOP-UPGRADE
+    ================================ */
+    else if (purpose === 'shop-upgrade') {
+      // refId = sellerId
+       normalizedRefId = refId;
+      }
+
+
+    /* ===============================
        🛒 ORDER (FIXED)
     ================================ */
     else if (purpose === 'order') {

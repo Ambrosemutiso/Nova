@@ -9,12 +9,13 @@ interface SellerItem {
   price: number;
   quantity: number;
   sellerId: mongoose.Types.ObjectId | string;
+  status: 'Pending' | 'Delivered' | 'Cancelled';
 }
 
 interface OrderDoc {
   _id: mongoose.Types.ObjectId;
   userId?: mongoose.Types.ObjectId;
-  status?: string;
+  status: 'pending' | 'paid' | 'failed';
   createdAt: Date;
   items: SellerItem[];
   paymentMethod?: string;
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Seller ID is required' }, { status: 400 });
     }
 
-    const allOrders = (await Order.find({
+    const orders = (await Order.find({
       'items.sellerId': sellerId,
     }).lean()) as unknown as OrderDoc[];
 
@@ -41,34 +42,44 @@ export async function POST(req: NextRequest) {
     const transactions: any[] = [];
     const monthlyData: Record<string, { sales: number; payouts: number }> = {};
 
-    for (const order of allOrders) {
+    for (const order of orders) {
       const sellerItems = order.items.filter(
-        (item: SellerItem) => item.sellerId?.toString() === sellerId
+        item => item.sellerId.toString() === sellerId && item.status !== 'Cancelled'
       );
 
-      if (sellerItems.length === 0) continue;
+      if (!sellerItems.length) continue;
 
-      const orderTotal = sellerItems.reduce(
-        (sum, item) => sum + (item.price || 0) * (item.quantity || 1),
+      const deliveredItems = sellerItems.filter(item => item.status === 'Delivered');
+
+      const sellerItemsTotal = sellerItems.reduce(
+        (sum, item) => sum + item.price * item.quantity,
         0
       );
 
-      totalSales += orderTotal;
+      const deliveredTotal = deliveredItems.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0
+      );
 
-      const fee = orderTotal * 0.1; // assume 10% platform fee
-      const earnings = orderTotal - fee;
+      const fee = deliveredTotal * 0.1;
+      const earnings = deliveredTotal - fee;
 
-      platformFees += fee;
-      netEarnings += earnings;
-
-      if (order.status !== 'Delivered') {
+      // Only count PAID orders
+      if (order.status === 'paid') {
+        totalSales += sellerItemsTotal;
+        netEarnings += earnings;
+        platformFees += fee;
+      } else {
         pendingPayouts += earnings;
       }
 
       const month = new Date(order.createdAt).toLocaleString('default', { month: 'short' });
       if (!monthlyData[month]) monthlyData[month] = { sales: 0, payouts: 0 };
-      monthlyData[month].sales += orderTotal;
-      monthlyData[month].payouts += order.status === 'Delivered' ? earnings : 0;
+
+      monthlyData[month].sales += sellerItemsTotal;
+      if (order.status === 'paid') {
+        monthlyData[month].payouts += earnings;
+      }
 
       // 🧍 Get buyer name safely
       let buyerName = 'Unknown Buyer';
@@ -81,10 +92,13 @@ export async function POST(req: NextRequest) {
 
       transactions.push({
         date: order.createdAt,
-        orderId: order._id ? order._id.toString() : '',
+        orderId: order._id.toString(),
         buyer: buyerName,
-        amount: orderTotal,
-        status: order.status === 'Delivered' ? 'Completed' : 'Pending',
+        amount: sellerItemsTotal,
+        status:
+          order.status === 'paid' && deliveredItems.length
+            ? 'Completed'
+            : 'Pending',
         method: order.paymentMethod || 'M-Pesa',
       });
     }
@@ -95,14 +109,19 @@ export async function POST(req: NextRequest) {
       payouts: data.payouts,
     }));
 
-    const summary = {
-      totalSales,
-      netEarnings,
-      pendingPayouts,
-      platformFees,
-    };
-
-    return NextResponse.json({ summary, chart, transactions }, { status: 200 });
+    return NextResponse.json(
+      {
+        summary: {
+          totalSales,
+          netEarnings,
+          pendingPayouts,
+          platformFees,
+        },
+        chart,
+        transactions,
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error('Error in finance metrics API:', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });

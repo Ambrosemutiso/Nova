@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { dbConnect } from "@/lib/dbConnect";
 import Order from "@/app/models/orders";
 import Product from "@/app/models/product";
-import Seller from "@/app/models/seller";
 import mongoose from "mongoose";
 
 export async function GET(req: NextRequest) {
@@ -11,29 +10,45 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const sellerId = searchParams.get("sellerId");
-    if (!sellerId) return NextResponse.json({ error: "Missing sellerId" }, { status: 400 });
+    if (!sellerId) {
+      return NextResponse.json({ error: "Missing sellerId" }, { status: 400 });
+    }
 
     const sellerObjectId = new mongoose.Types.ObjectId(sellerId);
     const months = Array.from({ length: 12 }, (_, i) => i + 1);
 
-    // -------------------------------
-    // 1️⃣ Monthly Sales & Views
-    // -------------------------------
-    // Fetch orders
+    // --------------------------------------------------
+    // 1️⃣ Monthly Sales & Orders (PAID ONLY)
+    // --------------------------------------------------
     const monthlyOrders = await Order.aggregate([
-      { $match: { "items.sellerId": sellerObjectId } },
+      {
+        $match: {
+          status: "paid",
+          "items.sellerId": sellerObjectId,
+        },
+      },
       { $unwind: "$items" },
+      {
+        $match: {
+          "items.sellerId": sellerObjectId,
+          "items.status": { $ne: "Cancelled" },
+        },
+      },
       {
         $group: {
           _id: { month: { $month: "$createdAt" } },
-          sales: { $sum: "$items.price" },
+          sales: {
+            $sum: { $multiply: ["$items.price", "$items.quantity"] },
+          },
           orders: { $sum: 1 },
         },
       },
       { $sort: { "_id.month": 1 } },
     ]);
 
-    // Fetch product views
+    // --------------------------------------------------
+    // Product Views
+    // --------------------------------------------------
     const monthlyViews = await Product.aggregate([
       { $match: { sellerId } },
       {
@@ -47,6 +62,7 @@ export async function GET(req: NextRequest) {
     const salesData = months.map((m) => {
       const monthOrder = monthlyOrders.find(x => x._id.month === m);
       const monthView = monthlyViews.find(x => x._id.month === m);
+
       return {
         month: m,
         sales: Number(monthOrder?.sales) || 0,
@@ -55,25 +71,50 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    // -------------------------------
-    // 2️⃣ Total Orders & Revenue
-    // -------------------------------
-    const totalOrders = await Order.countDocuments({ "items.sellerId": sellerObjectId });
-    const totalRevenueAgg = await Order.aggregate([
+    // --------------------------------------------------
+    // 2️⃣ Total Orders & Revenue (PAID ONLY)
+    // --------------------------------------------------
+    const totalOrdersAgg = await Order.aggregate([
+      { $match: { status: "paid", "items.sellerId": sellerObjectId } },
       { $unwind: "$items" },
-      { $match: { "items.sellerId": sellerObjectId } },
-      { $group: { _id: null, total: { $sum: "$items.price" } } },
+      {
+        $match: {
+          "items.sellerId": sellerObjectId,
+          "items.status": { $ne: "Cancelled" },
+        },
+      },
+      { $count: "count" },
+    ]);
+    const totalOrders = totalOrdersAgg[0]?.count || 0;
+
+    const totalRevenueAgg = await Order.aggregate([
+      { $match: { status: "paid" } },
+      { $unwind: "$items" },
+      {
+        $match: {
+          "items.sellerId": sellerObjectId,
+          "items.status": "Delivered",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: {
+            $sum: { $multiply: ["$items.price", "$items.quantity"] },
+          },
+        },
+      },
     ]);
     const totalRevenue = totalRevenueAgg[0]?.total || 0;
 
-    // -------------------------------
+    // --------------------------------------------------
     // 3️⃣ Visits & Bounce Rate
-    // -------------------------------
-    const totalVisits = salesData.reduce((sum, d) => sum + d.views, 0); // sum of monthly views
-    const bounceRate = Math.round(40 + Math.random() * 10); // 40–50% simulated
+    // --------------------------------------------------
+    const totalVisits = salesData.reduce((sum, d) => sum + d.views, 0);
+    const bounceRate = Math.round(40 + Math.random() * 10);
 
-    // Helper for sparklines (12 months)
-    const makeSeries = (arr: number[]) => arr.map((v, i) => ({ name: i + 1, value: Number(v) || 0 }));
+    const makeSeries = (arr: number[]) =>
+      arr.map((v, i) => ({ name: i + 1, value: Number(v) || 0 }));
 
     const stats = [
       {
@@ -114,118 +155,168 @@ export async function GET(req: NextRequest) {
       },
     ];
 
-    // -------------------------------
-    // 4️⃣ Order Status Breakdown
-    // -------------------------------
+    // --------------------------------------------------
+    // 4️⃣ Order Status Breakdown (PAID ONLY)
+    // --------------------------------------------------
     const statusAgg = await Order.aggregate([
-      { $match: { "items.sellerId": sellerObjectId } },
+      { $match: { status: "paid", "items.sellerId": sellerObjectId } },
       { $unwind: "$items" },
       {
-        $group: { _id: "$items.status", count: { $sum: 1 } },
+        $match: {
+          "items.sellerId": sellerObjectId,
+          "items.status": { $ne: "Cancelled" },
+        },
+      },
+      {
+        $group: {
+          _id: "$items.status",
+          count: { $sum: 1 },
+        },
       },
     ]);
-    const donutData = statusAgg.map(s => ({ name: s._id || "Unknown", value: s.count }));
 
+    const donutData = statusAgg.map(s => ({
+      name: s._id || "Unknown",
+      value: s.count,
+    }));
 
-    // -------------------------------
-// 7️⃣ Delivered vs Pending Summary
-// -------------------------------
-const deliveredOrders = await Order.countDocuments({
-  "items.sellerId": sellerObjectId,
-  "items.status": "Delivered",
-});
-const pendingOrders = await Order.countDocuments({
-  "items.sellerId": sellerObjectId,
-  "items.status": { $in: ["Pending", "Processing"] },
-});
-const totalRelevantOrders = deliveredOrders + pendingOrders || 1;
+    // --------------------------------------------------
+    // 5️⃣ Delivered vs Pending (PAID ONLY)
+    // --------------------------------------------------
+    const deliveredOrders = await Order.countDocuments({
+      status: "paid",
+      "items.sellerId": sellerObjectId,
+      "items.status": "Delivered",
+    });
 
-const deliveredPercent = Math.round((deliveredOrders / totalRelevantOrders) * 100);
+    const pendingOrders = await Order.countDocuments({
+      status: "paid",
+      "items.sellerId": sellerObjectId,
+      "items.status": "Pending",
+    });
 
-const deliveredSummary = {
-  label: "Orders Delivered",
-  value: deliveredOrders,
-  percent: deliveredPercent,
-  color: "#10b981", // green for delivered
-  usd: "",
-};
+    const totalRelevantOrders = deliveredOrders + pendingOrders || 1;
+    const deliveredPercent = Math.round(
+      (deliveredOrders / totalRelevantOrders) * 100
+    );
 
-    // -------------------------------
-// 🏆 Seller Performance & Rank
-// -------------------------------
-const sellerRevenueAgg = await Order.aggregate([
-  { $unwind: "$items" },
-  { $match: { "items.sellerId": sellerObjectId } },
-  { $group: { _id: null, revenue: { $sum: "$items.price" } } },
-]);
-const sellerRevenue = sellerRevenueAgg[0]?.revenue || 0;
+    const deliveredSummary = {
+      label: "Orders Delivered",
+      value: deliveredOrders,
+      percent: deliveredPercent,
+      color: "#10b981",
+      usd: "",
+    };
 
-// Global top seller (optional global highlight)
-const topSellerAgg = await Order.aggregate([
-  { $unwind: "$items" },
-  { $group: { _id: "$items.sellerId", revenue: { $sum: "$items.price" } } },
-  { $sort: { revenue: -1 } },
-  { $limit: 1 },
-]);
-const topSellerId = topSellerAgg[0]?._id?.toString();
-const topSellerRevenue = topSellerAgg[0]?.revenue || 0;
-const isTopSeller = topSellerId === sellerId;
+    // --------------------------------------------------
+    // 6️⃣ Seller Performance & Rank (PAID + DELIVERED)
+    // --------------------------------------------------
+    const sellerRevenueAgg = await Order.aggregate([
+      { $match: { status: "paid" } },
+      { $unwind: "$items" },
+      {
+        $match: {
+          "items.sellerId": sellerObjectId,
+          "items.status": "Delivered",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          revenue: {
+            $sum: { $multiply: ["$items.price", "$items.quantity"] },
+          },
+        },
+      },
+    ]);
+    const sellerRevenue = sellerRevenueAgg[0]?.revenue || 0;
 
-// Tier system
-let rank = "Bronze";
-let nextTier = "Silver";
-let nextThreshold = 1_000_000;
+    const topSellerAgg = await Order.aggregate([
+      { $match: { status: "paid" } },
+      { $unwind: "$items" },
+      {
+        $match: { "items.status": "Delivered" },
+      },
+      {
+        $group: {
+          _id: "$items.sellerId",
+          revenue: {
+            $sum: { $multiply: ["$items.price", "$items.quantity"] },
+          },
+        },
+      },
+      { $sort: { revenue: -1 } },
+      { $limit: 1 },
+    ]);
 
-if (sellerRevenue >= 2_000_000) {
-  rank = "Gold";
-  nextTier = "Top Seller";
-  nextThreshold = topSellerRevenue || 3_000_000;
-} else if (sellerRevenue >= 1_000_000) {
-  rank = "Silver";
-  nextTier = "Gold";
-  nextThreshold = 2_000_000;
-}
+    const topSellerId = topSellerAgg[0]?._id?.toString();
+    const topSellerRevenue = topSellerAgg[0]?.revenue || 0;
+    const isTopSeller = topSellerId === sellerId;
 
-const progressPercent = Math.min(
-  Math.round((sellerRevenue / nextThreshold) * 100),
-  100
-);
+    let rank = "Bronze";
+    let nextTier = "Silver";
+    let nextThreshold = 1_000_000;
 
-const sellerPerformance = {
-  isTopSeller,
-  rank,
-  revenue: sellerRevenue,
-  topSellerRevenue,
-  nextTier,
-  nextThreshold,
-  progressPercent,
-};
-    // -------------------------------
-    // 6️⃣ Active Products
-    // -------------------------------
+    if (sellerRevenue >= 2_000_000) {
+      rank = "Gold";
+      nextTier = "Top Seller";
+      nextThreshold = topSellerRevenue || 3_000_000;
+    } else if (sellerRevenue >= 1_000_000) {
+      rank = "Silver";
+      nextTier = "Gold";
+      nextThreshold = 2_000_000;
+    }
+
+    const progressPercent = Math.min(
+      Math.round((sellerRevenue / nextThreshold) * 100),
+      100
+    );
+
+    const sellerPerformance = {
+      isTopSeller,
+      rank,
+      revenue: sellerRevenue,
+      topSellerRevenue,
+      nextTier,
+      nextThreshold,
+      progressPercent,
+    };
+
+    // --------------------------------------------------
+    // 7️⃣ Active Products
+    // --------------------------------------------------
     const totalProducts = await Product.countDocuments({ sellerId });
-    const activeProducts = await Product.countDocuments({ sellerId, quantity: { $gt: 0 } });
-    const activePercent = totalProducts ? Math.round((activeProducts / totalProducts) * 100) : 0;
+    const activeProducts = await Product.countDocuments({
+      sellerId,
+      quantity: { $gt: 0 },
+    });
+
+    const activePercent = totalProducts
+      ? Math.round((activeProducts / totalProducts) * 100)
+      : 0;
 
     const summary = [
-      { label: "Active Products", value: activeProducts, percent: activePercent, color: "#3b82f6" },
+      {
+        label: "Active Products",
+        value: activeProducts,
+        percent: activePercent,
+        color: "#3b82f6",
+      },
     ];
 
-return NextResponse.json({
-  stats,
-  salesData,
-  donutData,
-  summary,
-  activeProductsSummary: [deliveredSummary],
-  sellerPerformance,
-});
-
+    return NextResponse.json({
+      stats,
+      salesData,
+      donutData,
+      summary,
+      activeProductsSummary: [deliveredSummary],
+      sellerPerformance,
+    });
   } catch (err) {
     console.error("Dashboard metrics error:", err);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
-
-
-
-

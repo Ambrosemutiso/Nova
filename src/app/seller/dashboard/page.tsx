@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ShoppingCart, DollarSign, Eye, BarChart3, Gift, Box } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, Tooltip, PieChart, Pie, Cell, Label, AreaChart, Area } from "recharts";
 import { motion } from "framer-motion";

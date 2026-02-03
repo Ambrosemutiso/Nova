@@ -39,6 +39,7 @@ interface ApiResponse {
   seller: SellerInfo;
   stats: SellerStats;
   awards: Award[];
+  leaderboard: LeaderboardEntry[];
 }
 
 // ✅ Badge structure for UI
@@ -51,6 +52,13 @@ interface Badge {
   reward: string;
 }
 
+interface LeaderboardEntry {
+  sellerId: string;
+  name?: string;
+  shopName?: string;
+  sales: number;
+}
+
 export default function AwardsPage() {
   const [badges, setBadges] = useState<Badge[]>([]);
   const [progress, setProgress] = useState<number>(0);
@@ -60,43 +68,39 @@ export default function AwardsPage() {
   const [sellerStats, setSellerStats] = useState<SellerStats | null>(null);
   const [sellerInfo, setSellerInfo] = useState<SellerInfo | null>(null);
 
-  // ✅ Fetch seller awards from backend
-  useEffect(() => {
-    const fetchAwards = async () => {
-      try {
-        const sellerId = localStorage.getItem('SellerUser');
-        if (!sellerId) return;
+const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
 
-        const res = await axios.get<ApiResponse>(
-          `/api/seller/awards?sellerId=${sellerId}`
-        );
+useEffect(() => {
+  const fetchAwards = async () => {
+    const sellerId = localStorage.getItem("SellerUser");
+    if (!sellerId) return;
 
-        const data = res.data;
-        setSellerInfo(data.seller);
-        setSellerStats(data.stats);
+    const res = await axios.get<ApiResponse>(
+      `/api/seller/awards?sellerId=${sellerId}`
+    );
 
-        // Convert backend awards into UI badges
-        const convertedBadges: Badge[] = data.awards.map((award) => ({
-          name: award.title,
-          icon: <FaMedal className="text-orange-500" />,
-          date: new Date().toLocaleDateString('en-GB', {
-            month: 'short',
-            year: 'numeric',
-          }),
-          desc: award.description,
-          type: 'All-Time',
-          reward: 'Ksh 1000',
-        }));
+    setSellerInfo(res.data.seller);
+    setSellerStats(res.data.stats);
+    setLeaderboard(res.data.leaderboard);
 
-        setBadges(convertedBadges);
-        setProgress(Math.min((data.stats.totalSales / 100000) * 100, 100));
-      } catch (error) {
-        console.error('❌ Error fetching awards:', error);
-      }
-    };
+const convertedBadges: Badge[] = res.data.awards.map((award) => ({
+  name: award.title,
+  icon: <FaMedal className="text-orange-500" />,
+  date: new Date().toLocaleDateString("en-GB", {
+    month: "short",
+    year: "numeric",
+  }),
+  desc: award.description,
+  type: "All-Time", // ✅ now locked
+  reward: "Ksh 1,000",
+}));
 
-    fetchAwards();
-  }, []);
+    setBadges(convertedBadges);
+    setProgress(Math.min((res.data.stats.totalSales / 100000) * 100, 100));
+  };
+
+  fetchAwards();
+}, []);
 
   // ✅ Filter logic
   const filteredBadges =
@@ -260,25 +264,26 @@ export default function AwardsPage() {
             </tr>
           </thead>
           <tbody>
-            {[
-              { rank: 1, name: 'ElectroTech', sales: 'Ksh 120,000', badge: <FaCrown className="text-yellow-400" /> },
-              { rank: 2, name: 'SwiftDeals', sales: 'Ksh 92,500', badge: <FaTrophy className="text-gray-400" /> },
-              { rank: 3, name: 'MegaShop', sales: 'Ksh 80,000', badge: <FaMedal className="text-orange-500" /> },
-            ].map((row, i) => (
-              <motion.tr
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="border-b hover:bg-orange-50"
-              >
-                <td className="p-2 font-semibold">{row.rank}</td>
-                <td className="p-2">{row.name}</td>
-                <td className="p-2">{row.sales}</td>
-                <td className="p-2 text-xl">{row.badge}</td>
-              </motion.tr>
-            ))}
-          </tbody>
+  {leaderboard.map((row, i) => (
+    <motion.tr
+      key={row.sellerId}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: i * 0.05 }}
+      className="border-b hover:bg-orange-50"
+    >
+      <td className="p-2 font-semibold">{i + 1}</td>
+      <td className="p-2">{row.shopName || row.name}</td>
+      <td className="p-2">Ksh {row.sales.toLocaleString()}</td>
+      <td className="p-2 text-xl">
+        {i === 0 ? <FaCrown className="text-yellow-400" /> :
+         i === 1 ? <FaTrophy className="text-gray-400" /> :
+         <FaMedal className="text-orange-500" />}
+      </td>
+    </motion.tr>
+  ))}
+</tbody>
+
         </table>
       </div>
     </div>

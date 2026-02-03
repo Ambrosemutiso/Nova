@@ -11,6 +11,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { toast } from "react-toastify";
+import GlobalPayModal from '@/components/payments/GlobalPayModal';
 
 export default function SellerSettingsPage() {
   const [seller, setSeller] = useState<any>(null);
@@ -44,45 +45,14 @@ export default function SellerSettingsPage() {
     setShowUpgradeModal(false); // ✅ ensure payment modal appears above
   };
 
-  const handleConfirmPayment = async () => {
-    if (!selectedPlan || !paymentMethod || !paymentPhone) {
-      toast.error("Please fill all details");
-      return;
-    }
-
-    try {
-      setActivatingShop(true);
-      let amount = selectedPlan === "basic" ? 1300 : 3000;
-      if (selectedPlan === "premium" && seller?.shop?.plan === "basic") {
-        const alreadyPaid = seller.shop?.amountPaid || 0;
-        amount = 3000 - alreadyPaid;
-      }
-
-      const res = await fetch("/api/seller/payment/initiate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sellerId: seller?._id,
-          plan: selectedPlan,
-          method: paymentMethod,
-          phone: paymentPhone,
-          amount,
-        }),
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        toast.success("Payment request sent! Complete on your phone.");
-        setShowPaymentModal(false);
-      } else {
-        toast.error(data.error || "Payment failed");
-      }
-    } catch (err) {
-      toast.error("Error initiating payment");
-    } finally {
-      setActivatingShop(false);
-    }
-  };
+const amount =
+  selectedPlan === "basic"
+    ? 1300
+    : selectedPlan === "premium"
+    ? seller?.shop?.plan === "basic"
+      ? 1700 // top-up from basic → premium
+      : 3000
+    : 0;
 
   const fadeIn = {
     hidden: { opacity: 0, y: 30 },
@@ -430,54 +400,23 @@ export default function SellerSettingsPage() {
               exit={{ scale: 0.9, opacity: 0 }}
               className="bg-white p-6 rounded-xl w-full max-w-md relative shadow-xl"
             >
-              <button
-                onClick={() => setShowPaymentModal(false)}
-                className="absolute top-3 right-4 text-gray-500 text-2xl font-bold"
-              >
-                ×
-              </button>
-              <h2 className="text-xl font-semibold text-center text-gray-800 mb-3">
-                {selectedPlan === "basic" ? "Basic Plan" : "Premium Plan"}
-              </h2>
-              <p className="text-center text-orange-600 font-semibold mb-4">
-                Amount: {selectedPlan === "basic" ? "Ksh 1300" : "Ksh 3000"}
-              </p>
-              <label className="block text-sm text-gray-600 mb-1">Phone Number</label>
-              <input
-                type="text"
-                value={paymentPhone}
-                onChange={(e) => setPaymentPhone(e.target.value)}
-                placeholder="2547xxxxxxxx"
-                className="w-full border px-3 py-2 rounded mb-4"
-              />
-              <label className="block text-sm text-gray-600 mb-1">Payment Method</label>
-              <div className="flex gap-4 mb-5">
-                <button
-                  onClick={() => setPaymentMethod("mpesa")}
-                  className={`flex-1 border rounded-lg px-3 py-2 ${
-                    paymentMethod === "mpesa" ? "border-green-500 bg-green-50" : ""
-                  }`}
-                >
-                  <img src="/mpesa.png" className="h-6 mx-auto" />
-                </button>
-                <button
-                  onClick={() => setPaymentMethod("airtel")}
-                  className={`flex-1 border rounded-lg px-3 py-2 ${
-                    paymentMethod === "airtel" ? "border-red-500 bg-red-50" : ""
-                  }`}
-                >
-                  <img src="/airtel.png" className="h-6 mx-auto" />
-                </button>
-              </div>
-              <button
-                onClick={handleConfirmPayment}
-                disabled={activatingShop}
-                className={`w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded-lg ${
-                  activatingShop ? "opacity-70 cursor-not-allowed" : ""
-                }`}
-              >
-                {activatingShop ? "Processing..." : "Confirm & Pay"}
-              </button>
+<GlobalPayModal
+  payload={{
+    amount,
+    items: [],
+    deliveryFee: 0,
+    county: '',
+    town: '',
+    userId: seller._id,
+    purpose: 'shop-upgrade',
+    refId: seller._id,
+  }}
+  onClose={() => setShowPaymentModal(false)}
+  onSuccess={() => {
+    toast.success('Shop upgraded successfully!');
+    window.location.reload();
+  }}
+/>
             </motion.div>
           </motion.div>
         )}

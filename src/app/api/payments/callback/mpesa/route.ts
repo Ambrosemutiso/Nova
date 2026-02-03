@@ -140,6 +140,41 @@ await WalletTransaction.create({
         );
         break;
       }
+
+case 'shop-upgrade': {
+  const Seller = (await import('@/app/models/seller')).default;
+
+  const seller = await Seller.findById(paymentIntent.refId);
+  if (!seller) break;
+
+  const amount = paymentIntent.amount;
+
+  let newPlan: 'basic' | 'premium' = 'basic';
+
+  if (amount >= 3000 || (seller.shop?.plan === 'basic' && amount >= 1700)) {
+    newPlan = 'premium';
+  }
+
+  const now = new Date();
+  const expiresAt = new Date();
+  expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+
+  await Seller.findByIdAndUpdate(seller._id, {
+    $set: {
+      'shop.isActive': true,
+      'shop.activatedAt': now,
+      'shop.expiresAt': expiresAt,
+      'shop.plan': newPlan,
+    },
+    $inc: {
+      'shop.amountPaid': amount,
+    },
+  });
+
+  break;
+}
+
+
     }
 
 

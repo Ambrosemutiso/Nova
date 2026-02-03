@@ -1,148 +1,157 @@
-import { NextRequest, NextResponse } from 'next/server';
-import mongoose from 'mongoose';
-import { dbConnect } from '@/lib/dbConnect';
-import Order from '@/app/models/orders';
-import Seller from '@/app/models/seller';
-
-interface SellerItem {
-  price: number;
-  quantity: number;
-  sellerId: mongoose.Types.ObjectId | string;
-  status?: string;
-}
-
-interface OrderDoc {
-  _id: mongoose.Types.ObjectId;
-  createdAt: Date;
-  status: string;
-  items: SellerItem[];
-}
+import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
+import { dbConnect } from "@/lib/dbConnect";
+import Order from "@/app/models/orders";
+import Seller from "@/app/models/seller";
 
 export async function GET(req: NextRequest) {
   try {
     await dbConnect();
 
     const { searchParams } = new URL(req.url);
-    const sellerId = searchParams.get('sellerId');
+    const sellerId = searchParams.get("sellerId");
 
     if (!sellerId) {
-      return NextResponse.json({ error: 'Seller ID is required' }, { status: 400 });
+      return NextResponse.json({ error: "Seller ID is required" }, { status: 400 });
     }
 
-    // ✅ Fetch all orders for this seller
-    const sellerOrders = (await Order.find({
-      'items.sellerId': sellerId,
-    }).lean()) as unknown as OrderDoc[];
+    const sellerObjectId = new mongoose.Types.ObjectId(sellerId);
 
-    if (!sellerOrders.length) {
-      return NextResponse.json({
-        message: 'No orders found for this seller',
-        awards: [],
-      });
-    }
+    // --------------------------------------------------
+    // 1️⃣ Aggregate PAID + DELIVERED seller items
+    // --------------------------------------------------
+    const sellerAgg = await Order.aggregate([
+      { $match: { status: "paid" } },
+      { $unwind: "$items" },
+      {
+        $match: {
+          "items.sellerId": sellerObjectId,
+          "items.status": "Delivered",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalSales: {
+            $sum: { $multiply: ["$items.price", "$items.quantity"] },
+          },
+          deliveredCount: { $sum: 1 },
+        },
+      },
+    ]);
 
-    // --- Step 1: Calculate key performance stats ---
-    let totalSales = 0;
-    let deliveredCount = 0;
-    let pendingCount = 0;
-    let cancelledCount = 0;
+    const totalSales = sellerAgg[0]?.totalSales || 0;
+    const deliveredCount = sellerAgg[0]?.deliveredCount || 0;
 
-    for (const order of sellerOrders) {
-      const sellerItems = order.items.filter(
-        (item) => String(item.sellerId) === String(sellerId)
-      );
+    // --------------------------------------------------
+    // 2️⃣ Total orders (paid orders containing seller items)
+    // --------------------------------------------------
+    const totalOrders = await Order.countDocuments({
+      status: "paid",
+      "items.sellerId": sellerObjectId,
+    });
 
-      const orderTotal = sellerItems.reduce(
-        (sum, item) => sum + (item.price || 0) * (item.quantity || 1),
-        0
-      );
-
-      totalSales += orderTotal;
-
-      for (const item of sellerItems) {
-        if (item.status === 'Delivered') deliveredCount++;
-        if (item.status === 'Pending') pendingCount++;
-        if (item.status === 'Cancelled') cancelledCount++;
-      }
-    }
-
-    const totalOrders = sellerOrders.length;
     const deliveryRate =
       totalOrders > 0 ? (deliveredCount / totalOrders) * 100 : 0;
-    const cancelRate =
-      totalOrders > 0 ? (cancelledCount / totalOrders) * 100 : 0;
 
-    // --- Step 2: Award Logic ---
+    // --------------------------------------------------
+    // 3️⃣ Award logic (STRICT & REAL)
+    // --------------------------------------------------
     const awards: { title: string; description: string; badge: string }[] = [];
 
-    // 🎖️ Top Seller
-    if (totalSales >= 100000) {
+    if (totalSales >= 100_000) {
       awards.push({
-        title: 'Top Seller Award',
-        description: 'Awarded for achieving over KSh 100,000 in total sales.',
-        badge: '🥇',
+        title: "Top Seller Award",
+        description: "Achieved over KSh 100,000 in paid & delivered sales.",
+        badge: "🥇",
       });
     }
 
-    // 🌟 Rising Star
-    if (totalSales >= 20000 && totalSales < 100000) {
+    if (totalSales >= 20_000 && totalSales < 100_000) {
       awards.push({
-        title: 'Rising Star',
-        description: 'Recognized for impressive early growth in sales.',
-        badge: '🌟',
+        title: "Rising Star",
+        description: "Strong growth from completed and paid orders.",
+        badge: "🌟",
       });
     }
 
-    // 🚚 Best Delivery
-    if (deliveryRate >= 90) {
+    if (deliveryRate >= 90 && deliveredCount >= 10) {
       awards.push({
-        title: 'Best Delivery Award',
-        description: 'Maintained an excellent delivery success rate above 90%.',
-        badge: '🚚',
+        title: "Best Delivery",
+        description: "90%+ delivery success on paid orders.",
+        badge: "🚚",
       });
     }
 
-    // ❤️ Customer Commitment
-    if (pendingCount === 0 && cancelledCount === 0) {
+    if (deliveredCount >= 50) {
       awards.push({
-        title: 'Customer Commitment',
-        description: 'All orders successfully fulfilled with zero pending or cancelled ones.',
-        badge: '❤️',
+        title: "Consistency Award",
+        description: "50+ completed deliveries.",
+        badge: "🔥",
       });
     }
 
-    // 🔥 Consistency
-    if (sellerOrders.length >= 50) {
-      awards.push({
-        title: 'Consistency Award',
-        description: 'Awarded for completing over 50 orders successfully.',
-        badge: '🔥',
-      });
-    }
+    // --------------------------------------------------
+    // 4️⃣ Dynamic Leaderboard (Top 10)
+    // --------------------------------------------------
+    const leaderboard = await Order.aggregate([
+      { $match: { status: "paid" } },
+      { $unwind: "$items" },
+      { $match: { "items.status": "Delivered" } },
+      {
+        $group: {
+          _id: "$items.sellerId",
+          sales: {
+            $sum: { $multiply: ["$items.price", "$items.quantity"] },
+          },
+        },
+      },
+      { $sort: { sales: -1 } },
+      { $limit: 10 },
+      {
+        $lookup: {
+          from: "sellers",
+          localField: "_id",
+          foreignField: "_id",
+          as: "seller",
+        },
+      },
+      { $unwind: "$seller" },
+      {
+        $project: {
+          sellerId: "$_id",
+          shopName: "$seller.shopName",
+          name: "$seller.name",
+          sales: 1,
+        },
+      },
+    ]);
 
-    // --- Step 3: Attach basic seller info (optional) ---
-    const seller = await Seller.findById(sellerId).select('name shopName').lean();
+    // --------------------------------------------------
+    // 5️⃣ Seller basic info
+    // --------------------------------------------------
+    const seller = await Seller.findById(sellerId)
+      .select("name shopName")
+      .lean();
 
     return NextResponse.json(
       {
-        seller: seller || { name: 'Unknown Seller' },
+        seller,
         stats: {
           totalSales,
           totalOrders,
           deliveredCount,
-          pendingCount,
-          cancelledCount,
           deliveryRate: deliveryRate.toFixed(1),
-          cancelRate: cancelRate.toFixed(1),
         },
         awards,
+        leaderboard,
       },
       { status: 200 }
     );
   } catch (error: any) {
-    console.error('❌ Error in awards route:', error);
+    console.error("Awards route error:", error);
     return NextResponse.json(
-      { error: 'Server error', details: error.message },
+      { error: "Server error", details: error.message },
       { status: 500 }
     );
   }

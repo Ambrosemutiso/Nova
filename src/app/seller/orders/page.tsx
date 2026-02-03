@@ -196,153 +196,155 @@ const handleDownloadLabelPDF = () => {
   }
 
   try {
-const pdf = new jsPDF({
-  orientation: 'portrait',
-  unit: 'mm',
-  format: 'a5', // ✅ switch from 'a6' to 'a5'
-});
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a5',
+    });
 
-    const pageWidth = 105;
-    let y = 8;
-
-/* =========================
-   🟧 HEADER (Logo + Contact)
-   ========================= */
-pdf.setFillColor(255, 128, 0);
-pdf.roundedRect(5, y, pageWidth - 10, 20, 3, 3, 'F');
-
-// Logo (left)
-pdf.addImage(
-  NOVAXMAX_LOGO_BASE64,
-  'PNG',
-  8,
-  y + 4,
-  18,
-  12
-);
-
-// Company Info (right)
-pdf.setTextColor(255);
-pdf.setFontSize(15);
-pdf.setFont('helvetica', 'bold');
-pdf.text('NOVAXMAX DELIVERY LABEL', 30, y + 9);
-
-pdf.setFontSize(7);
-pdf.setFont('helvetica', 'normal');
-pdf.text('www.novaxmax.com | support@novaxmax.com', 30, y + 13);
-pdf.text('+254798437808 | +254787055840', 30, y + 17);
+    const pageWidth = 148; // A5 width
+    let y = 6;
 
     /* =========================
-       👤 CUSTOMER CARD
-       ========================= */
-    pdf.setTextColor(0);
-    pdf.setFontSize(9);
-    pdf.setFont('helvetica', 'bold');
-    pdf.text('Customer Information', 7, y);
+       🟧 HEADER
+    ========================= */
+    pdf.setFillColor(255, 128, 0);
+    pdf.roundedRect(6, y, pageWidth - 12, 14, 3, 3, 'F');
 
-    y += 2;
+    pdf.addImage(NOVAXMAX_LOGO_BASE64, 'PNG', 9, y + 3, 14, 8);
+
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(13);
+    pdf.text('DELIVERY LABEL', pageWidth - 9, y + 9, { align: 'right' });
+
+    y += 20;
+
+    /* =========================
+       👤 CUSTOMER + ORDER META
+    ========================= */
+    pdf.setFillColor(248, 248, 248); // light grey background
     pdf.setDrawColor(220);
-    pdf.roundedRect(5, y + 2, pageWidth - 10, 26, 3, 3);
+    pdf.roundedRect(6, y, pageWidth - 12, 26, 3, 3, 'FD');
+
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Customer', 9, y + 6);
+    pdf.text('Order', pageWidth / 2 + 2, y + 6);
 
     pdf.setFont('helvetica', 'normal');
     pdf.text(
       `Name: ${selectedLabelOrder.customerInfo.firstName} ${selectedLabelOrder.customerInfo.lastName}`,
-      8,
-      y + 9
+      9,
+      y + 11
     );
     pdf.text(
       `Phone: ${selectedLabelOrder.customerInfo.phone}`,
-      8,
-      y + 14
-    );
-    pdf.text(
-      `County: ${selectedLabelOrder.customerInfo.county || 'N/A'}`,
-      8,
-      y + 19
+      9,
+      y + 16
     );
     pdf.text(
       `Town: ${selectedLabelOrder.customerInfo.town || 'N/A'}`,
-      8,
-      y + 24
+      9,
+      y + 21
     );
 
-    y += 34;
-
-/* =========================
-   📦 ITEMS TABLE (autoTable)
-   ========================= */
-pdf.setFont('helvetica', 'bold');
-pdf.setFontSize(9);
-pdf.text('Order Items', 7, y);
-
-autoTable(pdf, {
-  startY: y + 4,
-  margin: { left: 5, right: 5 },
-  head: [['Item', 'Qty', 'Subtotal']],
-  body: selectedLabelOrder.items.map((item) => [
-    item.name,
-    item.quantity.toString(),
-    `Ksh ${(item.price * item.quantity).toLocaleString()}`,
-  ]),
-  theme: 'grid',
-  styles: {
-    fontSize: 8,
-    cellPadding: 2,
-  },
-  headStyles: {
-    fillColor: [255, 128, 0],
-    textColor: 255,
-    fontStyle: 'bold',
-  },
-});
-
-y = (pdf as any).lastAutoTable.finalY + 6;
-
-pdf.setFont('helvetica', 'bold');
-pdf.setFontSize(9);
-pdf.text(
-  `Total: Ksh ${selectedLabelOrder.totalAmount.toLocaleString()}`,
-  pageWidth - 8,
-  y,
-  { align: 'right' }
-);
-
-y += 6;
-
-
-    /* =========================
-       🚚 TRACKING CARD
-       ========================= */
-    pdf.setFontSize(9);
-    pdf.text('Tracking Information', 7, y);
-
-    y += 2;
-    pdf.roundedRect(5, y + 2, pageWidth - 10, 34, 3, 3);
-
-    pdf.setFont('helvetica', 'normal');
-    pdf.text(
-      `Tracking: ${selectedLabelOrder.trackingNumber}`,
-      8,
-      y + 10
-    );
     pdf.text(
       `Order ID: ${selectedLabelOrder._id.slice(-6)}`,
-      8,
-      y + 15
+      pageWidth / 2 + 2,
+      y + 11
+    );
+    pdf.text(
+      `Tracking: ${selectedLabelOrder.trackingNumber}`,
+      pageWidth / 2 + 2,
+      y + 16
+    );
+    pdf.text(
+      `Date: ${new Date(selectedLabelOrder.createdAt).toLocaleDateString()}`,
+      pageWidth / 2 + 2,
+      y + 21
     );
 
-    pdf.addImage(barcodeSrc, 'PNG', 8, y + 18, 60, 12);
-    pdf.addImage(qrSrc, 'PNG', pageWidth - 28, y + 18, 18, 18);
+    y += 32;
+
+    /* =========================
+       📦 ORDER ITEMS
+    ========================= */
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(9);
+    pdf.text('Order Items', 6, y);
+    y += 3;
+
+    autoTable(pdf, {
+      startY: y,
+      margin: { left: 6, right: 6 },
+      head: [['Item', 'Qty', 'Subtotal']],
+      body: selectedLabelOrder.items.map(item => [
+        item.name.length > 40 ? item.name.slice(0, 40) + '…' : item.name,
+        item.quantity.toString(),
+        `Ksh ${(item.price * item.quantity).toLocaleString()}`,
+      ]),
+      theme: 'grid',
+      styles: {
+        fontSize: 7,
+        cellPadding: 1.5,
+        overflow: 'linebreak',
+        textColor: 20,
+      },
+      headStyles: {
+        fillColor: [255, 237, 213], // soft orange tint
+        textColor: 0,
+        fontStyle: 'bold',
+      },
+    });
+
+    y = (pdf as any).lastAutoTable.finalY + 4;
+
+    /* =========================
+       💰 TOTAL
+    ========================= */
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(9);
+    pdf.setTextColor(0, 0, 0);
+    pdf.text(
+      `TOTAL: Ksh ${selectedLabelOrder.totalAmount.toLocaleString()}`,
+      pageWidth - 6,
+      y,
+      { align: 'right' }
+    );
+
+    y += 6;
+
+    /* =========================
+       🚚 TRACKING ZONE
+    ========================= */
+    pdf.setFillColor(245, 247, 250);
+    pdf.roundedRect(6, y, pageWidth - 12, 32, 3, 3, 'F');
+
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('Tracking Number', 9, y + 6);
+
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(selectedLabelOrder.trackingNumber!, 9, y + 11);
+
+    pdf.addImage(barcodeSrc, 'PNG', 9, y + 15, 70, 10);
+    pdf.addImage(qrSrc, 'PNG', pageWidth - 30, y + 12, 18, 18);
+
+    y += 36;
 
     /* =========================
        🧾 FOOTER
-       ========================= */
+    ========================= */
     pdf.setFontSize(7);
-    pdf.setTextColor(120);
+    pdf.setTextColor(90, 90, 90);
     pdf.text(
       'www.novaxmax.com • support@novaxmax.com',
       pageWidth / 2,
-      145,
+      148,
       { align: 'center' }
     );
 
@@ -352,7 +354,6 @@ y += 6;
     toast.error('Failed to generate PDF');
   }
 };
-
 
 
   // ✅ Extract available cities dynamically
