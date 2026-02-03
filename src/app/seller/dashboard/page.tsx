@@ -49,76 +49,58 @@ function StatsCard({ id, title, value, change, icon, trend, series }: any) {
 
 
 // ---------- Sales & Views Chart ----------
-function SalesViewsChart({ data }: { data: any[] }) {
-  const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-  ];
+function SalesChart({ data }: { data: any[] }) {
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-  // Normalize data so each month exists and apply a minimum bar height for visibility
-const chartData = months.map((m, idx) => {
-  const monthData = data[idx] || { sales: 0, views: 0 };
-  const safeSales = Number(monthData.sales) || 0;
-  const safeViews = Number(monthData.views) || 0;
-
-  // minimum 0.5 for visibility
-  const adjustedViews = safeViews === 0 && safeSales > 0 ? safeSales * 0.05 : safeViews || 0;
-
-  return { name: m, sales: safeSales, views: adjustedViews };
-});
-
+  const chartData = months.map((m, i) => ({
+    name: m,
+    sales: Number(data[i]?.sales) || 0,
+  }));
 
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-      <h2 className="text-gray-700 font-semibold mb-4">Sales & Views (Yearly)</h2>
-      <div style={{ width: "100%", height: 280 }}>
+      <h2 className="font-semibold text-gray-700 mb-4">Sales (Yearly)</h2>
+      <div style={{ width: "100%", height: 260 }}>
         <ResponsiveContainer>
-          <BarChart
-            data={chartData}
-            margin={{ top: 20, right: 30, left: 10, bottom: 20 }}
-            barCategoryGap="25%" // ✅ better spacing
-          >
-            <XAxis
-              dataKey="name"
-              stroke="#94a3b8"
-              tick={{ fontSize: 12 }}
-              interval={0} // ✅ shows all labels (Jan–Dec)
-            />
-<Tooltip
-  contentStyle={{ borderRadius: "10px" }}
-  formatter={(value: any) => Number(value)?.toLocaleString() || "0"}
-/>
-
-            <Bar
-              dataKey="sales"
-              fill="#f97316"
-              name="Sales"
-              radius={[6, 6, 0, 0]}
-            />
-            <Bar
-              dataKey="views"
-              fill="#3b82f6"
-              name="Views"
-              radius={[6, 6, 0, 0]}
-            />
+          <BarChart data={chartData}>
+            <XAxis dataKey="name" />
+            <Tooltip formatter={(v:any)=>v.toLocaleString()} />
+            <Bar dataKey="sales" fill="#f97316" radius={[6,6,0,0]} />
           </BarChart>
         </ResponsiveContainer>
-      </div>
-
-      {/* Legend */}
-      <div className="flex justify-center gap-4 mt-3 text-xs text-gray-600">
-        <div className="flex items-center gap-1">
-          <span className="w-3 h-3 bg-orange-500 rounded-sm"></span> Sales
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="w-3 h-3 bg-blue-500 rounded-sm"></span> Views
-        </div>
       </div>
     </div>
   );
 }
 
+function ViewsChart({ data }: { data: any[] }) {
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
+  const chartData = months.map((m, i) => ({
+    name: m,
+    views: Number(data[i]?.views) || 0,
+  }));
+
+  return (
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+      <h2 className="font-semibold text-gray-700 mb-4">Product Views (Yearly)</h2>
+      <div style={{ width: "100%", height: 260 }}>
+        <ResponsiveContainer>
+          <AreaChart data={chartData}>
+            <Tooltip formatter={(v:any)=>v.toLocaleString()} />
+            <Area
+              type="monotone"
+              dataKey="views"
+              stroke="#3b82f6"
+              fill="#3b82f6"
+              fillOpacity={0.2}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
 
 
 // ---------- Order Status Donut ----------
@@ -197,6 +179,40 @@ function MiniDonut({ label, value, color, percent, usd }: any) {
   );
 }
 
+function FollowersDonut({ value }: { value: number }) {
+  const data = [{ name: "Followers", value }];
+  const COLOR = "#8b5cf6";
+
+  return (
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+      <h3 className="font-semibold text-gray-700 mb-4">Followers</h3>
+      <div style={{ width: 160, height: 160 }} className="mx-auto">
+        <ResponsiveContainer>
+          <PieChart>
+            <Pie
+              data={data}
+              dataKey="value"
+              innerRadius={55}
+              outerRadius={70}
+              startAngle={90}
+              endAngle={-270}
+            >
+              <Cell fill={COLOR} />
+              <Label
+                value={value.toLocaleString()}
+                position="center"
+                fontSize={20}
+                fontWeight={700}
+                fill="#374151"
+              />
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
 // ---------- Main Dashboard ----------
 export default function DashboardPage() {
   const [stats, setStats] = useState<any[]>([]);
@@ -204,6 +220,7 @@ export default function DashboardPage() {
   const [orderStatus, setOrderStatus] = useState<any[]>([]);
   const [summary, setSummary] = useState<any[]>([]);
   const [sellerPerformance, setSellerPerformance] = useState<any>(null);
+  const [followersDonut, setFollowersDonut] = useState<any[]>([]);
 
 
   useEffect(() => {
@@ -224,6 +241,7 @@ export default function DashboardPage() {
         setOrderStatus(data.donutData || []);
         setSummary([...(data.summary || []), ...(data.activeProductsSummary || [])]);
         setSellerPerformance(data.sellerPerformance || null);
+        setFollowersDonut(data.followersDonut || []);
       } catch (err) {
         console.error("Dashboard metrics error:", err);
       }
@@ -310,7 +328,11 @@ export default function DashboardPage() {
 
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <SalesViewsChart data={salesData} />
+            <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <SalesChart data={salesData} />
+  <ViewsChart data={salesData} />
+</section>
+
           </div>
 
           <div className="space-y-6">
@@ -318,6 +340,7 @@ export default function DashboardPage() {
             <div className="grid grid-cols-2 gap-4">
               {summary.map((s) => <MiniDonut key={s.label} {...s} />)}
             </div>
+            <FollowersDonut value={followersDonut[0]?.value || 0} />
           </div>
         </section>
       </main>

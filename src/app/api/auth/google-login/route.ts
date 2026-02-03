@@ -5,23 +5,22 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'novaxpress_secret_123'; // Replace in production
+const JWT_SECRET = process.env.JWT_SECRET || 'secret_ecom';
 
-// --- Configure Nodemailer (Gmail) ---
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-        type: "OAuth2",
-        user: process.env.GMAIL_USER,
-        clientId: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
-  },
-});
+    // ✅ Zoho SMTP transporter
+    const transporter = nodemailer.createTransport({
+      host: process.env.ZOHO_SMTP_HOST,
+      port: Number(process.env.ZOHO_SMTP_PORT),
+      secure: false, // TLS
+      auth: {
+        user: process.env.ZOHO_SMTP_USER,
+        pass: process.env.ZOHO_SMTP_PASS,
+      },
+    });
 
 // --- Helper: Send Reset Email ---
 async function sendResetEmail(email: string, name: string, role: string, token: string) {
-  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://novaxpress.co.ke';
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://novaxmax.com';
   const resetLink = `${BASE_URL}/reset-password?token=${token}`;
 
   const brand = {
@@ -40,153 +39,222 @@ async function sendResetEmail(email: string, name: string, role: string, token: 
   const gradientEnd = isBuyer ? '#fb923c' : '#3b82f6';
 
   const mailOptions = {
-    from: `"NovaXpress" <${process.env.GMAIL_USER}>`,
+    from: `"NovaXmax" <${process.env.ZOHO_SMTP_USER}>`,
     to: email,
-    subject: 'Reset Your NovaXpress Password',
+    subject: 'Reset Your NovaXmax Password',
     html: `
     <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <meta name="color-scheme" content="light dark" />
-      <title>Password Reset</title>
-      <style>
-        body {
-          margin: 0;
-          padding: 0;
-          background-color: ${brand.neutral};
-          color: ${brand.textDark};
-          font-family: 'Segoe UI', Arial, sans-serif;
-        }
-        .container {
-          max-width: 600px;
-          margin: 40px auto;
-          background-color: #ffffff;
-          border-radius: 14px;
-          overflow: hidden;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        }
-        @keyframes gradientShift {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-        .header {
-          background: linear-gradient(135deg, ${gradientStart}, ${gradientEnd}, ${
-      isBuyer ? '#facc15' : '#06b6d4'
-    });
-          background-size: 300% 300%;
-          animation: gradientShift 6s ease infinite;
-          padding: 25px 0;
-          text-align: center;
-        }
-        .header img {
-          margin-bottom: 8px;
-        }
-        .header h1 {
-          color: #fff;
-          font-size: 22px;
-          margin: 0;
-          letter-spacing: 0.5px;
-        }
-        .body {
-          padding: 30px 40px;
-        }
-        .body h2 {
-          color: ${primary};
-          margin-bottom: 10px;
-        }
-        .body p {
-          font-size: 15px;
-          line-height: 1.6;
-        }
-        .cta {
-          text-align: center;
-          margin: 30px 0;
-        }
-        .cta a {
-          background: ${primary};
-          color: #fff !important;
-          padding: 14px 28px;
-          border-radius: 8px;
-          text-decoration: none;
-          font-weight: bold;
-          display: inline-block;
-          transition: all 0.3s ease;
-        }
-        .cta a:hover {
-          opacity: 0.9;
-        }
-        .footer {
-          background: ${brand.neutral};
-          padding: 25px;
-          text-align: center;
-          font-size: 13px;
-          color: ${brand.textLight};
-        }
-        .divider {
-          height: 1px;
-          background-color: #e5e7eb;
-          margin: 25px 0 15px;
-        }
-        @media (prefers-color-scheme: dark) {
-          body {
-            background-color: ${brand.darkBg} !important;
-            color: #e6edf3 !important;
-          }
-          .container {
-            background-color: ${brand.darkCard} !important;
-          }
-          .footer {
-            background: ${brand.darkBg} !important;
-            color: #999 !important;
-          }
-          .divider {
-            background-color: #30363d !important;
-          }
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <!-- Header -->
-        <div class="header">
-          <img src="https://novaxpress.co.ke/Logo.jpg" alt="NovaXpress Logo" width="120" />
-          <h1>Password Reset Request</h1>
-        </div>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Reset Your Password</title>
 
-        <!-- Body -->
-        <div class="body">
-          <h2>Hello ${name || 'there'},</h2>
-          <p>We received a request to reset your NovaXpress password.</p>
-          <p>Click the button below to create a new password:</p>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: ${brand.neutral};
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: ${brand.textDark};
+    }
 
-          <div class="cta">
-            <a href="${resetLink}" target="_blank">Reset Password 🔒</a>
-          </div>
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: #ffffff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+    }
 
-          <p style="font-size: 14px; color: #666;">
-            This link will expire in <strong>15 minutes</strong> for your security.
-            <br/><br/>
-            If you didn’t request a password reset, you can safely ignore this email — your account will remain secure.
-          </p>
-        </div>
+    .header {
+      background: linear-gradient(135deg, ${gradientStart}, ${gradientEnd});
+      padding: 30px 20px;
+      text-align: center;
+    }
 
-        <!-- Footer -->
-        <div class="footer">
-          <div class="divider"></div>
-          <p>Need help? Contact us at 
-            <a href="mailto:support@novaxpress.shop" style="color:${primary};text-decoration:none;">support@novaxpress.shop</a>
-          </p>
-          <p style="font-size:12px;margin-top:10px;">
-            © ${new Date().getFullYear()} NovaXpress. All rights reserved.
-          </p>
-        </div>
+    .header img {
+      width: 120px;
+      margin-bottom: 10px;
+    }
+
+    .header h1 {
+      color: #ffffff;
+      font-size: 22px;
+      margin: 0;
+      font-weight: 600;
+    }
+
+    .body {
+      padding: 36px 42px;
+    }
+
+    .body h2 {
+      font-size: 20px;
+      margin-bottom: 12px;
+      color: ${primary};
+    }
+
+    .body p {
+      font-size: 15px;
+      line-height: 1.7;
+      margin-bottom: 14px;
+    }
+
+    .cta {
+      text-align: center;
+      margin: 32px 0;
+    }
+
+    .cta a {
+      display: inline-block;
+      background: ${primary};
+      color: #ffffff !important;
+      padding: 16px 32px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 15px;
+      text-decoration: none;
+    }
+
+    .cta-note {
+      font-size: 13px;
+      color: ${brand.textLight};
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    .security-box {
+      background: #f9fafb;
+      border-left: 4px solid ${primary};
+      padding: 16px 18px;
+      border-radius: 8px;
+      margin: 26px 0;
+      font-size: 14px;
+    }
+
+    .fallback {
+      word-break: break-all;
+      font-size: 13px;
+      color: ${brand.textLight};
+      margin-top: 16px;
+    }
+
+    .divider {
+      height: 1px;
+      background: #e5e7eb;
+      margin: 28px 0;
+    }
+
+    .footer {
+      background: ${brand.neutral};
+      padding: 24px;
+      text-align: center;
+      font-size: 12px;
+      color: ${brand.textLight};
+    }
+
+    .footer a {
+      color: ${primary};
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: ${brand.darkBg};
+        color: #e6edf3;
+      }
+
+      .container {
+        background: ${brand.darkCard};
+        box-shadow: none;
+      }
+
+      .security-box {
+        background: #0b1220;
+      }
+
+      .footer {
+        background: ${brand.darkBg};
+      }
+
+      .divider {
+        background: #30363d;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <!-- Header -->
+    <div class="header">
+      <img src="https://novaxmax.com/Logo.png" alt="NovaXmax Logo" />
+      <h1>Password Reset Request</h1>
+    </div>
+
+    <!-- Body -->
+    <div class="body">
+      <h2>Hello ${name || 'there'},</h2>
+
+      <p>
+        We received a request to reset the password for your
+        <strong>NovaXmax</strong> account.
+      </p>
+
+      <p>
+        To keep your account secure, this request was generated using your
+        email address and is valid for a short time only.
+      </p>
+
+      <div class="cta">
+        <a href="${resetLink}" target="_blank">
+          Reset Password
+        </a>
       </div>
-    </body>
-    </html>
-    `,
+
+      <div class="cta-note">
+        ⏱ This link expires in <strong>15 minutes</strong>
+      </div>
+
+      <div class="security-box">
+        🔐 <strong>Security reminder:</strong><br />
+        If you did not request this password reset, please ignore this email.
+        No changes will be made to your account unless you click the button above.
+      </div>
+
+      <p class="fallback">
+        Having trouble with the button? Copy and paste this link into your browser:<br />
+        <a href="${resetLink}">${resetLink}</a>
+      </p>
+
+      <div class="divider"></div>
+
+      <p>
+        Need help or suspect suspicious activity?
+        Contact our support team at
+        <a href="mailto:support@novaxmax.com">support@novaxmax.com</a>
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>
+        © ${new Date().getFullYear()} <strong>NovaXmax</strong>. All rights reserved.
+      </p>
+      <p>
+        This email was sent to <strong>${email}</strong> because a password reset
+        was requested for your account.
+      </p>
+    </div>
+
+  </div>
+</body>
+</html>`,
   };
 
   await transporter.sendMail(mailOptions);

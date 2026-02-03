@@ -5,19 +5,17 @@ export async function POST(req: NextRequest) {
   try {
     const { email, name, role } = await req.json();
 
-    // Setup transporter
+    // ✅ Zoho SMTP transporter
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: process.env.ZOHO_SMTP_HOST,
+      port: Number(process.env.ZOHO_SMTP_PORT),
+      secure: false, // TLS
       auth: {
-        type: "OAuth2",
-        user: process.env.GMAIL_USER,
-        clientId: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
+        user: process.env.ZOHO_SMTP_USER,
+        pass: process.env.ZOHO_SMTP_PASS,
       },
     });
 
-    // Brand colors
     const brand = {
       orange: "#f97316",
       blue: "#2563eb",
@@ -37,7 +35,6 @@ export async function POST(req: NextRequest) {
       ? "Welcome to NovaXmax — Let’s Start Shopping!"
       : "Welcome to NovaXmax Seller Hub — Time to Grow Your Business!";
 
-    // HTML Email Template
     const html = `
     <!DOCTYPE html>
     <html lang="en">
@@ -262,8 +259,9 @@ export async function POST(req: NextRequest) {
     `;
 
     await transporter.sendMail({
-      from: `"NovaXmax" <${process.env.GMAIL_USER}>`,
+      from: `"NovaXmax" <no-reply@novaxmax.com>`,
       to: email,
+      replyTo: "support@novaxmax.com",
       subject,
       html,
     });
@@ -271,6 +269,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("❌ Error sending welcome email:", error);
-    return NextResponse.json({ error: "Failed to send email" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to send email" },
+      { status: 500 }
+    );
   }
 }

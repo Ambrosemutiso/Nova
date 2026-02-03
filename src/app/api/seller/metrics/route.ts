@@ -39,8 +39,8 @@ export async function POST(req: NextRequest) {
     const totalRevenue = orders.reduce((acc, order) => acc + (order.paidAmount || 0), 0);
     const deliveredOrders = orders.filter((o) => o.status === 'Delivered').length;
     const cancelledOrders = orders.filter((o) => o.status === 'Cancelled').length;
-    const pendingOrders = orders.filter((o) => o.status === 'Pending').length;
-    const paidOrders = orders.filter((o) => o.status === 'Paid').length;
+    const pendingOrders = orders.filter((o) => o.status === 'pending').length;
+    const paidOrders = orders.filter((o) => o.status === 'paid').length;
 
     // ===== Finance Metrics =====
     let subtotalRevenue = 0;
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     const platformFees = subtotalRevenue * platformFeeRate;
     const netEarnings = subtotalRevenue - platformFees;
     const pendingPayouts = orders
-      .filter((o) => o.status === 'Pending')
+      .filter((o) => o.status === 'pending')
       .reduce((acc, o) => acc + (o.paidAmount || 0), 0);
 
     // ===== Monthly Chart Data =====

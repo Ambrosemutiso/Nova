@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    if (deliveryRate >= 90 && deliveredCount >= 10) {
+    if (deliveryRate >= 90 && deliveredCount >= 5) {
       awards.push({
         title: "Best Delivery",
         description: "90%+ delivery success on paid orders.",

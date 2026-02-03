@@ -3,6 +3,7 @@ import { dbConnect } from "@/lib/dbConnect";
 import Order from "@/app/models/orders";
 import Product from "@/app/models/product";
 import mongoose from "mongoose";
+import Seller from '@/app/models/seller';
 
 export async function GET(req: NextRequest) {
   try {
@@ -282,6 +283,15 @@ export async function GET(req: NextRequest) {
       progressPercent,
     };
 
+        const seller = await Seller.findById(sellerId).select('followers');
+        const totalFollowers = seller?.followers?.length || 0;
+
+  const followersDonut = [
+  { name: "Followers", value: totalFollowers },
+  { name: "Remaining", value: Math.max(0, 100 - totalFollowers) }, // visual padding
+];
+
+    
     // --------------------------------------------------
     // 7️⃣ Active Products
     // --------------------------------------------------
