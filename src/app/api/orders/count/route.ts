@@ -1,36 +1,50 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { dbConnect } from '@/lib/dbConnect';
-import Order from '@/app/models/orders';
+import { NextRequest, NextResponse } from "next/server";
+import { dbConnect } from "@/lib/dbConnect";
+import Order from "@/app/models/orders";
+import mongoose from "mongoose";
 
-// POST /api/orders/count
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
     await dbConnect();
 
-    const { sellerId } = await req.json();
+    const { searchParams } = new URL(req.url);
+    const sellerId = searchParams.get("sellerId");
     if (!sellerId) {
-      return NextResponse.json(
-        { message: 'sellerId is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing sellerId" }, { status: 400 });
     }
 
-    const count = await Order.countDocuments({
-      status: 'paid', // ✅ order must be paid
-      items: {
-        $elemMatch: {
-          sellerId,
-          status: { $ne: 'Delivered' }, // ✅ pending / in-progress
+    const sellerObjectId = new mongoose.Types.ObjectId(sellerId);
+
+    // --------------------------------------------------
+    // Completed vs Pending (ITEM-BASED)
+    // --------------------------------------------------
+    const statusAgg = await Order.aggregate([
+      { $match: { status: "paid" } },
+      { $unwind: "$items" },
+      {
+        $match: {
+          "items.sellerId": sellerObjectId,
+          "items.status": { $in: ["Delivered", "Pending"] },
         },
       },
-    });
+      {
+        $group: {
+          _id: "$items.status",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
 
-    return NextResponse.json({ count });
+    const delivered = statusAgg.find(s => s._id === "Delivered")?.count || 0;
+    const pending = statusAgg.find(s => s._id === "Pending")?.count || 0;
+
+    return NextResponse.json({
+      deliveredOrders: delivered,
+      pendingOrders: pending,
+      totalActiveOrders: delivered + pending,
+    });
   } catch (err) {
-    console.error('❌ Error counting seller orders:', err);
-    return NextResponse.json(
-      { message: 'Failed to count orders' },
-      { status: 500 }
-    );
+    console.error("Error counting orders:", err);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

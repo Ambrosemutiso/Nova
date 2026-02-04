@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { ShoppingCart, DollarSign, Eye, BarChart3, Gift, Box } from "lucide-react";
-import { ResponsiveContainer, BarChart, Bar, XAxis, Tooltip, PieChart, Pie, Cell, Label, AreaChart, Area } from "recharts";
+import { ResponsiveContainer,CartesianGrid, Tooltip, PieChart, Pie, Cell, Label, AreaChart, Area } from "recharts";
 import { motion } from "framer-motion";
 
 const iconMap: Record<string, any> = { ShoppingCart, DollarSign, Eye, BarChart3, Box };
@@ -60,18 +60,26 @@ function SalesChart({ data }: { data: any[] }) {
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
       <h2 className="font-semibold text-gray-700 mb-4">Sales (Yearly)</h2>
+
       <div style={{ width: "100%", height: 260 }}>
         <ResponsiveContainer>
-          <BarChart data={chartData}>
-            <XAxis dataKey="name" />
-            <Tooltip formatter={(v:any)=>v.toLocaleString()} />
-            <Bar dataKey="sales" fill="#f97316" radius={[6,6,0,0]} />
-          </BarChart>
+          <AreaChart data={chartData}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <Tooltip cursor={{ strokeDasharray: "3 3" }} />
+            <Area
+              type="monotone"
+              dataKey="sales"
+              stroke="#f97316"
+              fill="#f97316"
+              fillOpacity={0.2}
+            />
+          </AreaChart>
         </ResponsiveContainer>
       </div>
     </div>
   );
 }
+
 
 function ViewsChart({ data }: { data: any[] }) {
   const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -87,7 +95,8 @@ function ViewsChart({ data }: { data: any[] }) {
       <div style={{ width: "100%", height: 260 }}>
         <ResponsiveContainer>
           <AreaChart data={chartData}>
-            <Tooltip formatter={(v:any)=>v.toLocaleString()} />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <Tooltip cursor={{ strokeDasharray: "3 3" }} />
             <Area
               type="monotone"
               dataKey="views"
@@ -180,12 +189,17 @@ function MiniDonut({ label, value, color, percent, usd }: any) {
 }
 
 function FollowersDonut({ value }: { value: number }) {
-  const data = [{ name: "Followers", value }];
-  const COLOR = "#8b5cf6";
+  const data = [
+    { name: "Followers", value },
+    { name: "Spacer", value: Math.max(1, 100 - value) }, // 👈 prevents empty pie
+  ];
+
+  const COLORS = ["#8b5cf6", "#e5e7eb"];
 
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
       <h3 className="font-semibold text-gray-700 mb-4">Followers</h3>
+
       <div style={{ width: 160, height: 160 }} className="mx-auto">
         <ResponsiveContainer>
           <PieChart>
@@ -197,7 +211,10 @@ function FollowersDonut({ value }: { value: number }) {
               startAngle={90}
               endAngle={-270}
             >
-              <Cell fill={COLOR} />
+              {data.map((_, i) => (
+                <Cell key={i} fill={COLORS[i]} />
+              ))}
+
               <Label
                 value={value.toLocaleString()}
                 position="center"
