@@ -2,23 +2,30 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import jwt from 'jsonwebtoken';
 
+
 const SECRET_KEY = process.env.JWT_SECRET || 'secret_ecom';
 
 // ✅ Public affiliate routes (NO AUTH REQUIRED)
-const AFFILIATE_PUBLIC_ROUTES = [
+const PUBLIC_ROUTES = [
+  // Affiliate
   '/api/affiliate/auth/login',
   '/api/affiliate/auth/register',
   '/affiliate/auth/login',
   '/affiliate/auth/register',
+
+  // Logistics
+  '/api/logistics/login',
+  '/api/logistics/register',
+  '/logistics/login',
 ];
+
 
 export function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
-  // 🔓 Allow public affiliate auth routes
-  if (AFFILIATE_PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
-    return NextResponse.next();
-  }
+if (PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
+  return NextResponse.next();
+}
 
   // Token sources
   const logisticsToken = req.cookies.get('logisticsToken')?.value;
@@ -34,6 +41,24 @@ export function middleware(req: NextRequest) {
   const isAffiliatePath = affiliateProtected.some(path =>
     pathname.startsWith(path)
   );
+
+if (
+  pathname === '/affiliate/auth/login' &&
+  affiliateToken
+) {
+  try {
+    jwt.verify(affiliateToken, SECRET_KEY);
+    return NextResponse.redirect(new URL('/affiliate/dashboard', req.url));
+  } catch {}
+}
+
+if (pathname === '/logistics/login' && logisticsToken) {
+  try {
+    jwt.verify(logisticsToken, SECRET_KEY);
+    return NextResponse.redirect(new URL('/logistics/dashboard', req.url));
+  } catch {}
+}
+
 
   // 🚚 Logistics protection
   if (isLogisticsPath) {
