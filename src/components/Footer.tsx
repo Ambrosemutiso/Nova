@@ -92,8 +92,8 @@ export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () =>
             <h4 className="font-semibold text-sm">Payment Methods:</h4>
             <Image src="/visa.png" alt="Visa" width={40} height={24} />
             <Image src="/mastercard.png" alt="MasterCard" width={40} height={24} />
-            <Image src="/mpesa.png" alt="MPesa" width={40} height={24} />
-            <Image src="/airtel.png" alt="Airtel" width={40} height={24} />
+            <Image src="/M-PESA.svg" alt="MPesa" width={40} height={24} />
+            <Image src="/Airtel.svg" alt="Airtel" width={40} height={24} />
           </div>
 
           <div className="flex space-x-4">

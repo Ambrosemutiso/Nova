@@ -11,7 +11,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secret_ecom';
     const transporter = nodemailer.createTransport({
       host: process.env.ZOHO_SMTP_HOST,
       port: Number(process.env.ZOHO_SMTP_PORT),
-      secure: false, // TLS
+      secure: true, // TLS
       auth: {
         user: process.env.ZOHO_SMTP_USER,
         pass: process.env.ZOHO_SMTP_PASS,

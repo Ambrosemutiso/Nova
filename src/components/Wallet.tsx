@@ -332,13 +332,13 @@ const maxWeeklyValue = Math.max(
 
   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
     <PaymentMethod
-      image="/mpesa.png"
+      image="/M-PESA.svg"
       alt="M-Pesa"
       label="M-Pesa"
     />
 
     <PaymentMethod
-      image="/airtel.png"
+      image="/Airtel.svg"
       alt="Airtel Money"
       label="Airtel Money"
     />
