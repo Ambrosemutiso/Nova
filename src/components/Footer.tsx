@@ -93,7 +93,7 @@ export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () =>
             <Image src="/visa.png" alt="Visa" width={40} height={24} />
             <Image src="/mastercard.png" alt="MasterCard" width={40} height={24} />
             <Image src="/M-PESA.svg" alt="MPesa" width={40} height={24} />
-            <Image src="/Airtel.svg" alt="Airtel" width={40} height={24} />
+            <Image src="/Airtel.svg" alt="Airtel" width={40} height={10} />
           </div>
 
           <div className="flex space-x-4">
