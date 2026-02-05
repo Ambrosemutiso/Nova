@@ -5,16 +5,15 @@ export async function POST(req: NextRequest) {
   try {
     const { email, name, role } = await req.json();
 
-    // ✅ Zoho SMTP transporter
-    const transporter = nodemailer.createTransport({
-      host: process.env.ZOHO_SMTP_HOST!,
-      port: process.env.ZOHO_SMTP_PORT!,
-      secure: false, // TLS
-      auth: {
-        user: process.env.ZOHO_SMTP_USER!,
-        pass: process.env.ZOHO_SMTP_PASS!,
-      },
-    });
+const transporter = nodemailer.createTransport({
+  host: process.env.ZOHO_SMTP_HOST,
+  port: Number(process.env.ZOHO_SMTP_PORT),
+  secure: false, 
+  auth: {
+    user: process.env.ZOHO_SMTP_USER,
+    pass: process.env.ZOHO_SMTP_PASS,
+  },
+});
 
     const brand = {
       orange: "#f97316",

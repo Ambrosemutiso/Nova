@@ -7,16 +7,15 @@ import nodemailer from 'nodemailer';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret_ecom';
 
-    // ✅ Zoho SMTP transporter
-    const transporter = nodemailer.createTransport({
-      host: process.env.ZOHO_SMTP_HOST!,
-      port: process.env.ZOHO_SMTP_PORT!,
-      secure: false, // TLS
-      auth: {
-        user: process.env.ZOHO_SMTP_USER!,
-        pass: process.env.ZOHO_SMTP_PASS!,
-      },
-    });
+const transporter = nodemailer.createTransport({
+  host: process.env.ZOHO_SMTP_HOST,
+  port: Number(process.env.ZOHO_SMTP_PORT),
+  secure: false, 
+  auth: {
+    user: process.env.ZOHO_SMTP_USER,
+    pass: process.env.ZOHO_SMTP_PASS,
+  },
+});
 
 // --- Helper: Send Reset Email ---
 async function sendResetEmail(email: string, name: string, role: string, token: string) {

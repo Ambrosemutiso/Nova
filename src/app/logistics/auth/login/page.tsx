@@ -42,7 +42,7 @@ export default function LogisticsAuth() {
       if (isLogin) {
         const res = await axios.post('/api/logistics/login', { email, password });
         toast.success('Login successful!');
-        router.replace('/logistics/dashboard');
+        window.location.href = '/logistics/dashboard';
       } else {
         const res = await axios.post('/api/logistics/register', {
           name,

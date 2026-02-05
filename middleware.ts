@@ -2,105 +2,131 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import jwt from 'jsonwebtoken';
 
-
 const SECRET_KEY = process.env.JWT_SECRET || 'secret_ecom';
 
-// ✅ Public affiliate routes (NO AUTH REQUIRED)
+/**
+ * ✅ Routes that NEVER require authentication
+ */
 const PUBLIC_ROUTES = [
-  // Affiliate
+  // Affiliate auth (API + pages)
   '/api/affiliate/auth/login',
   '/api/affiliate/auth/register',
   '/affiliate/auth/login',
   '/affiliate/auth/register',
 
-  // Logistics
+  // Logistics auth (API + pages)
   '/api/logistics/login',
   '/api/logistics/register',
   '/logistics/login',
 ];
 
+/**
+ * ✅ Protected route prefixes
+ */
+const LOGISTICS_PROTECTED = ['/logistics/dashboard'];
+const AFFILIATE_PROTECTED = ['/affiliate/dashboard', '/api/affiliate'];
+
+/**
+ * 🔐 Helper: verify JWT safely
+ */
+function verifyToken(token: string | undefined) {
+  if (!token) return false;
+  try {
+    jwt.verify(token, SECRET_KEY);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
-if (PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
-  return NextResponse.next();
-}
+  /**
+   * 1️⃣ Allow public routes immediately
+   */
+  if (PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
+    return NextResponse.next();
+  }
 
-  // Token sources
+  /**
+   * 2️⃣ Read cookies
+   */
   const logisticsToken = req.cookies.get('logisticsToken')?.value;
   const affiliateToken = req.cookies.get('affiliateToken')?.value;
 
-  // Protected paths
-  const logisticsProtected = ['/logistics/dashboard'];
-  const affiliateProtected = ['/affiliate/dashboard', '/api/affiliate/'];
+  const logisticsValid = verifyToken(logisticsToken);
+  const affiliateValid = verifyToken(affiliateToken);
 
-  const isLogisticsPath = logisticsProtected.some(path =>
-    pathname.startsWith(path)
-  );
-  const isAffiliatePath = affiliateProtected.some(path =>
+  const isLogisticsPath = LOGISTICS_PROTECTED.some(path =>
     pathname.startsWith(path)
   );
 
-if (
-  pathname === '/affiliate/auth/login' &&
-  affiliateToken
-) {
-  try {
-    jwt.verify(affiliateToken, SECRET_KEY);
-    return NextResponse.redirect(new URL('/affiliate/dashboard', req.url));
-  } catch {}
-}
+  const isAffiliatePath = AFFILIATE_PROTECTED.some(path =>
+    pathname.startsWith(path)
+  );
 
-if (pathname === '/logistics/login' && logisticsToken) {
-  try {
-    jwt.verify(logisticsToken, SECRET_KEY);
-    return NextResponse.redirect(new URL('/logistics/dashboard', req.url));
-  } catch {}
-}
+  /**
+   * 3️⃣ If already logged in, block access to login pages
+   */
+  if (pathname === '/logistics/login' && logisticsValid) {
+    return NextResponse.redirect(
+      new URL('/logistics/dashboard', req.url)
+    );
+  }
 
+  if (pathname === '/affiliate/auth/login' && affiliateValid) {
+    return NextResponse.redirect(
+      new URL('/affiliate/dashboard', req.url)
+    );
+  }
 
-  // 🚚 Logistics protection
+  /**
+   * 4️⃣ Logistics protection
+   */
   if (isLogisticsPath) {
-    if (!logisticsToken) {
-      return NextResponse.redirect(new URL('/logistics/login', req.url));
+    if (!logisticsValid) {
+      return NextResponse.redirect(
+        new URL('/logistics/login', req.url)
+      );
     }
-
-    try {
-      jwt.verify(logisticsToken, SECRET_KEY);
-      return NextResponse.next();
-    } catch {
-      return NextResponse.redirect(new URL('/logistics/login', req.url));
-    }
+    return NextResponse.next();
   }
 
-  // 🤝 Affiliate protection
+  /**
+   * 5️⃣ Affiliate protection
+   */
   if (isAffiliatePath) {
-    if (!affiliateToken) {
-      if (pathname.startsWith('/affiliate/dashboard')) {
-        return NextResponse.redirect(new URL('/affiliate/auth/login', req.url));
+    if (!affiliateValid) {
+      // API routes return JSON, pages redirect
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json(
+          { error: 'Unauthorized' },
+          { status: 401 }
+        );
       }
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.redirect(
+        new URL('/affiliate/auth/login', req.url)
+      );
     }
-
-    try {
-      jwt.verify(affiliateToken, SECRET_KEY);
-      return NextResponse.next();
-    } catch {
-      if (pathname.startsWith('/affiliate/dashboard')) {
-        return NextResponse.redirect(new URL('/affiliate/auth/login', req.url));
-      }
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
+    return NextResponse.next();
   }
 
+  /**
+   * 6️⃣ Default allow
+   */
   return NextResponse.next();
 }
 
+/**
+ * ✅ Middleware matcher
+ */
 export const config = {
   matcher: [
     '/logistics/dashboard/:path*',
     '/affiliate/dashboard/:path*',
+    '/affiliate/auth/login',
+    '/logistics/login',
     '/api/affiliate/:path*',
   ],
 };

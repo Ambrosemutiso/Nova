@@ -38,7 +38,7 @@ export default function AffiliateAuth() {
       if (isLogin) {
         const res = await axios.post('/api/affiliate/auth/login', { email, password });
         toast.success('Login successful!');
-        router.replace('/affiliate/dashboard');
+        window.location.href = '/affiliate/dashboard';
 
       } else {
         const res = await axios.post('/api/affiliate/auth/register', {
