@@ -27,8 +27,7 @@ export async function POST(req: Request) {
       { expiresIn: '7d' }
     );
 
-    // Create response with cookie
-    const res = NextResponse.json({
+    return NextResponse.json({
       message: 'Login successful',
       token,
       user: {
@@ -37,17 +36,6 @@ export async function POST(req: Request) {
         email: user.email,
       },
     });
-
-    // Set cookie
-res.cookies.set('logisticsToken', token, {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax',
-  path: '/',
-  maxAge: 60 * 60 * 24 * 7,
-});
-
-    return res;
   } catch (err) {
     console.error('Login error:', err);
     return NextResponse.json({ message: 'Something went wrong' }, { status: 500 });

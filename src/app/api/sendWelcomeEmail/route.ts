@@ -6,11 +6,11 @@ export async function POST(req: NextRequest) {
     const { email, name, role } = await req.json();
 
 const transporter = nodemailer.createTransport({
-  host: process.env.ZOHO_SMTP_HOST,
-  port: Number(process.env.ZOHO_SMTP_PORT),
+  host: "smtp.zoho.com",
+  port: "465",
   secure: false, 
   auth: {
-    user: process.env.ZOHO_SMTP_USER,
+    user: "noreply@novaxmax.com",
     pass: process.env.ZOHO_SMTP_PASS,
   },
 });

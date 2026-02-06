@@ -8,11 +8,11 @@ import nodemailer from 'nodemailer';
 const JWT_SECRET = process.env.JWT_SECRET || 'secret_ecom';
 
 const transporter = nodemailer.createTransport({
-  host: process.env.ZOHO_SMTP_HOST,
-  port: Number(process.env.ZOHO_SMTP_PORT),
+  host: "smtp.zoho.com",
+  port: "465",
   secure: false, 
   auth: {
-    user: process.env.ZOHO_SMTP_USER,
+    user: "noreply@novaxmax.com",
     pass: process.env.ZOHO_SMTP_PASS,
   },
 });

@@ -41,6 +41,7 @@ export default function LogisticsAuth() {
 
       if (isLogin) {
         const res = await axios.post('/api/logistics/login', { email, password });
+        localStorage.setItem('logisticsToken', res.data.token);
         toast.success('Login successful!');
         window.location.href = '/logistics/dashboard';
       } else {

@@ -1,51 +1,43 @@
-import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import { NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
 import Affiliate from '@/app/models/Affiliate';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret_ecom';
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
-    await dbConnect();
     const { email, password } = await req.json();
 
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Email and password required.' }, { status: 400 });
+    await dbConnect();
+    const user = await Affiliate.findOne({ email });
+    if (!user) {
+      return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
     }
 
-    const affiliate = await Affiliate.findOne({ email });
-    if (!affiliate) {
-      return NextResponse.json({ error: 'Invalid email or password.' }, { status: 400 });
-    }
-
-    const isMatch = await bcrypt.compare(password, affiliate.password);
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return NextResponse.json({ error: 'Invalid email or password.' }, { status: 400 });
+      return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
     }
 
     const token = jwt.sign(
-      { id: affiliate._id, email: affiliate.email, role: 'affiliate' },
+      { id: user._id, role: 'affiliate' },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
 
-    const res = NextResponse.json({ success: true });
-
-    res.cookies.set({
-      name: 'affiliateToken',
-      value: token,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+    return NextResponse.json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
     });
-
-    return res;
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  } catch (err) {
+    console.error('Login error:', err);
+    return NextResponse.json({ message: 'Something went wrong' }, { status: 500 });
   }
 }
