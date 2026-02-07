@@ -67,24 +67,39 @@ async function sendResetEmail(email: string, name: string, role: string, token: 
       overflow: hidden;
       box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
     }
+.header {
+  background: linear-gradient(135deg, ${gradientStart}, ${gradientEnd});
+  padding: 20px 28px;
+}
 
-    .header {
-      background: linear-gradient(135deg, ${gradientStart}, ${gradientEnd});
-      padding: 30px 20px;
-      text-align: center;
-    }
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
 
-    .header img {
-      width: 120px;
-      margin-bottom: 10px;
-    }
+.logo-wrap {
+  display: flex;
+  align-items: center;
+}
 
-    .header h1 {
-      color: #ffffff;
-      font-size: 22px;
-      margin: 0;
-      font-weight: 600;
-    }
+.logo-wrap img {
+  width: 88px; /* 🔽 reduced */
+  height: auto;
+}
+
+.header-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+  opacity: 0.95;
+}
+
+.header-divider {
+  margin-top: 16px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.25);
+}
 
     .body {
       padding: 36px 42px;
@@ -190,11 +205,18 @@ async function sendResetEmail(email: string, name: string, role: string, token: 
 <body>
   <div class="container">
 
-    <!-- Header -->
-    <div class="header">
+<!-- Header -->
+<div class="header">
+  <div class="header-inner">
+    <div class="logo-wrap">
       <img src="https://novaxmax.com/Logo.png" alt="NovaXmax Logo" />
-      <h1>Password Reset Request</h1>
     </div>
+    <div class="header-title">
+  🔐 Secure Password Reset
+</div>
+  <div class="header-divider"></div>
+</div>
+
 
     <!-- Body -->
     <div class="body">

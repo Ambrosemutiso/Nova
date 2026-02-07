@@ -50,6 +50,17 @@ const transporter = nodemailer.createTransport({
           color: ${brand.textDark};
           font-family: 'Segoe UI', Arial, sans-serif;
         }
+          .banner {
+  width: 100%;
+  display: block;
+  border-radius: 12px;
+  margin: 24px 0;
+}
+
+.banner-wrapper {
+  padding: 0 0 10px;
+}
+
         .container {
           max-width: 600px;
           margin: 40px auto;
@@ -181,7 +192,7 @@ const transporter = nodemailer.createTransport({
       <div class="container">
         <!-- Header -->
         <div class="header">
-          <img src="/Logo.png" alt="NovaXmax Logo" width="120" />
+          <img src="https://novaxmax.com/Logo.png" alt="NovaXmax Logo" width="120" />
           <h1>${isBuyer ? "Welcome to NovaXmax!" : "Welcome to NovaXmax Seller Hub!"}</h1>
         </div>
 
@@ -191,23 +202,43 @@ const transporter = nodemailer.createTransport({
           ${
             isBuyer
               ? `
-              <p>We’re thrilled to have you join <b>NovaXpress</b> — your one-stop marketplace for amazing products, great prices, and fast deliveries.</p>
+              <p>We’re thrilled to have you join <b>NovaXmax</b> — your one-stop marketplace for amazing products, great prices, and fast deliveries.</p>
               <p>Start browsing, discover exclusive deals, and experience a smarter way to shop.</p>
-              <div class="cta">
-                <a href="https://novaxmax.com">Start Shopping 🛍️</a>
-              </div>
+<div class="banner-wrapper">
+  <img
+    src="https://novaxmax.com/email/buyer-welcome-banner.jpg"
+    alt="Discover amazing products on NovaXmax"
+    class="banner"
+  />
+</div>
+
+<p>
+  You’re all set! Explore thousands of products, enjoy competitive prices,
+  and experience fast, reliable delivery — all in one place.
+</p>
+
             `
               : `
-              <p>Welcome to the <b>NovaXpress Seller Hub</b> — the platform designed to help your business grow, connect with customers, and increase sales.</p>
+              <p>Welcome to the <b>NovaXmax Seller Hub</b> — the platform designed to help your business grow, connect with customers, and increase sales.</p>
               <p>Get started by adding your first products and building your storefront today.</p>
-              <div class="cta">
-                <a href="https://novaxmax.com/desc/sell-on-novaxmax">Go to Seller Dashboard 💼</a>
-              </div>
+<div class="banner-wrapper">
+  <img
+    src="https://novaxmax.com/email/seller-welcome-banner.jpg"
+    alt="Grow your business with NovaXmax Seller Hub"
+    class="banner"
+  />
+</div>
+
+<p>
+  Your seller account is ready. NovaXmax gives you the tools to reach more
+  customers, manage products easily, and scale your business with confidence.
+</p>
+
             `
           }
           <p style="font-size: 14px; color: #666;">
             Need help? Our team is here for you. Contact us anytime at 
-            <a href="mailto:support@novaxmax.com" style="color: ${primary}; text-decoration: none;">support@novaxpress.shop</a>.
+            <a href="mailto:support@novaxmax.com" style="color: ${primary}; text-decoration: none;">support@novaxmax.com</a>.
           </p>
         </div>
 
@@ -217,10 +248,14 @@ const transporter = nodemailer.createTransport({
             ? `
             <div class="app-download">
               <p>📱 Get the NovaXmax App for faster shopping</p>
-            <div className="app-logos">
-              <a href="#"><Image src="/play_store.png" alt="Google Play" width={135} height={40} /></a>
-              <a href="#"><Image src="/app_store.png" alt="App Store" width={120} height={40} /></a>
-            </div>
+<div class="app-logos">
+  <a href="#">
+    <img src="https://novaxmax.com/play_store.png" alt="Google Play" width="135" />
+  </a>
+  <a href="#">
+    <img src="https://novaxmax.com/app_store.png" alt="App Store" width="120" />
+  </a>
+</div>
             </div>
             `
             : ""
