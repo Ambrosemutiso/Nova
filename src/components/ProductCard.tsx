@@ -53,7 +53,7 @@ export default function ProductCard({ product, showSponsoredBadge, badge, redire
   onClick={() =>
     redirectAllTo
       ? router.push(redirectAllTo)
-      : router.push(`/product/${product._id}`)
+      : router.push(`/product/${product.slug}`)
   }
   className="cursor-pointer"
 >

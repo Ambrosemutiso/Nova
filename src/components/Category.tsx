@@ -124,6 +124,46 @@ export default function CategoryPage() {
     });
   };
 
+  const renderStars = (rating: number = 0) => {
+    const fullStars = Math.floor(rating);
+    const halfStar = rating - fullStars >= 0.5;
+    const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
+
+    return (
+      <div className="flex space-x-1 mb-1">
+        {[...Array(fullStars)].map((_, i) => (
+          <svg key={`full-${i}`} className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 15l-5.878 3.09 1.122-6.545L.488 6.91l6.561-.955L10 0l2.951 5.955 6.561.955-4.756 4.635 1.122 6.545z" />
+          </svg>
+        ))}
+        {halfStar && (
+          <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 15l-5.878 3.09 1.122-6.545L.488 6.91l6.561-.955L10 0z" />
+          </svg>
+        )}
+        {[...Array(emptyStars)].map((_, i) => (
+          <svg key={`empty-${i}`} className="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 15l-5.878 3.09 1.122-6.545L.488 6.91l6.561-.955L10 0l2.951 5.955 6.561.955-4.756 4.635 1.122 6.545z" />
+          </svg>
+        ))}
+      </div>
+    );
+  };
+
+  const renderStockProgress = (quantity: number = 0) => {
+    const max = 50;
+    const percent = Math.min((quantity / max) * 100, 100);
+
+    return (
+      <div className="mt-1">
+        <div className="text-xs text-gray-500 mb-1">Stock left: {quantity}</div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="bg-orange-500 h-2 rounded-full" style={{ width: `${percent}%` }}></div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
       <div className="max-w-6xl mx-auto px-4 pt-28 pb-10">
@@ -195,24 +235,36 @@ export default function CategoryPage() {
               const inWishlist = isInWishlist(product._id);
 
               return (
-                <div key={product._id} className="border p-4 rounded bg-white">
-                  <Link href={`/product/${product.slug}`} className="block relative h-40 mb-2">
-                    <CldImage
-                      src={getPublicId(product.images?.[0]) || 'sample'}
-                      alt={product.name}
-                      width={300}
-                      height={300}
-                      crop="fill"
-                      className="object-cover rounded"
-                    />
-                  </Link>
+<div
+  key={product._id}
+  className="border p-4 rounded bg-white flex flex-col"
+>
+  <Link
+    href={`/product/${product.slug}`}
+    className="block relative aspect-square w-full mb-2 overflow-hidden"
+  >
+    <CldImage
+      src={getPublicId(product.images?.[0]) || 'sample'}
+      alt={product.name}
+      width={300}
+      height={300}
+      crop="fill"
+      className="object-cover rounded w-full h-full"
+    />
+  </Link>
 
-                  <h3 className="text-sm font-semibold truncate">{product.name}</h3>
+  <div className="flex flex-col flex-grow">
+    <h3 className="text-sm font-semibold line-clamp-2">
+      {product.name}
+    </h3>
 
-                  <p className="text-red-600 font-bold">
-                    Ksh. {product.calculatedPrice.toLocaleString()}
-                  </p>
+    {renderStars(product.rating || 4)}
+    {renderStockProgress(product.quantity)}
 
+    <p className="text-red-600 font-bold mt-auto">
+      Ksh. {product.calculatedPrice.toLocaleString()}
+    </p>
+</div>
                   <div className="flex gap-2 mt-2">
                     {cartItem ? (
                       <>

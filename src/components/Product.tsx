@@ -257,7 +257,7 @@ return (
 
       {/* ➡️ Right Arrow for Mobile */}
       <a
-        href={`/product/${product._id}/description`}
+        href={`/product/${product.slug}/description`}
         className="md:hidden text-orange-600 flex items-center gap-1 text-sm font-medium"
       >
         View more
