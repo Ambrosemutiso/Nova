@@ -206,7 +206,7 @@ const transporter = nodemailer.createTransport({
               <p>Start browsing, discover exclusive deals, and experience a smarter way to shop.</p>
 <div class="banner-wrapper">
   <img
-    src="https://novaxmax.com/email/buyer-welcome-banner.jpg"
+    src="https://novaxmax.com/buyer-welcome-banner.jpg"
     alt="Discover amazing products on NovaXmax"
     class="banner"
   />
@@ -223,7 +223,7 @@ const transporter = nodemailer.createTransport({
               <p>Get started by adding your first products and building your storefront today.</p>
 <div class="banner-wrapper">
   <img
-    src="https://novaxmax.com/email/seller-welcome-banner.jpg"
+    src="https://novaxmax.com/seller-welcome-banner.jpg"
     alt="Grow your business with NovaXmax Seller Hub"
     class="banner"
   />

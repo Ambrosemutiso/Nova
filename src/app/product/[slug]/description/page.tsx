@@ -6,7 +6,7 @@ import { ChevronLeft } from 'lucide-react';
 import type { Product } from '@/app/types/product';
 
 export default function FullDescriptionPage() {
-  const { id } = useParams();
+  const { slug } = useParams();
   const router = useRouter();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -14,7 +14,7 @@ export default function FullDescriptionPage() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await fetch(`/api/product/${id}`);
+        const res = await fetch(`/api/product/${slug}`);
         if (!res.ok) throw new Error('Failed to fetch product');
         const data = await res.json();
         setProduct(data.product);
@@ -25,7 +25,7 @@ export default function FullDescriptionPage() {
       }
     };
     fetchProduct();
-  }, [id]);
+  }, [slug]);
 
   if (loading) {
     return (

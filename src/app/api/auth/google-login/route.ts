@@ -67,52 +67,37 @@ async function sendResetEmail(email: string, name: string, role: string, token: 
       overflow: hidden;
       box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
     }
-.header {
-  background: linear-gradient(135deg, ${gradientStart}, ${gradientEnd});
-  padding: 20px 28px;
-}
 
-.header-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
+    .header {
+      background: linear-gradient(135deg, ${gradientStart}, ${gradientEnd});
+      padding: 30px 20px;
+      text-align: center;
+    }
 
-.logo-wrap {
-  display: flex;
-  align-items: center;
-}
+    .header img {
+      width: 60px;
+      margin-bottom: 10px;
+    }
 
-.logo-wrap img {
-  width: 88px; /* 🔽 reduced */
-  height: auto;
-}
-
-.header-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #ffffff;
-  opacity: 0.95;
-}
-
-.header-divider {
-  margin-top: 16px;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.25);
-}
+    .header h1 {
+      color: #ffffff;
+      font-size: 11px;
+      margin: 0;
+      font-weight: 600;
+    }
 
     .body {
       padding: 36px 42px;
     }
 
     .body h2 {
-      font-size: 20px;
+      font-size: 10px;
       margin-bottom: 12px;
       color: ${primary};
     }
 
     .body p {
-      font-size: 15px;
+      font-size: 8px;
       line-height: 1.7;
       margin-bottom: 14px;
     }
@@ -129,12 +114,12 @@ async function sendResetEmail(email: string, name: string, role: string, token: 
       padding: 16px 32px;
       border-radius: 10px;
       font-weight: 600;
-      font-size: 15px;
+      font-size: 8px;
       text-decoration: none;
     }
 
     .cta-note {
-      font-size: 13px;
+      font-size: 7px;
       color: ${brand.textLight};
       margin-top: 10px;
       text-align: center;
@@ -146,12 +131,12 @@ async function sendResetEmail(email: string, name: string, role: string, token: 
       padding: 16px 18px;
       border-radius: 8px;
       margin: 26px 0;
-      font-size: 14px;
+      font-size: 7px;
     }
 
     .fallback {
       word-break: break-all;
-      font-size: 13px;
+      font-size: 7px;
       color: ${brand.textLight};
       margin-top: 16px;
     }
@@ -166,7 +151,7 @@ async function sendResetEmail(email: string, name: string, role: string, token: 
       background: ${brand.neutral};
       padding: 24px;
       text-align: center;
-      font-size: 12px;
+      font-size: 6px;
       color: ${brand.textLight};
     }
 
@@ -205,18 +190,11 @@ async function sendResetEmail(email: string, name: string, role: string, token: 
 <body>
   <div class="container">
 
-<!-- Header -->
-<div class="header">
-  <div class="header-inner">
-    <div class="logo-wrap">
+    <!-- Header -->
+    <div class="header">
       <img src="https://novaxmax.com/Logo.png" alt="NovaXmax Logo" />
+      <h1>Password Reset Request</h1>
     </div>
-    <div class="header-title">
-  🔐 Secure Password Reset
-</div>
-  <div class="header-divider"></div>
-</div>
-
 
     <!-- Body -->
     <div class="body">
