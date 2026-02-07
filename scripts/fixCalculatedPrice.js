@@ -36,18 +36,18 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// injectMissingProductInstallments.ts
 var dotenv = require("dotenv");
 dotenv.config();
 var mongoose_1 = require("mongoose");
+var slugify_1 = require("slugify");
 var dbConnect_1 = require("../lib/dbConnect");
-function injectMissingProductInstallments() {
+function injectMissingProductSlugs() {
     return __awaiter(this, void 0, void 0, function () {
-        var db, collection, missingInstallmentDocs, _i, missingInstallmentDocs_1, doc, err_1;
+        var db, collection, products, _i, products_1, product, baseSlug, slug, counter, err_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    _a.trys.push([0, 7, , 8]);
+                    _a.trys.push([0, 11, , 13]);
                     return [4 /*yield*/, (0, dbConnect_1.dbConnect)()];
                 case 1:
                     _a.sent();
@@ -55,52 +55,68 @@ function injectMissingProductInstallments() {
                     if (!db)
                         throw new Error("Database connection not established.");
                     collection = db.collection("products");
-                    console.log("🔍 Checking 'products' collection for missing installment fields...");
+                    console.log("🔍 Checking products missing slug field...");
                     return [4 /*yield*/, collection
                             .find({
                             $or: [
-                                { installmentEnabled: { $exists: false } },
-                                { installmentDepositPercent: { $exists: false } },
-                                { installmentMonths: { $exists: false } },
-                                { installmentPolicy: { $exists: false } },
+                                { slug: { $exists: false } },
+                                { slug: "" },
                             ],
                         })
                             .toArray()];
                 case 2:
-                    missingInstallmentDocs = _a.sent();
-                    console.log("\uD83E\uDDE9 Found ".concat(missingInstallmentDocs.length, " products missing installment fields."));
-                    _i = 0, missingInstallmentDocs_1 = missingInstallmentDocs;
+                    products = _a.sent();
+                    console.log("\uD83E\uDDE9 Found ".concat(products.length, " products without slug."));
+                    _i = 0, products_1 = products;
                     _a.label = 3;
                 case 3:
-                    if (!(_i < missingInstallmentDocs_1.length)) return [3 /*break*/, 6];
-                    doc = missingInstallmentDocs_1[_i];
-                    return [4 /*yield*/, collection.updateOne({ _id: doc._id }, {
-                            $set: {
-                                installmentEnabled: false,
-                                installmentDepositPercent: 0,
-                                installmentMonths: 0,
-                                installmentPolicy: "",
-                            },
-                        })];
-                case 4:
-                    _a.sent();
-                    console.log("\u2705 Updated product ".concat(doc._id, " with default installment fields"));
-                    _a.label = 5;
+                    if (!(_i < products_1.length)) return [3 /*break*/, 9];
+                    product = products_1[_i];
+                    if (!product.name) {
+                        console.warn("\u26A0\uFE0F Skipping product ".concat(product._id, " (missing name)"));
+                        return [3 /*break*/, 8];
+                    }
+                    baseSlug = (0, slugify_1.default)(product.name, {
+                        lower: true,
+                        strict: true,
+                        trim: true,
+                    });
+                    slug = baseSlug;
+                    counter = 1;
+                    _a.label = 4;
+                case 4: return [4 /*yield*/, collection.findOne({
+                        slug: slug,
+                        _id: { $ne: product._id },
+                    })];
                 case 5:
+                    if (!_a.sent()) return [3 /*break*/, 6];
+                    counter += 1;
+                    slug = "".concat(baseSlug, "-").concat(counter);
+                    return [3 /*break*/, 4];
+                case 6: return [4 /*yield*/, collection.updateOne({ _id: product._id }, { $set: { slug: slug } })];
+                case 7:
+                    _a.sent();
+                    console.log("\u2705 ".concat(product._id, " \u2192 ").concat(slug));
+                    _a.label = 8;
+                case 8:
                     _i++;
                     return [3 /*break*/, 3];
-                case 6:
-                    console.log("🎯 All missing installment fields have been successfully patched!");
-                    mongoose_1.default.connection.close();
-                    return [3 /*break*/, 8];
-                case 7:
+                case 9:
+                    console.log("🎯 All missing slugs successfully generated!");
+                    return [4 /*yield*/, mongoose_1.default.connection.close()];
+                case 10:
+                    _a.sent();
+                    return [3 /*break*/, 13];
+                case 11:
                     err_1 = _a.sent();
-                    console.error("❌ Failed to inject missing installment fields:", err_1);
-                    mongoose_1.default.connection.close();
-                    return [3 /*break*/, 8];
-                case 8: return [2 /*return*/];
+                    console.error("❌ Failed to inject product slugs:", err_1);
+                    return [4 /*yield*/, mongoose_1.default.connection.close()];
+                case 12:
+                    _a.sent();
+                    return [3 /*break*/, 13];
+                case 13: return [2 /*return*/];
             }
         });
     });
 }
-injectMissingProductInstallments();
+injectMissingProductSlugs();

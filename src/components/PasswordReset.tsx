@@ -82,8 +82,8 @@ export default function ResetPasswordPage() {
       >
         <div className="text-center mb-6">
           <img
-            src="/Logo.jpg"
-            alt="Novaxpress Logo"
+            src="/Logo.png"
+            alt="Novaxmax Logo"
             className="h-16 w-auto mx-auto rounded-lg mb-2"
           />
           <h2 className="text-2xl font-bold text-white">

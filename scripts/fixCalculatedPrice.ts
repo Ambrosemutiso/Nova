@@ -1,19 +1,17 @@
-// injectMissingProductInstallments.ts
 import * as dotenv from "dotenv";
 dotenv.config();
 
 import mongoose from "mongoose";
+import slugify from "slugify";
 import { dbConnect } from "@/lib/dbConnect";
 
 interface ProductDoc {
   _id: mongoose.Types.ObjectId;
-  installmentEnabled?: boolean;
-  installmentDepositPercent?: number;
-  installmentMonths?: number;
-  installmentPolicy?: string;
+  name?: string;
+  slug?: string;
 }
 
-async function injectMissingProductInstallments() {
+async function injectMissingProductSlugs() {
   try {
     await dbConnect();
 
@@ -21,44 +19,62 @@ async function injectMissingProductInstallments() {
     if (!db) throw new Error("Database connection not established.");
 
     const collection = db.collection<ProductDoc>("products");
-    console.log("🔍 Checking 'products' collection for missing installment fields...");
 
-    // Step 1: find products missing any of the installment fields
-    const missingInstallmentDocs = await collection
+    console.log("🔍 Checking products missing slug field...");
+
+    // Find products without slug
+    const products = await collection
       .find({
         $or: [
-          { installmentEnabled: { $exists: false } },
-          { installmentDepositPercent: { $exists: false } },
-          { installmentMonths: { $exists: false } },
-          { installmentPolicy: { $exists: false } },
+          { slug: { $exists: false } },
+          { slug: "" },
         ],
       })
       .toArray();
 
-    console.log(`🧩 Found ${missingInstallmentDocs.length} products missing installment fields.`);
+    console.log(`🧩 Found ${products.length} products without slug.`);
 
-    // Step 2: Update each doc with default values
-    for (const doc of missingInstallmentDocs) {
+    for (const product of products) {
+      if (!product.name) {
+        console.warn(`⚠️ Skipping product ${product._id} (missing name)`);
+        continue;
+      }
+
+      // Base slug
+      const baseSlug = slugify(product.name, {
+        lower: true,
+        strict: true,
+        trim: true,
+      });
+
+      let slug = baseSlug;
+      let counter = 1;
+
+      // Ensure uniqueness
+      while (
+        await collection.findOne({
+          slug,
+          _id: { $ne: product._id },
+        })
+      ) {
+        counter += 1;
+        slug = `${baseSlug}-${counter}`;
+      }
+
       await collection.updateOne(
-        { _id: doc._id },
-        {
-          $set: {
-            installmentEnabled: false,
-            installmentDepositPercent: 0,
-            installmentMonths: 0,
-            installmentPolicy: "",
-          },
-        }
+        { _id: product._id },
+        { $set: { slug } }
       );
-      console.log(`✅ Updated product ${doc._id} with default installment fields`);
+
+      console.log(`✅ ${product._id} → ${slug}`);
     }
 
-    console.log("🎯 All missing installment fields have been successfully patched!");
-    mongoose.connection.close();
+    console.log("🎯 All missing slugs successfully generated!");
+    await mongoose.connection.close();
   } catch (err) {
-    console.error("❌ Failed to inject missing installment fields:", err);
-    mongoose.connection.close();
+    console.error("❌ Failed to inject product slugs:", err);
+    await mongoose.connection.close();
   }
 }
 
-injectMissingProductInstallments();
+injectMissingProductSlugs();

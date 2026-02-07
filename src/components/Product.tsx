@@ -16,7 +16,7 @@ import MoreFromSeller from '@/components/MoreFromSeller';
 import BuyerLoginModal from '@/components/modals/BuyerLoginModal';
 
 export default function ProductDetails() {
-  const { id } = useParams();
+const { slug } = useParams();
   const [product, setProduct] = useState<Product | null>(null);
   const { addToCart, cartItems, increaseQuantity, decreaseQuantity } = useCart();
   const [userId, setUserId] = useState<string | null>(null);
@@ -32,32 +32,37 @@ const [showReportModal, setShowReportModal] = useState(false);
     if (file) setScreenshot(file);
   };
 
-  const handleReportSubmit = async () => {
-    const formData = new FormData();
-   formData.append('productId', Array.isArray(id) ? id[0] : id || '');
-    formData.append('userId', userId || '');
-    formData.append('reason', reportReason);
-    formData.append('message', reportMessage);
-    if (screenshot) formData.append('screenshot', screenshot);
+const handleReportSubmit = async () => {
+  if (!product?._id) return;
 
-    try {
-      const res = await fetch('/api/report-product', {
-        method: 'POST',
-        body: formData,
-      });
+  const formData = new FormData();
+  formData.append('productId', product._id.toString());
+  formData.append('userId', userId || '');
+  formData.append('reason', reportReason);
+  formData.append('message', reportMessage);
 
-      if (res.ok) {
-        setReportSuccess(true);
-        setReportReason('');
-        setReportMessage('');
-        setScreenshot(null);
-      } else {
-        console.error('Report submission failed');
-      }
-    } catch (err) {
-      console.error('Error submitting report:', err);
+  if (screenshot) {
+    formData.append('screenshot', screenshot);
+  }
+
+  try {
+    const res = await fetch('/api/report-product', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (res.ok) {
+      setReportSuccess(true);
+      setReportReason('');
+      setReportMessage('');
+      setScreenshot(null);
+    } else {
+      console.error('Report submission failed');
     }
-  };
+  } catch (err) {
+    console.error('Error submitting report:', err);
+  }
+};
 
   useEffect(() => {
     if (reportSuccess) {
@@ -104,20 +109,23 @@ useEffect(() => {
       if (_id) setUserId(_id);
     }
   }, []);
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const res = await fetch(`/api/product/${id}`);
-        if (!res.ok) throw new Error('Failed to fetch product');
-        const data = await res.json();
-        setProduct(data.product);
-      } catch (err) {
-        console.error('Error fetching product:', err);
-      }
-    };
+useEffect(() => {
+  if (!slug) return;
 
-    fetchProduct();
-  }, [id]);
+  const fetchProduct = async () => {
+    try {
+      const res = await fetch(`/api/product/products/${slug}`);
+      if (!res.ok) throw new Error('Failed to fetch product');
+      const data = await res.json();
+      setProduct(data.product);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  fetchProduct();
+}, [slug]);
+
 
   const handleAddToCart = () => {
     if (!product) return;

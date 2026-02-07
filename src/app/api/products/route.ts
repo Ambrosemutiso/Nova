@@ -5,6 +5,26 @@ import cloudinary from '@/lib/cloudinary';
 import Notification from '@/app/models/notification';
 import Seller from '@/app/models/seller';
 import type { Follower } from '@/app/types/follower';
+import slugify from 'slugify';
+import { submitToIndexNow } from '@/lib/indexNow';
+
+async function generateUniqueSlug(name: string) {
+  const baseSlug = slugify(name, {
+    lower: true,
+    strict: true,
+    trim: true,
+  });
+
+  let slug = baseSlug;
+  let counter = 1;
+
+  while (await Product.exists({ slug })) {
+    slug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+
+  return slug;
+}
 
 // 🔹 Define plan product limits
 const PLAN_LIMITS: Record<string, number> = {
@@ -89,10 +109,13 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Image upload failed' }, { status: 500 });
       }
     }
+    // 🔹 Generate SEO-friendly unique slug
+const slug = await generateUniqueSlug(name);
 
     // 🔹 Create new product
     const newProduct = new Product({
       name,
+      slug,
       price,
       oldPrice,
       calculatedPrice,
@@ -117,6 +140,13 @@ export async function POST(request: NextRequest) {
     });
 
     await newProduct.save();
+
+// 🔹 Build product URL using the slug
+const productUrl = `https://novaxmax.com/product/${slug}`;
+
+// 🔹 Submit to IndexNow
+await submitToIndexNow([productUrl]);
+
 
     // 🔔 Notify followers
     try {

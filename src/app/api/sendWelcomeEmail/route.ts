@@ -258,7 +258,7 @@ const transporter = nodemailer.createTransport({
     `;
 
     await transporter.sendMail({
-      from: `"NovaXmax" <no-reply@novaxmax.com>`,
+      from: `"NovaXmax" <${process.env.ZOHO_SMTP_USER}>`,
       to: email,
       replyTo: "support@novaxmax.com",
       subject,

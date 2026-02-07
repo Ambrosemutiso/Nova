@@ -17,10 +17,14 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://novaxmax.com"),
-  title: "NovaXmax — Kenya’s Trusted Multi-Seller E-Commerce Marketplace",
+    title: {
+    default: "NovaXmax — Kenya’s Trusted Multi-Seller Marketplace",
+    template: "%s | NovaXmax",
+    },
   description:
     "Buy, sell, and advertise products across Kenya with Novaxmax — a powerful multi-seller e-commerce platform connecting local vendors and buyers. Enjoy secure M-Pesa payments, fast delivery, and video ad promotions that help your business grow online.",
-  keywords: [
+
+    keywords: [
     "Kenya e-commerce",
     "online marketplace Kenya",
     "multi-seller platform Kenya",
@@ -30,14 +34,21 @@ export const metadata: Metadata = {
     "online shop Kenya",
     "digital marketplace Kenya",
     "local business Kenya",
-    "Kenya delivery platform",
+    "buy products online Kenya",
+    "sell online Kenya",
+    "M-Pesa shopping",
+    "NovaXmax",
   ],
+    robots: {
+    index: true,
+    follow: true,
+  },
   openGraph: {
     title: "NovaXmax — Kenya’s Trusted Multi-Seller E-Commerce Marketplace",
     description:
       "Join NovaXmax to buy and sell across Kenya. Secure payments, fast delivery, and engaging video ads that boost your product visibility.",
     url: "https://novaxmax.com",
-    siteName: "Novaxpress",
+    siteName: "Novaxmax",
     images: [
       {
         url: "/og-image.png",
