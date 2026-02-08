@@ -79,7 +79,7 @@ export default function WishlistPage() {
               className="border p-4 rounded-2xl bg-white/70 backdrop-blur-sm shadow-md hover:shadow-lg transition-all"
             >
               <div
-                onClick={() => router.push(`/product/${product._id}`)}
+                onClick={() => router.push(`/product/${product.slug}`)}
                 className="cursor-pointer mb-3 w-full h-44 relative"
               >
                 <CldImage
@@ -100,7 +100,7 @@ export default function WishlistPage() {
 
               <div className="mt-3 flex justify-between">
                 <button
-                  onClick={() => router.push(`/product/${product._id}`)}
+                  onClick={() => router.push(`/product/${product.slug}`)}
                   className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 rounded text-sm transition-all"
                 >
                   View

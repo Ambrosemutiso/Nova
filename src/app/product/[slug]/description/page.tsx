@@ -14,7 +14,7 @@ export default function FullDescriptionPage() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await fetch(`/api/product/${slug}`);
+        const res = await fetch(`/api/product/products/${slug}`);
         if (!res.ok) throw new Error('Failed to fetch product');
         const data = await res.json();
         setProduct(data.product);
@@ -50,7 +50,8 @@ export default function FullDescriptionPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 pt-28 pb-10">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
+      <div className="max-w-6xl mx-auto px-4 pt-28 pb-10">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <button
@@ -102,6 +103,7 @@ export default function FullDescriptionPage() {
           </ul>
         </div>
       )}
+    </div>
     </div>
   );
 }

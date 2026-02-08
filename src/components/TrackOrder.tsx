@@ -26,7 +26,8 @@ export default function TrackOrder() {
   ];
 
   return (
-    <div className="bg-gray-50 min-h-screen pt-28 pb-20">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
+      <div className="max-w-6xl mx-auto px-4 pt-28 pb-10">
       {/* Header Section */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -107,6 +108,7 @@ export default function TrackOrder() {
           Contact Support
         </a>
       </motion.div>
+    </div>
     </div>
   );
 }

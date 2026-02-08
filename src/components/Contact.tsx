@@ -5,7 +5,8 @@ import { motion } from 'framer-motion';
 
 export default function ContactUs() {
   return (
-    <div className="bg-gray-50 min-h-screen pt-28 pb-20">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
+      <div className="max-w-6xl mx-auto px-4 pt-28 pb-10">
       {/* Header Section */}
       <section className="text-center px-6 mb-12">
         <motion.h1
@@ -157,6 +158,7 @@ export default function ContactUs() {
           Email Us Now
         </a>
       </motion.div>
+    </div>
     </div>
   );
 }

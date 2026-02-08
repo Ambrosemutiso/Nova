@@ -5,7 +5,8 @@ import { Store, Scale, CheckCircle, ShieldAlert, DollarSign, FileText } from 'lu
 
 export default function SellerPolicy() {
   return (
-    <div className="bg-white text-gray-800">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
+      <div className="max-w-6xl mx-auto px-4 pt-28 pb-10">
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-orange-600 via-orange-500 to-amber-400 text-white py-24 px-6 text-center">
         <div className="max-w-5xl mx-auto">
@@ -163,6 +164,7 @@ export default function SellerPolicy() {
           </a>
         </div>
       </section>
+    </div>
     </div>
   );
 }

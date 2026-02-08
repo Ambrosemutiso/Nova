@@ -33,7 +33,8 @@ export default function InstallmentProgressPage() {
     tab === 'current' ? currentPlans : completedPlans;
 
   return (
-    <div className="pt-24 px-4 md:ml-64">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
+      <div className="max-w-6xl mx-auto px-4 pt-28 pb-10">
       <h1 className="text-2xl font-semibold mb-6">
         My Installment Plans
       </h1>
@@ -75,6 +76,7 @@ export default function InstallmentProgressPage() {
           ))}
         </div>
       )}
+    </div>
     </div>
   );
 }

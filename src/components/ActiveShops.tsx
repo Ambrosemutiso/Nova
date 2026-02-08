@@ -73,8 +73,8 @@ export default function ActiveShops() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 pt-24 pb-16">
-
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
+      <div className="max-w-6xl mx-auto px-4 pt-28 pb-10">
       {/* 🔹 Search & Sort Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
         <input
@@ -99,7 +99,7 @@ export default function ActiveShops() {
         <div className="text-center py-20">
           <p className="text-gray-600 mb-3">😔 No active shops found.</p>
           <Link
-            href="/desc/sell-on-novaxpress"
+            href="/desc/sell-on-novaxmax"
             className="text-orange-600 font-medium hover:underline"
           >
             Become a Seller →
@@ -136,6 +136,7 @@ export default function ActiveShops() {
           ))}
         </div>
       )}
+    </div>
     </div>
   );
 }

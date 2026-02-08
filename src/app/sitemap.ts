@@ -1,16 +1,25 @@
-import { getAllProducts } from '@/lib/products';
+import Product from "@/app/models/product";
+import { dbConnect } from "@/lib/dbConnect";
 
 export default async function sitemap() {
-  const products = await getAllProducts();
+  await dbConnect();
+
+  const products = await Product.find({}, "slug updatedAt").lean();
+
+  const productUrls = products.map((product) => ({
+    url: `https://novaxmax.com/product/${product.slug}`,
+    lastModified: product.updatedAt || new Date(),
+  }));
 
   return [
     {
-      url: 'https://novaxmax.com',
+      url: "https://novaxmax.com",
       lastModified: new Date(),
     },
-    ...products.map((product) => ({
-      url: `https://novaxmax.com/product/${product.slug}`,
-      lastModified: product.updatedAt,
-    })),
+    {
+      url: "https://novaxmax.com/products",
+      lastModified: new Date(),
+    },
+    ...productUrls,
   ];
 }

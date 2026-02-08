@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useCart } from '@/app/context/CartContext';
 import { ShoppingCart, ChevronRight} from 'lucide-react';
-import type { Product } from '@/app/types/product';
+import type { Product as ProductType } from "@/app/types/product";
 import RelatedProducts from '@/components/RelatedProducts'
 import CustomersAlsoViewed from "@/components/CustomersAlsoViewed";
 import RecentlyViewed from "@/components/RecentlyViewed";
@@ -14,10 +14,13 @@ import ProductImageViewer from '@/components/ProductImageViewer';
 import SellerSection from '@/components/SellerSection';
 import MoreFromSeller from '@/components/MoreFromSeller';
 import BuyerLoginModal from '@/components/modals/BuyerLoginModal';
+import Link from 'next/link';
 
-export default function ProductDetails() {
-const { slug } = useParams();
-  const [product, setProduct] = useState<Product | null>(null);
+type ProductDetailsProps = {
+  product: ProductType;
+};
+
+export default function ProductDetails({ product }: ProductDetailsProps) {
   const { addToCart, cartItems, increaseQuantity, decreaseQuantity } = useCart();
   const [userId, setUserId] = useState<string | null>(null);
 const [showReportModal, setShowReportModal] = useState(false);
@@ -109,23 +112,6 @@ useEffect(() => {
       if (_id) setUserId(_id);
     }
   }, []);
-useEffect(() => {
-  if (!slug) return;
-
-  const fetchProduct = async () => {
-    try {
-      const res = await fetch(`/api/product/products/${slug}`);
-      if (!res.ok) throw new Error('Failed to fetch product');
-      const data = await res.json();
-      setProduct(data.product);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  fetchProduct();
-}, [slug]);
-
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -153,8 +139,8 @@ useEffect(() => {
     </div>
     );
 return (
-  <div className="max-w-6xl mx-auto px-4 pt-28 pb-10"> {/* pt-28 to offset navbar height */}
-  <div className="mb-6 overflow-x-auto">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
+      <div className="max-w-6xl mx-auto px-4 pt-28 pb-10">
   <nav className="flex items-center text-sm text-gray-500 whitespace-nowrap flex-nowrap gap-1 px-1">
     <span>Home</span>
     <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
@@ -256,21 +242,14 @@ return (
       </h2>
 
       {/* ➡️ Right Arrow for Mobile */}
-      <a
-        href={`/product/${product.slug}/description`}
-        className="md:hidden text-orange-600 flex items-center gap-1 text-sm font-medium"
-      >
-        View more
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-4 h-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
-      </a>
+<Link
+  href={`/product/${product.slug}/description`}
+  className="md:hidden text-orange-600 flex items-center gap-1 text-sm font-medium"
+>
+  View more
+  <ChevronRight className="w-4 h-4" />
+</Link>
+
     </div>
 
     {/* Description Content */}
