@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import ProductModel from "@/app/models/product";
+import Product from "@/app/models/product";
 import { dbConnect } from "@/lib/dbConnect";
 import ProductDetails from "@/components/Product";
 import type { Product as ProductType } from "@/app/types/product";
@@ -13,7 +13,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   await dbConnect();
 
-  const product = (await ProductModel
+  const product = (await Product
     .findOne({ slug: params.slug })
     .lean()) as ProductType | null;
 
@@ -83,7 +83,7 @@ export async function generateMetadata(
 export default async function ProductPage({ params }: PageProps) {
   await dbConnect();
 
-  const product = (await ProductModel
+  const product = (await Product
     .findOne({ slug: params.slug })
     .lean()) as ProductType | null;
 
