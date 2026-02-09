@@ -14,12 +14,8 @@ import SellerSection from '@/components/SellerSection';
 import MoreFromSeller from '@/components/MoreFromSeller';
 import BuyerLoginModal from '@/components/modals/BuyerLoginModal';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
 
-
-export default function ProductDetails(){
-    const { slug } = useParams();
-const [product, setProduct] = useState<ProductType | null>(null);
+export default function ProductDetails({ product }: { product: ProductType }) {
   const { addToCart, cartItems, increaseQuantity, decreaseQuantity } = useCart();
   const [userId, setUserId] = useState<string | null>(null);
 const [showReportModal, setShowReportModal] = useState(false);
@@ -46,6 +42,7 @@ const handleReportSubmit = async () => {
   if (screenshot) {
     formData.append('screenshot', screenshot);
   }
+
   try {
     const res = await fetch('/api/report-product', {
       method: 'POST',
@@ -103,18 +100,7 @@ useEffect(() => {
   return () => window.removeEventListener("beforeunload", handleBeforeUnload);
 }, [product]);
 
-useEffect(() => {
-  if (!slug) return;
-
-  const fetchProduct = async () => {
-    const res = await fetch(`/api/product/products/${slug}`);
-    const data = await res.json();
-    setProduct(data.product);
-  };
-
-  fetchProduct();
-}, [slug]);
-
+  
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const _id = localStorage.getItem('userId');
