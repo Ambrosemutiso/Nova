@@ -46,7 +46,6 @@ const handleReportSubmit = async () => {
   if (screenshot) {
     formData.append('screenshot', screenshot);
   }
-
   try {
     const res = await fetch('/api/report-product', {
       method: 'POST',

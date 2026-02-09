@@ -13,9 +13,9 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   await dbConnect();
 
-  const product = (await Product
-    .findOne({ slug: params.slug })
-    .lean()) as ProductType | null;
+  const slug = decodeURIComponent(params.slug).toLowerCase();
+
+  const product = await Product.findOne({ slug }).lean<ProductType | null>();
 
   if (!product) {
     return {
@@ -35,7 +35,7 @@ export async function generateMetadata(
   const image =
     product.images?.[0] || "https://novaxmax.com/og-default.png";
 
-  const url = `https://novaxmax.com/product/${product.slug}`;
+  const url = `https://novaxmax.com/product/${slug}`;
 
   const keywords: string[] = [
     product.name,
