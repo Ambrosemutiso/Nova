@@ -5,7 +5,8 @@ import { motion } from 'framer-motion';
 
 export default function PrivacyPolicy() {
   return (
-    <div className="bg-white text-gray-800">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
+      <div className="max-w-6xl mx-auto px-4 pt-28 pb-10">
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-orange-500 via-orange-400 to-yellow-400 text-white py-24 px-6 text-center">
         <div className="max-w-5xl mx-auto">
@@ -128,10 +129,10 @@ export default function PrivacyPolicy() {
           <p className="text-gray-700">
             For questions, data requests, or privacy concerns, please contact our support team at:{' '}
             <a
-              href="mailto:privacy@novaxmax.com"
+              href="mailto:support@novaxmax.com"
               className="text-orange-500 font-medium hover:underline"
             >
-              privacy@novaxmax.com
+              support@novaxmax.com
             </a>.
           </p>
         </motion.div>
@@ -153,6 +154,7 @@ export default function PrivacyPolicy() {
           </a>
         </div>
       </section>
+    </div>
     </div>
   );
 }

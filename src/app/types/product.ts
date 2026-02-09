@@ -1,5 +1,5 @@
 // types/product.ts
-export interface Product {
+export interface ProductType {
   _id: string;
   name: string;
   slug: string;

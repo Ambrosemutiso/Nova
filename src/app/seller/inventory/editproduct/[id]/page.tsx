@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
-import type { Product } from '@/app/types/product';
+import type { ProductType } from "@/app/types/product";
 
 export default function EditProductPage() {
   const { id } = useParams();
   const router = useRouter();
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<ProductType | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

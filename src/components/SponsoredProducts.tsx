@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import ProductCard from './ProductCard';
-import { Product } from '@/app/types/product';
+import type { ProductType } from "@/app/types/product";
 
 export default function SponsoredProducts() {
-  const [sponsored, setSponsored] = useState<Product[]>([]);
+  const [sponsored, setSponsored] = useState<ProductType[]>([]);
 
   useEffect(() => {
     const fetchSponsored = async () => {

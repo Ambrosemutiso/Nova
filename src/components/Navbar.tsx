@@ -54,7 +54,6 @@ export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin }: NavbarPr
 
   const promos = [
     '🔥 Flash Sale! Up to 50% off selected products!',
-    '📞 Contact us: +254 798 437 508',
     '🚚 Free delivery for orders above Ksh 2,000!',
     '💳 Secure Payments via M-Pesa & AirtelMoney',
   ];

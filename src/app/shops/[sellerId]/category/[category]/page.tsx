@@ -2,11 +2,11 @@
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import ProductCard from '@/components/ProductCard';
-import type { Product } from '@/app/types/product';
+import type { ProductType } from '@/app/types/product';
 
 export default function CategoryPage() {
   const { sellerId, category } = useParams();
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductType[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

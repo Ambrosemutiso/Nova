@@ -1,15 +1,15 @@
 // utils/wishlist.ts
-import { Product } from '@/app/types/product'; 
+import type { ProductType } from "@/app/types/product";
 
 const WISHLIST_KEY = 'wishlist';
 
-export const getWishlist = (): Product[] => {
+export const getWishlist = (): ProductType[] => {
   if (typeof window === 'undefined') return [];
   const stored = localStorage.getItem(WISHLIST_KEY);
   return stored ? JSON.parse(stored) : [];
 };
 
-export const addToWishlist = (product: Product): void => {
+export const addToWishlist = (product: ProductType): void => {
   const current = getWishlist();
   const exists = current.some((item) => item._id === product._id);
   if (!exists) {

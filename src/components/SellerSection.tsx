@@ -7,14 +7,14 @@ import { toast, ToastContainer } from 'react-toastify';
 import { ShieldCheck, ChevronRight, CheckCircle } from 'lucide-react';
 import { Seller } from '@/app/types/seller';
 import { Review } from '@/app/types/review';
-import { Product } from '@/app/types/product';
+import type { ProductType } from "@/app/types/product";
 import { useRouter } from 'next/navigation';
 
 export default function ProductReviewSection({
   product,
   showLoginModal,
 }: {
-  product: Product;
+  product: ProductType;
   showLoginModal: () => void;
 }) {
   const router = useRouter();

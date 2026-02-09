@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import ProductCard from './ProductCard';
-import { Product } from '@/app/types/product';
+import type { ProductType } from "@/app/types/product";
 
 interface RelatedProductsProps {
   name: string;
@@ -11,7 +11,7 @@ interface RelatedProductsProps {
 }
 
 export default function RelatedProducts({ name, currentId }: RelatedProductsProps) {
-  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [relatedProducts, setRelatedProducts] = useState<ProductType[]>([]);
 
   useEffect(() => {
     const fetchRelated = async () => {

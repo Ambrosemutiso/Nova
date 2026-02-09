@@ -2,10 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 import { CldImage } from 'next-cloudinary';
-import { Product } from '@/app/types/product';
+import type { ProductType } from "@/app/types/product";
 
 interface ProductCardProps {
-  product: Product;
+  product: ProductType;
   showSponsoredBadge?: boolean;
   badge?: React.ReactNode;
   redirectAllTo?: string;

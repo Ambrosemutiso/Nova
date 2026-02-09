@@ -1,8 +1,8 @@
 'use client';
 import { useEffect } from 'react';
-import { Product } from '@/app/types/product';
+import type { ProductType } from '@/app/types/product';
 
-type Props = { product: Product };
+type Props = { product: ProductType };
 
 export default function BehaviorTracker({ product }: Props) {
   useEffect(() => {

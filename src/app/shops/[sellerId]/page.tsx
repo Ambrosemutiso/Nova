@@ -6,7 +6,7 @@ import Link from 'next/link';
 import ProductCard from '@/components/ProductCard';
 import { useAuth } from '@/app/context/AuthContext';
 import { toast, ToastContainer } from 'react-toastify';
-import type { Product } from '@/app/types/product';
+import type { ProductType } from '@/app/types/product';
 import type { Seller } from '@/app/types/seller';
 
 export default function SellerShopPage() {
@@ -14,7 +14,7 @@ export default function SellerShopPage() {
   const { user } = useAuth();
 
   const [seller, setSeller] = useState<Seller | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductType[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
 
@@ -79,7 +79,7 @@ export default function SellerShopPage() {
     }
   };
 
-  const groupedByCategory = products.reduce<Record<string, Product[]>>((acc, product) => {
+  const groupedByCategory = products.reduce<Record<string, ProductType[]>>((acc, product) => {
     const cat = product.category || 'Uncategorized';
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(product);

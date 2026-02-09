@@ -3,18 +3,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'react-toastify';
-
-interface Product {
-  _id: string;
-  name: string;
-  category: string;
-  calculatedPrice: number;
-  quantity: number;
-  createdAt: string;
-}
+import type { ProductType } from "@/app/types/product";
 
 export default function InventoryPage() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductType[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

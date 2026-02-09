@@ -1,10 +1,10 @@
 // lib/fetchProductsByCategory.ts
-import {Product} from '@/app/types/product';
+import type { ProductType } from "@/app/types/product";
 
-export const fetchProductsByCategory = async (category: string): Promise<Product[]> => {
+export const fetchProductsByCategory = async (category: string): Promise<ProductType[]> => {
   const res = await fetch('/api/products/all');
   const data = await res.json();
   return category === 'Shop'
     ? data.products
-    : data.products.filter((product: Product) => product.category === category);
+    : data.products.filter((product: ProductType) => product.category === category);
 };

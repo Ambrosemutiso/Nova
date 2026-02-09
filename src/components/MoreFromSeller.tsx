@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Product } from '@/app/types/product';
+import type { ProductType } from "@/app/types/product";
 import ProductCard from './ProductCard';
 
 interface Props {
@@ -10,7 +10,7 @@ interface Props {
 }
 
 export default function MoreFromSeller({ sellerId, currentProductId }: Props) {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductType[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,7 +24,7 @@ export default function MoreFromSeller({ sellerId, currentProductId }: Props) {
         const data = await res.json();
 
         const filtered = (data.products || []).filter(
-          (p: Product) => p._id !== currentProductId
+          (p: ProductType) => p._id !== currentProductId
         );
 
         setProducts(filtered);

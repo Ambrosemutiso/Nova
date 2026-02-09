@@ -1,10 +1,10 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Product } from '@/app/types/product';
+import type { ProductType } from "@/app/types/product";
 import ProductCard from './ProductCard';
 
 export default function TopPicksForYou() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductType[]>([]);
 
 useEffect(() => {
   const counts = JSON.parse(localStorage.getItem('viewCounts') || '{}');

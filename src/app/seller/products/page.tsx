@@ -3,18 +3,10 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-
-type Product = {
-  _id: string;
-  name: string;
-  image: string;
-  calculatedPrice: number;
-  quantity: number;
-  createdAt: string;
-};
+import type { ProductType } from "@/app/types/product";
 
 export default function InventoryPage() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductType[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -49,7 +41,7 @@ export default function InventoryPage() {
           {products.map(product => (
             <div key={product._id} className="border rounded-lg shadow p-4">
               <Image
-                src={product.image || '/placeholder.png'}
+                src={product.images[0] || '/placeholder.png'}
                 alt={product.name}
                 width={300}
                 height={200}

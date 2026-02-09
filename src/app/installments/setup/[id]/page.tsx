@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { CldImage } from 'next-cloudinary';
-import { Product } from '@/app/types/product';
+import type { ProductType } from '@/app/types/product';
 
 export default function InstallmentSetupPage() {
   const { id } = useParams();
 
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<ProductType | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<'3' | '6' | '12'>('6');
   const [showModal, setShowModal] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');

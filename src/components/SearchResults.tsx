@@ -3,7 +3,7 @@
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import ProductCard from '@/components/ProductCard';
-import { Product } from '@/app/types/product';
+import type { ProductType } from '@/app/types/product';
 import Loader from '@/components/Loader';
 import RecentlyViewed from './RecentlyViewed';
 import TopPicksForYou from './TopPicksForYou';
@@ -13,8 +13,8 @@ import SponsoredProducts from './SponsoredProducts';
 export default function SearchResults() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q') || '';
-  const [results, setResults] = useState<Product[]>([]);
-  const [filtered, setFiltered] = useState<Product[]>([]);
+  const [results, setResults] = useState<ProductType[]>([]);
+  const [filtered, setFiltered] = useState<ProductType[]>([]);
   const [loading, setLoading] = useState(false);
   const [category, setCategory] = useState('');
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
@@ -34,7 +34,7 @@ export default function SearchResults() {
           const products = data.products || [];
           setResults(products);
 
-          const categories = [...new Set(products.map((p: Product) => p.category).filter(Boolean))];
+          const categories = [...new Set(products.map((p: ProductType) => p.category).filter(Boolean))];
           setAvailableCategories(categories as string[]);
         } catch (err) {
           console.error('Search error:', err);

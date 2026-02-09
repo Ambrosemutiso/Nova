@@ -2,13 +2,13 @@
 
 import { useEffect, useState, useRef } from 'react';
 import ProductCard from './ProductCard';
-import { Product } from '@/app/types/product';
+import type { ProductType } from "@/app/types/product";
 import { toast } from 'react-toastify';
 
 const FLASH_SALE_DURATION_MS = 3 * 60 * 60 * 1000; // 3 hours
 
 export default function FlashSales() {
-  const [flashProducts, setFlashProducts] = useState<Product[]>([]);
+  const [flashProducts, setFlashProducts] = useState<ProductType[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [timeLeft, setTimeLeft] = useState('');
@@ -31,7 +31,7 @@ export default function FlashSales() {
       setSelectedCategory('All');
 
       // ✅ Extract categories from the fetched products
-      const uniqueCategories = [...new Set(products.map((p: Product) => p.category))] as string[];
+      const uniqueCategories = [...new Set(products.map((p: ProductType) => p.category))] as string[];
       setCategories(uniqueCategories);
 
       // ✅ Reset scroll

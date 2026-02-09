@@ -3,10 +3,10 @@
 
 import { useEffect, useState } from 'react';
 import ProductCard from './ProductCard';
-import { Product } from '@/app/types/product';
+import type { ProductType } from "@/app/types/product";
 
 export default function CustomersAlsoViewed({ productId }: { productId: string }) {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductType[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {

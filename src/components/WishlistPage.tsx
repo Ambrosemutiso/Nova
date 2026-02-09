@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Product } from '@/app/types/product';
+import type { ProductType } from "@/app/types/product";
 import { getWishlist, removeFromWishlist } from '@/lib/wishlist';
 import { useRouter } from 'next/navigation';
 import { CldImage } from 'next-cloudinary';
@@ -15,7 +15,7 @@ const getPublicId = (url?: string) => {
 };
 
 export default function WishlistPage() {
-  const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
+  const [wishlistItems, setWishlistItems] = useState<ProductType[]>([]);
   const router = useRouter();
 
   useEffect(() => {

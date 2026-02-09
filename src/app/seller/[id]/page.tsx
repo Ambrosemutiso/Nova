@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Star, Clock, Truck, MessageSquare, ChevronLeft } from 'lucide-react';
+import type { ProductType } from "@/app/types/product";
 
 interface Seller {
   _id: string;
@@ -18,19 +19,12 @@ interface Seller {
   town: string;
 }
 
-interface Product {
-  _id: string;
-  name: string;
-  calculatedPrice: number;
-  oldPrice?: number;
-  image: string;
-}
 
 export default function SellerPage() {
   const { id } = useParams();
   const router = useRouter();
   const [seller, setSeller] = useState<Seller | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductType[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -141,7 +135,7 @@ export default function SellerPage() {
                 className="bg-white rounded-lg shadow hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden"
               >
                 <img
-                  src={product.image}
+                  src={product.images[0]}
                   alt={product.name}
                   className="w-full h-40 object-cover"
                 />

@@ -9,7 +9,7 @@ import { ChevronRight } from 'lucide-react';
 
 import { useCart } from '@/app/context/CartContext';
 import { addToWishlist, isInWishlist } from '@/lib/wishlist';
-import type { Product } from '@/app/types/product';
+import type { ProductType } from "@/app/types/product";
 
 const LIMIT = 12;
 
@@ -20,7 +20,7 @@ const categoryBannerMap: Record<string, string> = {
 
 type FetchResponse = {
   total: number;
-  products: Product[];
+  products: ProductType[];
   brands: string[];
 };
 
@@ -70,7 +70,7 @@ export default function CategoryPage() {
   const minPrice = searchParams.get('minPrice') ?? '';
   const maxPrice = searchParams.get('maxPrice') ?? '';
 
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductType[]>([]);
   const [brands, setBrands] = useState<string[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -106,7 +106,7 @@ export default function CategoryPage() {
     router.push(`/category/${categorySlug}?${params}`);
   };
 
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = (product: ProductType) => {
     addToCart({
       id: product._id,
       productId: product._id,

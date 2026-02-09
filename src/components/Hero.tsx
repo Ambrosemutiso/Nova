@@ -3,15 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { CldImage } from 'next-cloudinary';
-
-type Product = {
-  id: string;
-  name: string;
-  images: string[];
-  calculatedPrice: number;
-  oldPrice: number;
-  quantity: number;
-};
+import type { ProductType } from "@/app/types/product";
 
 type Banner = {
   id: number;
@@ -19,7 +11,7 @@ type Banner = {
   alt: string;
   heading: string;
   cta: string;
-  products: Product[];
+  products: ProductType[];
 };
 
 const SLIDE_INTERVAL = 6000;

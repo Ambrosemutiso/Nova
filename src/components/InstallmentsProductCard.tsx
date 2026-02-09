@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { CldImage } from "next-cloudinary";
-import { Product } from "@/app/types/product";
+import type { ProductType } from "@/app/types/product";
 import InstallmentModal from "./InstallmentModal";
 
 interface InstallmentProductCardProps {
-  product: Product;
+  product: ProductType;
 }
 
 export default function InstallmentProductCard({ product }: InstallmentProductCardProps) {

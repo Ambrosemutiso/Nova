@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react';
 import { fetchProductsByCategory } from '@/lib/fetchProductsByCategory';
 import ProductCard from '@/components/ProductCard';
-import { Product } from '@/app/types/product';
+import type { ProductType } from '@/app/types/product';
 
 export default function Phone() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductType[]>([]);
 
   useEffect(() => {
     fetchProductsByCategory('Jewelry').then(setProducts);

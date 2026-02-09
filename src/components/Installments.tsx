@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import InstallmentProductCard from '@/components/InstallmentsProductCard';
-import { Product } from '@/app/types/product';
+import type { ProductType } from "@/app/types/product";
 
 export default function InstallmentsPage() {
-  const [items, setItems] = useState<Product[]>([]);
+  const [items, setItems] = useState<ProductType[]>([]);
 
   useEffect(() => {
     const fetchInstallments = async () => {

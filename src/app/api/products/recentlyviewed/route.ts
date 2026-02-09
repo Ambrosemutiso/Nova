@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
 import ProductModel from '@/app/models/product';
-import { Product } from '@/app/types/product'; 
+import type { ProductType } from '@/app/types/product'; 
 
 export async function POST(req: Request) {
   const { ids } = await req.json();
@@ -13,7 +13,7 @@ export async function POST(req: Request) {
 
   await dbConnect();
 
-  const products = await ProductModel.find({ _id: { $in: ids } }).lean() as unknown as Product[];
+  const products = await ProductModel.find({ _id: { $in: ids } }).lean() as unknown as ProductType[];
 
   // Return in same order as received
   const sorted = ids

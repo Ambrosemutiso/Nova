@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
 import { useCart } from '@/app/context/CartContext';
 import { ShoppingCart, ChevronRight} from 'lucide-react';
-import type { Product as ProductType } from "@/app/types/product";
+import type { ProductType } from "@/app/types/product";
 import RelatedProducts from '@/components/RelatedProducts'
 import CustomersAlsoViewed from "@/components/CustomersAlsoViewed";
 import RecentlyViewed from "@/components/RecentlyViewed";

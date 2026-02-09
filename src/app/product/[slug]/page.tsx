@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Product from "@/app/models/product";
 import { dbConnect } from "@/lib/dbConnect";
 import ProductDetails from "@/components/Product";
-import type { Product as ProductType } from "@/app/types/product";
+import type { ProductType } from "@/app/types/product";
 
 type PageProps = {
   params: { slug: string };

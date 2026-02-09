@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
-import type { Product } from '@/app/types/product';
+import type { ProductType } from '@/app/types/product';
 
 export default function FullDescriptionPage() {
   const { slug } = useParams();
   const router = useRouter();
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<ProductType | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
