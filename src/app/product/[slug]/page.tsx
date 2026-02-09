@@ -33,7 +33,7 @@ export async function generateMetadata(
     "Shop quality products on NovaXmax with fast delivery across Kenya.";
 
   const image =
-    product.images?.[0] || "https://novaxmax.com/og-default.png";
+    product.images[0] || "https://novaxmax.com/og-default.png";
 
   const url = `https://novaxmax.com/product/${slug}`;
 
@@ -91,5 +91,5 @@ export default async function ProductPage({ params }: PageProps) {
     return <div>Product not found</div>;
   }
 
-  return <ProductDetails product={product} />;
+  return <ProductDetails />;
 }
