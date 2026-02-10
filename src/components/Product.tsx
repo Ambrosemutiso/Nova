@@ -1,4 +1,4 @@
-'use client';
+'use client'; 
 
 import { useState, useEffect } from 'react';
 import { useCart } from '@/app/context/CartContext';
@@ -14,8 +14,11 @@ import SellerSection from '@/components/SellerSection';
 import MoreFromSeller from '@/components/MoreFromSeller';
 import BuyerLoginModal from '@/components/modals/BuyerLoginModal';
 import Link from 'next/link';
+import { useParams } from 'next/navigation'
 
-export default function ProductDetails({ product }: { product: ProductType }) {
+export default function ProductDetails() {
+    const { slug } = useParams();
+const [product, setProduct] = useState<ProductType | null>(null);
   const { addToCart, cartItems, increaseQuantity, decreaseQuantity } = useCart();
   const [userId, setUserId] = useState<string | null>(null);
 const [showReportModal, setShowReportModal] = useState(false);
@@ -107,6 +110,19 @@ useEffect(() => {
       if (_id) setUserId(_id);
     }
   }, []);
+
+useEffect(() => {
+  if (!slug) return;
+
+  const fetchProduct = async () => {
+    const res = await fetch(`/api/product/products/${slug}`);
+    const data = await res.json();
+    setProduct(data.product);
+  };
+
+  fetchProduct();
+}, [slug]);
+
 
   const handleAddToCart = () => {
     if (!product) return;
