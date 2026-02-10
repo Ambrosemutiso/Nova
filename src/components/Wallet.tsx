@@ -222,8 +222,7 @@ const maxWeeklyValue = Math.max(
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
-      <div className="max-w-6xl mx-auto px-4 pt-28 pb-10">
+    <div className="max-w-6xl mx-auto px-4 pt-28 pb-10 min-h-screen bg-gradient-to-b from-orange-50 to-white">
 
       {/* Greeting */}
       <div>
@@ -296,7 +295,6 @@ const maxWeeklyValue = Math.max(
       </div>
     );
   })}
-</div>
 </div>
 
       {/* Actions */}
@@ -819,6 +817,6 @@ function WithdrawModal({
           </button>
         </div>
       </div>
-    </div>
+      </div>
   );
 }
