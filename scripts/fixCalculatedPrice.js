@@ -39,84 +39,60 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var dotenv = require("dotenv");
 dotenv.config();
 var mongoose_1 = require("mongoose");
-var slugify_1 = require("slugify");
 var dbConnect_1 = require("../lib/dbConnect");
-function injectMissingProductSlugs() {
+function injectProductCondition() {
     return __awaiter(this, void 0, void 0, function () {
-        var db, collection, products, _i, products_1, product, baseSlug, slug, counter, err_1;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
+        var db, collection, products, _i, products_1, product, category, condition, err_1;
+        var _a;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
                 case 0:
-                    _a.trys.push([0, 11, , 13]);
+                    _b.trys.push([0, 8, , 10]);
                     return [4 /*yield*/, (0, dbConnect_1.dbConnect)()];
                 case 1:
-                    _a.sent();
+                    _b.sent();
                     db = mongoose_1.default.connection.db;
                     if (!db)
                         throw new Error("Database connection not established.");
                     collection = db.collection("products");
-                    console.log("🔍 Checking products missing slug field...");
-                    return [4 /*yield*/, collection
-                            .find({
-                            $or: [
-                                { slug: { $exists: false } },
-                                { slug: "" },
-                            ],
-                        })
-                            .toArray()];
+                    console.log("🔍 Updating ALL products with condition field...");
+                    return [4 /*yield*/, collection.find({}).toArray()];
                 case 2:
-                    products = _a.sent();
-                    console.log("\uD83E\uDDE9 Found ".concat(products.length, " products without slug."));
+                    products = _b.sent();
+                    console.log("\uD83E\uDDE9 Found ".concat(products.length, " products."));
                     _i = 0, products_1 = products;
-                    _a.label = 3;
+                    _b.label = 3;
                 case 3:
-                    if (!(_i < products_1.length)) return [3 /*break*/, 9];
+                    if (!(_i < products_1.length)) return [3 /*break*/, 6];
                     product = products_1[_i];
-                    if (!product.name) {
-                        console.warn("\u26A0\uFE0F Skipping product ".concat(product._id, " (missing name)"));
-                        return [3 /*break*/, 8];
-                    }
-                    baseSlug = (0, slugify_1.default)(product.name, {
-                        lower: true,
-                        strict: true,
-                        trim: true,
-                    });
-                    slug = baseSlug;
-                    counter = 1;
-                    _a.label = 4;
-                case 4: return [4 /*yield*/, collection.findOne({
-                        slug: slug,
-                        _id: { $ne: product._id },
-                    })];
+                    category = ((_a = product.category) === null || _a === void 0 ? void 0 : _a.toLowerCase()) || "";
+                    condition = category === "motors"
+                        ? "used"
+                        : "brand-new";
+                    return [4 /*yield*/, collection.updateOne({ _id: product._id }, { $set: { condition: condition } })];
+                case 4:
+                    _b.sent();
+                    console.log("\u2705 ".concat(product._id, " (").concat(category, ") \u2192 ").concat(condition));
+                    _b.label = 5;
                 case 5:
-                    if (!_a.sent()) return [3 /*break*/, 6];
-                    counter += 1;
-                    slug = "".concat(baseSlug, "-").concat(counter);
-                    return [3 /*break*/, 4];
-                case 6: return [4 /*yield*/, collection.updateOne({ _id: product._id }, { $set: { slug: slug } })];
-                case 7:
-                    _a.sent();
-                    console.log("\u2705 ".concat(product._id, " \u2192 ").concat(slug));
-                    _a.label = 8;
-                case 8:
                     _i++;
                     return [3 /*break*/, 3];
+                case 6:
+                    console.log("🎯 Condition field successfully injected!");
+                    return [4 /*yield*/, mongoose_1.default.connection.close()];
+                case 7:
+                    _b.sent();
+                    return [3 /*break*/, 10];
+                case 8:
+                    err_1 = _b.sent();
+                    console.error("❌ Failed to inject condition field:", err_1);
+                    return [4 /*yield*/, mongoose_1.default.connection.close()];
                 case 9:
-                    console.log("🎯 All missing slugs successfully generated!");
-                    return [4 /*yield*/, mongoose_1.default.connection.close()];
-                case 10:
-                    _a.sent();
-                    return [3 /*break*/, 13];
-                case 11:
-                    err_1 = _a.sent();
-                    console.error("❌ Failed to inject product slugs:", err_1);
-                    return [4 /*yield*/, mongoose_1.default.connection.close()];
-                case 12:
-                    _a.sent();
-                    return [3 /*break*/, 13];
-                case 13: return [2 /*return*/];
+                    _b.sent();
+                    return [3 /*break*/, 10];
+                case 10: return [2 /*return*/];
             }
         });
     });
 }
-injectMissingProductSlugs();
+injectProductCondition();

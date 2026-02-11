@@ -15,6 +15,7 @@ const productSchema = new Schema(
     dimensions: { type: String },
     weight: { type: Number },
     category: { type: String, required: true },
+    condition: { type: String, enum: ['brand_new', 'used', 'refurbished'], required: true, default: 'brand_new' },
     price: { type: Number, required: true },
     oldPrice: { type: Number, default: null },
     calculatedPrice: {

@@ -2,16 +2,15 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 import mongoose from "mongoose";
-import slugify from "slugify";
 import { dbConnect } from "@/lib/dbConnect";
 
 interface ProductDoc {
   _id: mongoose.Types.ObjectId;
-  name?: string;
-  slug?: string;
+  category?: string;
+  condition?: string;
 }
 
-async function injectMissingProductSlugs() {
+async function injectProductCondition() {
   try {
     await dbConnect();
 
@@ -20,61 +19,34 @@ async function injectMissingProductSlugs() {
 
     const collection = db.collection<ProductDoc>("products");
 
-    console.log("🔍 Checking products missing slug field...");
+    console.log("🔍 Updating ALL products with condition field...");
 
-    // Find products without slug
-    const products = await collection
-      .find({
-        $or: [
-          { slug: { $exists: false } },
-          { slug: "" },
-        ],
-      })
-      .toArray();
+    const products = await collection.find({}).toArray();
 
-    console.log(`🧩 Found ${products.length} products without slug.`);
+    console.log(`🧩 Found ${products.length} products.`);
 
     for (const product of products) {
-      if (!product.name) {
-        console.warn(`⚠️ Skipping product ${product._id} (missing name)`);
-        continue;
-      }
+      const category = product.category?.toLowerCase() || "";
 
-      // Base slug
-      const baseSlug = slugify(product.name, {
-        lower: true,
-        strict: true,
-        trim: true,
-      });
-
-      let slug = baseSlug;
-      let counter = 1;
-
-      // Ensure uniqueness
-      while (
-        await collection.findOne({
-          slug,
-          _id: { $ne: product._id },
-        })
-      ) {
-        counter += 1;
-        slug = `${baseSlug}-${counter}`;
-      }
+      const condition =
+        category === "motors"
+          ? "used"
+          : "brand-new";
 
       await collection.updateOne(
         { _id: product._id },
-        { $set: { slug } }
+        { $set: { condition } }
       );
 
-      console.log(`✅ ${product._id} → ${slug}`);
+      console.log(`✅ ${product._id} (${category}) → ${condition}`);
     }
 
-    console.log("🎯 All missing slugs successfully generated!");
+    console.log("🎯 Condition field successfully injected!");
     await mongoose.connection.close();
   } catch (err) {
-    console.error("❌ Failed to inject product slugs:", err);
+    console.error("❌ Failed to inject condition field:", err);
     await mongoose.connection.close();
   }
 }
 
-injectMissingProductSlugs();
+injectProductCondition();

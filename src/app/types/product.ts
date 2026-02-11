@@ -6,6 +6,7 @@ export interface ProductType {
   price: number;
   oldPrice: number;
   category: string;
+  condition: string;
   county: string;
   town: string;
   quantity: number;

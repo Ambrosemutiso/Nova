@@ -9,6 +9,7 @@ import SuggestedForYou from '@/components/SuggestedForYou';
 import SponsoredProducts from '@/components/SponsoredProducts';
 import FlashSales from '@/components/FlashSales';
 import InstallmentProducts from '@/components/InstallmentProducts'
+import UsedRefurbishedProducts from '@/components/RefurbishedProducts';
 
 export default function Main() {
   const [category, setCategory] = useState('Shop');
@@ -22,6 +23,7 @@ export default function Main() {
       <SponsoredProducts/>
       <SuggestedForYou/>
       <TopPicksForYou/>
+      <UsedRefurbishedProducts/>
     </div>
   );
 }

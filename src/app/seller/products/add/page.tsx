@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/app/context/AuthContext';
 import TextEditor from '@/components/TextEditor';
+type ProductCondition = 'brand_new' | 'used' | 'refurbished';
 
 type County = 'Nairobi' | 'Mombasa' | 'Kisumu'|'Kwale'|'Kilifi'|'TanaRiver'|'Lamu'
 |'TaitaTaveta'|'Garissa'|'Wajir'|'Mandera'|'Marsabit'|'Isiolo'|'Meru'|'TharakaNithi'
@@ -94,6 +95,7 @@ export default function AddProduct() {
   const [county, setCounty] = useState<County | ''>('');
   const [town, setTown] = useState('');
   const [fulfillmentMode, setFulfillmentMode] = useState('');
+  const [condition, setCondition] = useState<ProductCondition | ''>('');
 
   const handleFeatureChange = (index: number, value: string) => {
     const updated = [...keyFeatures];
@@ -149,6 +151,7 @@ const handleCountyChange = (selectedCounty: County | '') => {
     if (!category) return toast.error('Please select a category!');
     if (!fulfillmentMode) return toast.error('Please select a fulfillment mode!');
     if (imageFiles.length === 0) return toast.error('Please upload at least one image!');
+    if (!condition) return toast.error('Please select product condition!');
 
     setUploading(true);
 
@@ -165,6 +168,7 @@ const handleCountyChange = (selectedCounty: County | '') => {
     formData.append('dimensions', dimensions);
     formData.append('weight', weight);
     formData.append('category', category);
+    formData.append('condition',condition);
     formData.append('price', price);
     formData.append('oldPrice', oldPrice);
     formData.append('calculatedPrice', String(calculatedPrice));
@@ -262,6 +266,37 @@ const handleCountyChange = (selectedCounty: County | '') => {
             ))}
           </select>
         )}
+{/* 🏷 Product Condition */}
+<div>
+  <label className="block font-semibold mb-1 text-gray-700">
+    Product Condition
+  </label>
+  <select
+    value={condition}
+    onChange={(e) => setCondition(e.target.value as ProductCondition)}
+    className="w-full border px-4 py-2 rounded"
+    required
+  >
+    <option value="">Select Condition</option>
+    <option value="brand_new">Brand New</option>
+    <option value="used">Used</option>
+    <option value="refurbished">Refurbished</option>
+  </select>
+
+  {condition === 'used' && (
+    <p className="text-sm text-gray-500 mt-1">
+      Please ensure the product description clearly states usage condition.
+    </p>
+  )}
+
+  {condition === 'refurbished' && (
+    <p className="text-sm text-gray-500 mt-1">
+      Refurbished products must be tested and fully functional.
+    </p>
+  )}
+</div>
+
+
         <input type="number" className="w-full border px-4 py-2 rounded" placeholder="Price" value={price} onChange={(e) => handlePriceChange(e.target.value)} required />
         <input type="number" className="w-full border px-4 py-2 rounded" placeholder="Old Price" value={oldPrice} onChange={(e) => setOldPrice(e.target.value)} required/>
         <input type="number" className="w-full border px-4 py-2 rounded" placeholder="Quantity" value={quantity} onChange={(e) => setQuantity(e.target.value)} required />

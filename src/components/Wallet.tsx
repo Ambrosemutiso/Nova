@@ -222,7 +222,7 @@ const maxWeeklyValue = Math.max(
 
 
   return (
-    <div className="max-w-6xl mx-auto px-4 pt-28 pb-10 min-h-screen bg-gradient-to-b from-orange-50 to-white">
+    <div className="max-w-5xl mx-auto px-4 pt-28 pb-12 space-y-10 min-h-screen bg-gradient-to-b from-orange-50 to-white">
 
       {/* Greeting */}
       <div>
@@ -295,6 +295,7 @@ const maxWeeklyValue = Math.max(
       </div>
     );
   })}
+</div>
 </div>
 
       {/* Actions */}
@@ -448,7 +449,6 @@ const maxWeeklyValue = Math.max(
       ))}
     </ul>
   )}
-</div>
 </div>
 
       {/* 🔢 Amount Entry Modal */}
