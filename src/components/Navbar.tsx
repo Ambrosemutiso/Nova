@@ -273,7 +273,7 @@ useEffect(() => {
               <li
                 key={i}
                 onClick={() => {
-                  router.push(`/product/${product._id}`);
+                  router.push(`/product/${product.slug}`);
                   setSearchTerm('');
                   setShowSearch(false);
                 }}

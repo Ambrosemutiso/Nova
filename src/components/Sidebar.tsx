@@ -13,7 +13,7 @@ import {
 } from 'react-icons/fi';
 
 export default function Sidebar({ onClose }: { onClose: () => void }) {
-  const [fontSize, setFontSize] = useState<number>(() => parseFloat(localStorage.getItem('fontSize') || '1'));
+const [fontSize, setFontSize] = useState<number>(1);
   const [language, setLanguage] = useState<string>(() => localStorage.getItem('language') || 'en');
   const { theme, setTheme } = useTheme();
   const router = useRouter();
@@ -24,11 +24,25 @@ export default function Sidebar({ onClose }: { onClose: () => void }) {
       document.body.style.overflow = 'auto';
     };
   }, []);
-
   useEffect(() => {
-    document.documentElement.style.fontSize = `${fontSize * 100}%`;
-    localStorage.setItem('fontSize', fontSize.toString());
-  }, [fontSize]);
+  const savedFont = localStorage.getItem('fontSize');
+
+  if (savedFont) {
+    setFontSize(parseFloat(savedFont));
+  } else {
+    // Detect device width
+    const isMobile = window.innerWidth < 768;
+
+    const defaultSize = isMobile ? 0.9 : 1; // 👈 mobile smaller, desktop medium
+    setFontSize(defaultSize);
+    localStorage.setItem('fontSize', defaultSize.toString());
+  }
+}, []);
+useEffect(() => {
+  document.documentElement.style.fontSize = `${fontSize * 100}%`;
+  localStorage.setItem('fontSize', fontSize.toString());
+}, [fontSize]);
+
 
   useEffect(() => {
     localStorage.setItem('language', language);

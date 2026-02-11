@@ -4,18 +4,17 @@ import { dbConnect } from '@/lib/dbConnect';
 import ProductDetails from '@/components/Product';
 import type { ProductType } from '@/app/types/product';
 
-type PageProps = {
-  params: { slug: string };
-};
-
 export async function generateMetadata(
-  { params }: PageProps
+  { params }: { params: Promise<{ slug: string }> }
 ): Promise<Metadata> {
+
+  const { slug } = await params; // ✅ unwrap params
+
   await dbConnect();
 
-  const product = (await Product
-    .findOne({ slug: params.slug })
-    .lean()) as ProductType | null;
+  const product = await Product
+    .findOne({ slug })
+    .lean<ProductType | null>();
 
   if (!product) {
     return {
@@ -26,19 +25,19 @@ export async function generateMetadata(
   }
 
   const cleanDescription =
-    product.description
-      ?.replace(/<[^>]*>/g, '')
-      .slice(0, 160) ||
+    product.description?.replace(/<[^>]*>/g, '').slice(0, 160) ??
     `Buy ${product.name} online in Kenya on NovaXmax`;
 
   const image =
-    product.images?.[0] ?? 'https://novaxmax.com/og-default.png';
+    product.images?.[0] ??
+    'https://novaxmax.com/og-default.png';
 
   const url = `https://novaxmax.com/product/${product.slug}`;
 
   return {
-    title: `${product.name} | Buy Online in Kenya | NovaXmax`,
+    title: `${product.name} | Buy Online in Kenya`,
     description: cleanDescription,
+    alternates: { canonical: url },
 
     openGraph: {
       title: product.name,
@@ -62,13 +61,9 @@ export async function generateMetadata(
       description: cleanDescription,
       images: [image],
     },
-
-    alternates: {
-      canonical: url,
-    },
   };
 }
 
-export default function ProductPage() {
+export default async function ProductPage() {
   return <ProductDetails />;
 }
