@@ -18,8 +18,8 @@ export async function GET(req: NextRequest) {
     const products = await Product.find({
       name: { $regex: q, $options: 'i' }
     })
-      .select('_id name calculatedPrice images')
-      .limit(5);
+      .select('_id name calculatedPrice images slug')
+      .limit(10);
 
     return NextResponse.json(products);
   } catch (error) {

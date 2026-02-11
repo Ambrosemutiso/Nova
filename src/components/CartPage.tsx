@@ -11,6 +11,7 @@ import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import { Player } from '@lottiefiles/react-lottie-player';
 import GlobalPayModal from '@/components/payments/GlobalPayModal';
+import UsedRefurbishedProducts from '@/components/RefurbishedProducts';
 
 type CartProps = {
   onOpenBuyerLogin?: () => void;
@@ -392,6 +393,7 @@ const getPublicId = (url?: string) => {
       <SponsoredProducts />
       <SuggestedForYou />
       <TopPicksForYou />
+      <UsedRefurbishedProducts/>
     </div>
   );
 }
