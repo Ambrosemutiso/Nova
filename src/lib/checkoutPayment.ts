@@ -9,7 +9,7 @@ type PaymentCallbacks = {
 export async function initiateCheckoutPayment(
   payload: any & PaymentCallbacks
 ) {
-  const toastId = toast.loading('Waiting for M-Pesa confirmation...');
+  const toastId = toast.loading('Waiting for payment confirmation...');
 
   try {
     const res = await fetch('/api/payments/initiate', {

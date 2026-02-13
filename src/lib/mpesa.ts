@@ -1,87 +1,107 @@
-import axios from 'axios';
-import moment from 'moment';
+import axios from "axios";
 
-const consumerKey = process.env.MPESA_CONSUMER_KEY!;
-const consumerSecret = process.env.MPESA_CONSUMER_SECRET!;
-const shortCode = process.env.MPESA_SHORTCODE!;
-const passkey = process.env.MPESA_PASSKEY!;
-const callbackURL = process.env.MPESA_CALLBACK_URL!;
+const BASE_URL = process.env.NCBA_BASE_URL!;
+const USERNAME = process.env.NCBA_USERNAME!;
+const SECRET = process.env.NCBA_SECRET_KEY!;
+const PAYBILL = process.env.NCBA_PAYBILL!;
 
-if (!callbackURL) {
-  throw new Error('❌ MPESA_CALLBACK_URL is not set');
+// 🔐 1. Generate Access Token
+async function getAccessToken(): Promise<string> {
+  const auth = Buffer.from(`${USERNAME}:${SECRET}`).toString("base64");
+
+  const response = await axios.get(
+    `${BASE_URL}/payments/api/v1/auth/token`,
+    {
+      headers: {
+        Authorization: `Basic ${auth}`,
+      },
+      timeout: 5000,
+    }
+  );
+
+  return response.data.access_token;
 }
 
+// 🚀 2. Initiate STK Push
 export async function initiateSTKPush({
   phone,
   amount,
   accountReference,
-  description = 'Payment',
 }: {
   phone: string;
   amount: number;
   accountReference: string;
-  description?: string;
 }) {
   try {
-    // 🔐 Auth
-    const auth = Buffer.from(
-      `${consumerKey}:${consumerSecret}`
-    ).toString('base64');
+    const accessToken = await getAccessToken();
 
-    const tokenRes = await axios.get(
-      'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials',
-      {
-        headers: { Authorization: `Basic ${auth}` },
-        timeout: 5000,
-      }
-    );
-
-    const accessToken = tokenRes.data.access_token;
-
-    // ⏱ Password
-    const timestamp = moment().format('YYYYMMDDHHmmss');
-    const password = Buffer.from(
-      `${shortCode}${passkey}${timestamp}`
-    ).toString('base64');
-
-    const formattedPhone = phone.startsWith('254')
+    const formattedPhone = phone.startsWith("254")
       ? phone
-      : phone.replace(/^0/, '254');
+      : phone.replace(/^0/, "254");
 
-    const stkRes = await axios.post(
-      'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest',
+    const response = await axios.post(
+      `${BASE_URL}/payments/api/v1/stk-push/initiate`,
       {
-        BusinessShortCode: shortCode,
-        Password: password,
-        Timestamp: timestamp,
-        TransactionType: 'CustomerPayBillOnline',
-        Amount: amount,
-        PartyA: formattedPhone,
-        PartyB: shortCode,
-        PhoneNumber: formattedPhone,
-        CallBackURL: callbackURL,
-        AccountReference: accountReference,
-        TransactionDesc: description,
+        TelephoneNo: formattedPhone,
+        Amount: amount.toString(),
+        PayBillNo: PAYBILL,
+        AccountNo: accountReference,
+        Network: "Safaricom",
+        TransactionType: "CustomerPayBillOnline",
       },
       {
-        headers: { Authorization: `Bearer ${accessToken}` },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
         timeout: 5000,
       }
     );
 
-    console.log('✅ STK PUSH ACCEPTED:', stkRes.data);
+    console.log("✅ NCBA STK INITIATE:", response.data);
 
     return {
       ok: true,
-      CheckoutRequestID: stkRes.data.CheckoutRequestID,
-      MerchantRequestID: stkRes.data.MerchantRequestID,
-      raw: stkRes.data,
+      transactionId: response.data.TransactionID,
+      referenceId: response.data.ReferenceID,
+      raw: response.data,
     };
-  } catch (err: any) {
-    console.error('❌ STK PUSH ERROR:', err.response?.data || err.message);
+  } catch (error: any) {
+    console.error("❌ NCBA STK ERROR:", error.response?.data || error.message);
     return {
       ok: false,
-      error: err.response?.data || err.message,
+      error: error.response?.data || error.message,
+    };
+  }
+}
+
+// 🔎 3. Query STK Status
+export async function querySTK(transactionId: string) {
+  try {
+    const accessToken = await getAccessToken();
+
+    const response = await axios.post(
+      `${BASE_URL}/payments/api/v1/stk-push/query`,
+      {
+        TransactionID: transactionId,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        timeout: 5000,
+      }
+    );
+
+    console.log("🔎 STK QUERY RESPONSE:", response.data);
+
+    return response.data;
+  } catch (error: any) {
+    console.error("❌ STK QUERY ERROR:", error.response?.data || error.message);
+    return {
+      ok: false,
+      error: error.response?.data || error.message,
     };
   }
 }
