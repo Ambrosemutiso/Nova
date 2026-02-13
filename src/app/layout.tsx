@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     siteName: "Novaxmax",
     images: [
       {
-        url: "/og-image.png",
+        url: "https://novaxmax.com/banner8.jpg",
         width: 1200,
         height: 630,
         alt: "NovaXmax Kenya Marketplace",
@@ -65,7 +65,7 @@ export const metadata: Metadata = {
     title: "NovaXmax — Empowering Sellers, Connecting Kenya.",
     description:
       "Kenya’s leading multi-seller e-commerce marketplace. Promote your products with video ads, reach more buyers, and grow your business with Novaxpress.",
-    images: ["/og-image.png"],
+    images: ["https://novaxmax.com/banner8.jpg"],
   },
   icons: {
     icon: "/favicon.ico",
