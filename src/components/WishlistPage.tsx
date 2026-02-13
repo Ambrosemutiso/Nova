@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { CldImage } from 'next-cloudinary';
 import { Player } from '@lottiefiles/react-lottie-player';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 
 const getPublicId = (url?: string) => {
   if (!url || typeof url !== 'string') return '';
@@ -78,26 +79,28 @@ export default function WishlistPage() {
               transition={{ duration: 0.3 }}
               className="border p-4 rounded-2xl bg-white/70 backdrop-blur-sm shadow-md hover:shadow-lg transition-all"
             >
-              <div
-                onClick={() => router.push(`/product/${product.slug}`)}
-                className="cursor-pointer mb-3 w-full h-44 relative"
-              >
-                <CldImage
-                  src={getPublicId(product.images[0]) || '/Electronics.jpg'}
-                  alt={product.name}
-                  width={300}
-                  height={300}
-                  crop="fill"
-                  className="w-full h-full object-cover rounded-lg"
-                />
-              </div>
-              <h3 className="text-md font-semibold line-clamp-2">
-                {product.name}
-              </h3>
-              <p className="text-sm text-gray-500 mt-1">
-                Ksh {product.calculatedPrice}
-              </p>
+    <Link
+      href={`/product/${product.slug}`}
+      className="block relative aspect-square w-full mb-2 overflow-hidden"
+    >
+      <CldImage
+        src={getPublicId(product.images?.[0]) || 'sample'}
+        alt={product.name}
+        width={300}
+        height={300}
+        crop="fill"
+        className="object-cover rounded w-full h-full"
+      />
+    </Link>
+  <div className="flex flex-col flex-grow">
+    <h3 className="text-sm font-semibold line-clamp-2">
+      {product.name}
+    </h3>
 
+    <p className="text-gray-500 font-bold mt-auto">
+      Ksh. {product.calculatedPrice.toLocaleString()}
+    </p>
+</div>
               <div className="mt-3 flex justify-between">
                 <button
                   onClick={() => router.push(`/product/${product.slug}`)}

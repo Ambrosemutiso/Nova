@@ -14,7 +14,7 @@ import UsedRefurbishedProducts from '@/components/RefurbishedProducts';
 export default function Main() {
   const [category, setCategory] = useState('Shop');
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-gradient-to-b from-orange-50 to-white">
       <Hero />
       <Menu onSelectCategory={setCategory}/>
       <FlashSales/>

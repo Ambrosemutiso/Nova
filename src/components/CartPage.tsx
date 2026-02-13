@@ -168,7 +168,7 @@ const getPublicId = (url?: string) => {
 
   if (cartItems.length === 0)
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-112px)] pt-20">
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-112px)] pt-20 bg-gradient-to-b from-orange-50 to-white">
         <Player
           autoplay
           loop
