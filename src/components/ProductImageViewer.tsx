@@ -123,7 +123,7 @@ const handleScroll = () => {
   return (
     <div className="p-4">
       {/* Horizontal Scrollable Cards */}
-      <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide">
+      <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
         {images.map((image, index) => (
 <div
   key={index}

@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import mongoose from "mongoose";
-import { dbConnect } from "@/lib/dbConnect";
-import PaymentIntent from "@/app/models/paymentIntent";
-import Wallet from "@/app/models/wallet";
-import Order from "@/app/models/orders";
-import { initiateSTKPush } from "@/lib/mpesa"; // ✅ changed
+import { NextRequest, NextResponse } from 'next/server';
+import mongoose from 'mongoose';
+import { dbConnect } from '@/lib/dbConnect';
+import PaymentIntent from '@/app/models/paymentIntent';
+import Wallet from '@/app/models/wallet';
+import Order from '@/app/models/orders';
+import { initiateSTKPush } from '@/lib/mpesa';
 
 export async function POST(req: NextRequest) {
   await dbConnect();
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
       amount,
       userId,
       purpose,
-      refId,
+      refId, 
       items,
       deliveryFee,
       county,
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
 
     if (!phone || !amount || !userId || !method || !purpose || !refId) {
       return NextResponse.json(
-        { message: "Missing required payment fields" },
+        { message: 'Missing required payment fields' },
         { status: 400 }
       );
     }
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     /* ===============================
        💰 WALLET
     ================================ */
-    if (purpose === "wallet") {
+    if (purpose === 'wallet') {
       let wallet = await Wallet.findOne({ userId: refId });
 
       if (!wallet) {
@@ -51,24 +51,26 @@ export async function POST(req: NextRequest) {
     /* ===============================
        📆 INSTALLMENT
     ================================ */
-    else if (purpose === "installment-monthly") {
-      normalizedRefId = refId;
+    else if (purpose === 'installment-monthly') {
+      normalizedRefId = refId; // already a planId
     }
 
     /* ===============================
        📆 SHOP-UPGRADE
     ================================ */
-    else if (purpose === "shop-upgrade") {
-      normalizedRefId = refId;
-    }
+    else if (purpose === 'shop-upgrade') {
+      // refId = sellerId
+       normalizedRefId = refId;
+      }
+
 
     /* ===============================
-       🛒 ORDER
+       🛒 ORDER (FIXED)
     ================================ */
-    else if (purpose === "order") {
+    else if (purpose === 'order') {
       if (!items || !county || !town) {
         return NextResponse.json(
-          { message: "Missing order details" },
+          { message: 'Missing order details' },
           { status: 400 }
         );
       }
@@ -79,7 +81,7 @@ export async function POST(req: NextRequest) {
         deliveryFee,
         totalAmount: amount,
         customerInfo: { county, town, phone },
-        paymentStatus: "pending",
+        paymentStatus: 'pending',
       });
 
       normalizedRefId = order._id.toString();
@@ -90,13 +92,13 @@ export async function POST(req: NextRequest) {
     ================================ */
     else {
       return NextResponse.json(
-        { message: "Invalid payment purpose" },
+        { message: 'Invalid payment purpose' },
         { status: 400 }
       );
     }
 
     /* ===============================
-       💳 CREATE PAYMENT INTENT
+       💳 PAYMENT INTENT
     ================================ */
     const paymentIntent = await PaymentIntent.create({
       userId,
@@ -104,44 +106,48 @@ export async function POST(req: NextRequest) {
       method,
       purpose,
       refId: normalizedRefId,
-      status: "pending",
+      status: 'pending',
     });
 
     /* ===============================
-       📲 NCBA STK PUSH
+       📲 MPESA STK PUSH
     ================================ */
-    if (method === "mpesa") {
+    if (method === 'mpesa') {
       const stk = await initiateSTKPush({
         phone,
         amount,
         accountReference: `PAY-${paymentIntent._id}`,
+        description:
+          purpose === 'wallet'
+            ? 'Wallet top-up'
+            : purpose === 'order'
+            ? 'Order payment'
+            : 'Installment payment',
       });
 
-      // 🔥 NCBA returns TransactionID
-      if (!stk?.transactionId) {
-        paymentIntent.status = "failed";
+      if (!stk?.CheckoutRequestID) {
+        paymentIntent.status = 'failed';
         await paymentIntent.save();
 
         return NextResponse.json(
-          { message: "Failed to initiate STK push" },
+          { message: 'Failed to initiate STK push' },
           { status: 500 }
         );
       }
 
-      // ✅ Store NCBA TransactionID
-      paymentIntent.transactionId = stk.transactionId;
+      paymentIntent.checkoutRequestId = stk.CheckoutRequestID;
       await paymentIntent.save();
     }
 
     return NextResponse.json({
       success: true,
       paymentIntentId: paymentIntent._id,
-      refId: normalizedRefId,
+      refId: normalizedRefId, // 🔑 useful for debugging
     });
   } catch (error) {
-    console.error("[PAYMENT INITIATE ERROR]", error);
+    console.error('[PAYMENT INITIATE ERROR]', error);
     return NextResponse.json(
-      { message: "Payment initiation failed" },
+      { message: 'Payment initiation failed' },
       { status: 500 }
     );
   }

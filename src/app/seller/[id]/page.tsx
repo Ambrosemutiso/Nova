@@ -67,7 +67,7 @@ export default function SellerPage() {
     );
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-10">
+    <div className=" md:ml-64 max-w-2xl p-6 mx-auto px-4 pt-28 min-h-screen bg-gray-50 pb-10">
       {/* Sticky Header */}
       <div className="sticky top-0 z-30 bg-white shadow-sm flex items-center gap-3 px-4 py-3">
         <button

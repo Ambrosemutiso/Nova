@@ -31,7 +31,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="relative min-h-screen pt-28 pb-16 px-6 overflow-hidden bg-gradient-to-b from-orange-50 via-white to-orange-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="md:ml-64 max-w-2xl p-6 mx-auto relative min-h-screen pt-28 pb-16 px-6 overflow-hidden bg-gradient-to-b from-orange-50 via-white to-orange-100 dark:from-gray-900 dark:to-gray-800">
       {/* 🌈 Animated background blobs */}
       <motion.div
         initial={{ opacity: 0 }}

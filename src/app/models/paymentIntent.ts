@@ -9,7 +9,7 @@ export interface IPaymentIntent {
   purpose: 'order' | 'installment-deposit' | 'installment-monthly' | 'wallet' |'shop-upgrade';
   refId: string;
   status: 'pending' | 'paid' | 'failed';
-  transactionId?: string;
+  checkoutRequestId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,7 +51,7 @@ const PaymentIntentSchema = new Schema<IPaymentIntent>(
       default: 'pending',
     },
 
-    transactionId: {
+    checkoutRequestId: {
       type: String,
       index: true,
     },

@@ -1,107 +1,139 @@
-import { NextRequest, NextResponse } from "next/server";
-import { dbConnect } from "@/lib/dbConnect";
-import PaymentIntent from "@/app/models/paymentIntent";
-import Order from "@/app/models/orders";
-import Installment from "@/app/models/InstallmentOrder";
-import Wallet from "@/app/models/wallet";
-import WalletTransaction from "@/app/models/walletTransaction";
-import { querySTK } from "@/lib/mpesa";
-import { notifyClient } from "@/lib/paymentStream";
+// /app/api/payments/callback/mpesa/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { dbConnect } from '@/lib/dbConnect';
+import PaymentIntent from '@/app/models/paymentIntent';
+import Order from '@/app/models/orders';
+import Installment from '@/app/models/InstallmentOrder';
+import Wallet from '@/app/models/wallet';
+import WalletTransaction from '@/app/models/walletTransaction';
+import { notifyClient } from '@/lib/paymentStream';
 
 export async function POST(req: NextRequest) {
   await dbConnect();
 
   try {
-    const { paymentIntentId } = await req.json();
+    console.log('🔥 MPESA CALLBACK RECEIVED');
 
-    const paymentIntent = await PaymentIntent.findById(paymentIntentId);
+    const body = await req.json();
+    const stkCallback = body?.Body?.stkCallback;
 
-    if (!paymentIntent || !paymentIntent.transactionId) {
-      return NextResponse.json(
-        { message: "Payment not found" },
-        { status: 404 }
-      );
+    // ✅ 1. Structure validation
+    if (
+      !stkCallback ||
+      !stkCallback.CheckoutRequestID ||
+      typeof stkCallback.ResultCode !== 'number'
+    ) {
+      console.error('Invalid callback payload', body);
+      return NextResponse.json({ message: 'Invalid callback' }, { status: 400 });
     }
 
-    // 🔎 Query NCBA
-    const result = await querySTK(paymentIntent.transactionId);
+    const checkoutRequestId = stkCallback.CheckoutRequestID;
+    const resultCode = stkCallback.ResultCode;
 
-    if (result.status === "FAILED") {
-      paymentIntent.status = "failed";
+    // ✅ 2. Find intent
+    const paymentIntent = await PaymentIntent.findOne({
+      checkoutRequestId,
+    });
+
+    if (!paymentIntent) {
+      console.error('PaymentIntent not found:', checkoutRequestId);
+      return NextResponse.json({ message: 'Payment not found' }, { status: 404 });
+    }
+
+    // ✅ 3. Idempotency
+    if (paymentIntent.status === 'paid') {
+      return NextResponse.json({ success: true });
+    }
+
+    // ❌ Payment failed
+    if (resultCode !== 0) {
+      paymentIntent.status = 'failed';
       await paymentIntent.save();
 
       notifyClient(paymentIntent._id.toString(), {
-        status: "failed",
+        status: 'failed',
       });
 
-      return NextResponse.json({ status: "failed" });
+      return NextResponse.json({ success: false });
     }
 
-    if (result.status !== "SUCCESS") {
-      return NextResponse.json({ status: "pending" });
-    }
-
-    // ✅ Idempotency
-    if (paymentIntent.status === "paid") {
-      return NextResponse.json({ status: "paid" });
-    }
-
-    paymentIntent.status = "paid";
+    // ✅ Payment success
+    paymentIntent.status = 'paid';
     await paymentIntent.save();
 
-    /* ===============================
-       BUSINESS LOGIC
-    ================================ */
-
+    // ✅ 4. Business logic
     switch (paymentIntent.purpose) {
+      case 'order':
+        await Order.findByIdAndUpdate(paymentIntent.refId, {
+          status: 'paid',
+          paidAt: new Date(),
+        });
+        break;
 
-      case "installment-monthly": {
-        const inst = await Installment.findById(paymentIntent.refId);
-        if (!inst) break;
-
-        const paidAmount =
-          Number(inst.paidAmount ?? 0) + Number(paymentIntent.amount ?? 0);
-
-        const isCompleted = paidAmount >= inst.totalAmount;
-
+      case 'installment-deposit':
         await Installment.findByIdAndUpdate(paymentIntent.refId, {
-          paidAmount,
-          status: isCompleted ? "completed" : inst.status,
+          depositPaid: true,
+          status: 'active',
         });
+        break;
+
+case 'installment-monthly': {
+  const inst = await Installment.findById(paymentIntent.refId);
+
+  if (!inst) break;
+
+  const paidAmount =
+    Number(inst.paidAmount ?? 0) + Number(paymentIntent.amount ?? 0);
+
+  const isCompleted = paidAmount >= inst.totalAmount;
+
+  await Installment.findByIdAndUpdate(
+    paymentIntent.refId,
+    {
+      $set: {
+        paidAmount,
+        status: isCompleted ? 'completed' : inst.status,
+      },
+    },
+    { new: true }
+  );
+
+  break;
+}
+
+      case 'wallet': {
+const walletId = paymentIntent.refId;
+
+const wallet = await Wallet.findById(walletId);
+if (!wallet) throw new Error('Wallet not found');
+
+wallet.balance += paymentIntent.amount;
+await wallet.save();
+
+
+await WalletTransaction.create({
+  walletId: wallet._id,      // ✅ wallet reference
+  userId: wallet.userId,     // ✅ user reference
+  type: 'credit',
+  purpose: 'wallet',
+  status: 'paid',
+  amount: paymentIntent.amount,
+  label: 'Wallet top-up',
+  reference: checkoutRequestId,
+  balanceAfter: wallet.balance,
+});
 
         break;
-      }
-
-      case "wallet": {
-        const wallet = await Wallet.findById(paymentIntent.refId);
-        if (!wallet) break;
-
-        wallet.balance += paymentIntent.amount;
-        await wallet.save();
-
-        await WalletTransaction.create({
-          walletId: wallet._id,
-          userId: wallet.userId,
-          type: "credit",
-          purpose: "wallet",
-          status: "paid",
-          amount: paymentIntent.amount,
-          label: "Wallet top-up",
-          reference: paymentIntent.transactionId,
-          balanceAfter: wallet.balance,
-        });
-
-        break;
-      }
-
-            case 'order': {
+      }       
+      
+      case 'order': {
         await Order.findByIdAndUpdate(
           paymentIntent.refId,
           {
             status: 'paid',
             paymentInfo: {
               method: 'mpesa',
-              receipt: paymentIntent.transactionId,
+              receipt: checkoutRequestId,
               paidAt: new Date(),
             },
           },
@@ -141,18 +173,22 @@ case 'shop-upgrade': {
 
   break;
 }
+
+
     }
 
+
+    // ✅ 5. Notify frontend instantly
     notifyClient(paymentIntent._id.toString(), {
-      status: "paid",
+      status: 'paid',
       amount: paymentIntent.amount,
     });
 
-    return NextResponse.json({ status: "paid" });
+    return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("[NCBA STATUS ERROR]", err);
+    console.error('[MPESA CALLBACK ERROR]', err);
     return NextResponse.json(
-      { message: "Status check failed" },
+      { message: 'Callback processing failed' },
       { status: 500 }
     );
   }

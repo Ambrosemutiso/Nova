@@ -74,7 +74,7 @@ export default function HeroSlider() {
       ref={containerRef}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="w-full overflow-x-auto whitespace-nowrap scroll-smooth scrollbar-hide px-4 pt-28 pb-10"
+      className="w-full overflow-x-auto whitespace-nowrap scroll-smooth scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 px-4 pt-28 pb-10"
     >
       <div className="inline-flex gap-4">
         {banners.map((banner) => (

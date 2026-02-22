@@ -17,7 +17,7 @@ export default async function sitemap() {
       lastModified: new Date(),
     },
     {
-      url: "https://novaxmax.com/products",
+      url: "https://novaxmax.com/product",
       lastModified: new Date(),
     },
     ...productUrls,

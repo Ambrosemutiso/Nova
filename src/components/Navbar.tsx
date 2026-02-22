@@ -16,6 +16,7 @@ import { CldImage } from 'next-cloudinary';
 type NavbarProps = {
   onOpenBuyerLogin?: () => void;
   onOpenSellerLogin?: () => void;
+  onMenuClick?: () => void;
 };
 
 const countryData = [
@@ -29,7 +30,7 @@ const countryData = [
   { name: 'Somalia', code: 'SO', flag: 'https://flagcdn.com/w40/so.png', dialCode: '+252', currency: 'SOS' },
 ];
 
-export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin }: NavbarProps) {
+export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin,onMenuClick }: NavbarProps) {
   const [showSidebar, setShowSidebar] = useState(false);
   const [orderCount, setOrderCount] = useState(0);
   const [showSearch, setShowSearch] = useState(false);
@@ -418,29 +419,41 @@ useEffect(() => {
           )}
         </div>
 
-        {/* 🧭 Sidebars */}
-        {isSeller ? (
-          <>
-            {showSidebar && (
-              <div className="md:hidden">
-                <SellerSidebar onClose={() => setShowSidebar(false)} />
-              </div>
-            )}
+{/* SELLER SIDEBAR */}
+{isSeller && (
+  <>
+    {/* Desktop Sidebar */}
+    <div className="hidden md:block">
+      <SellerSidebar />
+    </div>
 
-            {!showSidebar && (
-              <button
-                onClick={() => setShowSidebar(true)}
-                className="md:hidden fixed bottom-6 right-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all z-[60]"
-                aria-label="Open Menu"
-              >
-                <FiMenu size={22} />
-              </button>
-            )}
-          </>
-        ) : (
-          showSidebar && <Sidebar onClose={() => setShowSidebar(false)} />
-        )}
+    {/* Mobile Sidebar */}
+    <div className="md:hidden">
+      <SellerSidebar
+        isOpen={showSidebar}
+        onClose={() => setShowSidebar(false)}
+        onOpen={() => setShowSidebar(true)}
+      />
+    </div>
+  </>
+)}
 
+{/* BUYER SIDEBAR */}
+{!isSeller && (
+  <>
+    {/* Desktop Sidebar */}
+    <div className="hidden md:block">
+      <Sidebar onClose={() => {}} />
+    </div>
+
+    {/* Mobile Sidebar */}
+    {showSidebar && (
+      <div className="md:hidden">
+        <Sidebar onClose={() => setShowSidebar(false)} />
+      </div>
+    )}
+  </>
+)}
         {/* 🔔 Notifications */}
         <AnimatePresence>
           {showNotifModal && (

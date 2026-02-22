@@ -7,47 +7,83 @@ import {
   FiHome, FiSmartphone, FiMonitor, FiHeart, FiUser,
   FiTv, FiWatch, FiGift, FiTruck, FiBook, FiTool,
   FiGrid, FiZoomIn, FiZoomOut, FiPackage, FiLayout,
-  FiLoader, FiSend, FiSun, FiMoon, FiGlobe,
-  FiFilm,
-  FiPhone, FiCreditCard
+  FiLoader, FiSun, FiMoon, FiGlobe,
+  FiFilm, FiPhone, FiCreditCard
 } from 'react-icons/fi';
 
-export default function Sidebar({ onClose }: { onClose: () => void }) {
-const [fontSize, setFontSize] = useState<number>(1);
-  const [language, setLanguage] = useState<string>(() => localStorage.getItem('language') || 'en');
-  const { theme, setTheme } = useTheme();
-  const router = useRouter();
+export default function Sidebar({
+  onClose,
+}: {
+  onClose?: () => void;
+}) {
 
+  const router = useRouter();
+  const { theme, setTheme } = useTheme();
+
+  const [isMobile, setIsMobile] = useState(false);
+  const [fontSize, setFontSize] = useState(1);
+  const [language, setLanguage] = useState('en');
+
+  /* -------------------------------- */
+  /* Detect mobile / desktop */
+  /* -------------------------------- */
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
+    const checkScreen = () =>
+      setIsMobile(window.innerWidth < 768);
+
+    checkScreen();
+    window.addEventListener('resize', checkScreen);
+
+    return () =>
+      window.removeEventListener('resize', checkScreen);
+  }, []);
+
+  /* -------------------------------- */
+  /* Lock scroll ONLY on mobile */
+  /* -------------------------------- */
+  useEffect(() => {
+    document.body.style.overflow =
+      isMobile ? 'hidden' : 'auto';
+
     return () => {
       document.body.style.overflow = 'auto';
     };
-  }, []);
+  }, [isMobile]);
+
+  /* -------------------------------- */
+  /* Font size */
+  /* -------------------------------- */
   useEffect(() => {
-  const savedFont = localStorage.getItem('fontSize');
+    const saved = localStorage.getItem('fontSize');
+    if (saved) setFontSize(parseFloat(saved));
+  }, []);
 
-  if (savedFont) {
-    setFontSize(parseFloat(savedFont));
-  } else {
-    // Detect device width
-    const isMobile = window.innerWidth < 768;
+  useEffect(() => {
+    document.documentElement.style.fontSize =
+      `${fontSize * 100}%`;
 
-    const defaultSize = isMobile ? 0.9 : 1; // 👈 mobile smaller, desktop medium
-    setFontSize(defaultSize);
-    localStorage.setItem('fontSize', defaultSize.toString());
-  }
-}, []);
-useEffect(() => {
-  document.documentElement.style.fontSize = `${fontSize * 100}%`;
-  localStorage.setItem('fontSize', fontSize.toString());
-}, [fontSize]);
+    localStorage.setItem(
+      'fontSize',
+      fontSize.toString()
+    );
+  }, [fontSize]);
 
+  /* -------------------------------- */
+  /* Language */
+  /* -------------------------------- */
+  useEffect(() => {
+    const savedLang =
+      localStorage.getItem('language');
+    if (savedLang) setLanguage(savedLang);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('language', language);
   }, [language]);
 
+  /* -------------------------------- */
+  /* Categories */
+  /* -------------------------------- */
   const categories = [
     { label: 'Home', icon: <FiHome />, route: '/' },
     { label: 'Wishlist', icon: <FiHeart />, route: '/wishlist' },
@@ -59,137 +95,141 @@ useEffect(() => {
     { label: 'Computing', icon: <FiMonitor />, route: '/category/Laptops' },
     { label: 'Electronics', icon: <FiTv />, route: '/category/Electronics' },
     { label: 'Fashion', icon: <FiUser />, route: '/category/Fashion' },
-    { label: 'Health', icon: <FiHeart />, route: '/category/Health' },
-    { label: 'Beauty', icon: <FiLayout />, route: '/category/Beauty' },
-    { label: 'Baby Products', icon: <FiGift />, route: '/category/Kids' },
     { label: 'Gaming', icon: <FiWatch />, route: '/category/Gaming' },
-    { label: 'Sporting Goods', icon: <FiTruck />, route: '/category/Sports' },
     { label: 'Automotive', icon: <FiTool />, route: '/category/Motors' },
-    { label: 'Books & Stationery', icon: <FiBook />, route: '/category/Books' },
-    { label: 'Sound Systems', icon: <FiLoader />, route: '/category/Systems' },
+    { label: 'Books', icon: <FiBook />, route: '/category/Books' },
     { label: 'Ads', icon: <FiFilm />, route: '/ads' },
     { label: 'Shops', icon: <FiGrid />, route: '/shops' },
   ];
 
-  return (
-    <div className="fixed inset-0 z-50 flex">
-      {/* Overlay */}
-      <div onClick={onClose} className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity" />
+  /* -------------------------------- */
+  /* Sidebar Content */
+  /* -------------------------------- */
+  const sidebarContent = (
+    <div className="p-6 pt-8">
 
-      {/* Sidebar */}
-      <div className="relative w-72 bg-gradient-to-b from-orange-50 via-white to-orange-100 dark:from-gray-900 dark:to-gray-800 shadow-2xl h-full transform transition-transform duration-300 translate-x-0 overflow-y-auto border-r border-orange-200/40">
-        {/* Close Button */}
+      {/* LOGO */}
+      <div
+        className="flex justify-center mb-8 cursor-pointer"
+        onClick={() => {
+          router.push('/');
+          onClose?.();
+        }}
+      >
+        <img
+          src="/Logo.png"
+          className="h-16 object-contain"
+        />
+      </div>
+
+      {/* Categories */}
+      <ul className="space-y-2">
+        {categories.map(({ label, icon, route }, i) => (
+          <li
+            key={i}
+            onClick={() => {
+              router.push(route);
+              onClose?.();
+            }}
+            className="
+              flex items-center gap-3
+              px-3 py-2 rounded-lg
+              cursor-pointer
+              hover:bg-orange-500/10
+              text-gray-800 dark:text-gray-200
+            "
+          >
+            {icon}
+            <span>{label}</span>
+          </li>
+        ))}
+      </ul>
+
+      {/* SETTINGS */}
+      <div className="mt-10 border-t pt-6 space-y-4">
+
         <button
-          className="absolute top-4 right-4 text-gray-700 dark:text-gray-300 hover:text-orange-500 transition-colors"
-          onClick={onClose}
+          onClick={() =>
+            setFontSize(f => Math.min(f + 0.1, 2))
+          }
+          className="w-full bg-orange-500 text-white py-2 rounded"
         >
-          ✕
+          <FiZoomIn className="inline mr-2" />
+          Zoom In
         </button>
 
-        {/* Header */}
-        <div className="p-6 pt-14">
-          <div
-  className="flex items-center justify-center mb-8 cursor-pointer"
-  onClick={() => {
-    router.push('/');
-    onClose();
-  }}
->
-  <div
-    className="bg-white dark:bg-gray-800 rounded-lg p-1 overflow-hidden transition-all duration-300"
-  >
-    <img
-      src="/Logo.png"
-      alt="Novaxmax Logo"
-      className="h-20 w-auto object-contain object-center scale-110 hover:scale-115 transition-transform duration-300 rounded-none
-        dark:invert dark:brightness-110 dark:contrast-105 dark:drop-shadow-[0_0_6px_rgba(255,255,255,0.25)]"
-      style={{
-        clipPath: 'inset(5% 5% 5% 5%)', // hides extra white borders if present
-      }}
-    />
-  </div>
-  </div>
+        <button
+          onClick={() =>
+            setFontSize(f => Math.max(f - 0.1, 0.6))
+          }
+          className="w-full bg-orange-500 text-white py-2 rounded"
+        >
+          <FiZoomOut className="inline mr-2" />
+          Zoom Out
+        </button>
 
+        <button
+          onClick={() =>
+            setTheme(theme === 'light'
+              ? 'dark'
+              : 'light')
+          }
+          className="w-full bg-orange-500 text-white py-2 rounded"
+        >
+          {theme === 'light'
+            ? <FiMoon className="inline mr-2"/>
+            : <FiSun className="inline mr-2"/>}
+          Theme
+        </button>
 
-          {/* Categories */}
-          <ul className="space-y-3">
-            {categories.map(({ label, icon, route }, index) => (
-              <li
-                key={index}
-                onClick={() => {
-                  router.push(route);
-                  onClose();
-                }}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-orange-500/10 hover:text-orange-600 text-gray-800 dark:text-gray-200 cursor-pointer transition-all duration-200"
-              >
-                <span className="text-lg">{icon}</span>
-                <span className="text-base font-medium">{label}</span>
-              </li>
-            ))}
-          </ul>
+        <select
+          value={language}
+          onChange={(e) =>
+            setLanguage(e.target.value)
+          }
+          className="w-full border rounded p-2
+          dark:bg-gray-800"
+        >
+          <option value="en">English</option>
+          <option value="sw">Kiswahili</option>
+        </select>
 
-          {/* Settings */}
-          <div className="mt-10 border-t border-orange-200/50 pt-5 space-y-4">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Settings</h3>
-
-            {/* Font Size Controls */}
-            <div className="flex items-center justify-between text-sm">
-              <span className="flex items-center text-gray-600 dark:text-gray-300">
-                <FiZoomIn className="mr-2" /> Zoom In
-              </span>
-              <button
-                onClick={() => setFontSize(f => Math.min(f + 0.1, 2))}
-                className="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded-md shadow-sm transition"
-              >
-                +
-              </button>
-            </div>
-
-            <div className="flex items-center justify-between text-sm">
-              <span className="flex items-center text-gray-600 dark:text-gray-300">
-                <FiZoomOut className="mr-2" /> Zoom Out
-              </span>
-              <button
-                onClick={() => setFontSize(f => Math.max(f - 0.1, 0.5))}
-                className="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded-md shadow-sm transition"
-              >
-                -
-              </button>
-            </div>
-
-            {/* Theme Toggle */}
-            <div className="flex items-center justify-between text-sm">
-              <span className="flex items-center text-gray-600 dark:text-gray-300">
-                {theme === 'light' ? <FiSun className="mr-2" /> : <FiMoon className="mr-2" />} Theme
-              </span>
-              <button
-                onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-                className="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded-md shadow-sm transition"
-              >
-                {theme === 'light' ? 'Dark' : 'Light'}
-              </button>
-            </div>
-
-            {/* Language Select */}
-            <div className="flex items-center justify-between text-sm">
-              <span className="flex items-center text-gray-600 dark:text-gray-300">
-                <FiGlobe className="mr-2" /> Language
-              </span>
-              <select
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-                className="px-2 py-1 border border-orange-300 rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-sm focus:ring-2 focus:ring-orange-400"
-              >
-                <option value="en">English</option>
-                <option value="fr">Français</option>
-                <option value="es">Español</option>
-                <option value="de">Deutsch</option>
-                <option value="sw">Kiswahili</option>
-              </select>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
+  );
+
+  /* -------------------------------- */
+  /* FINAL RENDER */
+  /* -------------------------------- */
+
+  return (
+    <>
+      {/* MOBILE OVERLAY */}
+      {isMobile && (
+        <div
+          onClick={onClose}
+          className="fixed inset-0 bg-black/40 z-40"
+        />
+      )}
+
+      {/* SIDEBAR */}
+      <aside
+        className={`
+          bg-gradient-to-b
+          from-orange-50 via-white to-orange-100
+          dark:from-gray-900 dark:to-gray-800
+          border-r
+          overflow-y-auto
+          transition-all duration-300
+
+          ${isMobile
+            ? 'fixed left-0 top-0 z-50 w-72 h-screen'
+            : 'hidden md:block fixed left-0 top-[80px] w-72 h-[calc(100vh-80px)] z-30'
+          }
+        `}
+      >
+        {sidebarContent}
+      </aside>
+    </>
   );
 }

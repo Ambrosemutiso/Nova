@@ -58,7 +58,7 @@ export default function SellerChatDetail() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)] bg-gray-50 dark:bg-gray-900">
+    <div className="md:ml-64 max-w-2xl p-6 mx-auto px-4 pt-28 flex flex-col h-[calc(100vh-80px)] bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
         <button

@@ -48,7 +48,7 @@ export default function CategoryMenu({
   };
 
   return (
-    <div className="bg-white py-4 px-2">
+    <div className="py-4 px-2">
       <div className="flex gap-4 overflow-x-auto px-1 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
         {categories.map((cat) => {
           const isSelected = selected === cat.name;

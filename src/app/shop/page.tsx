@@ -8,22 +8,33 @@ import TopPicksForYou from '@/components/TopPicksForYou';
 import SuggestedForYou from '@/components/SuggestedForYou';
 import SponsoredProducts from '@/components/SponsoredProducts';
 import FlashSales from '@/components/FlashSales';
-import InstallmentProducts from '@/components/InstallmentProducts'
+import InstallmentProducts from '@/components/InstallmentProducts';
 import UsedRefurbishedProducts from '@/components/RefurbishedProducts';
 
 export default function Main() {
   const [category, setCategory] = useState('Shop');
+
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-orange-50 to-white">
+    <div className="max-w-[1600px] mx-auto px-4 md:px-6 space-y-6">
+
       <Hero />
-      <Menu onSelectCategory={setCategory}/>
-      <FlashSales/>
+
+      <Menu onSelectCategory={setCategory} />
+
+      <FlashSales />
+
       <ProductsList category={category} />
+
       <InstallmentProducts />
-      <SponsoredProducts/>
-      <SuggestedForYou/>
-      <TopPicksForYou/>
-      <UsedRefurbishedProducts/>
+
+      <SponsoredProducts />
+
+      <SuggestedForYou />
+
+      <TopPicksForYou />
+
+      <UsedRefurbishedProducts />
+
     </div>
   );
 }

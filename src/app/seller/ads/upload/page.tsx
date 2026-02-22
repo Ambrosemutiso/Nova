@@ -165,7 +165,7 @@ export default function SellerAdsPage() {
     );
 
   return (
-    <div className="min-h-screen bg-white p-4 pt-24">
+    <div className="md:ml-64 max-w-2xl p-4 mx-auto px-4 pt-24 pb-10 min-h-screen bg-white">
       <h1 className="text-xl font-bold mb-4 text-gray-800">My Ads</h1>
 
       {loading ? (

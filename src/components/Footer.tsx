@@ -2,9 +2,19 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { FaFacebook, FaInstagram, FaTiktok, FaTwitter, FaYoutube } from 'react-icons/fa';
+import {
+  FaFacebook,
+  FaInstagram,
+  FaTiktok,
+  FaTwitter,
+  FaYoutube,
+} from 'react-icons/fa';
 
-export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () => void }) {
+export default function Footer({
+  onOpenSellerLogin,
+}: {
+  onOpenSellerLogin?: () => void;
+}) {
   const [isSeller, setIsSeller] = useState(false);
 
   useEffect(() => {
@@ -12,99 +22,121 @@ export default function Footer({ onOpenSellerLogin }: { onOpenSellerLogin: () =>
     setIsSeller(!!sellerData);
   }, []);
 
+  /* ================= SELLER SIMPLE FOOTER ================= */
   if (isSeller) {
     return (
-      <footer className="bg-white shadow-md p-4 text-center text-gray-600">
-        &copy; {new Date().getFullYear()}NovaXmax. All rights reserved.
+      <footer className="md:ml-72 bg-white shadow-md p-4 text-center text-gray-600">
+        &copy; {new Date().getFullYear()} NovaXmax. All rights reserved.
       </footer>
     );
   }
 
   return (
-    <footer className="bg-gray-100 text-gray-700 pt-10 pb-6 px-6 z-50">
-      <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
-        {/* About Us */}
+    <footer
+      className="
+        md:ml-72
+        bg-gray-100
+        text-gray-700
+        pt-10
+        pb-6
+        px-6
+        transition-all
+        duration-300
+      "
+    >
+      {/* ================= GRID ================= */}
+      <div className="max-w-7xl mx-auto grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
+
+        {/* About */}
         <div>
           <h4 className="font-bold mb-4">About Us</h4>
-          <ul className="space-y-2">
-              <li><a href="/desc/about">About NovaXmax</a></li>
-              <li><a href="/desc/careers">Careers</a></li>
-              <li><a href="/desc/terms">Terms & Conditions</a></li>
+          <ul className="space-y-2 text-sm">
+            <li><a href="/desc/about">About NovaXmax</a></li>
+            <li><a href="/desc/careers">Careers</a></li>
+            <li><a href="/desc/terms">Terms & Conditions</a></li>
           </ul>
         </div>
 
-                {/* Privacy Policy */}
+        {/* Policies */}
         <div>
           <h4 className="font-bold mb-4">Policies</h4>
-          <ul className="space-y-2">
-              <li><a href="/desc/privacy">Privacy Policy</a></li>
-              <li><a href="/desc/delivery-policy">Shipping & Delivery Policy</a></li>
-              <li><a href="/desc/buyer-protection-policy">Buyer Protection Policy</a></li>
-              <li><a href="/desc/seller-policy">Seller Policy</a></li>
-              <li><a href="/desc/community-and-market-policy">Community & Market Policy</a></li>
+          <ul className="space-y-2 text-sm">
+            <li><a href="/desc/privacy">Privacy Policy</a></li>
+            <li><a href="/desc/delivery-policy">Shipping Policy</a></li>
+            <li><a href="/desc/buyer-protection-policy">Buyer Protection</a></li>
+            <li><a href="/desc/seller-policy">Seller Policy</a></li>
           </ul>
         </div>
 
-        {/* Help Center */}
+        {/* Help */}
         <div>
           <h4 className="font-bold mb-4">Help Center</h4>
-          <ul className="space-y-2">
-              <li><a href="/desc/help/shop">How to Shop</a></li>
-              <li><a href="/desc/help/track-order">Track Your Order</a></li>
-              <li><a href="/desc/help/returns">Returns & Refunds</a></li>
-              <li><a href="/desc/help/contact">Contact Us</a></li>
+          <ul className="space-y-2 text-sm">
+            <li><a href="/desc/help/shop">How to Shop</a></li>
+            <li><a href="/desc/help/track-order">Track Order</a></li>
+            <li><a href="/desc/help/returns">Returns</a></li>
+            <li><a href="/desc/help/contact">Contact Us</a></li>
           </ul>
         </div>
 
-        {/* Make Money */}
+        {/* Earn */}
         <div>
-          <h4 className="font-bold mb-4">Make Money With Us</h4>
-          <ul className="space-y-2">
+          <h4 className="font-bold mb-4">Make Money</h4>
+          <ul className="space-y-2 text-sm">
             <li><a href="/desc/sell-on-novaxmax">Sell on NovaXmax</a></li>
-            <li><a href="/desc/logistics-partner">Become a Logistics Partner</a></li>
-            <li><a href="/desc/novaxmax-affilliate-marketing">Join Affiliate Program</a></li>
+            <li><a href="/desc/logistics-partner">Logistics Partner</a></li>
+            <li><a href="/desc/novaxmax-affilliate-marketing">Affiliate</a></li>
           </ul>
         </div>
 
-        {/* Social & Newsletter */}
+        {/* Social */}
         <div>
-          <h4 className="font-bold mb-4">Connect With Us</h4>
-          <div className="flex space-x-4 mb-4">
-            <a href="#"><FaFacebook className="w-5 h-5" /></a>
-            <a href="#"><FaTwitter className="w-5 h-5" /></a>
-            <a href="#"><FaInstagram className="w-5 h-5" /></a>
-            <a href="#"><FaYoutube className="w-5 h-5" /></a>
-            <a href="#"><FaTiktok className="w-5 h-5" /></a>
+          <h4 className="font-bold mb-4">Connect</h4>
+
+          <div className="flex gap-4 mb-4">
+            <FaFacebook />
+            <FaTwitter />
+            <FaInstagram />
+            <FaYoutube />
+            <FaTiktok />
           </div>
-          <h4 className="font-bold mb-2">Newsletter</h4>
+
           <input
             type="email"
-            placeholder="Enter your email"
-            className="w-full px-2 py-1 border border-gray-300 rounded mb-2"
+            placeholder="Enter email"
+            className="w-full px-3 py-2 border rounded mb-2"
           />
-          <button className="w-full bg-black text-white py-2 rounded hover:bg-gray-800">Subscribe</button>
+
+          <button className="w-full bg-black text-white py-2 rounded">
+            Subscribe
+          </button>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto mt-10 px-6">
-        <div className="flex flex-col md:flex-row items-center justify-between">
-          <div className="flex space-x-4 items-center mb-4 md:mb-0">
-            <h4 className="font-semibold text-sm">Payment Methods:</h4>
-            <Image src="/visa.png" alt="Visa" width={40} height={24} />
-            <Image src="/mastercard.png" alt="MasterCard" width={40} height={24} />
-            <Image src="/M-PESA.svg" alt="MPesa" width={40} height={24} />
-            <Image src="/Airtel.svg" alt="Airtel" width={40} height={10} />
-          </div>
+      {/* ================= PAYMENTS ================= */}
+      <div className="max-w-7xl mx-auto mt-10 flex flex-col lg:flex-row items-center justify-between gap-6">
 
-          <div className="flex space-x-4">
-            <a href="#"><Image src="/play_store.png" alt="Google Play" width={135} height={40} /></a>
-            <a href="#"><Image src="/app_store.png" alt="App Store" width={120} height={40} /></a>
-          </div>
+        <div className="flex flex-wrap items-center gap-4">
+          <span className="text-sm font-semibold">
+            Payment Methods:
+          </span>
+
+          <Image src="/visa.png" alt="Visa" width={40} height={24} />
+          <Image src="/mastercard.png" alt="MasterCard" width={40} height={24} />
+          <Image src="/M-PESA.svg" alt="MPesa" width={40} height={24} />
+          <Image src="/Airtel.svg" alt="Airtel" width={40} height={14} />
         </div>
+
+        <div className="flex gap-4">
+          <Image src="/play_store.png" alt="Play Store" width={135} height={40} />
+          <Image src="/app_store.png" alt="App Store" width={120} height={40} />
+        </div>
+
       </div>
 
-      <div className="text-center text-sm text-gray-500 mt-6">
-        &copy; {new Date().getFullYear()} Novaxmax. All rights reserved.
+      {/* ================= COPYRIGHT ================= */}
+      <div className="text-center text-sm text-gray-500 mt-8">
+        &copy; {new Date().getFullYear()} NovaXmax. All rights reserved.
       </div>
     </footer>
   );

@@ -29,7 +29,7 @@ export default function InventoryPage() {
   }, []);
 
   return (
-    <div className="md:ml-64 p-6">
+    <div className="md:ml-64 max-w-2xl p-6 mx-auto px-4 pt-28 pb-10">
       <h1 className="text-2xl font-bold mb-6">📦 Inventory Management</h1>
 
       {loading ? (

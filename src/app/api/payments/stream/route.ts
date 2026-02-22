@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   const stream = new ReadableStream({
     start(controller) {
       registerClient(paymentIntentId, controller);
-      controller.enqueue(': connected\n\n'); // keep-alive
+      controller.enqueue(': connected\n\n');
     },
   });
 
