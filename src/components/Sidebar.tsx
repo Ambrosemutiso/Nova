@@ -11,11 +11,12 @@ import {
   FiFilm, FiPhone, FiCreditCard
 } from 'react-icons/fi';
 
-export default function Sidebar({
-  onClose,
-}: {
+interface Props {
+  isOpen?: boolean;
   onClose?: () => void;
-}) {
+  onOpen?: () => void;
+}
+export default function Sidebar({ isOpen = false, onClose, onOpen }: Props) {
 
   const router = useRouter();
   const { theme, setTheme } = useTheme();
@@ -41,15 +42,17 @@ export default function Sidebar({
   /* -------------------------------- */
   /* Lock scroll ONLY on mobile */
   /* -------------------------------- */
-  useEffect(() => {
-    document.body.style.overflow =
-      isMobile ? 'hidden' : 'auto';
+useEffect(() => {
+  if (isMobile && isOpen) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = 'auto';
+  }
 
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
-  }, [isMobile]);
-
+  return () => {
+    document.body.style.overflow = 'auto';
+  };
+}, [isMobile, isOpen]);
   /* -------------------------------- */
   /* Font size */
   /* -------------------------------- */

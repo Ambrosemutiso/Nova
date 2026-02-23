@@ -35,6 +35,18 @@ export default function SellerSidebar({ isOpen = false, onClose, onOpen }: Props
     return () => window.removeEventListener('resize', checkScreen);
   }, []);
 
+  useEffect(() => {
+  if (isMobile && isOpen) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = 'auto';
+  }
+
+  return () => {
+    document.body.style.overflow = 'auto';
+  };
+}, [isMobile, isOpen]);
+
   const menuItems = [
     { label: 'Dashboard', icon: <FiHome size={20} />, path: '/seller/dashboard' },
     { label: 'Add Product', icon: <FiPlusCircle size={20} />, path: '/seller/products/add' },

@@ -4,43 +4,101 @@ import { useEffect, useState } from 'react';
 
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
+import SellerSidebar from '@/app/seller/sidebar/SellerSidebar';
+
 import BackToTopButton from '@/components/BackToTopButton';
 import LoginWrapper from '@/components/LoginWrapper';
 import CartNotification from '@/app/cart/CartNotification';
 
 import { CartProvider } from '@/app/context/CartContext';
-import { AuthProvider } from '@/app/context/AuthContext';
+import { AuthProvider, useAuth } from '@/app/context/AuthContext';
 import { LanguageProvider } from '@/app/context/LanguageContext';
 
 import { ToastContainer } from 'react-toastify';
 import { ThemeProvider } from 'next-themes';
 
+/* ================= INNER UI ================= */
+function LayoutUI({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const isSeller = user?.role === 'seller';
+
+  /* MOBILE SCROLL LOCK */
+  useEffect(() => {
+    document.body.style.overflow =
+      sidebarOpen && window.innerWidth < 768
+        ? 'hidden'
+        : 'auto';
+
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [sidebarOpen]);
+
+  return (
+    <>
+      <CartNotification />
+
+      {/* NAVBAR */}
+      <Navbar onMenuClick={() => setSidebarOpen(true)} />
+
+      {/* DESKTOP SIDEBAR */}
+      <aside className="hidden md:block fixed top-[110px] left-0 w-72 h-[calc(100vh-110px)] z-40">
+        {isSeller ? <SellerSidebar /> : <Sidebar isOpen />}
+      </aside>
+
+      {/* MOBILE SIDEBAR */}
+      {sidebarOpen && (
+        <div className="md:hidden fixed inset-0 z-[70]">
+          {isSeller ? (
+            <SellerSidebar
+              isOpen
+              onClose={() => setSidebarOpen(false)}
+            />
+          ) : (
+            <Sidebar
+              isOpen
+              onClose={() => setSidebarOpen(false)}
+            />
+          )}
+        </div>
+      )}
+
+      {/* PAGE */}
+      <main className="pt-[110px] md:ml-72 min-h-screen">
+        {children}
+      </main>
+
+      <BackToTopButton />
+      <LoginWrapper />
+      <ToastContainer position="top-right" autoClose={3000} />
+    </>
+  );
+}
+
+/* ================= WRAPPER ================= */
 export default function AppLayoutWrapper({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [ready, setReady] = useState(false);
 
-  /* ================= INITIAL LOADER ================= */
   useEffect(() => {
-    const timeout = setTimeout(() => setLoading(false), 800);
-    return () => clearTimeout(timeout);
+    setTimeout(() => setReady(true), 600);
+
+    const zoom =
+      parseFloat(localStorage.getItem('fontSize') || '1');
+
+    document.documentElement.style.fontSize =
+      `${zoom * 100}%`;
   }, []);
 
-  /* ================= RESTORE ZOOM ================= */
-  useEffect(() => {
-    const savedZoom = parseFloat(
-      localStorage.getItem('fontSize') || '1'
-    );
-    document.documentElement.style.fontSize = `${savedZoom * 100}%`;
-  }, []);
-
-  if (loading) {
+  if (!ready) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin h-10 w-10 border-b-2 border-orange-500 rounded-full" />
       </div>
     );
   }
@@ -50,58 +108,7 @@ export default function AppLayoutWrapper({
       <ThemeProvider attribute="class" defaultTheme="light">
         <AuthProvider>
           <CartProvider>
-
-            {/* ================= GLOBAL COMPONENTS ================= */}
-            <CartNotification />
-
-            {/* ================= NAVBAR ================= */}
-            <Navbar onMenuClick={() => setSidebarOpen(true)} />
-
-            {/* ================= DESKTOP SIDEBAR ================= */}
-            <aside
-              className="
-                hidden md:block
-                fixed
-                top-0
-                left-0
-                h-[calc(100vh-110px)]
-                w-72
-                z-[60]
-              "
-            >
-              <Sidebar onClose={() => setSidebarOpen(false)} />
-            </aside>
-
-            {/* ================= MOBILE SIDEBAR ================= */}
-            {sidebarOpen && (
-              <div className="md:hidden">
-                <Sidebar onClose={() => setSidebarOpen(false)} />
-              </div>
-            )}
-
-            {/* ================= MAIN CONTENT AREA ================= */}
-            <main
-              className="
-                pt-[30px]
-                md:ml-72
-                min-h-screen
-                transition-all
-                duration-300
-                bg-gradient-to-b
-                from-orange-50
-                to-white
-                dark:from-gray-900
-                dark:to-gray-950
-              "
-            >
-              {children}
-            </main>
-
-            {/* ================= GLOBAL UTILITIES ================= */}
-            <BackToTopButton />
-            <LoginWrapper />
-            <ToastContainer position="top-right" autoClose={3000} />
-
+            <LayoutUI>{children}</LayoutUI>
           </CartProvider>
         </AuthProvider>
       </ThemeProvider>

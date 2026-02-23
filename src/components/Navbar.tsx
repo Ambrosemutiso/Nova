@@ -4,8 +4,6 @@ import { useEffect, useState, useRef } from 'react';
 import { FiMenu, FiShoppingCart, FiPackage, FiSearch, FiBell, FiUser } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/app/context/CartContext';
-import Sidebar from './Sidebar';
-import SellerSidebar from '@/app/seller/sidebar/SellerSidebar';
 import Image from 'next/image';
 import { LogOut } from 'lucide-react';
 import { useAuth } from '@/app/context/AuthContext';
@@ -213,7 +211,7 @@ useEffect(() => {
       {/* 🔹 Navbar */}
       <nav className="fixed top-6 left-0 w-full z-50 bg-gradient-to-b from-orange-50 via-white to-orange-100 dark:from-gray-900 dark:to-gray-800 shadow-lg py-3 px-4 flex items-center justify-between transition-all">
         {/* Sidebar Button */}
-        <button onClick={() => setShowSidebar(true)} className="text-2xl text-orange-600">
+        <button onClick={onMenuClick} className="text-2xl text-orange-600">
           <FiMenu />
         </button>
 
@@ -419,41 +417,7 @@ useEffect(() => {
           )}
         </div>
 
-{/* SELLER SIDEBAR */}
-{isSeller && (
-  <>
-    {/* Desktop Sidebar */}
-    <div className="hidden md:block">
-      <SellerSidebar />
-    </div>
 
-    {/* Mobile Sidebar */}
-    <div className="md:hidden">
-      <SellerSidebar
-        isOpen={showSidebar}
-        onClose={() => setShowSidebar(false)}
-        onOpen={() => setShowSidebar(true)}
-      />
-    </div>
-  </>
-)}
-
-{/* BUYER SIDEBAR */}
-{!isSeller && (
-  <>
-    {/* Desktop Sidebar */}
-    <div className="hidden md:block">
-      <Sidebar onClose={() => {}} />
-    </div>
-
-    {/* Mobile Sidebar */}
-    {showSidebar && (
-      <div className="md:hidden">
-        <Sidebar onClose={() => setShowSidebar(false)} />
-      </div>
-    )}
-  </>
-)}
         {/* 🔔 Notifications */}
         <AnimatePresence>
           {showNotifModal && (
