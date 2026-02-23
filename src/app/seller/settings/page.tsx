@@ -64,7 +64,7 @@ const amount =
   };
 
   return (
-    <div className="md:ml-64 p-6 min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 pt-28 relative overflow-hidden">
+    <div className="p-6 min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 pt-28 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-r from-orange-500/10 to-gray-200/5 blur-3xl -z-10" />
 
       {/* Header */}

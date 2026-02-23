@@ -59,8 +59,8 @@ export default function InventoryPage() {
   };
 
   return (
-    <div className="md:ml-64 pt-24 px-4">
-      <div className="flex justify-between items-center mb-6">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
+      <div className="max-w-6xl mx-auto px-4 pt-28 pb-10">
         <h1 className="text-2xl font-semibold text-orange-600">My Inventory</h1>
         <Link
           href="/seller/products/add"

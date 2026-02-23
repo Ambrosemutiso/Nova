@@ -64,7 +64,8 @@ export default function EditProductPage() {
   if (loading) return <p className="mt-24 px-4">Loading...</p>;
 
   return (
-    <div className="md:ml-64 pt-24 px-4 max-w-xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
+      <div className="max-w-6xl mx-auto px-4 pt-28 pb-10">
       <h1 className="text-2xl font-bold text-orange-600 mb-4">Edit Product</h1>
       {product && (
         <form onSubmit={handleUpdate} className="space-y-4">
@@ -108,6 +109,7 @@ export default function EditProductPage() {
           </button>
         </form>
       )}
+    </div>
     </div>
   );
 }

@@ -18,8 +18,8 @@ function StatsCard({ id, title, value, change, icon, trend, series }: any) {
   const chartSeries = months.map((m, idx) => series[idx] ? { month: m, v: series[idx].v } : { month: m, v: 0 });
 
   return (
-    <div className="md:ml-64 max-w-2xl p-6 mx-auto px-4 pt-28 pb-10 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all border border-gray-100 flex flex-col justify-between">
-      <div className="flex items-start justify-between">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
+      <div className="max-w-6xl mx-auto px-4 pt-28 pb-10">
         <div>
           <p className="text-sm text-gray-500">{title}</p>
           <h3 className="text-2xl font-bold text-gray-900 mt-1">{value}</h3>

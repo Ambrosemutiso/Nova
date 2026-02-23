@@ -360,8 +360,7 @@ const handleDownloadLabelPDF = () => {
   const cities = Array.from(new Set(orders.map((o) => o.customerInfo.county).filter(Boolean)));
 
   return (
-    <div className="md:ml-64 px-6 pt-28 pb-10">
-
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white first-letter:px-6 pt-28 pb-10">
       {/* Filters Row (non-intrusive) */}
       <div className="mb-6 flex flex-wrap gap-3 items-center">
         {/* Status Filter */}

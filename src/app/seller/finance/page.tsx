@@ -223,7 +223,8 @@ const pieData = Object.entries(paymentSummary).map(([name, value]) => ({
 
   // 🔸 Main Page
   return (
-    <div className="md:ml-64 p-6 md:p-10 bg-gray-50 min-h-screen pt-10 pb-10">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
+      <div className="max-w-6xl mx-auto px-4 pt-28 pb-10">
       <motion.h1
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -463,6 +464,7 @@ const pieData = Object.entries(paymentSummary).map(([name, value]) => ({
         Request Payout
         </button>
       </div>
+    </div>
     </div>
   );
 }

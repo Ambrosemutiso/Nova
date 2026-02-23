@@ -49,24 +49,35 @@ function LayoutUI({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* MOBILE SIDEBAR */}
-      {sidebarOpen && (
-        <div className="md:hidden fixed inset-0 z-[70]">
-          {isSeller ? (
-            <SellerSidebar
-              isOpen
-              onClose={() => setSidebarOpen(false)}
-            />
-          ) : (
-            <Sidebar
-              isOpen
-              onClose={() => setSidebarOpen(false)}
-            />
-          )}
-        </div>
+{sidebarOpen && (
+  <div className="md:hidden fixed inset-0 z-[80] flex">
+    
+    {/* BACKDROP */}
+    <div
+      className="absolute inset-0 bg-black/40"
+      onClick={() => setSidebarOpen(false)}
+    />
+
+    {/* SIDEBAR PANEL */}
+    <div className="relative w-72 h-full bg-white dark:bg-gray-900 shadow-xl z-[90]">
+      {isSeller ? (
+        <SellerSidebar
+          isOpen
+          onClose={() => setSidebarOpen(false)}
+        />
+      ) : (
+        <Sidebar
+          isOpen
+          onClose={() => setSidebarOpen(false)}
+        />
       )}
+    </div>
+
+  </div>
+)}
 
       {/* PAGE */}
-      <main className="pt-[110px] md:ml-72 min-h-screen">
+      <main className="pt-[40px] md:ml-72 min-h-screen">
         {children}
       </main>
 

@@ -114,7 +114,8 @@ const convertedBadges: Badge[] = res.data.awards.map((award) => ({
   };
 
   return (
-    <div className="md:ml-64 p-6 text-gray-800 relative pt-10 pb-10">
+      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
+      <div className="max-w-6xl mx-auto px-4 pt-28 pb-10">
       {showConfetti && (
         <Confetti
           width={typeof window !== 'undefined' ? window.innerWidth : 0}
@@ -286,6 +287,7 @@ const convertedBadges: Badge[] = res.data.awards.map((award) => ({
 
         </table>
       </div>
+    </div>
     </div>
   );
 }
