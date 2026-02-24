@@ -40,20 +40,6 @@ export default function Sidebar({ isOpen = false, onClose, onOpen }: Props) {
   }, []);
 
   /* -------------------------------- */
-  /* Lock scroll ONLY on mobile */
-  /* -------------------------------- */
-useEffect(() => {
-  if (isMobile && isOpen) {
-    document.body.style.overflow = 'hidden';
-  } else {
-    document.body.style.overflow = 'auto';
-  }
-
-  return () => {
-    document.body.style.overflow = 'auto';
-  };
-}, [isMobile, isOpen]);
-  /* -------------------------------- */
   /* Font size */
   /* -------------------------------- */
   useEffect(() => {
@@ -211,7 +197,7 @@ useEffect(() => {
       {isMobile && (
         <div
           onClick={onClose}
-          className="fixed inset-0 bg-black/40 z-40"
+          className="relative h-full w-72 bg-white dark:bg-gray-900 shadow-xl"
         />
       )}
 

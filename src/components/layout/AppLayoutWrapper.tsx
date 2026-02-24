@@ -21,20 +21,38 @@ import { ThemeProvider } from 'next-themes';
 function LayoutUI({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [startX, setStartX] = useState<number | null>(null);
 
   const isSeller = user?.role === 'seller';
 
-  /* MOBILE SCROLL LOCK */
-  useEffect(() => {
-    document.body.style.overflow =
-      sidebarOpen && window.innerWidth < 768
-        ? 'hidden'
-        : 'auto';
+  const handleTouchStart = (e: React.TouchEvent) => {
+  setStartX(e.touches[0].clientX);
+};
 
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
-  }, [sidebarOpen]);
+const handleTouchMove = (e: React.TouchEvent) => {
+  if (!startX) return;
+
+  const diff = e.touches[0].clientX - startX;
+
+  if (diff < -80) {
+    setSidebarOpen(false);
+  }
+};
+
+  /* MOBILE SCROLL LOCK */
+useEffect(() => {
+  const isMobile = window.matchMedia("(max-width: 767px)").matches;
+
+  if (sidebarOpen && isMobile) {
+    document.body.style.overflow = "hidden";
+  } else {
+    document.body.style.overflow = "";
+  }
+
+  return () => {
+    document.body.style.overflow = "";
+  };
+}, [sidebarOpen]);
 
   return (
     <>
@@ -48,33 +66,38 @@ function LayoutUI({ children }: { children: React.ReactNode }) {
         {isSeller ? <SellerSidebar /> : <Sidebar isOpen />}
       </aside>
 
-      {/* MOBILE SIDEBAR */}
-{sidebarOpen && (
-  <div className="md:hidden fixed inset-0 z-[80] flex">
-    
-    {/* BACKDROP */}
-    <div
-      className="absolute inset-0 bg-black/40"
-      onClick={() => setSidebarOpen(false)}
-    />
+{/* ================= MOBILE SIDEBAR ================= */}
+<div
+  onTouchStart={handleTouchStart}
+  onTouchMove={handleTouchMove}
+  className={`
+    absolute top-0 left-0 h-full w-72
+    transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]
+    ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+  `}
+>
+  {/* Overlay */}
+  <div
+    onClick={() => setSidebarOpen(false)}
+    className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+  />
 
-    {/* SIDEBAR PANEL */}
-    <div className="relative w-72 h-full bg-white dark:bg-gray-900 shadow-xl z-[90]">
-      {isSeller ? (
-        <SellerSidebar
-          isOpen
-          onClose={() => setSidebarOpen(false)}
-        />
-      ) : (
-        <Sidebar
-          isOpen
-          onClose={() => setSidebarOpen(false)}
-        />
-      )}
-    </div>
-
+  {/* Sliding Panel */}
+  <div
+    className={`
+      absolute top-0 left-0 h-full w-72
+      transition-transform duration-300 ease-out
+      transform
+      ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+    `}
+  >
+    {isSeller ? (
+      <SellerSidebar onClose={() => setSidebarOpen(false)} />
+    ) : (
+      <Sidebar onClose={() => setSidebarOpen(false)} />
+    )}
   </div>
-)}
+</div>
 
       {/* PAGE */}
       <main className="pt-[40px] md:ml-72 min-h-screen">
