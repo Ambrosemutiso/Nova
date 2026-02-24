@@ -193,32 +193,19 @@ export default function Sidebar({ isOpen = false, onClose, onOpen }: Props) {
 
   return (
     <>
-      {/* MOBILE OVERLAY */}
-      {isMobile && (
-        <div
-          onClick={onClose}
-          className="relative h-full w-72 bg-white dark:bg-gray-900 shadow-xl"
-        />
-      )}
-
       {/* SIDEBAR */}
-      <aside
-        className={`
-          bg-gradient-to-b
-          from-orange-50 via-white to-orange-100
-          dark:from-gray-900 dark:to-gray-800
-          border-r
-          overflow-y-auto
-          transition-all duration-300
-
-          ${isMobile
-            ? 'relative h-full z-50 w-72'
-            : 'hidden md:block fixed left-0 top-[80px] w-72 h-[calc(100vh-80px)] z-30'
-          }
-        `}
-      >
-        {sidebarContent}
-      </aside>
+<aside
+  className="
+    h-full w-72
+    bg-gradient-to-b
+    from-orange-50 via-white to-orange-100
+    dark:from-gray-900 dark:to-gray-800
+    border-r
+    overflow-y-auto
+  "
+>
+  {sidebarContent}
+</aside>
     </>
   );
 }

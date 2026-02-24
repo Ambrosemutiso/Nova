@@ -73,7 +73,7 @@ export default function SellerSidebar({ isOpen = false, onClose, onOpen }: Props
             animate={{ x: 0 }}
             exit={{ x: isMobile ? -260 : 0 }}
             transition={{ duration: 0.3 }}
-            className={`fixed top-[64px] left-0 h-[calc(100vh-64px)] w-64 bg-gradient-to-b from-orange-500 to-orange-600 text-white shadow-2xl flex flex-col z-40 transition-all duration-300`}
+            className={"h-full w-64 bg-gradient-to-b from-orange-500 to-orange-600 text-white flex flex-col"}
           >
             {/* Header (mobile only) */}
             {isMobile && (
