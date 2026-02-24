@@ -212,7 +212,7 @@ export default function Sidebar({ isOpen = false, onClose, onOpen }: Props) {
           transition-all duration-300
 
           ${isMobile
-            ? 'fixed left-0 top-0 z-50 w-72 h-screen'
+            ? 'relative h-full z-50 w-72'
             : 'hidden md:block fixed left-0 top-[80px] w-72 h-[calc(100vh-80px)] z-30'
           }
         `}

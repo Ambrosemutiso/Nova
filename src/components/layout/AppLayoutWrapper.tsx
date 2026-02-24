@@ -68,28 +68,41 @@ useEffect(() => {
 
 {/* ================= MOBILE SIDEBAR ================= */}
 <div
-  onTouchStart={handleTouchStart}
-  onTouchMove={handleTouchMove}
   className={`
-    absolute top-0 left-0 h-full w-72
-    transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]
-    ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+    md:hidden
+    fixed inset-0 z-[90]
+    transition-opacity duration-300
+    ${
+      sidebarOpen
+        ? "opacity-100 pointer-events-auto"
+        : "opacity-0 pointer-events-none"
+    }
   `}
 >
-  {/* Overlay */}
+  {/* DARK OVERLAY */}
   <div
     onClick={() => setSidebarOpen(false)}
     className="absolute inset-0 bg-black/40 backdrop-blur-sm"
   />
 
-  {/* Sliding Panel */}
+  {/* SLIDING SIDEBAR */}
   <div
+    onTouchStart={handleTouchStart}
+    onTouchMove={handleTouchMove}
     className={`
       absolute top-0 left-0 h-full w-72
-      transition-transform duration-300 ease-out
+      bg-white dark:bg-gray-900
+      shadow-xl
+      transition-transform duration-300
+      ease-[cubic-bezier(0.22,1,0.36,1)]
       transform
-      ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+      ${
+        sidebarOpen
+          ? "translate-x-0"
+          : "-translate-x-full"
+      }
     `}
+    style={{ willChange: "transform" }}
   >
     {isSeller ? (
       <SellerSidebar onClose={() => setSidebarOpen(false)} />

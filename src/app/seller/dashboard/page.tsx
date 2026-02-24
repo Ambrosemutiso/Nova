@@ -6,47 +6,95 @@ import { motion } from "framer-motion";
 
 const iconMap: Record<string, any> = { ShoppingCart, DollarSign, Eye, BarChart3, Box };
 
-// ---------- Stats Card ----------
+// ---------- Professional Stats Card ----------
 function StatsCard({ id, title, value, change, icon, trend, series }: any) {
   const isUp = trend === "up";
   const strokeColor = isUp ? "#10b981" : "#ef4444";
   const gradientId = `grad-spark-${id}`;
   const Icon = iconMap[icon] || ShoppingCart;
 
-  // Map series to 12 months if not already
   const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const chartSeries = months.map((m, idx) => series[idx] ? { month: m, v: series[idx].v } : { month: m, v: 0 });
+
+  const chartSeries = months.map((m, idx) =>
+    series[idx]
+      ? { month: m, v: series[idx].v }
+      : { month: m, v: 0 }
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
-      <div className="max-w-6xl mx-auto px-4 pt-28 pb-10">
+    <div
+      className="
+        relative
+        bg-white dark:bg-gray-900
+        rounded-2xl
+        border border-gray-100 dark:border-gray-800
+        shadow-sm
+        hover:shadow-lg
+        transition-all duration-300
+        p-5
+        flex flex-col
+        justify-between
+        h-[150px]
+      "
+    >
+      {/* TOP SECTION */}
+      <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm text-gray-500">{title}</p>
-          <h3 className="text-2xl font-bold text-gray-900 mt-1">{value}</h3>
-          <p className={`text-sm font-medium mt-1 ${isUp ? "text-green-600" : "text-red-600"}`}>{change}</p>
+          <p className="text-xs text-gray-500 font-medium tracking-wide">
+            {title}
+          </p>
+
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+            {value}
+          </h3>
+
+          <p
+            className={`text-xs mt-1 font-semibold flex items-center gap-1
+            ${isUp ? "text-emerald-600" : "text-red-500"}`}
+          >
+            {change}
+          </p>
         </div>
-        <div className="ml-4 shrink-0 bg-orange-50 p-3 rounded-xl">
-          <Icon size={22} className="text-orange-500" />
+
+        {/* ICON */}
+        <div
+          className="
+            h-10 w-10
+            flex items-center justify-center
+            rounded-xl
+            bg-orange-50
+            dark:bg-orange-900/20
+          "
+        >
+          <Icon size={20} className="text-orange-500" />
         </div>
       </div>
-      <div className="mt-4" style={{ width: "100%", height: 40 }}>
+
+      {/* MINI CHART */}
+      <div className="w-full h-10 mt-3">
         <ResponsiveContainer>
           <AreaChart data={chartSeries}>
             <defs>
               <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={strokeColor} stopOpacity={0.24} />
-                <stop offset="100%" stopColor={strokeColor} stopOpacity={0.05} />
+                <stop offset="0%" stopColor={strokeColor} stopOpacity={0.25}/>
+                <stop offset="100%" stopColor={strokeColor} stopOpacity={0}/>
               </linearGradient>
             </defs>
-            <Tooltip formatter={(value: number) => value.toLocaleString()} labelFormatter={(label) => label} contentStyle={{ fontSize: "12px" }} />
-            <Area type="monotone" dataKey="v" stroke={strokeColor} strokeWidth={2} fill={`url(#${gradientId})`} dot={false} activeDot={{ r: 4 }} />
+
+            <Area
+              type="monotone"
+              dataKey="v"
+              stroke={strokeColor}
+              strokeWidth={2}
+              fill={`url(#${gradientId})`}
+              dot={false}
+            />
           </AreaChart>
         </ResponsiveContainer>
       </div>
     </div>
   );
 }
-
 
 // ---------- Sales & Views Chart ----------
 function SalesChart({ data }: { data: any[] }) {
