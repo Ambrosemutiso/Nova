@@ -20,91 +20,20 @@ import { ThemeProvider } from 'next-themes';
 /* ================= INNER UI ================= */
 function LayoutUI({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [startX, setStartX] = useState<number | null>(null);
 
   const isSeller = user?.role === 'seller';
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-  setStartX(e.touches[0].clientX);
-};
-
-const handleTouchMove = (e: React.TouchEvent) => {
-  if (!startX) return;
-
-  const diff = e.touches[0].clientX - startX;
-
-  if (diff < -80) {
-    setSidebarOpen(false);
-  }
-};
-
-  /* MOBILE SCROLL LOCK */
-useEffect(() => {
-  const isMobile = window.matchMedia("(max-width: 767px)").matches;
-
-  if (sidebarOpen && isMobile) {
-    document.body.style.overflow = "hidden";
-  } else {
-    document.body.style.overflow = "";
-  }
-
-  return () => {
-    document.body.style.overflow = "";
-  };
-}, [sidebarOpen]);
 
   return (
     <>
       <CartNotification />
 
       {/* NAVBAR */}
-      <Navbar onMenuClick={() => setSidebarOpen(true)} />
+      <Navbar/>
 
       {/* DESKTOP SIDEBAR */}
       <aside className="hidden md:block fixed top-[110px] left-0 w-72 h-[calc(100vh-110px)] z-40">
         {isSeller ? <SellerSidebar /> : <Sidebar isOpen />}
       </aside>
-
-{/* ================= MOBILE SIDEBAR ================= */}
-<div
-  className={`
-    md:hidden
-    fixed inset-0 z-[9999]
-    transition-opacity duration-300
-    ${sidebarOpen
-      ? "opacity-100 pointer-events-auto"
-      : "opacity-0 pointer-events-none"}
-  `}
->
-  {/* Overlay */}
-  <div
-    onClick={() => setSidebarOpen(false)}
-    className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-  />
-
-  {/* Drawer */}
-  <div
-    onTouchStart={handleTouchStart}
-    onTouchMove={handleTouchMove}
-    className={`
-      absolute top-0 left-0
-      h-full w-72
-      z-[10000]
-      bg-white dark:bg-gray-900
-      shadow-2xl
-      transition-transform duration-300
-      ease-[cubic-bezier(0.22,1,0.36,1)]
-      ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-    `}
-  >
-    {isSeller ? (
-      <SellerSidebar onClose={() => setSidebarOpen(false)} />
-    ) : (
-      <Sidebar onClose={() => setSidebarOpen(false)} />
-    )}
-  </div>
-</div>
 
       {/* PAGE */}
       <main className="pt-[40px] md:ml-72 min-h-screen">

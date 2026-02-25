@@ -7,6 +7,8 @@ import { useCart } from '@/app/context/CartContext';
 import Image from 'next/image';
 import { LogOut } from 'lucide-react';
 import { useAuth } from '@/app/context/AuthContext';
+import Sidebar from '@/components/Sidebar';
+import SellerSidebar from '@/app/seller/sidebar/SellerSidebar';
 import type { Notification } from '@/app/types/notification';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CldImage } from 'next-cloudinary';
@@ -14,7 +16,6 @@ import { CldImage } from 'next-cloudinary';
 type NavbarProps = {
   onOpenBuyerLogin?: () => void;
   onOpenSellerLogin?: () => void;
-  onMenuClick?: () => void;
 };
 
 const countryData = [
@@ -28,7 +29,7 @@ const countryData = [
   { name: 'Somalia', code: 'SO', flag: 'https://flagcdn.com/w40/so.png', dialCode: '+252', currency: 'SOS' },
 ];
 
-export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin,onMenuClick }: NavbarProps) {
+export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin}: NavbarProps) {
   const [showSidebar, setShowSidebar] = useState(false);
   const [orderCount, setOrderCount] = useState(0);
   const [showSearch, setShowSearch] = useState(false);
@@ -43,6 +44,7 @@ export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin,onMenuClick
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const searchRef = useRef<HTMLDivElement | null>(null);
   const notifRef = useRef<HTMLDivElement | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const router = useRouter();
   const { cartItems } = useCart();
@@ -211,9 +213,12 @@ useEffect(() => {
       {/* 🔹 Navbar */}
       <nav className="fixed top-6 left-0 w-full z-50 bg-gradient-to-b from-orange-50 via-white to-orange-100 dark:from-gray-900 dark:to-gray-800 shadow-lg py-3 px-4 flex items-center justify-between transition-all">
         {/* Sidebar Button */}
-        <button onClick={onMenuClick} className="text-2xl text-orange-600">
-          <FiMenu />
-        </button>
+<button
+  onClick={() => setSidebarOpen(true)}
+  className="text-2xl text-orange-600"
+>
+  <FiMenu />
+</button>
 
         {/* Logo */}
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/')}>
@@ -475,6 +480,43 @@ useEffect(() => {
           )}
         </AnimatePresence>
       </nav>
+      {/* ================= MOBILE SIDEBAR ================= */}
+<div
+  className={`
+    md:hidden fixed inset-0 z-[9999]
+    transition-opacity duration-300
+    ${sidebarOpen
+      ? "opacity-100 pointer-events-auto"
+      : "opacity-0 pointer-events-none"}
+  `}
+>
+  {/* Overlay */}
+  <div
+    onClick={() => setSidebarOpen(false)}
+    className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+  />
+
+  {/* Drawer */}
+  <div
+    className={`
+      absolute top-0 left-0
+      h-full w-72
+      bg-white dark:bg-gray-900
+      shadow-2xl
+      transition-transform duration-300
+      ease-[cubic-bezier(0.22,1,0.36,1)]
+      ${sidebarOpen
+        ? "translate-x-0"
+        : "-translate-x-full"}
+    `}
+  >
+    {isSeller ? (
+      <SellerSidebar onClose={() => setSidebarOpen(false)} />
+    ) : (
+      <Sidebar onClose={() => setSidebarOpen(false)} />
+    )}
+  </div>
+</div>
     </>
   );
 }
