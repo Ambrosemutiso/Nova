@@ -12,6 +12,8 @@ import SellerSidebar from '@/app/seller/sidebar/SellerSidebar';
 import type { Notification } from '@/app/types/notification';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CldImage } from 'next-cloudinary';
+import { useMotionValue } from "framer-motion";
+import { usePathname } from "next/navigation";
 
 type NavbarProps = {
   onOpenBuyerLogin?: () => void;
@@ -30,7 +32,6 @@ const countryData = [
 ];
 
 export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin}: NavbarProps) {
-  const [showSidebar, setShowSidebar] = useState(false);
   const [orderCount, setOrderCount] = useState(0);
   const [showSearch, setShowSearch] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -44,7 +45,8 @@ export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin}: NavbarPro
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const searchRef = useRef<HTMLDivElement | null>(null);
   const notifRef = useRef<HTMLDivElement | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+const [sidebarOpen, setSidebarOpen] = useState(false);
+const [isMobile, setIsMobile] = useState(false);
 
   const router = useRouter();
   const { cartItems } = useCart();
@@ -58,6 +60,9 @@ export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin}: NavbarPro
     '🚚 Free delivery for orders above Ksh 2,000!',
     '💳 Secure Payments via M-Pesa & AirtelMoney',
   ];
+
+  const x = useMotionValue(-288); // drawer width
+const pathname = usePathname();
 
   useEffect(() => {
   if (guestCountry) localStorage.setItem("guestCountry", JSON.stringify(guestCountry));
@@ -95,6 +100,22 @@ useEffect(() => {
 
     fetchGuestCountry();
   }, [user]);
+
+  useEffect(() => {
+  const check = () => setIsMobile(window.innerWidth < 768);
+  check();
+  window.addEventListener("resize", check);
+  return () => window.removeEventListener("resize", check);
+}, []);
+
+  useEffect(() => {
+  const saved = localStorage.getItem("sidebarOpen");
+  if (saved === "true") {
+    setSidebarOpen(true);
+    x.set(0);
+  }
+}, []);
+
 
   // ✅ Unified function for flag + currency
   const getUserCountryData = (user?: any, guestCountry?: any) => {
@@ -211,7 +232,13 @@ useEffect(() => {
       </div>
 
       {/* 🔹 Navbar */}
-      <nav className="fixed top-6 left-0 w-full z-50 bg-gradient-to-b from-orange-50 via-white to-orange-100 dark:from-gray-900 dark:to-gray-800 shadow-lg py-3 px-4 flex items-center justify-between transition-all">
+<nav className="
+fixed top-6 left-0 w-full z-50
+bg-gradient-to-b from-orange-50 via-white to-orange-100
+dark:from-gray-900 dark:to-gray-800
+shadow-lg py-3 px-4
+flex items-center
+">
         {/* Sidebar Button */}
 <button
   onClick={() => setSidebarOpen(true)}
@@ -241,34 +268,50 @@ useEffect(() => {
   className="relative flex items-center"
 >
   <AnimatePresence>
-    {showSearch && (
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
-        transition={{ duration: 0.25 }}
-        className="
-          fixed 
-          right-0
-          left-1/2
-          top-16
-          w-[92vw]
-          max-w-[420px]
-          md:w-[240px]
-          md:top-0
-          md:-right-8
-          z-[9999]
-          md: translate-x-0
-          md: fixed-none
-        "
-      >
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Search products..."
-          className="w-full border border-orange-300 rounded-full py-1.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
-        />
+{showSearch && (
+<motion.div
+  ref={searchRef}
+  initial={{ y: -40, opacity: 0 }}
+  animate={{ y: 0, opacity: 1 }}
+  exit={{ y: -40, opacity: 0 }}
+  transition={{ duration: 0.25 }}
+  className="
+    md:hidden
+    fixed
+    top-[72px]
+    left-0
+    w-full
+    bg-white
+    dark:bg-gray-900
+    shadow-md
+    z-[9998]
+    px-4 py-3
+  "
+>
+  <div className="relative">
+    <input
+      autoFocus
+      type="text"
+      value={searchTerm}
+      onChange={(e)=>setSearchTerm(e.target.value)}
+      placeholder="Search products..."
+      className="
+        w-full
+        rounded-full
+        border border-orange-300
+        py-2.5 px-5
+        focus:ring-2 focus:ring-orange-400
+        outline-none
+      "
+    />
+
+    <button
+      onClick={()=>setShowSearch(false)}
+      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
+    >
+      ✕
+    </button>
+    </div>
 
         {/* Suggestions */}
         {suggestions.length > 0 && (
@@ -317,6 +360,7 @@ useEffect(() => {
     <FiSearch />
   </button>
 </div>
+
 
 
       {/* Country Flag & Currency */}
@@ -480,43 +524,73 @@ useEffect(() => {
           )}
         </AnimatePresence>
       </nav>
-      {/* ================= MOBILE SIDEBAR ================= */}
+      {/* EDGE SWIPE AREA */}
 <div
-  className={`
-    md:hidden fixed inset-0 z-[9999]
-    transition-opacity duration-300
-    ${sidebarOpen
-      ? "opacity-100 pointer-events-auto"
-      : "opacity-0 pointer-events-none"}
-  `}
+  className="fixed top-0 left-0 h-full w-5 z-[9998] md:hidden"
+  onTouchStart={() => {
+    if (!sidebarOpen) setSidebarOpen(true);
+  }}
+/>
+      {/* ================= MOBILE SIDEBAR ================= */}
+<AnimatePresence>
+{sidebarOpen && (
+<motion.div
+  className="md:hidden fixed inset-0 z-[9999]"
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  exit={{ opacity: 0 }}
 >
   {/* Overlay */}
-  <div
-    onClick={() => setSidebarOpen(false)}
+  <motion.div
     className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+    onClick={() => setSidebarOpen(false)}
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
   />
 
-  {/* Drawer */}
-  <div
-    className={`
+  {/* IOS STYLE DRAWER */}
+  <motion.div
+    drag="x"
+    dragConstraints={{ left: -288, right: 0 }}
+    dragElastic={0.08}
+    style={{ x }}
+    initial={{ x: -288 }}
+    animate={{ x: 0 }}
+    exit={{ x: -288 }}
+    transition={{
+      type: "spring",
+      stiffness: 320,
+      damping: 35,
+    }}
+    onDragEnd={(e, info) => {
+      const shouldClose =
+        info.offset.x < -120 || info.velocity.x < -500;
+
+      if (shouldClose) {
+        setSidebarOpen(false);
+        x.set(-288);
+      } else {
+        x.set(0);
+      }
+    }}
+    className="
       absolute top-0 left-0
       h-full w-72
       bg-white dark:bg-gray-900
       shadow-2xl
-      transition-transform duration-300
-      ease-[cubic-bezier(0.22,1,0.36,1)]
-      ${sidebarOpen
-        ? "translate-x-0"
-        : "-translate-x-full"}
-    `}
+      touch-pan-y
+    "
   >
     {isSeller ? (
       <SellerSidebar onClose={() => setSidebarOpen(false)} />
     ) : (
       <Sidebar onClose={() => setSidebarOpen(false)} />
     )}
-  </div>
-</div>
+  </motion.div>
+</motion.div>
+)}
+</AnimatePresence>
     </>
   );
 }
