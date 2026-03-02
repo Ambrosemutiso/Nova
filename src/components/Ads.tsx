@@ -510,13 +510,13 @@ const submitComment = async () => {
 
   // ---------------- JSX ----------------
   return (
-    <div className="relative w-full h-[100vh] overflow-y-scroll snap-y snap-mandatory bg-black z-[9999]">
+    <div className="relative w-full h-[100vh] overflow-y-scroll snap-y snap-mandatory bg-black z-[99999]">
 
 {/* Floating Search Bar */}
 <motion.div
   animate={{ y: showSearchBar ? 0 : -90, opacity: showSearchBar ? 1 : 0 }}
   transition={{ duration: 0.25 }}
-  className="fixed top-4 left-0 right-0 z-[99999] px-4"
+  className="fixed top-4 left-0 right-0 z-[999999] px-4"
 >
   {/* Top Row: Back Arrow + Search Bar */}
   <div className="grid grid-cols-[40px_1fr] items-center gap-3">

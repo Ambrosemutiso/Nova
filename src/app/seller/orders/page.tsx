@@ -51,6 +51,10 @@ export default function SellerOrdersPage() {
   const [selectedLabelOrder, setSelectedLabelOrder] = useState<Order | null>(null);
   const [qrSrc, setQrSrc] = useState<string | null>(null);
   const [barcodeSrc, setBarcodeSrc] = useState<string | null>(null);
+  const [downloadingPDF, setDownloadingPDF] = useState(false);
+  const [downloadStep, setDownloadStep] = useState<
+  'starting' | 'barcode' | 'rendering' | 'finalizing'
+>('starting');
 
   const pageSize = 5;
 
@@ -189,11 +193,17 @@ const filteredOrders = orders.filter((order) => {
     setShowLabelModal(true);
   };
 
-const handleDownloadLabelPDF = () => {
+
+const handleDownloadLabelPDF = async () => {
   if (!selectedLabelOrder || !qrSrc || !barcodeSrc) {
     toast.error('Label data not ready');
     return;
   }
+
+  setDownloadingPDF(true);
+setDownloadStep('starting');
+
+await new Promise(r => setTimeout(r, 300));
 
   try {
     const pdf = new jsPDF({
@@ -277,6 +287,9 @@ const handleDownloadLabelPDF = () => {
     pdf.text('Order Items', 6, y);
     y += 3;
 
+    setDownloadStep('rendering');
+await new Promise(r => setTimeout(r, 400));
+
     autoTable(pdf, {
       startY: y,
       margin: { left: 6, right: 6 },
@@ -331,30 +344,117 @@ const handleDownloadLabelPDF = () => {
     pdf.setFont('helvetica', 'bold');
     pdf.text(selectedLabelOrder.trackingNumber!, 9, y + 11);
 
+    setDownloadStep('barcode');
+await new Promise(r => setTimeout(r, 400));
+
     pdf.addImage(barcodeSrc, 'PNG', 9, y + 15, 70, 10);
     pdf.addImage(qrSrc, 'PNG', pageWidth - 30, y + 12, 18, 18);
 
     y += 36;
 
-    /* =========================
-       🧾 FOOTER
-    ========================= */
-    pdf.setFontSize(7);
-    pdf.setTextColor(90, 90, 90);
-    pdf.text(
-      'www.novaxmax.com • support@novaxmax.com',
-      pageWidth / 2,
-      148,
-      { align: 'center' }
-    );
+/* =========================
+   🧾 PROFESSIONAL FOOTER
+========================= */
 
-    pdf.save(`NovaXmax_Label_${selectedLabelOrder._id.slice(-6)}.pdf`);
-  } catch (err) {
-    console.error(err);
-    toast.error('Failed to generate PDF');
-  }
+const pageHeight = pdf.internal.pageSize.getHeight();
+const footerY = pageHeight - 48;
+
+// Footer background
+pdf.setFillColor(250, 250, 250);
+pdf.setDrawColor(220);
+pdf.roundedRect(6, footerY, pageWidth - 12, 42, 3, 3, 'FD');
+
+/* -------------------------
+   🚚 DELIVERY INSTRUCTIONS
+------------------------- */
+pdf.setFont('helvetica', 'bold');
+pdf.setFontSize(8);
+pdf.setTextColor(0);
+pdf.text('Delivery Instructions', 9, footerY + 6);
+
+pdf.setFont('helvetica', 'normal');
+pdf.setFontSize(7);
+
+const deliveryInstruction =
+  selectedLabelOrder.customerInfo.deliveryInstructions ||
+  'Handle package with care. Deliver only to the named recipient.';
+
+pdf.text(
+  pdf.splitTextToSize(deliveryInstruction, pageWidth - 20),
+  9,
+  footerY + 11
+);
+
+/* -------------------------
+   🏢 COMPANY DETAILS
+------------------------- */
+pdf.setFont('helvetica', 'bold');
+pdf.text('Company Information', pageWidth / 2, footerY + 6);
+
+pdf.setFont('helvetica', 'normal');
+
+pdf.text(
+  [
+    'NovaXmax Technologies Ltd',
+    'Nairobi, Kenya',
+    'Website: www.novaxmax.com',
+    'Email: support@novaxmax.com',
+    'Customer Care: +254 798 437 508',
+  ],
+  pageWidth / 2,
+  footerY + 11
+);
+
+/* -------------------------
+   ⚖ TERMS & CONDITIONS
+------------------------- */
+pdf.setFont('helvetica', 'bold');
+pdf.text('Terms & Conditions', 9, footerY + 25);
+
+pdf.setFont('helvetica', 'normal');
+pdf.setFontSize(6.5);
+
+const terms = [
+  '• Goods must be inspected upon delivery.',
+  '• NovaXmax is not liable after successful handover.',
+  '• Refused deliveries may attract return charges.',
+  '• Report damages within 24 hours.',
+];
+
+pdf.text(
+  terms,
+  9,
+  footerY + 30
+);
+
+/* -------------------------
+   COPYRIGHT LINE
+------------------------- */
+pdf.setFontSize(6);
+pdf.setTextColor(120);
+pdf.text(
+  `© ${new Date().getFullYear()} NovaXmax Ltd`,
+  pageWidth / 2,
+  pageHeight - 4,
+  { align: 'center' }
+);
+
+setDownloadStep('finalizing');
+await new Promise(r => setTimeout(r, 500));
+pdf.save(`NovaXmax_Label_${selectedLabelOrder._id.slice(-6)}.pdf`);
+
+setTimeout(() => {
+  setDownloadingPDF(false);
+  setShowLabelModal(false); // ✅ auto close modal
+  toast.success('Delivery label downloaded');
+}, 900);
+} catch (err) {
+  console.error(err);
+  toast.error('Failed to generate PDF');
+  setDownloadingPDF(false);
+  setDownloadStep('starting');
+}
 };
-
 
   // ✅ Extract available cities dynamically
   const cities = Array.from(new Set(orders.map((o) => o.customerInfo.county).filter(Boolean)));
@@ -527,6 +627,36 @@ const handleDownloadLabelPDF = () => {
           </div>
         </>
       )}
+
+      {downloadingPDF && (
+  <div className="fixed inset-0 z-[10000] bg-black/60 backdrop-blur-sm flex items-center justify-center">
+    <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center gap-5 w-[320px]">
+
+      {/* Spinner */}
+      <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
+
+      <h2 className="text-lg font-semibold text-gray-800">
+        Preparing Delivery Label
+      </h2>
+
+      {/* Dynamic Progress */}
+      <p className="text-sm text-gray-600 text-center transition-all duration-300">
+        {downloadStep === 'starting' && 'Initializing label...'}
+        {downloadStep === 'barcode' && 'Preparing barcode & tracking...'}
+        {downloadStep === 'rendering' && 'Rendering order information...'}
+        {downloadStep === 'finalizing' && 'Finalizing PDF download...'}
+      </p>
+
+      {/* Progress dots */}
+      <div className="flex gap-2 mt-1">
+        <span className="w-2 h-2 bg-orange-400 rounded-full animate-bounce"></span>
+        <span className="w-2 h-2 bg-orange-400 rounded-full animate-bounce delay-150"></span>
+        <span className="w-2 h-2 bg-orange-400 rounded-full animate-bounce delay-300"></span>
+      </div>
+
+    </div>
+  </div>
+)}
 
 {showLabelModal && selectedLabelOrder && (
   <div className="fixed inset-0 z-[9999] bg-black bg-opacity-50 flex items-center justify-center backdrop-blur-sm transition-all">

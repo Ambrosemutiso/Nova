@@ -577,7 +577,7 @@ flex items-center
     className="
       absolute top-0 left-0
       h-full w-72
-      bg-white dark:bg-gray-900
+      dark:bg-gray-900
       shadow-2xl
       touch-pan-y
     "
