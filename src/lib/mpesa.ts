@@ -54,7 +54,7 @@ const tokenRes = await axios.get(
         BusinessShortCode: shortCode,
         Password: password,
         Timestamp: timestamp,
-        TransactionType: 'CustomerPayBillOnline',
+        TransactionType: 'CustomerBuyGoodsOnline',
         Amount: amount,
         PartyA: formattedPhone,
         PartyB: shortCode,
