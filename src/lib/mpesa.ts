@@ -29,7 +29,7 @@ export async function initiateSTKPush({
     ).toString('base64');
 
 const tokenRes = await axios.get(
-  'https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials',
+  'https://api.safaricom.co.ke/oauth/v1/generate',
   {
     headers: { Authorization: `Basic ${auth}` },
     timeout: 5000,
