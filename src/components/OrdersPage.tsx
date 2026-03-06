@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Loader2, Search, Truck, PackageCheck, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -59,15 +58,12 @@ export default function MyOrdersPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [timeTrigger, setTimeTrigger] = useState(0);
 
-  const router = useRouter();
-
   const fetchOrders = async (page = 1) => {
     setLoading(true);
     try {
       const userId = localStorage.getItem('userId');
       if (!userId) {
         toast.error('Please log in first');
-        router.push('/login');
         return;
       }
 
@@ -160,9 +156,6 @@ const getDeliveryStepIndex = (order: Order) => {
       transition={{ duration: 0.4 }}
       className="min-h-screen bg-white py-24 px-4 md:px-10"
     >
-      <h1 className="text-3xl font-bold text-orange-600 mb-8 border-b pb-2">
-        My Orders
-      </h1>
 
       {/* Filters */}
       <div className="flex flex-col md:flex-row flex-wrap items-center justify-between gap-4 mb-8">
