@@ -5,6 +5,7 @@ const consumerKey = process.env.MPESA_CONSUMER_KEY!;
 const consumerSecret = process.env.MPESA_CONSUMER_SECRET!;
 const shortCode = process.env.MPESA_SHORTCODE!;
 const passkey = process.env.MPESA_PASSKEY!;
+const tillNumber = process.env.MPESA_TILL_NUMBER!;
 const callbackURL = process.env.MPESA_CALLBACK_URL!;
 
 if (!callbackURL) {
@@ -32,7 +33,7 @@ const tokenRes = await axios.get(
   'https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials',
   {
     headers: { Authorization: `Basic ${auth}` },
-    timeout: 5000,
+    timeout: 10000,
   }
 );
 
@@ -57,7 +58,7 @@ const formattedPhone = phone
         TransactionType: 'CustomerBuyGoodsOnline',
         Amount: amount,
         PartyA: formattedPhone,
-        PartyB: shortCode,
+        PartyB: tillNumber,
         PhoneNumber: formattedPhone,
         CallBackURL: callbackURL,
         AccountReference: accountReference,
@@ -65,7 +66,7 @@ const formattedPhone = phone
       },
       {
         headers: { Authorization: `Bearer ${accessToken}` },
-        timeout: 5000,
+        timeout: 30000,
       }
     );
 
