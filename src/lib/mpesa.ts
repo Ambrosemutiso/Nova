@@ -29,7 +29,7 @@ export async function initiateSTKPush({
     ).toString('base64');
 
 const tokenRes = await axios.get(
-  'https://api.safaricom.co.ke/oauth/v1/generate',
+  'https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials',
   {
     headers: { Authorization: `Basic ${auth}` },
     timeout: 5000,
@@ -44,10 +44,10 @@ const tokenRes = await axios.get(
       `${shortCode}${passkey}${timestamp}`
     ).toString('base64');
 
-    const formattedPhone = phone.startsWith('254')
-      ? phone
-      : phone.replace(/^0/, '254');
-
+const formattedPhone = phone
+  .replace('+', '')
+  .replace(/^0/, '254');
+  
     const stkRes = await axios.post(
       'https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest',
       {
