@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/app/context/AuthContext';
 import 'react-toastify/dist/ReactToastify.css';
+import { signInWithGoogle, checkGoogleRedirectResult } from '@/lib/authUtils';
 
 interface LoginModalProps {
   onClose: () => void;
@@ -52,6 +53,68 @@ const validatePhone = (num: string): string | null => {
   if (clean.startsWith('0')) clean = clean.slice(1);
   if (/^[1-9]\d{8}$/.test(clean)) return clean;
   return null;
+};
+
+useEffect(() => {
+  const handleRedirect = async () => {
+    const googleUser = await checkGoogleRedirectResult();
+
+    if (!googleUser) return;
+
+    const res = await axios.post('/api/auth/google-login', {
+      provider: 'google',
+      role: role || 'buyer',
+      ...googleUser,
+    });
+
+    const { token, user } = res.data;
+
+    localStorage.setItem(`${user.role}Token`, token);
+
+    login(user);
+
+    toast.success('Google login successful!');
+
+    window.location.href =
+      user.role === 'seller'
+        ? '/seller/dashboard'
+        : '/';
+  };
+
+  handleRedirect();
+}, []);
+
+const handleGoogleLogin = async () => {
+  try {
+    const googleUser = await signInWithGoogle(role || 'buyer');
+
+    if (!googleUser) return;
+
+    const res = await axios.post('/api/auth/google-login', {
+      provider: 'google',
+      role: role || 'buyer',
+      ...googleUser,
+    });
+
+    const { token, user } = res.data;
+
+    localStorage.setItem(`${user.role}Token`, token);
+
+    login(user);
+
+    toast.success('Google login successful!');
+
+    onClose();
+
+    window.location.href =
+      user.role === 'seller'
+        ? '/seller/dashboard'
+        : '/';
+
+  } catch (err: any) {
+    console.error(err);
+    toast.error('Google login failed');
+  }
 };
 
   const handleEmailCheck = async (email: string) => {
@@ -262,6 +325,24 @@ const handleForgotPassword = async () => {
             >
               {isForgot ? 'Send Reset Link' : isLogin ? 'Login' : 'Register'}
             </button>
+            {/* Divider */}
+<div className="flex items-center my-4">
+  <div className="flex-1 border-t border-gray-400"></div>
+  <span className="px-3 text-sm text-gray-300">OR</span>
+  <div className="flex-1 border-t border-gray-400"></div>
+</div>
+
+{/* Google Sign In */}
+<button
+  onClick={handleGoogleLogin}
+  className="w-full flex items-center justify-center gap-3 bg-white text-gray-800 py-2 rounded-lg hover:bg-gray-100 transition font-semibold"
+>
+  <img
+    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+    className="w-5 h-5"
+  />
+  Sign in with Google
+</button>
 
 <p className="text-sm mt-4 text-center text-gray-300">
   {isForgot ? (
@@ -284,7 +365,6 @@ const handleForgotPassword = async () => {
     </>
   )}
 </p>
-
           </motion.div>
         </AnimatePresence>
       </motion.div>

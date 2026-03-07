@@ -3,10 +3,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import Wallet from '@/app/models/wallet';
 import WalletTransaction from '@/app/models/walletTransaction';
+import { sendB2CPayment } from '@/lib/mpesab2c';
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, pin, amount, method } = await req.json();
+    const { userId, pin, amount, method, phoneNumber } = await req.json();
 
     if (!userId || !pin || !amount || !method) {
       return NextResponse.json(
@@ -17,12 +18,33 @@ export async function POST(req: NextRequest) {
 
     const wallet = await Wallet.findOne({ userId });
 
-    if (!wallet || !wallet.pinHash) {
-      return NextResponse.json(
-        { message: 'Wallet not ready' },
-        { status: 400 }
-      );
-    }
+    if (amount < 50) {
+  return NextResponse.json(
+    { message: 'Minimum withdrawal is 50' },
+    { status: 400 }
+  );
+}
+
+if (amount > 70000) {
+  return NextResponse.json(
+    { message: 'Maximum withdrawal exceeded' },
+    { status: 400 }
+  );
+}
+
+if (!wallet) {
+  return NextResponse.json(
+    { message: 'Wallet not found' },
+    { status: 404 }
+  );
+}
+
+if (!wallet.pinHash) {
+  return NextResponse.json(
+    { message: 'Please set wallet PIN first' },
+    { status: 400 }
+  );
+}
 
     const validPin = await bcrypt.compare(pin, wallet.pinHash);
     if (!validPin) {
@@ -55,8 +77,15 @@ export async function POST(req: NextRequest) {
       status: 'pending', // B2C async
     });
 
-    // 🔜 NEXT STEP (coming next)
-    // initiateMpesaB2C({ userId, amount });
+// Send MPESA B2C
+const b2cResponse = await sendB2CPayment({
+  amount,
+  phone: phoneNumber, // user phone
+  remarks: 'NovaX Wallet Withdrawal',
+  transactionId: wallet._id.toString(),
+});
+
+console.log('B2C RESPONSE:', b2cResponse);
 
     return NextResponse.json({ success: true });
   } catch (error) {

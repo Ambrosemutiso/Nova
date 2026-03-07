@@ -1,18 +1,19 @@
-export async function getMpesaAccessToken() {
-  const auth = Buffer.from(
-    `${process.env.MPESA_CONSUMER_KEY}:${process.env.MPESA_CONSUMER_SECRET}`
-  ).toString("base64");
+export async function getMpesaToken() {
+  const consumerKey = process.env.MPESA_CONSUMER_KEY!;
+  const consumerSecret = process.env.MPESA_CONSUMER_SECRET!;
 
-  const url =
-    process.env.MPESA_ENV === "sandbox"
-      ? "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
-      : "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials";
+  const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64");
 
-  const res = await fetch(url, {
-    headers: { Authorization: `Basic ${auth}` },
-  });
+  const res = await fetch(
+    "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Basic ${auth}`,
+      },
+    }
+  );
 
-  if (!res.ok) throw new Error("Failed to get Mpesa access token");
-
-  return res.json();
+  const data = await res.json();
+  return data.access_token;
 }

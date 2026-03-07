@@ -15,7 +15,7 @@ export interface IWalletTransaction {
   balanceAfter: number;
 
   label: string;
-  reference?: string; // MPESA CheckoutRequestID / Txn ID
+  reference?: string; 
 
   createdAt: Date;
   updatedAt: Date;

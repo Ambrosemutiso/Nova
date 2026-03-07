@@ -266,19 +266,20 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const {
-      mode, // "login" | "signup" | "forgot-password" | "reset-password"
-      name,
-      email,
-      password,
-      confirmPassword,
-      token, // for reset-password mode
-      role,
-      phoneNumber,
-      country,
-      currency,
-      image,
-    } = body;
+const {
+  provider,
+  mode,
+  name,
+  email,
+  password,
+  confirmPassword,
+  token,
+  role,
+  phoneNumber,
+  country,
+  currency,
+  image,
+} = body;
 
     if (!mode) {
       return NextResponse.json(
@@ -287,6 +288,72 @@ export async function POST(req: Request) {
       );
     }
 
+// ------------------------------------------------
+// 🔹Google Login
+// ------------------------------------------------
+if (provider === 'google') {
+
+  if (!email) {
+    return NextResponse.json(
+      { success: false, error: 'Google email missing' },
+      { status: 400 }
+    );
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+
+  let user = await User.findOne({ email: normalizedEmail });
+
+  // ------------------------------------------------
+  // 🆕 USER DOES NOT EXIST → CREATE
+  // ------------------------------------------------
+  if (!user) {
+    user = await User.create({
+      provider: 'google',
+      name,
+      email: normalizedEmail,
+      role: role || 'buyer',
+      image,
+      phoneNumber: phoneNumber || null,
+      country,
+      currency,
+    });
+  }
+
+  // ------------------------------------------------
+  // 🆕 USER EXISTS → LINK GOOGLE PROVIDER
+  // ------------------------------------------------
+  else {
+
+    // If account created with email/password
+    if (user.provider === 'email') {
+      user.provider = 'email+google';
+    }
+
+    // Update profile picture if missing
+    if (!user.image && image) {
+      user.image = image;
+    }
+
+    await user.save();
+  }
+
+  const token = jwt.sign(
+    { id: user._id.toString(), role: user.role },
+    JWT_SECRET,
+    { expiresIn: '7d' }
+  );
+
+  const userData = user.toObject();
+  delete userData.password;
+
+  return NextResponse.json({
+    success: true,
+    message: 'Google login successful',
+    user: userData,
+    token,
+  });
+}
 // ------------------------------------------------
 // 🔹 SIGNUP (Corrected and hardened)
 // ------------------------------------------------

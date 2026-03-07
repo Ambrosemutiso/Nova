@@ -81,7 +81,7 @@ export default function WalletPage() {
 
   const [showPinModal, setShowPinModal] = useState(false);
   const [pin, setPin] = useState('');
-  const [hasPin, setHasPin] = useState<boolean | null>(null);
+  const [withdrawPhone, setWithdrawPhone] = useState('');
   const [showSetPinModal, setShowSetPinModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState<number | null>(null);
@@ -316,7 +316,22 @@ const maxWeeklyValue = Math.max(
   title="Withdraw"
   subtitle="Cash out"
   color="red"
-  onClick={() => setShowWithdrawModal(true)}
+  onClick={async () => {
+  if (!user?._id) return;
+
+  try {
+    const res = await fetch(`/api/wallet/check-pin?userId=${user._id}`);
+    const data = await res.json();
+
+    if (!data.hasPin) {
+      setShowSetPinModal(true);
+    } else {
+      setShowWithdrawModal(true);
+    }
+  } catch {
+    toast.error('Unable to verify wallet PIN');
+  }
+}}
 />
         <WalletAction
           icon={<FiCreditCard />}
@@ -477,9 +492,10 @@ const maxWeeklyValue = Math.max(
 {showWithdrawModal && (
   <WithdrawModal
     onClose={() => setShowWithdrawModal(false)}
-    onConfirm={(amount, method) => {
+    onConfirm={(amount, method, phone) => {
       setWithdrawAmount(amount);
       setWithdrawMethod(method);
+      setWithdrawPhone(phone);
       setShowWithdrawModal(false);
       setShowPinModal(true);
     }}
@@ -776,15 +792,15 @@ function SetPinModal({
     </div>
   );
 }
-
 function WithdrawModal({
   onClose,
   onConfirm,
 }: {
   onClose: () => void;
-  onConfirm: (amount: number, method: 'mpesa') => void;
+  onConfirm: (amount: number, method: 'mpesa', phone: string) => void;
 }) {
   const [amount, setAmount] = useState('');
+  const [phone, setPhone] = useState('');
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
@@ -792,10 +808,16 @@ function WithdrawModal({
         <h3 className="font-semibold">Withdraw Funds</h3>
 
         <select className="w-full border rounded-xl p-2" disabled>
-          <option value="mpesa">M-Pesa (Available)</option>
-          <option>Airtel Money (Coming soon)</option>
-          <option>Card (Coming soon)</option>
+          <option value="mpesa">M-Pesa</option>
         </select>
+
+        <input
+          type="text"
+          placeholder="M-Pesa Phone (2547XXXXXXXX)"
+          value={phone}
+          onChange={e => setPhone(e.target.value)}
+          className="w-full border rounded-xl p-2"
+        />
 
         <input
           type="number"
@@ -806,17 +828,23 @@ function WithdrawModal({
         />
 
         <div className="flex gap-2">
-          <button onClick={onClose} className="flex-1 border rounded-xl py-2">
+          <button
+            onClick={onClose}
+            className="flex-1 border rounded-xl py-2"
+          >
             Cancel
           </button>
+
           <button
-            onClick={() => onConfirm(Number(amount), 'mpesa')}
+            onClick={() =>
+              onConfirm(Number(amount), 'mpesa', phone)
+            }
             className="flex-1 bg-orange-600 text-white rounded-xl py-2"
           >
             Continue
           </button>
         </div>
       </div>
-      </div>
+    </div>
   );
 }

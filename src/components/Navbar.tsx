@@ -237,7 +237,7 @@ fixed top-6 left-0 w-full z-50
 bg-gradient-to-b from-orange-50 via-white to-orange-100
 dark:from-gray-900 dark:to-gray-800
 shadow-lg py-3 px-4
-flex items-center
+flex items-center justify-between
 ">
         {/* Sidebar Button */}
 <button
@@ -259,6 +259,57 @@ flex items-center
       }}
     />   
         </div>
+        {/* DESKTOP SEARCH */}
+<div className="hidden md:flex flex-1 justify-center px-6">
+  <div className="relative w-full max-w-xl">
+
+    <input
+      type="text"
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      placeholder="Search products, brands and categories..."
+      className="w-full rounded-full border border-orange-300 py-2 px-5 pr-12 focus:ring-2 focus:ring-orange-400 outline-none"
+    />
+
+    <FiSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-orange-500" />
+
+    {/* Suggestions (same as mobile) */}
+    {suggestions.length > 0 && (
+      <ul className="absolute top-12 left-0 w-full bg-white border border-orange-200 rounded-lg shadow-lg z-[80] max-h-80 overflow-y-auto">
+        {suggestions.map((product: any, i) => (
+          <li
+            key={i}
+            onClick={() => {
+              router.push(`/product/${product.slug}`);
+              setSearchTerm('');
+            }}
+            className="flex items-center gap-3 px-3 py-2 hover:bg-orange-50 cursor-pointer"
+          >
+            <CldImage
+              src={getPublicId(product.images[0])}
+              alt={product.name}
+              width="40"
+              height="40"
+              className="rounded-md object-cover"
+            />
+
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-800 font-medium">
+                {product.name}
+              </span>
+
+              <span className="text-xs text-orange-600 font-semibold">
+                Ksh {product.calculatedPrice?.toLocaleString()}
+              </span>
+            </div>
+
+          </li>
+        ))}
+      </ul>
+    )}
+
+  </div>
+</div>
 
         {/* Right Section */}
         <div className="flex items-center gap-4 relative ml-auto">
@@ -542,7 +593,7 @@ flex items-center
 >
   {/* Overlay */}
   <motion.div
-    className="absolute inset-0 bg-orange-50"
+    className="absolute inset-0 bg-black/40 backdrop-blur-sm"
     onClick={() => setSidebarOpen(false)}
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
@@ -576,6 +627,8 @@ flex items-center
     }}
     className="
       absolute top-0 left-0
+      bg-white dark:bg-gray-900
+      shadow-2xl
       h-full w-72
       touch-pan-y
     "

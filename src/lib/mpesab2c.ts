@@ -1,34 +1,41 @@
-import { getMpesaAccessToken } from "./mpesaAccessToken";
+import { getMpesaToken } from "@/lib/mpesaAccessToken";
 
-export async function initiateB2CPayment(
-  phone: string,
-  amount: number
-): Promise<any> {
-  const { access_token } = await getMpesaAccessToken();
+export async function sendB2CPayment({
+  amount,
+  phone,
+  remarks,
+  transactionId,
+}: {
+  amount: number;
+  phone: string;
+  remarks: string;
+  transactionId: string;
+}) {
+  const token = await getMpesaToken();
 
-  const url =
-    process.env.MPESA_ENV === "sandbox"
-      ? "https://sandbox.safaricom.co.ke/mpesa/b2c/v1/paymentrequest"
-      : "https://api.safaricom.co.ke/mpesa/b2c/v1/paymentrequest";
+  const response = await fetch(
+    "https://api.safaricom.co.ke/mpesa/b2c/v1/paymentrequest",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        InitiatorName: process.env.MPESA_INITIATOR_NAME,
+        SecurityCredential: process.env.MPESA_SECURITY_CREDENTIAL,
+        CommandID: "BusinessPayment",
+        Amount: amount,
+        PartyA: process.env.MPESA_SHORTCODE,
+        PartyB: phone,
+        Remarks: remarks,
+        QueueTimeOutURL: `${process.env.BASE_URL}/api/mpesa/b2c/timeout`,
+        ResultURL: `${process.env.BASE_URL}/api/mpesa/b2c/result`,
+        Occasion: transactionId,
+      }),
+    }
+  );
 
-  const body = {
-    InitiatorName: process.env.MPESA_INITIATOR_NAME!,
-    SecurityCredential: process.env.MPESA_SECURITY_CREDENTIAL!,
-    CommandID: process.env.MPESA_B2C_COMMAND_ID!,
-    Amount: Number(amount),
-    PartyA: process.env.MPESA_SHORTCODE!,
-    PartyB: phone.replace("+", ""), // clean phone number
-    Remarks: "Withdrawal Payment",
-    QueueTimeOutURL: process.env.MPESA_TIMEOUT_URL!,
-    ResultURL: process.env.MPESA_RESULT_URL!,
-  };
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${access_token}`, "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-
-  const data = await res.json();
+  const data = await response.json();
   return data;
 }
