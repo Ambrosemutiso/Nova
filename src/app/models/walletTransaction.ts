@@ -7,7 +7,7 @@ export interface IWalletTransaction {
   userId: Types.ObjectId;
 
   type: 'credit' | 'debit';
-  purpose: 'wallet' | 'order' | 'installment-deposit' | 'installment-monthly';
+  purpose: 'wallet' | 'order' | 'installment-deposit' | 'installment-monthly' | 'withdrawal';
 
   status: 'pending' | 'paid' | 'failed';
 
@@ -50,6 +50,7 @@ const WalletTransactionSchema = new Schema<IWalletTransaction>(
         'order',
         'installment-deposit',
         'installment-monthly',
+        'withdrawal',
       ],
       required: true,
     },

@@ -10,10 +10,14 @@ export async function getMpesaToken() {
       method: "GET",
       headers: {
         Authorization: `Basic ${auth}`,
+        "Content-Type": "application/json",
       },
     }
   );
 
   const data = await res.json();
+
+  console.log("MPESA TOKEN RESPONSE:", data);
+
   return data.access_token;
 }

@@ -67,10 +67,12 @@ if (!wallet.pinHash) {
 
     // 🔁 Log transaction
     await WalletTransaction.create({
+      userId: wallet.userId, 
       walletId: wallet._id,
       type: 'debit',
       amount,
       purpose: 'withdrawal',
+      label: 'Withdraw',
       method, // mpesa | airtel | card
       balanceBefore,
       balanceAfter: wallet.balance,
@@ -81,7 +83,7 @@ if (!wallet.pinHash) {
 const b2cResponse = await sendB2CPayment({
   amount,
   phone: phoneNumber, // user phone
-  remarks: 'NovaX Wallet Withdrawal',
+  remarks: 'N-PAY Wallet Withdrawal',
   transactionId: wallet._id.toString(),
 });
 
