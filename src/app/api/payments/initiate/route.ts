@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
         deliveryFee,
         totalAmount: amount,
         customerInfo: { county, town, phone },
-        paymentStatus: 'pending',
+        status: 'pending',
       });
 
       normalizedRefId = order._id.toString();

@@ -50,8 +50,7 @@ export async function POST(req: NextRequest) {
         deliveryFee,
         totalAmount: amount,
         customerInfo: { county, town },
-        paymentStatus: 'paid',
-        paidAt: new Date()
+        status: 'paid',
       })
 
       normalizedRefId = order._id
