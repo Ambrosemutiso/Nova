@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { dbConnect } from '@/lib/dbConnect'
 import Wallet from '@/app/models/wallet'
+import WalletTransaction from '@/app/models/walletTransaction'
 
 export async function POST(req: NextRequest) {
   await dbConnect()
@@ -36,20 +37,31 @@ export async function POST(req: NextRequest) {
     // Deduct balance
     wallet.balance -= amount
 
-    wallet.transactions.push({
-      type: 'debit',
-      amount,
-      purpose,
-      refId,
-      createdAt: new Date()
-    })
-
     await wallet.save()
+
+    // Create wallet transaction
+    await WalletTransaction.create({
+      walletId: wallet._id,
+      userId: wallet.userId,
+
+      type: 'debit',
+      purpose: purpose || 'order',
+
+      status: 'paid',
+
+      amount,
+      balanceAfter: wallet.balance,
+
+      label: 'Wallet payment',
+
+      reference: refId || undefined
+    })
 
     return NextResponse.json({
       success: true,
       balance: wallet.balance
     })
+
   } catch (err) {
     console.error(err)
 

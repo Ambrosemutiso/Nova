@@ -29,8 +29,8 @@ export async function sendB2CPayment({
         PartyA: process.env.MPESA_SHORTCODE,
         PartyB: phone,
         Remarks: remarks,
-        QueueTimeOutURL: `${process.env.BASE_URL}/api/mpesa/b2c/timeout`,
-        ResultURL: `${process.env.BASE_URL}/api/mpesa/b2c/result`,
+        QueueTimeOutURL: `${process.env.NEXT_PUBLIC_BASE_URL}/api/mpesa/b2c/timeout`,
+        ResultURL: `${process.env.NEXT_PUBLIC_BASE_URL}/api/mpesa/b2c/result`,
         Occasion: transactionId,
       }),
     }
