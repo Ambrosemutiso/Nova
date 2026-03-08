@@ -5,7 +5,7 @@ import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyD3kH_yW6xnLCHzsYDQVSl_BHE_w5vkrBE',
-  authDomain: 'novamart-8742a.firebaseapp.com',
+  authDomain: 'novaxmax.com',
   projectId: 'novamart-8742a',
   storageBucket: 'novamart-8742a.appspot.com',
   messagingSenderId: '7530844007',
