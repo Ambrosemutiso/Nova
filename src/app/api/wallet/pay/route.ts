@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { dbConnect } from '@/lib/dbConnect'
 import Wallet from '@/app/models/wallet'
 import WalletTransaction from '@/app/models/walletTransaction'
+import PaymentIntent from '@/app/models/paymentIntent'
+import Order from '@/app/models/orders'
+import Installment from '@/app/models/InstallmentOrder'
 
 export async function POST(req: NextRequest) {
   await dbConnect()
@@ -9,22 +12,21 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
 
-    const { userId, amount, purpose, refId } = body
-
-    if (!userId || !amount) {
-      return NextResponse.json(
-        { message: 'Missing payment data' },
-        { status: 400 }
-      )
-    }
+    const {
+      userId,
+      amount,
+      purpose,
+      refId,
+      items,
+      deliveryFee,
+      county,
+      town
+    } = body
 
     const wallet = await Wallet.findOne({ userId })
 
     if (!wallet) {
-      return NextResponse.json(
-        { message: 'Wallet not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ message: 'Wallet not found' }, { status: 404 })
     }
 
     if (wallet.balance < amount) {
@@ -34,35 +36,96 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Deduct balance
-    wallet.balance -= amount
+    let normalizedRefId = refId
 
+    /* ================================
+       🛒 ORDER
+    ================================= */
+
+    if (purpose === 'order') {
+
+      const order = await Order.create({
+        userId,
+        items,
+        deliveryFee,
+        totalAmount: amount,
+        customerInfo: { county, town },
+        paymentStatus: 'paid',
+        paidAt: new Date()
+      })
+
+      normalizedRefId = order._id
+    }
+
+    /* ================================
+       📆 INSTALLMENT MONTHLY
+    ================================= */
+
+    if (purpose === 'installment-monthly') {
+
+      const inst = await Installment.findById(refId)
+
+      if (inst) {
+
+        const paidAmount =
+          Number(inst.paidAmount ?? 0) + Number(amount)
+
+        const isCompleted = paidAmount >= inst.totalAmount
+
+        await Installment.findByIdAndUpdate(
+          refId,
+          {
+            $set: {
+              paidAmount,
+              status: isCompleted ? 'completed' : inst.status
+            }
+          }
+        )
+      }
+    }
+
+    /* ================================
+       💰 WALLET DEDUCTION
+    ================================= */
+
+    wallet.balance -= amount
     await wallet.save()
 
-    // Create wallet transaction
+    /* ================================
+       💳 WALLET TRANSACTION
+    ================================= */
+
     await WalletTransaction.create({
       walletId: wallet._id,
       userId: wallet.userId,
-
       type: 'debit',
-      purpose: purpose || 'order',
-
+      purpose,
       status: 'paid',
-
       amount,
-      balanceAfter: wallet.balance,
-
       label: 'Wallet payment',
+      reference: `NPAY-${Date.now()}`,
+      balanceAfter: wallet.balance
+    })
 
-      reference: refId || undefined
+    /* ================================
+       💳 PAYMENT INTENT (LOGGING)
+    ================================= */
+
+    await PaymentIntent.create({
+      userId,
+      amount,
+      method: 'npay',
+      purpose,
+      refId: normalizedRefId,
+      status: 'paid'
     })
 
     return NextResponse.json({
-      success: true,
-      balance: wallet.balance
+      success: true
     })
 
   } catch (err) {
+
     console.error(err)
 
     return NextResponse.json(

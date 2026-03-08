@@ -53,7 +53,11 @@ export default function GlobalPayModal({
           amount: safeAmount,
           purpose: payload.purpose,
           refId: payload.refId,
-        }),
+          items: payload.items,
+          deliveryFee: payload.deliveryFee,
+          county: payload.county,
+          town: payload.town
+        })
       });
 
       const data = await res.json();

@@ -1,3 +1,4 @@
+//lib/authUtils.ts
 import {
   GoogleAuthProvider,
   signInWithPopup,
@@ -16,7 +17,6 @@ const countryCurrencyMap: Record<string, string> = {
   SO: 'SOS',
   SS: 'SSP',
 };
-
 /**
  * 🔹 Start Google sign-in
  * Automatically saves a redirect marker (so modal reopens after redirect)
@@ -59,14 +59,10 @@ export const signInWithGoogle = async (role: 'buyer' | 'seller') => {
   } catch (error: any) {
     console.warn('Popup failed, using redirect...', error?.code);
     await signInWithRedirect(auth, provider);
-    // 🚀 redirect will happen automatically; we’ll handle result later
+    return null;
   }
 };
 
-/**
- * 🔹 Handle redirect result (called on mount)
- * Returns Google user info if redirect succeeded
- */
 export const checkGoogleRedirectResult = async () => {
   const result = await getRedirectResult(auth);
   if (!result) return null;
@@ -86,7 +82,7 @@ export const checkGoogleRedirectResult = async () => {
   const currency = countryCurrencyMap[country] || 'USD';
   const token = await user.getIdToken();
 
-  localStorage.removeItem('pendingGoogleRedirect'); // ✅ clear marker now that we’re back
+  localStorage.removeItem('pendingGoogleRedirect');
 
   return {
     name: user.displayName || '',
