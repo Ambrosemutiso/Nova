@@ -281,7 +281,7 @@ const {
   image,
 } = body;
 
-    if (!mode) {
+  if (!mode && provider !== 'google') {
       return NextResponse.json(
         { success: false, error: 'Mode is required!' },
         { status: 400 }

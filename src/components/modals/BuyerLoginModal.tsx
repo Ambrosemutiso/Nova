@@ -90,11 +90,12 @@ const handleGoogleLogin = async () => {
 
     if (!googleUser) return;
 
-    const res = await axios.post('/api/auth/google-login', {
-      provider: 'google',
-      role: role || 'buyer',
-      ...googleUser,
-    });
+const res = await axios.post('/api/auth/google-login', {
+  provider: 'google',
+  mode: 'google',
+  role: role || 'buyer',
+  ...googleUser,
+});
 
     const { token, user } = res.data;
 

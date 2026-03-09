@@ -48,6 +48,8 @@ export async function POST(request: NextRequest) {
     const description = formData.get('description')?.toString();
     const quantity = formData.get('quantity')?.toString() || '0';
     const category = formData.get('category')?.toString();
+    const subcategory = formData.get('subcategory')?.toString();
+    const productType = formData.get('productType')?.toString();
     const sellerId = formData.get('sellerId')?.toString();
     const county = formData.get('county')?.toString();
     const town = formData.get('town')?.toString();

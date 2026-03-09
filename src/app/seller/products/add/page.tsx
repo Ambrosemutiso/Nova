@@ -5,7 +5,10 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/app/context/AuthContext';
 import TextEditor from '@/components/TextEditor';
+import { categoryTree } from "@/lib/productCategories";
 type ProductCondition = 'brand_new' | 'used' | 'refurbished';
+type Category = keyof typeof categoryTree;
+type Subcategory = keyof typeof categoryTree[Category];
 
 type County = 'Nairobi' | 'Mombasa' | 'Kisumu'|'Kwale'|'Kilifi'|'TanaRiver'|'Lamu'
 |'TaitaTaveta'|'Garissa'|'Wajir'|'Mandera'|'Marsabit'|'Isiolo'|'Meru'|'TharakaNithi'
@@ -64,13 +67,6 @@ const countyTownMap: Record<County, string[]> = {
   Vihiga: ['Mbale', 'Luanda', 'Chavakali', 'Hamisi'],
 };
 
-const productCategories = [
-          'Electronics','Systems','Fashion','Gaming',
-          'Phones','Laptops','Computers','Household',
-          'Kitchen','Sofas','Health','Beauty','Women',
-          'Jewelry','Kids','Skincare','Men','Books',
-          'Machines','Spares','Motors','Liquor','Sports','Robotics',
-        ];
 export default function AddProduct() {
   const { user } = useAuth();
   const router = useRouter();
@@ -85,7 +81,9 @@ export default function AddProduct() {
   const [warranty, setWarranty] = useState('');
   const [dimensions, setDimensions] = useState('');
   const [weight, setWeight] = useState('');
-  const [category, setCategory] = useState('');
+  const [category, setCategory] = useState<Category | ''>('');
+  const [subcategory, setSubcategory] = useState<string>('');
+  const [productType, setProductType] = useState('');
   const [price, setPrice] = useState('');
   const [oldPrice, setOldPrice] = useState('');
   const [calculatedPrice, setCalculatedPrice] = useState(0);
@@ -168,6 +166,8 @@ const handleCountyChange = (selectedCounty: County | '') => {
     formData.append('dimensions', dimensions);
     formData.append('weight', weight);
     formData.append('category', category);
+    formData.append('subcategory', subcategory);
+    formData.append('productType', productType);
     formData.append('condition',condition);
     formData.append('price', price);
     formData.append('oldPrice', oldPrice);
@@ -236,12 +236,56 @@ const handleCountyChange = (selectedCounty: County | '') => {
         <input type="string" className="w-full border px-4 py-2 rounded" placeholder="Dimensions (L x W x H)" value={dimensions} onChange={(e) => setDimensions(e.target.value)} />
         <input type="number" className="w-full border px-4 py-2 rounded" placeholder="Weight" value={weight} onChange={(e) => setWeight(e.target.value)} />
 
-        <select className="w-full border px-4 py-2 rounded" value={category} onChange={(e) => setCategory(e.target.value)} required>
-          <option value="">Select Category</option>
-          {productCategories.map((cat) => (
-            <option key={cat} value={cat}>{cat}</option>
-          ))}
-        </select>
+<select
+  value={category}
+  onChange={(e) => {
+    setCategory(e.target.value as Category);
+    setSubcategory('');
+    setProductType('');
+  }}
+  className="w-full border px-4 py-2 rounded"
+>
+  <option value="">Select Category</option>
+
+  {Object.keys(categoryTree).map((cat) => (
+    <option key={cat} value={cat}>
+      {cat}
+    </option>
+  ))}
+</select>
+{category && (
+  <select
+    value={subcategory}
+    onChange={(e) => {
+      setSubcategory(e.target.value);
+      setProductType('');
+    }}
+    className="w-full border px-4 py-2 rounded"
+  >
+    <option value="">Select Subcategory</option>
+
+    {Object.keys(categoryTree[category as Category]).map((sub) => (
+      <option key={sub} value={sub}>
+        {sub}
+      </option>
+    ))}
+  </select>
+)}
+{subcategory && category && (
+  <select
+    value={productType}
+    onChange={(e) => setProductType(e.target.value)}
+    className="w-full border px-4 py-2 rounded"
+  >
+    <option value="">Select Product Type</option>
+
+    {(categoryTree[category as Category][subcategory as keyof typeof categoryTree[Category]] as string[]).map((type) => (
+      <option key={type} value={type}>
+        {type}
+      </option>
+    ))}
+  </select>
+)}
         <select
           value={county}
           onChange={(e) => handleCountyChange(e.target.value as County)}
