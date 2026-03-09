@@ -204,39 +204,7 @@ const handleCountyChange = (selectedCounty: County | '') => {
     <div className="p-6 mx-auto px-4 pt-28 pb-10 min-h-screen bg-gradient-to-b from-orange-50 to-white">
       <h1 className="text-2xl font-bold text-orange-600 mb-4">Add Product</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input type="text" className="w-full border px-4 py-2 rounded" placeholder="Product Name" value={name} onChange={(e) => setName(e.target.value)} required />
-        <input type="text" className="w-full border px-4 py-2 rounded" placeholder="Brand" value={brand} onChange={(e) => setBrand(e.target.value)} />
-        <input type="text" className="w-full border px-4 py-2 rounded" placeholder="Model" value={model} onChange={(e) => setModel(e.target.value)} />
-        <input type="text" className="w-full border px-4 py-2 rounded" placeholder="Main Material" value={material} onChange={(e) => setMaterial(e.target.value)} />
-        <input type="text" className="w-full border px-4 py-2 rounded" placeholder="Color" value={color} onChange={(e) => setColor(e.target.value)} />
-        <label className="block font-semibold">Product Description</label>
-        <TextEditor content={description} onChange={setDescription}/>
-        <div>
-          <label className="block font-semibold">Key Features:</label>
-          {keyFeatures.map((feature, idx) => (
-            <div key={idx} className="flex gap-2 mb-2">
-              <input type="text" className="flex-1 border px-4 py-2 rounded" value={feature} onChange={(e) => handleFeatureChange(idx, e.target.value)} />
-              <button type="button" onClick={() => removeFeatureField(idx)} className="text-red-500">Remove</button>
-            </div>
-          ))}
-          <button type="button" onClick={addFeatureField} className="text-orange-500">+ Add Feature</button>
-        </div>
-        <div>
-          <label className="block font-semibold">What&apos;s in the Box:</label>
-          {boxContents.map((box, idx) => (
-            <div key={idx} className="flex gap-2 mb-2">
-              <input type="text" className="flex-1 border px-4 py-2 rounded" value={box} onChange={(e) => handleBoxChange(idx, e.target.value)} />
-              <button type="button" onClick={() => removeBoxField(idx)} className="text-red-500">Remove</button>
-            </div>
-          ))}
-          <button type="button" onClick={addBoxField} className="text-orange-500">+ Add Box Content</button>
-        </div>
-
-        <input type="string" className="w-full border px-4 py-2 rounded" placeholder="Warranty Period" value={warranty} onChange={(e) => setWarranty(e.target.value)} />
-        <input type="string" className="w-full border px-4 py-2 rounded" placeholder="Dimensions (L x W x H)" value={dimensions} onChange={(e) => setDimensions(e.target.value)} />
-        <input type="number" className="w-full border px-4 py-2 rounded" placeholder="Weight" value={weight} onChange={(e) => setWeight(e.target.value)} />
-
-<select
+        <select
   value={category}
   onChange={(e) => {
     setCategory(e.target.value as Category);
@@ -286,6 +254,38 @@ const handleCountyChange = (selectedCounty: County | '') => {
     ))}
   </select>
 )}
+        <input type="text" className="w-full border px-4 py-2 rounded" placeholder="Product Name" value={name} onChange={(e) => setName(e.target.value)} required />
+        <input type="text" className="w-full border px-4 py-2 rounded" placeholder="Brand" value={brand} onChange={(e) => setBrand(e.target.value)} />
+        <input type="text" className="w-full border px-4 py-2 rounded" placeholder="Model" value={model} onChange={(e) => setModel(e.target.value)} />
+        <input type="text" className="w-full border px-4 py-2 rounded" placeholder="Main Material" value={material} onChange={(e) => setMaterial(e.target.value)} />
+        <input type="text" className="w-full border px-4 py-2 rounded" placeholder="Color" value={color} onChange={(e) => setColor(e.target.value)} />
+        <label className="block font-semibold">Product Description</label>
+        <TextEditor content={description} onChange={setDescription}/>
+        <div>
+          <label className="block font-semibold">Key Features:</label>
+          {keyFeatures.map((feature, idx) => (
+            <div key={idx} className="flex gap-2 mb-2">
+              <input type="text" className="flex-1 border px-4 py-2 rounded" value={feature} onChange={(e) => handleFeatureChange(idx, e.target.value)} />
+              <button type="button" onClick={() => removeFeatureField(idx)} className="text-red-500">Remove</button>
+            </div>
+          ))}
+          <button type="button" onClick={addFeatureField} className="text-orange-500">+ Add Feature</button>
+        </div>
+        <div>
+          <label className="block font-semibold">What&apos;s in the Box:</label>
+          {boxContents.map((box, idx) => (
+            <div key={idx} className="flex gap-2 mb-2">
+              <input type="text" className="flex-1 border px-4 py-2 rounded" value={box} onChange={(e) => handleBoxChange(idx, e.target.value)} />
+              <button type="button" onClick={() => removeBoxField(idx)} className="text-red-500">Remove</button>
+            </div>
+          ))}
+          <button type="button" onClick={addBoxField} className="text-orange-500">+ Add Box Content</button>
+        </div>
+
+        <input type="string" className="w-full border px-4 py-2 rounded" placeholder="Warranty Period" value={warranty} onChange={(e) => setWarranty(e.target.value)} />
+        <input type="string" className="w-full border px-4 py-2 rounded" placeholder="Dimensions (L x W x H)" value={dimensions} onChange={(e) => setDimensions(e.target.value)} />
+        <input type="number" className="w-full border px-4 py-2 rounded" placeholder="Weight" value={weight} onChange={(e) => setWeight(e.target.value)} />
+
         <select
           value={county}
           onChange={(e) => handleCountyChange(e.target.value as County)}

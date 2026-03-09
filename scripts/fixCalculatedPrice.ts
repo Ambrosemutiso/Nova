@@ -3,14 +3,17 @@ dotenv.config();
 
 import mongoose from "mongoose";
 import { dbConnect } from "@/lib/dbConnect";
+import { categoryTree } from "@/lib/productCategories";
 
 interface ProductDoc {
   _id: mongoose.Types.ObjectId;
+  name?: string;
   category?: string;
-  condition?: string;
+  subcategory?: string;
+  productType?: string;
 }
 
-async function injectProductCondition() {
+async function autoClassifyProducts() {
   try {
     await dbConnect();
 
@@ -19,34 +22,68 @@ async function injectProductCondition() {
 
     const collection = db.collection<ProductDoc>("products");
 
-    console.log("🔍 Updating ALL products with condition field...");
+    console.log("🔍 Searching products needing classification...");
 
-    const products = await collection.find({}).toArray();
+    const products = await collection
+      .find({
+        $or: [
+          { subcategory: "" },
+          { productType: "" }
+        ]
+      })
+      .toArray();
 
-    console.log(`🧩 Found ${products.length} products.`);
+    console.log(`🧩 Found ${products.length} products to classify`);
 
     for (const product of products) {
-      const category = product.category?.toLowerCase() || "";
 
-      const condition =
-        category === "motors"
-          ? "used"
-          : "brand-new";
+      if (!product.category) {
+        console.log(`⚠️ Skipping ${product._id} (no category)`);
+        continue;
+      }
+
+      const category = product.category as keyof typeof categoryTree;
+
+      const categoryData = categoryTree[category];
+
+      if (!categoryData) {
+        console.log(`⚠️ Unknown category for ${product._id}`);
+        continue;
+      }
+
+      const subcategories = Object.keys(categoryData);
+
+      // pick first subcategory
+      const subcategory = subcategories[0];
+
+      const productTypes =
+        categoryData[subcategory as keyof typeof categoryData];
+
+      const productType = productTypes?.[0] || "";
 
       await collection.updateOne(
         { _id: product._id },
-        { $set: { condition } }
+        {
+          $set: {
+            subcategory,
+            productType
+          }
+        }
       );
 
-      console.log(`✅ ${product._id} (${category}) → ${condition}`);
+      console.log(
+        `✅ ${product._id} → ${category} / ${subcategory} / ${productType}`
+      );
     }
 
-    console.log("🎯 Condition field successfully injected!");
+    console.log("🎯 Auto classification completed!");
+
     await mongoose.connection.close();
+
   } catch (err) {
-    console.error("❌ Failed to inject condition field:", err);
+    console.error("❌ Auto classification failed:", err);
     await mongoose.connection.close();
   }
 }
 
-injectProductCondition();
+autoClassifyProducts();

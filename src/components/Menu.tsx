@@ -1,92 +1,60 @@
 'use client';
 
-import { useState } from 'react';
+import { categoryTree } from '@/lib/productCategories';
+import { slugify } from '@/lib/slugify';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
-interface Category {
-  name: string;
-  image: string;
-}
+type MenuProps = {
+  onSelectCategory?: (category: string) => void;
+};
 
-const categories: Category[] = [
-  { name: 'Shop',        image: '/shop.png' },
-  { name: 'Laptops',     image: '/Menu/Laptops.jpg' },
-  { name: 'Electronics',     image: '/Menu/Electronics.jpg' },
-  { name: 'Phones',      image: '/Menu/Phones.jpg' },
-  { name: 'Computers',     image: '/Menu/Computers.jpg' },
-  { name: 'Systems',     image: '/Menu/Systems.jpg' },
-  { name: 'Household',    image: '/Menu/Household.jpg' },
-  { name: 'Kitchen',       image: '/Menu/Kitchen1.jpg' },
-  { name: 'Sofas',    image: '/Menu/Sofas.jpg' },
-  { name: 'Health',  image: '/Menu/Health.jpg' },
-  { name: 'Beauty',image: '/Menu/Beauty.jpg' },
-  { name: 'Jewelry',image: '/Menu/Jewelry.jpg' },
-  { name: 'Women',    image: '/Menu/Women.jpg' },
-  { name: 'Kids',      image: '/Menu/Kids.jpg' },
-  { name: 'Skincare',    image: '/Menu/Skincare.jpg' },
-  { name: 'Men',  image: '/Menu/Men.jpg' },
-  { name: 'Books',image: '/Menu/Books.jpg' },
-  { name: 'Machines',    image: '/Menu/Machines.jpg' },
-  { name: 'Spares',      image: '/Menu/Spares.jpg' },
-  { name: 'Motors',      image: '/Menu/Motors.jpg' }, 
-  { name: 'Liquor',      image: '/Menu/Liquor.jpg' },
-  { name: 'Robotics',      image: '/Menu/Robotics.jpg' },
-  { name: 'Sports',      image: '/Menu/Sports.jpg' },
-  { name: 'Gaming',      image: '/Menu/Gaming.jpg' },  
-];
-                                   
-export default function CategoryMenu({
-  onSelectCategory,
-}: {
-  onSelectCategory: (category: string) => void;
-}) {
-  const [selected, setSelected] = useState<string>('Shop');
+export default function CategoryMenu({ onSelectCategory }: MenuProps) {
 
-  const handleClick = (cat: string) => {
-    setSelected(cat);
-    onSelectCategory(cat);
-  };
+  const router = useRouter();
 
   return (
     <div className="py-4 px-2">
-      <div className="flex gap-4 overflow-x-auto px-1 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
-        {categories.map((cat) => {
-          const isSelected = selected === cat.name;
+
+      <div className="flex gap-4 overflow-x-auto scrollbar-hide">
+
+        {Object.keys(categoryTree).map((category) => {
+
+          const slug = slugify(category);
 
           return (
-          <button
-          key={cat.name}
-          onClick={() => handleClick(cat.name)}
-          title={cat.name}
-          className="flex-shrink-0 flex flex-col items-center focus:outline-none group"
-          >
+            <button
+              key={category}
+              onClick={() => {
+                onSelectCategory?.(category);
+                router.push(`/category/${slug}`);
+              }}
+              className="flex-shrink-0 flex flex-col items-center group"
+            >
 
-              <div
-                className={`w-16 h-16 rounded-full overflow-hidden border-2 transition-all duration-300 ${
-                  isSelected
-                    ? 'ring-4 ring-orange-500 scale-105 border-orange-500 shadow-md'
-                    : 'border-gray-300 group-hover:border-orange-400'
-                }`}
-              >
+              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-300 group-hover:border-orange-500">
+
                 <Image
-                  src={cat.image}
-                  alt={cat.name}
+                  src={`/Menu/${slug}.jpg`}
+                  alt={category}
                   width={64}
                   height={64}
                   className="object-cover w-full h-full"
                 />
+
               </div>
-              <span
-                className={`mt-2 text-xs md:text-sm font-medium transition-colors ${
-                  isSelected ? 'text-orange-600' : 'text-gray-700 group-hover:text-orange-500'
-                }`}
-              >
-                {cat.name}
+
+              <span className="text-xs mt-2 group-hover:text-orange-600">
+                {category}
               </span>
+
             </button>
           );
+
         })}
+
       </div>
+
     </div>
   );
 }

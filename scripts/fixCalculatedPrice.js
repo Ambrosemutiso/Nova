@@ -40,59 +40,81 @@ var dotenv = require("dotenv");
 dotenv.config();
 var mongoose_1 = require("mongoose");
 var dbConnect_1 = require("../lib/dbConnect");
-function injectProductCondition() {
+var productCategories_1 = require("../lib/productCategories");
+function autoClassifyProducts() {
     return __awaiter(this, void 0, void 0, function () {
-        var db, collection, products, _i, products_1, product, category, condition, err_1;
-        var _a;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
+        var db, collection, products, _i, products_1, product, category, categoryData, subcategories, subcategory, productTypes, productType, err_1;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
                 case 0:
-                    _b.trys.push([0, 8, , 10]);
+                    _a.trys.push([0, 8, , 10]);
                     return [4 /*yield*/, (0, dbConnect_1.dbConnect)()];
                 case 1:
-                    _b.sent();
+                    _a.sent();
                     db = mongoose_1.default.connection.db;
                     if (!db)
                         throw new Error("Database connection not established.");
                     collection = db.collection("products");
-                    console.log("🔍 Updating ALL products with condition field...");
-                    return [4 /*yield*/, collection.find({}).toArray()];
+                    console.log("🔍 Searching products needing classification...");
+                    return [4 /*yield*/, collection
+                            .find({
+                            $or: [
+                                { subcategory: "" },
+                                { productType: "" }
+                            ]
+                        })
+                            .toArray()];
                 case 2:
-                    products = _b.sent();
-                    console.log("\uD83E\uDDE9 Found ".concat(products.length, " products."));
+                    products = _a.sent();
+                    console.log("\uD83E\uDDE9 Found ".concat(products.length, " products to classify"));
                     _i = 0, products_1 = products;
-                    _b.label = 3;
+                    _a.label = 3;
                 case 3:
                     if (!(_i < products_1.length)) return [3 /*break*/, 6];
                     product = products_1[_i];
-                    category = ((_a = product.category) === null || _a === void 0 ? void 0 : _a.toLowerCase()) || "";
-                    condition = category === "motors"
-                        ? "used"
-                        : "brand-new";
-                    return [4 /*yield*/, collection.updateOne({ _id: product._id }, { $set: { condition: condition } })];
+                    if (!product.category) {
+                        console.log("\u26A0\uFE0F Skipping ".concat(product._id, " (no category)"));
+                        return [3 /*break*/, 5];
+                    }
+                    category = product.category;
+                    categoryData = productCategories_1.categoryTree[category];
+                    if (!categoryData) {
+                        console.log("\u26A0\uFE0F Unknown category for ".concat(product._id));
+                        return [3 /*break*/, 5];
+                    }
+                    subcategories = Object.keys(categoryData);
+                    subcategory = subcategories[0];
+                    productTypes = categoryData[subcategory];
+                    productType = (productTypes === null || productTypes === void 0 ? void 0 : productTypes[0]) || "";
+                    return [4 /*yield*/, collection.updateOne({ _id: product._id }, {
+                            $set: {
+                                subcategory: subcategory,
+                                productType: productType
+                            }
+                        })];
                 case 4:
-                    _b.sent();
-                    console.log("\u2705 ".concat(product._id, " (").concat(category, ") \u2192 ").concat(condition));
-                    _b.label = 5;
+                    _a.sent();
+                    console.log("\u2705 ".concat(product._id, " \u2192 ").concat(category, " / ").concat(subcategory, " / ").concat(productType));
+                    _a.label = 5;
                 case 5:
                     _i++;
                     return [3 /*break*/, 3];
                 case 6:
-                    console.log("🎯 Condition field successfully injected!");
+                    console.log("🎯 Auto classification completed!");
                     return [4 /*yield*/, mongoose_1.default.connection.close()];
                 case 7:
-                    _b.sent();
+                    _a.sent();
                     return [3 /*break*/, 10];
                 case 8:
-                    err_1 = _b.sent();
-                    console.error("❌ Failed to inject condition field:", err_1);
+                    err_1 = _a.sent();
+                    console.error("❌ Auto classification failed:", err_1);
                     return [4 /*yield*/, mongoose_1.default.connection.close()];
                 case 9:
-                    _b.sent();
+                    _a.sent();
                     return [3 /*break*/, 10];
                 case 10: return [2 /*return*/];
             }
         });
     });
 }
-injectProductCondition();
+autoClassifyProducts();

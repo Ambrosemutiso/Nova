@@ -1,3 +1,4 @@
+//app/seller/inventory/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -81,6 +82,8 @@ export default function InventoryPage() {
               <tr>
                 <th className="px-4 py-2 text-left">Name</th>
                 <th className="px-4 py-2 text-left">Category</th>
+                <th className="px-4 py-2 text-left">sub-category</th>
+                <th className="px-4 py-2 text-left">Type</th>
                 <th className="px-4 py-2 text-left">Price</th>
                 <th className="px-4 py-2 text-left">Quantity</th>
                 <th className="px-4 py-2 text-left">Created</th>
@@ -92,6 +95,8 @@ export default function InventoryPage() {
                 <tr key={product._id}>
                   <td className="px-4 py-2 font-medium">{product.name}</td>
                   <td className="px-4 py-2">{product.category}</td>
+                  <td className="px-4 py-2">{product.subcategory}</td>
+                  <td className="px-4 py-2">{product.productType}</td>
                   <td className="px-4 py-2">Ksh {product.calculatedPrice.toFixed(2)}</td>
                   <td className="px-4 py-2">{product.quantity}</td>
                   <td className="px-4 py-2">

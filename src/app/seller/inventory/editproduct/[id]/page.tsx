@@ -1,14 +1,18 @@
+//app/seller/inventory/editproduct/[id]/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import type { ProductType } from "@/app/types/product";
+import { categoryTree } from "@/lib/productCategories";
 
 export default function EditProductPage() {
   const { id } = useParams();
   const router = useRouter();
   const [product, setProduct] = useState<ProductType | null>(null);
+  const [subcategories, setSubcategories] = useState<string[]>([]);
+  const [productTypes, setProductTypes] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,6 +36,30 @@ export default function EditProductPage() {
 
     fetchProduct();
   }, [id]);
+  useEffect(() => {
+  if (!product?.category) return;
+
+  const subs = Object.keys(
+    categoryTree[product.category as keyof typeof categoryTree] || {}
+  );
+
+  setSubcategories(subs);
+}, [product?.category]);
+
+useEffect(() => {
+  if (!product?.category || !product?.subcategory) return;
+
+  const category = product.category as keyof typeof categoryTree;
+
+  const subcategoryMap = categoryTree[category];
+
+  const types =
+    subcategoryMap[
+      product.subcategory as keyof typeof subcategoryMap
+    ] || [];
+
+  setProductTypes(types as string[]);
+}, [product?.category, product?.subcategory]);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,14 +105,48 @@ export default function EditProductPage() {
             placeholder="Product name"
             className="w-full border rounded px-3 py-2"
           />
-          <input
-            type="text"
-            name="category"
-            value={product.category}
-            onChange={handleChange}
-            placeholder="Category"
-            className="w-full border rounded px-3 py-2"
-          />
+<select
+  name="category"
+  value={product.category || ""}
+  onChange={handleChange}
+  className="w-full border rounded px-3 py-2"
+>
+  <option value="">Select Category</option>
+
+  {Object.keys(categoryTree).map((cat) => (
+    <option key={cat} value={cat}>
+      {cat}
+    </option>
+  ))}
+</select>
+<select
+  name="subcategory"
+  value={product.subcategory || ""}
+  onChange={handleChange}
+  className="w-full border rounded px-3 py-2"
+>
+  <option value="">Select Subcategory</option>
+
+  {subcategories.map((sub) => (
+    <option key={sub} value={sub}>
+      {sub}
+    </option>
+  ))}
+</select>
+<select
+  name="productType"
+  value={product.productType || ""}
+  onChange={handleChange}
+  className="w-full border rounded px-3 py-2"
+>
+  <option value="">Select Product Type</option>
+
+  {productTypes.map((type) => (
+    <option key={type} value={type}>
+      {type}
+    </option>
+  ))}
+</select>
           <input
             type="number"
             name="price"

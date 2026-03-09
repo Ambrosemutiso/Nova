@@ -1,3 +1,4 @@
+//components/categorySections.tsx
 'use client';
 
 import { ReactNode, useRef, useState } from 'react';
