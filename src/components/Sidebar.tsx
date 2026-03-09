@@ -10,6 +10,41 @@ import {
   FiLoader, FiSun, FiMoon, FiGlobe,
   FiFilm, FiPhone, FiCreditCard
 } from 'react-icons/fi';
+import { categoryTree } from '@/lib/productCategories';
+import { slugify } from '@/lib/slugify';
+
+const categoryIcons: Record<string, JSX.Element> = {
+  Electronics: <FiTv />,
+  "Computers & Laptops": <FiMonitor />,
+  "Mobile Phones & Accessories": <FiSmartphone />,
+  Gaming: <FiFilm />,
+  "Home & Kitchen": <FiGrid />,
+  Furniture: <FiLayout />,
+  Fashion: <FiUser />,
+  "Beauty & Personal Care": <FiHeart />,
+  "Health & Wellness": <FiHeart />,
+  "Baby & Kids": <FiGift />,
+  "Jewelry & Watches": <FiWatch />,
+  "Sports & Outdoors": <FiTruck />,
+  "Automotive & Motorcycles": <FiTool />,
+  "Industrial & Machinery": <FiTool />,
+  "Tools & Hardware": <FiTool />,
+  Agriculture: <FiTruck />,
+  "Books & Stationery": <FiBook />,
+  "Toys & Hobbies": <FiGift />,
+  "Pet Supplies": <FiHeart />,
+  "Food & Groceries": <FiPackage />,
+  Beverages: <FiPackage />,
+  "Alcohol & Liquor": <FiPackage />,
+  "Office Supplies": <FiMonitor />,
+  "Musical Instruments": <FiFilm />,
+  "Smart Home & Robotics": <FiMonitor />,
+  "Solar & Renewable Energy": <FiSun />,
+  "Motorbike Parts": <FiTool />,
+  "Farm Equipment": <FiTruck />,
+  "Mobile Money Devices": <FiCreditCard />,
+  "Construction Materials": <FiTool />,
+};
 
 interface Props {
   isOpen?: boolean;
@@ -73,23 +108,23 @@ export default function Sidebar({ isOpen = false, onClose, onOpen }: Props) {
   /* -------------------------------- */
   /* Categories */
   /* -------------------------------- */
-  const categories = [
-    { label: 'Home', icon: <FiHome />, route: '/' },
-    { label: 'Wishlist', icon: <FiHeart />, route: '/wishlist' },
-    { label: 'My Wallet', icon: <FiCreditCard />, route: '/wallet' },
-    { label: 'My Orders', icon: <FiPackage />, route: '/orders' },
-    { label: 'My Vouchers', icon: <FiGift />, route: '/vouchers' },
-    { label: 'My Installments', icon: <FiPhone />, route: '/installments/progress' },
-    { label: 'Phones & Tablets', icon: <FiSmartphone />, route: '/category/Phones' },
-    { label: 'Computing', icon: <FiMonitor />, route: '/category/Laptops' },
-    { label: 'Electronics', icon: <FiTv />, route: '/category/Electronics' },
-    { label: 'Fashion', icon: <FiUser />, route: '/category/Fashion' },
-    { label: 'Gaming', icon: <FiWatch />, route: '/category/Gaming' },
-    { label: 'Automotive', icon: <FiTool />, route: '/category/Motors' },
-    { label: 'Books', icon: <FiBook />, route: '/category/Books' },
-    { label: 'Ads', icon: <FiFilm />, route: '/ads' },
-    { label: 'Shops', icon: <FiGrid />, route: '/shops' },
-  ];
+const categories = [
+  { label: 'Home', icon: <FiHome />, route: '/' },
+  { label: 'Wishlist', icon: <FiHeart />, route: '/wishlist' },
+  { label: 'My Wallet', icon: <FiCreditCard />, route: '/wallet' },
+  { label: 'My Orders', icon: <FiPackage />, route: '/orders' },
+  { label: 'My Vouchers', icon: <FiGift />, route: '/vouchers' },
+  { label: 'My Installments', icon: <FiPhone />, route: '/installments/progress' },
+
+  ...Object.keys(categoryTree).map((category) => ({
+    label: category,
+    icon: categoryIcons[category] || <FiGrid />,
+    route: `/category/${slugify(category)}`
+  })),
+
+  { label: 'Ads', icon: <FiFilm />, route: '/ads' },
+  { label: 'Shops', icon: <FiGrid />, route: '/shops' },
+];
 
   /* -------------------------------- */
   /* Sidebar Content */

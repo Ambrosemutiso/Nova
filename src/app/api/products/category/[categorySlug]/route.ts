@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
 import Product from '@/app/models/product';
 import Review from '@/app/models/review';
+import { unslugify } from "@/lib/unSlugfy";
 
 export async function GET(
   req: NextRequest, 
@@ -31,7 +32,8 @@ export async function GET(
 
     await dbConnect();
 
-    const categoryRegex = new RegExp(`^${categorySlug}$`, 'i');
+const categoryName = unslugify(categorySlug);
+const categoryRegex = new RegExp(`^${categoryName}$`, "i");
 
     const filters: any = { category: categoryRegex };
     if (brand) filters.brand = brand;

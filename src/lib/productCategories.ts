@@ -1,4 +1,4 @@
-//lib/productCategories.ts
+//lib/productC
 export const categoryTree = {
 
   Electronics: {
@@ -452,4 +452,4 @@ export const categoryTree = {
     ]
   }
 
-} as const;
+};

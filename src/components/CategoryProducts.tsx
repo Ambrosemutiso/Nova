@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import ProductCard from "./ProductCard";
+import { slugify } from "@/lib/slugify";
 import type { ProductType } from "@/app/types/product";
 
 export default function CategoryProducts({ category }: { category: string }) {
@@ -10,7 +11,9 @@ export default function CategoryProducts({ category }: { category: string }) {
 
   useEffect(()=>{
 
-    fetch(`/api/products?category=${category}&limit=10`)
+    const slug = slugify(category);
+
+    fetch(`/api/products/category/${slug}?limit=10`)
       .then(res => res.json())
       .then(data => setProducts(data.products));
 
