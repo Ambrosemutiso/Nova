@@ -1,3 +1,4 @@
+//components/CategoryProducts.tsx
 'use client';
 
 import { useEffect, useState } from "react";
@@ -30,5 +31,4 @@ export default function CategoryProducts({ category }: { category: string }) {
     </div>
 
   );
-
 }

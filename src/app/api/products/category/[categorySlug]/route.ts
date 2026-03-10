@@ -1,8 +1,10 @@
+//app/api/products/category/[categorySlug]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
 import Product from '@/app/models/product';
 import Review from '@/app/models/review';
-import { unslugify } from "@/lib/unSlugfy";
+import { categoryTree } from "@/lib/productCategories";
+import { slugify } from "@/lib/slugify";
 
 export async function GET(
   req: NextRequest, 
@@ -31,11 +33,19 @@ export async function GET(
     const sortOption = sortMap[sort] || { name: 1 };
 
     await dbConnect();
+const categoryName = Object.keys(categoryTree).find(
+  (cat) => slugify(cat) === categorySlug
+);
 
-const categoryName = unslugify(categorySlug);
-const categoryRegex = new RegExp(`^${categoryName}$`, "i");
+if (!categoryName) {
+  return NextResponse.json(
+    { error: "Category not found" },
+    { status: 404 }
+  );
+}
 
-    const filters: any = { category: categoryRegex };
+const filters: any = { category: categoryName };
+
     if (brand) filters.brand = brand;
     if (minPrice > 0) filters.calculatedPrice = { ...filters.calculatedPrice, $gte: minPrice };
     if (maxPrice > 0) filters.calculatedPrice = { ...filters.calculatedPrice, $lte: maxPrice };
@@ -43,7 +53,7 @@ const categoryRegex = new RegExp(`^${categoryName}$`, "i");
     const [total, products, brands] = await Promise.all([
       Product.countDocuments(filters),
       Product.find(filters).sort(sortOption).skip(skip).limit(limit),
-      Product.distinct('brand', { category: categoryRegex }), 
+      Product.distinct('brand', { category: categoryName }), 
     ]);
 
     const productIds = products.map((p) => p._id);

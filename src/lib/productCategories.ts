@@ -1,455 +1,577 @@
-//lib/productC
+// lib/productCategories.ts
+
 export const categoryTree = {
 
-  Electronics: {
-    "TV & Audio": [
-      "Smart TVs",
-      "LED TVs",
-      "Sound Bars",
-      "Home Theatre Systems",
-      "Projectors"
-    ],
-    Cameras: [
-      "Digital Cameras",
-      "DSLR Cameras",
-      "Mirrorless Cameras",
-      "Action Cameras",
-      "Security Cameras"
-    ],
-    Accessories: [
-      "HDMI Cables",
-      "Remote Controls",
-      "TV Mounts",
-      "Batteries"
-    ]
-  },
+Electronics: {
 
-  "Computers & Laptops": {
-    Laptops: [
-      "Gaming Laptops",
-      "Business Laptops",
-      "Student Laptops",
-      "Chromebooks"
-    ],
-    Desktops: [
-      "Gaming PCs",
-      "All-in-One PCs",
-      "Mini PCs"
-    ],
-    Components: [
-      "RAM",
-      "Hard Drives",
-      "SSD Storage",
-      "Graphics Cards",
-      "Motherboards",
-      "Power Supplies"
-    ],
-    Accessories: [
-      "Keyboards",
-      "Mouse",
-      "Laptop Bags",
-      "Cooling Pads"
-    ]
-  },
+"TV & Audio": [
+"Smart TVs","OLED TVs","QLED TVs","LED TVs","Mini LED TVs",
+"Sound Bars","Home Theatre Systems","HiFi Systems","Amplifiers",
+"Speakers","Bluetooth Speakers","Subwoofers","Projectors","Streaming Devices","Other"
+],
 
-  "Mobile Phones & Accessories": {
-    Smartphones: [
-      "Android Phones",
-      "iPhones",
-      "Feature Phones"
-    ],
-    Accessories: [
-      "Phone Cases",
-      "Chargers",
-      "Power Banks",
-      "Screen Protectors",
-      "Phone Holders"
-    ],
-    Wearables: [
-      "Smart Watches",
-      "Fitness Bands"
-    ]
-  },
+Cameras: [
+"Digital Cameras","DSLR Cameras","Mirrorless Cameras","Action Cameras",
+"Security Cameras","Dash Cameras","Instant Cameras","Webcams",
+"Camera Lenses","Camera Flashes","Tripods","Camera Bags","Other"
+],
 
-  Gaming: {
-    Consoles: [
-      "PlayStation",
-      "Xbox",
-      "Nintendo"
-    ],
-    Accessories: [
-      "Controllers",
-      "Gaming Headsets",
-      "VR Headsets"
-    ],
-    Games: [
-      "Console Games",
-      "PC Games"
-    ]
-  },
+Accessories: [
+"HDMI Cables","DisplayPort Cables","AV Cables","TV Mounts",
+"Remote Controls","Universal Remotes","Batteries","Power Strips",
+"Extension Cables","Signal Boosters","Other"
+]
 
-  "Home & Kitchen": {
-    Appliances: [
-      "Blenders",
-      "Microwaves",
-      "Cookers",
-      "Air Fryers",
-      "Coffee Makers"
-    ],
-    Cookware: [
-      "Pots",
-      "Frying Pans",
-      "Pressure Cookers"
-    ],
-    Storage: [
-      "Food Containers",
-      "Kitchen Organizers"
-    ]
-  },
+},
 
-  Furniture: {
-    LivingRoom: [
-      "Sofas",
-      "Coffee Tables",
-      "TV Stands"
-    ],
-    Bedroom: [
-      "Beds",
-      "Wardrobes",
-      "Bedside Tables"
-    ],
-    Office: [
-      "Office Chairs",
-      "Office Desks"
-    ]
-  },
+"Computers & Laptops": {
 
-  Fashion: {
-    "Men's Clothing": [
-      "T-Shirts",
-      "Jeans",
-      "Jackets",
-      "Suits"
-    ],
-    "Women's Clothing": [
-      "Dresses",
-      "Tops",
-      "Skirts",
-      "Jeans"
-    ],
-    Shoes: [
-      "Sneakers",
-      "Boots",
-      "Heels",
-      "Sandals"
-    ],
-    Accessories: [
-      "Belts",
-      "Caps",
-      "Sunglasses"
-    ]
-  },
+Laptops: [
+"Gaming Laptops","Business Laptops","Student Laptops","Chromebooks",
+"Ultrabooks","2-in-1 Laptops","Workstation Laptops","Refurbished Laptops","Other"
+],
 
-  "Beauty & Personal Care": {
-    Skincare: [
-      "Face Creams",
-      "Face Wash",
-      "Serums",
-      "Sunscreen"
-    ],
-    Haircare: [
-      "Shampoo",
-      "Conditioner",
-      "Hair Oils",
-      "Hair Styling Tools"
-    ],
-    Makeup: [
-      "Lipsticks",
-      "Foundation",
-      "Mascara"
-    ]
-  },
+Desktops: [
+"Gaming PCs","Workstation PCs","All-in-One PCs","Mini PCs",
+"Home Office PCs","Barebone PCs","Refurbished Desktops","Other"
+],
 
-  "Health & Wellness": {
-    Medical: [
-      "Blood Pressure Monitors",
-      "Thermometers",
-      "First Aid Kits"
-    ],
-    Fitness: [
-      "Yoga Mats",
-      "Dumbbells",
-      "Resistance Bands"
-    ],
-    Supplements: [
-      "Vitamins",
-      "Protein Powders"
-    ]
-  },
+Components: [
+"Processors (CPUs)","Graphics Cards","Motherboards","RAM","DDR4 RAM","DDR5 RAM",
+"SSD Drives","NVMe SSD","Hard Drives","External Hard Drives",
+"Power Supplies","Computer Cases","Cooling Systems","Network Cards","Other"
+],
 
-  "Baby & Kids": {
-    BabyCare: [
-      "Diapers",
-      "Baby Wipes",
-      "Baby Lotions"
-    ],
-    Feeding: [
-      "Baby Bottles",
-      "High Chairs"
-    ],
-    Clothing: [
-      "Baby Clothes",
-      "Kids Shoes"
-    ]
-  },
+Accessories: [
+"Keyboards","Mechanical Keyboards","Mouse","Gaming Mouse","Laptop Bags",
+"Cooling Pads","USB Hubs","Docking Stations","Laptop Chargers",
+"External GPUs","Other"
+]
 
-  "Jewelry & Watches": {
-    Jewelry: [
-      "Necklaces",
-      "Bracelets",
-      "Rings",
-      "Earrings"
-    ],
-    Watches: [
-      "Luxury Watches",
-      "Smart Watches"
-    ]
-  },
+},
 
-  "Sports & Outdoors": {
-    Fitness: [
-      "Treadmills",
-      "Exercise Bikes"
-    ],
-    Outdoor: [
-      "Camping Tents",
-      "Sleeping Bags"
-    ],
-    Sports: [
-      "Football",
-      "Basketball",
-      "Tennis Rackets"
-    ]
-  },
+"Mobile Phones & Accessories": {
 
-  "Automotive & Motorcycles": {
-    Vehicles: [
-      "Cars",
-      "Motorcycles"
-    ],
-    Parts: [
-      "Engine Parts",
-      "Tyres",
-      "Car Batteries"
-    ],
-    Accessories: [
-      "Car Chargers",
-      "Seat Covers"
-    ]
-  },
+Smartphones: [
+"Android Phones","iPhones","Feature Phones","Foldable Phones",
+"Gaming Phones","Rugged Phones","5G Smartphones","Refurbished Phones","Other"
+],
 
-  "Industrial & Machinery": {
-    Machines: [
-      "Generators",
-      "Air Compressors"
-    ],
-    Equipment: [
-      "Welding Machines",
-      "Packaging Machines"
-    ]
-  },
+Accessories: [
+"Phone Cases","Wallet Cases","Screen Protectors","Chargers","Wireless Chargers",
+"Car Chargers","Power Banks","Phone Holders","Selfie Sticks","Phone Rings",
+"Charging Cables","Bluetooth Adapters","Other"
+],
 
-  "Tools & Hardware": {
-    HandTools: [
-      "Hammers",
-      "Screwdrivers",
-      "Wrenches"
-    ],
-    PowerTools: [
-      "Drills",
-      "Angle Grinders",
-      "Electric Saws"
-    ]
-  },
+Wearables: [
+"Smart Watches","Fitness Bands","Smart Glasses","VR Headsets","AR Headsets","Other"
+]
 
-  Agriculture: {
-    Seeds: [
-      "Vegetable Seeds",
-      "Fruit Seeds"
-    ],
-    Fertilizers: [
-      "Organic Fertilizers",
-      "Chemical Fertilizers"
-    ],
-    Irrigation: [
-      "Sprinklers",
-      "Drip Irrigation Kits"
-    ]
-  },
+},
 
-  "Books & Stationery": {
-    Books: [
-      "Educational Books",
-      "Novels",
-      "Children Books"
-    ],
-    Stationery: [
-      "Notebooks",
-      "Pens",
-      "Markers"
-    ]
-  },
+Gaming: {
 
-  "Toys & Hobbies": {
-    Toys: [
-      "Educational Toys",
-      "Action Figures"
-    ],
-    Hobbies: [
-      "RC Cars",
-      "Model Kits"
-    ]
-  },
+Consoles:[
+"PlayStation","Xbox","Nintendo Switch","Retro Consoles","Handheld Consoles","Other"
+],
 
-  "Pet Supplies": {
-    Dogs: [
-      "Dog Food",
-      "Dog Beds",
-      "Dog Toys"
-    ],
-    Cats: [
-      "Cat Food",
-      "Cat Litter"
-    ]
-  },
+Accessories:[
+"Controllers","Gaming Headsets","VR Headsets","Steering Wheels",
+"Charging Docks","Gaming Chairs","Cooling Fans","Other"
+],
 
-  "Food & Groceries": {
-    Staples: [
-      "Rice",
-      "Flour",
-      "Cooking Oil"
-    ],
-    Snacks: [
-      "Biscuits",
-      "Chips"
-    ]
-  },
+Games:[
+"Console Games","PC Games","Digital Game Codes","Retro Games","Other"
+]
 
-  Beverages: {
-    SoftDrinks: [
-      "Soda",
-      "Energy Drinks"
-    ],
-    HotDrinks: [
-      "Tea",
-      "Coffee"
-    ]
-  },
+},
 
-  "Alcohol & Liquor": {
-    Spirits: [
-      "Whisky",
-      "Vodka",
-      "Gin"
-    ],
-    Wine: [
-      "Red Wine",
-      "White Wine"
-    ],
-    Beer: [
-      "Lager",
-      "Craft Beer"
-    ]
-  },
+"Home & Kitchen": {
 
-  "Office Supplies": {
-    OfficeEquipment: [
-      "Printers",
-      "Scanners"
-    ],
-    Supplies: [
-      "Paper",
-      "Staplers",
-      "Folders"
-    ]
-  },
+Appliances:[
+"Blenders","Microwaves","Cookers","Gas Cookers","Electric Cookers",
+"Air Fryers","Coffee Makers","Toasters","Juicers","Dishwashers",
+"Refrigerators","Freezers","Water Dispensers","Other"
+],
 
-  "Musical Instruments": {
-    String: [
-      "Guitars",
-      "Violins"
-    ],
-    Percussion: [
-      "Drums"
-    ],
-    Keyboards: [
-      "Pianos",
-      "Synthesizers"
-    ]
-  },
+Cookware:[
+"Pots","Frying Pans","Pressure Cookers","Cooking Sets",
+"Baking Trays","Grills","Kitchen Utensils","Knife Sets","Other"
+],
 
-  "Smart Home & Robotics": {
-    SmartHome: [
-      "Smart Bulbs",
-      "Smart Locks",
-      "Smart Cameras"
-    ],
-    Robots: [
-      "Robot Vacuums",
-      "Educational Robots"
-    ]
-  },
+Storage:[
+"Food Containers","Kitchen Organizers","Pantry Storage","Spice Racks",
+"Storage Baskets","Other"
+]
 
-  "Solar & Renewable Energy": {
-    Solar: [
-      "Solar Panels",
-      "Solar Batteries",
-      "Solar Inverters"
-    ]
-  },
+},
 
-  "Motorbike Parts": {
-    Engine: [
-      "Motorbike Pistons",
-      "Carburetors"
-    ],
-    Accessories: [
-      "Helmets",
-      "Motorbike Lights"
-    ]
-  },
+Furniture: {
 
-  "Farm Equipment": {
-    Machinery: [
-      "Tractors",
-      "Ploughs"
-    ],
-    Tools: [
-      "Hoes",
-      "Shovels"
-    ]
-  },
+LivingRoom:[
+"Sofas","Sectional Sofas","Coffee Tables","TV Stands",
+"Recliners","Bookshelves","Console Tables","Other"
+],
 
-  "Mobile Money Devices": {
-    POS: [
-      "POS Machines",
-      "Mobile Card Readers"
-    ],
-    Accessories: [
-      "Receipt Printers"
-    ]
-  },
+Bedroom:[
+"Beds","Mattresses","Wardrobes","Dressers","Bedside Tables",
+"Storage Beds","Other"
+],
 
-  "Construction Materials": {
-    BuildingMaterials: [
-      "Cement",
-      "Steel Bars",
-      "Bricks"
-    ],
-    Finishing: [
-      "Tiles",
-      "Paint"
-    ]
-  }
+Office:[
+"Office Chairs","Office Desks","Standing Desks","Bookcases",
+"Meeting Tables","Other"
+]
 
-};
+},
+
+Fashion: {
+
+"Men's Clothing":[
+"T-Shirts","Shirts","Jeans","Trousers","Shorts","Jackets",
+"Suits","Hoodies","Sweatshirts","Underwear","Other"
+],
+
+"Women's Clothing":[
+"Dresses","Tops","Blouses","Jeans","Skirts","Leggings",
+"Jackets","Sweaters","Activewear","Lingerie","Other"
+],
+
+Shoes:[
+"Sneakers","Boots","Sandals","Formal Shoes","Running Shoes",
+"Heels","Flats","Slippers","Other"
+],
+
+Accessories:[
+"Belts","Caps","Hats","Scarves","Sunglasses",
+"Wallets","Handbags","Backpacks","Other"
+]
+
+},
+
+"Beauty & Personal Care": {
+
+Skincare:[
+"Face Creams","Face Wash","Serums","Sunscreen","Face Masks",
+"Body Lotion","Body Scrubs","Acne Treatments","Other"
+],
+
+Haircare:[
+"Shampoo","Conditioner","Hair Oils","Hair Styling Tools",
+"Hair Extensions","Hair Color","Hair Treatments","Other"
+],
+
+Makeup:[
+"Lipsticks","Foundation","Mascara","Eyeliners","Powders",
+"Makeup Kits","Makeup Brushes","Other"
+]
+
+},
+
+"Health & Wellness": {
+
+Medical:[
+"Blood Pressure Monitors","Thermometers","First Aid Kits",
+"Glucose Meters","Nebulizers","Wheelchairs","Other"
+],
+
+Fitness:[
+"Treadmills","Exercise Bikes","Dumbbells","Resistance Bands",
+"Yoga Mats","Pull-Up Bars","Fitness Trackers","Other"
+],
+
+Supplements:[
+"Vitamins","Protein Powders","Creatine","Omega 3",
+"Multivitamins","Energy Supplements","Other"
+]
+
+},
+
+"Automotive & Motorcycles": {
+
+Vehicles:[
+"Cars","Motorcycles","Electric Cars","Electric Motorcycles","Other"
+],
+
+Parts:[
+"Engine Parts","Tyres","Car Batteries","Brake Pads",
+"Suspension Parts","Radiators","Filters","Other"
+],
+
+Accessories:[
+"Car Chargers","Seat Covers","Dash Cameras",
+"Car Mats","Phone Mounts","Other"
+]
+
+},
+
+"Sports & Outdoors": {
+
+Fitness:[
+"Treadmills","Exercise Bikes","Rowing Machines","Other"
+],
+
+Outdoor:[
+"Camping Tents","Sleeping Bags","Camping Chairs",
+"Hiking Backpacks","Portable Stoves","Other"
+],
+
+Sports:[
+"Football","Basketball","Tennis Rackets","Golf Clubs",
+"Boxing Gloves","Cycling Equipment","Other"
+]
+
+},
+
+"Books & Stationery": {
+
+Books:[
+"Educational Books","Novels","Children Books","Business Books",
+"Technology Books","Self Help Books","Other"
+],
+
+Stationery:[
+"Notebooks","Pens","Markers","Folders","Staplers",
+"Desk Organizers","Other"
+]
+
+},
+
+"Toys & Hobbies": {
+
+Toys:[
+"Educational Toys","Action Figures","Dolls","Puzzle Games",
+"Building Blocks","Remote Control Toys","Other"
+],
+
+Hobbies:[
+"RC Cars","Model Kits","3D Printing Kits","Art Supplies",
+"Craft Kits","Other"
+]
+
+},
+
+"Pet Supplies":{
+
+Dogs:[
+"Dog Food","Dog Beds","Dog Toys","Dog Collars","Dog Shampoo","Other"
+],
+
+Cats:[
+"Cat Food","Cat Litter","Cat Toys","Cat Trees","Other"
+]
+
+},
+
+"Food & Groceries":{
+
+Staples:[
+"Rice","Flour","Cooking Oil","Sugar","Salt","Beans","Pasta","Other"
+],
+
+Snacks:[
+"Biscuits","Chips","Chocolate","Candy","Nuts","Other"
+]
+
+},
+
+Beverages:{
+
+SoftDrinks:[
+"Soda","Energy Drinks","Flavored Water","Other"
+],
+
+HotDrinks:[
+"Tea","Coffee","Hot Chocolate","Other"
+]
+
+},
+
+"Solar & Renewable Energy":{
+
+Solar:[
+"Solar Panels","Solar Batteries","Solar Inverters",
+"Solar Charge Controllers","Solar Lights","Other"
+]
+
+},
+
+"Construction Materials":{
+
+BuildingMaterials:[
+"Cement","Steel Bars","Bricks","Sand","Gravel","Other"
+],
+
+Finishing:[
+"Tiles","Paint","Ceiling Boards","Doors","Windows","Other"
+]
+
+},
+"Electrical & Wiring": {
+
+Wiring: [
+"Electrical Wires",
+"Electrical Cables",
+"Twin & Earth Cables",
+"Armored Cables",
+"Flexible Cables",
+"Extension Cables",
+"Speaker Wires",
+"Network Cables",
+"Coaxial Cables",
+"Other"
+],
+
+Switches: [
+"Wall Switches",
+"Dimmer Switches",
+"Smart Switches",
+"Push Button Switches",
+"Fan Regulators",
+"Outdoor Switches",
+"Industrial Switches",
+"Other"
+],
+
+Sockets: [
+"Wall Sockets",
+"USB Wall Sockets",
+"Smart Sockets",
+"Industrial Sockets",
+"Outdoor Sockets",
+"Extension Sockets",
+"Other"
+],
+
+"Extension & Power": [
+"Extension Cords",
+"Power Strips",
+"Surge Protectors",
+"Cable Reels",
+"Multi Plug Adapters",
+"Travel Adapters",
+"Other"
+],
+
+Protection: [
+"Circuit Breakers",
+"Fuse Holders",
+"Electrical Fuses",
+"Voltage Protectors",
+"Surge Protectors",
+"Distribution Boards",
+"Other"
+],
+
+Lighting: [
+"LED Bulbs",
+"Tube Lights",
+"Spotlights",
+"Flood Lights",
+"Ceiling Lights",
+"Wall Lights",
+"Outdoor Lights",
+"Solar Lights",
+"Smart Lights",
+"Other"
+]
+
+},
+"Tools & Hardware": {
+
+HandTools:[
+"Hammers",
+"Screwdrivers",
+"Wrenches",
+"Pliers",
+"Spanners",
+"Socket Sets",
+"Measuring Tapes",
+"Utility Knives",
+"Other"
+],
+
+PowerTools:[
+"Drills",
+"Angle Grinders",
+"Electric Saws",
+"Power Sanders",
+"Impact Drivers",
+"Rotary Hammers",
+"Cordless Tools",
+"Other"
+],
+
+ToolAccessories:[
+"Drill Bits",
+"Saw Blades",
+"Grinding Discs",
+"Tool Batteries",
+"Tool Chargers",
+"Other"
+]
+
+},
+"Industrial Equipment": {
+
+Machinery:[
+"Welding Machines",
+"Air Compressors",
+"Water Pumps",
+"Generators",
+"Concrete Mixers",
+"Other"
+],
+
+Safety:[
+"Safety Helmets",
+"Protective Gloves",
+"Safety Boots",
+"Safety Goggles",
+"Reflective Jackets",
+"Other"
+],
+
+IndustrialTools:[
+"Hydraulic Jacks",
+"Chain Hoists",
+"Industrial Fans",
+"Workshop Equipment",
+"Other"
+]
+
+},
+"Agriculture & Farming": {
+
+FarmTools:[
+"Slashers",
+"Axes",
+"Hoes",
+"Wheelbarrows",
+"Irrigation Tools",
+"Other"
+],
+
+Seeds:[
+"Vegetable Seeds",
+"Fruit Seeds",
+"Grain Seeds",
+"Tree Seeds",
+"Other"
+],
+
+FarmEquipment:[
+"Water Pumps",
+"Sprayers",
+"Greenhouse Equipment",
+"Animal Feeders",
+"Other"
+]
+
+},
+"Baby Products": {
+
+BabyCare:[
+"Baby Diapers",
+"Baby Wipes",
+"Baby Powder",
+"Baby Lotion",
+"Other"
+],
+
+BabyGear:[
+"Baby Strollers",
+"Baby Car Seats",
+"Baby Carriers",
+"Baby Walkers",
+"Other"
+],
+
+Feeding:[
+"Baby Bottles",
+"Breast Pumps",
+"Baby Food Makers",
+"High Chairs",
+"Other"
+]
+
+},
+"Office & Business Supplies": {
+
+OfficeFurniture:[
+"Office Chairs",
+"Office Desks",
+"Filing Cabinets",
+"Conference Tables",
+"Other"
+],
+
+OfficeEquipment:[
+"Printers",
+"Scanners",
+"Photocopiers",
+"Projectors",
+"Other"
+],
+
+OfficeSupplies:[
+"Printing Paper",
+"Staplers",
+"Printer Ink",
+"Folders",
+"Desk Organizers",
+"Other"
+]
+
+},
+"Intimate Wellness (18+)": {
+
+Lubricants: [
+"Water-Based Lubricants",
+"Silicone-Based Lubricants",
+"Flavored Lubricants",
+"Warming Lubricants",
+"Cooling Lubricants",
+"Massage Oils",
+"Other"
+],
+
+Protection: [
+"Condoms",
+"Female Condoms",
+"Condom Lubricants",
+"Contraceptive Gels",
+"Other"
+],
+
+WellnessProducts: [
+"Delay Sprays",
+"Performance Supplements",
+"Intimate Wash",
+"Feminine Hygiene Products",
+"Other"
+],
+
+Enhancement: [
+"Enhancement Creams",
+"Enhancement Oils",
+"Enhancement Supplements",
+"Other"
+],
+
+AdultToys: [
+"Vibrators",
+"Couples Toys",
+"Adult Massagers",
+"Other"
+],
+
+Accessories: [
+"Toy Cleaners",
+"Toy Storage Bags",
+"Toy Chargers",
+"Other"
+]
+
+}
+} as const;

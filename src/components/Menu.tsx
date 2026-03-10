@@ -16,7 +16,7 @@ export default function CategoryMenu({ onSelectCategory }: MenuProps) {
   return (
     <div className="py-4 px-2">
 
-      <div className="flex gap-4 overflow-x-auto scrollbar-hide">
+      <div className="flex gap-4 overflow-x-auto">
 
         {Object.keys(categoryTree).map((category) => {
 
