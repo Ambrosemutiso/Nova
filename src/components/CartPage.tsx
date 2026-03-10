@@ -70,56 +70,6 @@ export const countyTownMap: Record<string, string[]> = {
   Vihiga: ['Mbale', 'Luanda', 'Chavakali', 'Hamisi'],
 };
 
-// 🚚 Base County Delivery Fees
-const baseCountyFees: Record<string, number> = {
-  Nairobi: 0,
-  Mombasa: 180,
-  Kisumu: 160,
-  Nakuru: 170,
-  Kiambu: 150,
-  Machakos: 160,
-  'Murang\'a': 160,
-  Nyeri: 170,
-  Kirinyaga: 160,
-  Meru: 180,
-  Embu: 170,
-  TharakaNithi: 180,
-  Kitui: 200,
-  Makueni: 180,
-  Nyandarua: 180,
-  Laikipia: 190,
-  Turkana: 300,
-  WestPokot: 280,
-  Samburu: 250,
-  TransNzoia: 190,
-  UasinGishu: 180,
-  ElgeyoMarakwet: 190,
-  Nandi: 180,
-  Baringo: 190,
-  Kericho: 170,
-  Bomet: 170,
-  Kakamega: 180,
-  Bungoma: 180,
-  Busia: 180,
-  Siaya: 170,
-  HomaBay: 170,
-  Migori: 180,
-  Kisii: 170,
-  Nyamira: 170,
-  Narok: 190,
-  Kajiado: 180,
-  Kwale: 190,
-  Kilifi: 190,
-  TaitaTaveta: 200,
-  Garissa: 250,
-  Wajir: 280,
-  Mandera: 300,
-  Marsabit: 300,
-  Isiolo: 220,
-  TanaRiver: 250,
-  Lamu: 260,
-  Vihiga: 170,
-};
 
 export default function CartPage({ onOpenBuyerLogin }: CartProps) {
   const { cartItems, removeFromCart, increaseQuantity, decreaseQuantity, clearCart } = useCart();
@@ -138,15 +88,39 @@ export default function CartPage({ onOpenBuyerLogin }: CartProps) {
     const storedUserId = localStorage.getItem('userId');
     setUserId(storedUserId);
   }, []);
+const totalWeight = cartItems.reduce(
+  (sum, item) => sum + (item.weight || 1) * item.quantity,
+  0
+);
+const calculateDeliveryFee = (weight: number) => {
+  const baseWeight = 5;
+  const basePrice = 200;
+  const extraPerKg = 30;
+
+  if (weight <= baseWeight) {
+    return basePrice;
+  }
+
+  const extraKg = Math.ceil(weight - baseWeight);
+  return basePrice + extraKg * extraPerKg;
+};
+useEffect(() => {
+  const weight = cartItems.reduce(
+    (sum, item) => sum + (item.weight || 1) * item.quantity,
+    0
+  );
+
+  const fee = calculateDeliveryFee(weight);
+
+  setDeliveryFee(fee);
+}, [cartItems]);
 
   useEffect(() => {
     if (county && countyTownMap[county]) {
       setTowns(countyTownMap[county]);
-      setTown('');
-      setDeliveryFee(baseCountyFees[county]);
+      setTown(''); 
     } else {
       setTowns([]);
-      setDeliveryFee(0);
     }
   }, [county]);
 
@@ -319,6 +293,10 @@ const getPublicId = (url?: string) => {
               <span>Subtotal</span>
               <span className="font-medium">Ksh.{subtotal.toLocaleString()}</span>
             </div>
+            <div className="flex justify-between text-sm">
+              <span>Total Weight</span>
+              <span className="font-medium">{totalWeight.toFixed(2)} kg</span>
+              </div>
             <div className="flex justify-between text-sm">
               <span>Delivery Fee</span>
               <span className="font-medium">

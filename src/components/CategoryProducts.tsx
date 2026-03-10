@@ -1,4 +1,3 @@
-//components/CategoryProducts.tsx
 'use client';
 
 import { useEffect, useState } from "react";
@@ -6,7 +5,13 @@ import ProductCard from "./ProductCard";
 import { slugify } from "@/lib/slugify";
 import type { ProductType } from "@/app/types/product";
 
-export default function CategoryProducts({ category }: { category: string }) {
+interface Props {
+  category: string;
+  onLoaded?: (count: number) => void;
+  hidden?: boolean;
+}
+
+export default function CategoryProducts({ category, onLoaded, hidden }: Props) {
 
   const [products,setProducts] = useState<ProductType[]>([]);
 
@@ -16,9 +21,14 @@ export default function CategoryProducts({ category }: { category: string }) {
 
     fetch(`/api/products/category/${slug}?limit=10`)
       .then(res => res.json())
-      .then(data => setProducts(data.products));
+      .then(data => {
+        setProducts(data.products || []);
+        onLoaded?.(data.products?.length || 0);
+      });
 
   },[category]);
+
+  if(hidden) return null;
 
   return (
 
@@ -31,4 +41,5 @@ export default function CategoryProducts({ category }: { category: string }) {
     </div>
 
   );
+
 }

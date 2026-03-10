@@ -161,6 +161,10 @@ return (
     <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
     <span className="text-gray-500 font-medium">{product.category}</span>
     <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
+    <span className="text-gray-500 font-medium">{product.subcategory}</span>
+    <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
+    <span className="text-gray-500 font-medium">{product.productType}</span>
+    <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
     <span className="text-gray-500 font-medium">{product.name}</span>
   </nav>
 </div>
@@ -184,12 +188,12 @@ return (
   <div className="flex flex-wrap gap-3 text-sm text-gray-600">
     {product.brand && (
       <span className="bg-gray-100 px-2.5 py-1 rounded-full capitalize">
-        🏷 Brand: {product.brand}
+        Brand: {product.brand}
       </span>
     )}
     {product.model && (
       <span className="bg-gray-100 px-2.5 py-1 rounded-full capitalize">
-        ⚙️ Model: {product.model}
+        Model: {product.model}
       </span>
     )}
   </div>

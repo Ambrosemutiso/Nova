@@ -35,7 +35,7 @@ export default function CategorySection({ title, categorySlug, children }: Categ
       {/* Product Row */}
       <div
         ref={scrollRef}
-        className="pt-8 overflow-x-auto scroll-smooth snap-x snap-mandatory"
+        className="pt-8 overflow-x-auto scroll-smooth snap-x snap-mandatory bg-orange-50"
       >
         <div className="flex flex-nowrap gap-4 min-w-max px-2">
           {visibleChildren.map((child, index) => (

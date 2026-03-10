@@ -86,6 +86,7 @@ export default function Footer({
             <li><a href="/desc/sell-on-novaxmax">Sell on NovaXmax</a></li>
             <li><a href="/desc/logistics-partner">Logistics Partner</a></li>
             <li><a href="/desc/novaxmax-affilliate-marketing">Affiliate</a></li>
+            <li><a href="/desc/seller-Ai-tools">AI Tools</a></li>
           </ul>
         </div>
 

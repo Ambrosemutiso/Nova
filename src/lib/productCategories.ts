@@ -124,6 +124,438 @@ Office:[
 ]
 
 },
+"Printing & 3D Printing": {
+
+Printers: [
+"Inkjet Printers",
+"Laser Printers",
+"All-in-One Printers",
+"Photo Printers",
+"Portable Printers",
+"Thermal Printers",
+"Label Printers",
+"Receipt Printers",
+"Other"
+],
+
+PrinterSupplies: [
+"Printer Ink",
+"Toner Cartridges",
+"Refill Ink Bottles",
+"Drum Units",
+"Printer Maintenance Kits",
+"Other"
+],
+
+"3DPrinters": [
+"FDM 3D Printers",
+"Resin 3D Printers",
+"Industrial 3D Printers",
+"Desktop 3D Printers",
+"Other"
+],
+
+"3DPrintingMaterials": [
+"PLA Filament",
+"ABS Filament",
+"PETG Filament",
+"Resin Printing Material",
+"Flexible Filament",
+"Carbon Fiber Filament",
+"Other"
+],
+
+"3DPrintingAccessories": [
+"3D Printer Nozzles",
+"Print Beds",
+"Build Plates",
+"Filament Dry Boxes",
+"Other"
+],
+
+Scanners: [
+"Flatbed Scanners",
+"Document Scanners",
+"Portable Scanners",
+"3D Scanners",
+"Barcode Scanners",
+"Other"
+]
+
+},
+"CCTV & Surveillance": {
+
+Cameras: [
+"Bullet Cameras",
+"Dome Cameras",
+"PTZ Cameras",
+"Wireless CCTV Cameras",
+"Outdoor Security Cameras",
+"Indoor Security Cameras",
+"Solar Security Cameras",
+"Other"
+],
+
+Recorders: [
+"DVR Recorders",
+"NVR Recorders",
+"Hybrid Recorders",
+"Other"
+],
+
+SurveillanceKits: [
+"CCTV Camera Kits",
+"Wireless Camera Kits",
+"Home Security Kits",
+"Business Surveillance Kits",
+"Other"
+],
+
+Storage: [
+"Surveillance Hard Drives",
+"Network Storage for CCTV",
+"Other"
+],
+
+Accessories: [
+"CCTV Cables",
+"BNC Connectors",
+"Camera Mount Brackets",
+"Power Supplies",
+"Video Baluns",
+"Other"
+],
+
+SmartSurveillance: [
+"AI Security Cameras",
+"Facial Recognition Cameras",
+"Smart Door Cameras",
+"Cloud Security Cameras",
+"Other"
+]
+
+},
+"POS & Retail Equipment": {
+
+POSMachines: [
+"All-in-One POS Systems",
+"Android POS Terminals",
+"Windows POS Systems",
+"Mobile POS Devices",
+"Other"
+],
+
+BarcodeEquipment: [
+"Barcode Scanners",
+"Wireless Barcode Scanners",
+"Barcode Printers",
+"Barcode Labels",
+"Other"
+],
+
+ReceiptPrinting: [
+"Thermal Receipt Printers",
+"Bluetooth Receipt Printers",
+"USB Receipt Printers",
+"Other"
+],
+
+CashManagement: [
+"Cash Drawers",
+"Money Counters",
+"Coin Counters",
+"Other"
+],
+
+RetailDisplays: [
+"Customer Display Screens",
+"Digital Price Displays",
+"POS Monitor Screens",
+"Other"
+]
+
+},
+"Smart Home & Robotics": {
+
+SmartLighting: [
+"Smart Bulbs",
+"Smart Light Switches",
+"Smart Light Strips",
+"Smart Ceiling Lights",
+"Smart Outdoor Lights",
+"Smart Dimmers",
+"Smart Lighting Kits",
+"Other"
+],
+
+SmartSecurity: [
+"Smart Door Locks",
+"Smart Doorbells",
+"Smart Security Cameras",
+"Smart Alarm Systems",
+"Motion Sensors",
+"Window & Door Sensors",
+"Smart Sirens",
+"Smart Security Kits",
+"Other"
+],
+
+SmartClimate: [
+"Smart Thermostats",
+"Smart Air Conditioners",
+"Smart Heaters",
+"Smart Fans",
+"Smart Humidifiers",
+"Smart Air Purifiers",
+"Other"
+],
+
+SmartPlugs: [
+"Smart Plugs",
+"Smart Power Strips",
+"WiFi Smart Plugs",
+"Zigbee Smart Plugs",
+"Smart Energy Monitors",
+"Other"
+],
+
+VoiceAssistants: [
+"Smart Speakers",
+"Voice Assistant Devices",
+"Smart Displays",
+"Voice Control Hubs",
+"Other"
+],
+
+HomeAutomationHubs: [
+"Smart Home Hubs",
+"Zigbee Hubs",
+"Z-Wave Hubs",
+"Matter Smart Hubs",
+"Home Automation Controllers",
+"Other"
+],
+
+RobotVacuum: [
+"Robot Vacuum Cleaners",
+"Robot Vacuum & Mop",
+"Robot Mop Cleaners",
+"Vacuum Accessories",
+"Replacement Brushes",
+"Other"
+],
+
+ServiceRobots: [
+"Educational Robots",
+"AI Robots",
+"Humanoid Robots",
+"Delivery Robots",
+"Companion Robots",
+"Other"
+]
+
+},
+"Networking & Internet": {
+
+Routers: [
+"WiFi Routers",
+"Dual Band Routers",
+"Tri-Band Routers",
+"Mesh WiFi Systems",
+"Gaming Routers",
+"4G Routers",
+"5G Routers",
+"Portable Routers",
+"Other"
+],
+
+AccessPoints: [
+"Wireless Access Points",
+"Indoor Access Points",
+"Outdoor Access Points",
+"Ceiling Access Points",
+"Mesh Access Points",
+"Enterprise Access Points",
+"Other"
+],
+
+Switches: [
+"Network Switches",
+"Managed Switches",
+"Unmanaged Switches",
+"PoE Switches",
+"Industrial Switches",
+"Gigabit Switches",
+"Other"
+],
+
+Modems: [
+"DSL Modems",
+"Cable Modems",
+"Fiber Modems",
+"4G LTE Modems",
+"5G Modems",
+"Other"
+],
+
+NetworkAdapters: [
+"USB WiFi Adapters",
+"PCIe WiFi Cards",
+"Ethernet Network Cards",
+"Bluetooth Adapters",
+"Powerline Adapters",
+"Other"
+],
+
+EthernetCables: [
+"Cat5 Ethernet Cables",
+"Cat6 Ethernet Cables",
+"Cat6a Ethernet Cables",
+"Cat7 Ethernet Cables",
+"Cat8 Ethernet Cables",
+"Outdoor Ethernet Cables",
+"Patch Cables",
+"Other"
+],
+
+Connectors: [
+"RJ45 Connectors",
+"RJ11 Connectors",
+"Ethernet Couplers",
+"Network Keystone Jacks",
+"Wall Plate Connectors",
+"Other"
+],
+
+Tools: [
+"Crimping Tools",
+"Network Cable Testers",
+"Punch Down Tools",
+"Cable Strippers",
+"Other"
+],
+
+FiberNetworking: [
+"Fiber Optic Cables",
+"Fiber Patch Cords",
+"Fiber Connectors",
+"Fiber Media Converters",
+"SFP Modules",
+"Other"
+],
+
+NetworkStorage: [
+"NAS Storage",
+"Home NAS Servers",
+"Enterprise NAS",
+"Network Backup Devices",
+"Other"
+]
+
+},
+"Electronics Components & Development": {
+
+DevelopmentBoards: [
+"Arduino Boards",
+"Raspberry Pi Boards",
+"ESP8266 Boards",
+"ESP32 Boards",
+"Microcontroller Boards",
+"FPGA Development Boards",
+"Other"
+],
+
+StarterKits: [
+"Arduino Starter Kits",
+"Raspberry Pi Starter Kits",
+"Electronics Learning Kits",
+"Robotics Kits",
+"IoT Development Kits",
+"Sensor Starter Kits",
+"Other"
+],
+
+Sensors: [
+"Temperature Sensors",
+"Humidity Sensors",
+"Motion Sensors",
+"Ultrasonic Sensors",
+"Gas Sensors",
+"Light Sensors",
+"Infrared Sensors",
+"Touch Sensors",
+"Other"
+],
+
+Modules: [
+"Relay Modules",
+"Bluetooth Modules",
+"WiFi Modules",
+"GSM Modules",
+"GPS Modules",
+"RF Modules",
+"Motor Driver Modules",
+"Display Modules",
+"Other"
+],
+
+Microcontrollers: [
+"ATmega Microcontrollers",
+"PIC Microcontrollers",
+"ARM Microcontrollers",
+"STM32 Microcontrollers",
+"Other"
+],
+
+ElectronicComponents: [
+"Resistors",
+"Capacitors",
+"Inductors",
+"Diodes",
+"Transistors",
+"Voltage Regulators",
+"Integrated Circuits",
+"Other"
+],
+
+Prototyping: [
+"Breadboards",
+"Perfboards",
+"Prototype PCBs",
+"Jumper Wires",
+"Dupont Cables",
+"Breadboard Power Modules",
+"Other"
+],
+
+Displays: [
+"LCD Displays",
+"OLED Displays",
+"TFT Displays",
+"7-Segment Displays",
+"LED Matrices",
+"Other"
+],
+
+Motors: [
+"DC Motors",
+"Stepper Motors",
+"Servo Motors",
+"Motor Drivers",
+"Linear Actuators",
+"Other"
+],
+
+PowerModules: [
+"Battery Holders",
+"Voltage Converters",
+"Boost Converters",
+"Buck Converters",
+"Power Supply Modules",
+"Other"
+]
+
+},
 
 Fashion: {
 
@@ -222,6 +654,18 @@ Sports:[
 ]
 
 },
+  "Jewelry & Watches": {
+    Jewelry: [
+      "Necklaces",
+      "Bracelets",
+      "Rings",
+      "Earrings"
+    ],
+    Watches: [
+      "Luxury Watches",
+      "Smart Watches"
+    ]
+  },
 
 "Books & Stationery": {
 
@@ -524,6 +968,19 @@ OfficeSupplies:[
 ]
 
 },
+  "Musical Instruments": {
+    String: [
+      "Guitars",
+      "Violins"
+    ],
+    Percussion: [
+      "Drums"
+    ],
+    Keyboards: [
+      "Pianos",
+      "Synthesizers"
+    ]
+  },
 "Intimate Wellness (18+)": {
 
 Lubricants: [
