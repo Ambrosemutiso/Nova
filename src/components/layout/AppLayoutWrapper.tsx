@@ -16,6 +16,8 @@ import { LanguageProvider } from '@/app/context/LanguageContext';
 
 import { ToastContainer } from 'react-toastify';
 import { ThemeProvider } from 'next-themes';
+import InstallAppButton from '@/components/IstallAppBtton';
+import PWARegister from '../PWARegister';
 
 /* ================= INNER UI ================= */
 function LayoutUI({ children }: { children: React.ReactNode }) {
@@ -39,9 +41,10 @@ function LayoutUI({ children }: { children: React.ReactNode }) {
       <main className="pt-[40px] md:ml-72 min-h-screen">
         {children}
       </main>
-
+      <PWARegister/>
       <BackToTopButton />
       <LoginWrapper />
+      <InstallAppButton />
       <ToastContainer position="top-right" autoClose={3000} />
     </>
   );

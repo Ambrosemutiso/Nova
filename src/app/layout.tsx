@@ -17,10 +17,12 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://novaxmax.com"),
+  manifest: "/manifest.json",
     title: {
     default: "NovaXmax — Kenya’s Trusted Multi-Seller Marketplace",
     template: "%s | NovaXmax",
     },
+    themeColor: "#f97316",
   description:
     "Buy, sell, and advertise products across Kenya with Novaxmax — a powerful multi-seller e-commerce platform connecting local vendors and buyers. Enjoy secure M-Pesa payments, fast delivery, and video ad promotions that help your business grow online.",
 
