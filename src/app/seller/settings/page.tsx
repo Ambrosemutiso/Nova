@@ -15,25 +15,18 @@ import GlobalPayModal from '@/components/payments/GlobalPayModal';
 
 export default function SellerSettingsPage() {
   const [seller, setSeller] = useState<any>(null);
-  const [showEditModal, setShowEditModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<"basic" | "premium" | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"mpesa" | "airtel" | "">("");
   const [paymentPhone, setPaymentPhone] = useState("");
   const [activatingShop, setActivatingShop] = useState(false);
-  const [editShopName, setEditShopName] = useState("");
-  const [editImage, setEditImage] = useState("");
-  const [editBanner, setEditBanner] = useState("");
 
   useEffect(() => {
     const stored = localStorage.getItem("sellerUser");
     if (stored) {
       const parsed = JSON.parse(stored);
       setSeller(parsed);
-      setEditShopName(parsed?.shopName || "");
-      setEditImage(parsed?.image || "");
-      setEditBanner(parsed?.banner || "");
     }
   }, []);
 
@@ -103,14 +96,6 @@ const amount =
                 </div>
               </div>
             ),
-            rightAction: (
-              <button
-                onClick={() => setShowEditModal(true)}
-                className="flex items-center gap-2 text-sm text-orange-600 hover:underline"
-              >
-                <Edit2 size={16} /> Edit
-              </button>
-            ),
           },
           {
             title: "Subscription Plan",
@@ -167,7 +152,6 @@ const amount =
               <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
                 {section.icon} {section.title}
               </h2>
-              {section.rightAction}
             </div>
             {section.content}
           </motion.div>
@@ -176,61 +160,6 @@ const amount =
 
       {/* ====== MODALS ====== */}
       <AnimatePresence>
-        {showEditModal && (
-          <motion.div
-            className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white p-6 rounded-xl w-full max-w-md relative shadow-lg"
-            >
-              <button
-                onClick={() => setShowEditModal(false)}
-                className="absolute top-2 right-4 text-gray-500 text-2xl font-bold"
-              >
-                ×
-              </button>
-              <h2 className="text-xl font-semibold mb-4 text-gray-800">Edit Shop Info</h2>
-              {[
-                ["Shop Name", editShopName, setEditShopName],
-                ["Profile Image URL", editImage, setEditImage],
-                ["Banner Image URL", editBanner, setEditBanner],
-              ].map(([label, val, set]: any, idx) => (
-                <div key={idx}>
-                  <label className="block text-sm text-gray-600 mb-1">{label}</label>
-                  <input
-                    type="text"
-                    value={val}
-                    onChange={(e) => set(e.target.value)}
-                    className="w-full border px-3 py-2 rounded mb-3"
-                  />
-                </div>
-              ))}
-              <button
-                onClick={() => {
-                  const updated = {
-                    ...seller,
-                    shopName: editShopName,
-                    image: editImage,
-                    bannerImage: editBanner,
-                  };
-                  setSeller(updated);
-                  localStorage.setItem("sellerUser", JSON.stringify(updated));
-                  setShowEditModal(false);
-                  toast.success("Shop info updated!");
-                }}
-                className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded"
-              >
-                Save Changes
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
 {showUpgradeModal && (
   <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center px-4">
     {/* Floating Background Icons */}

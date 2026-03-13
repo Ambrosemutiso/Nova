@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { Crown } from "lucide-react";
 
 interface Seller {
   _id: string;
@@ -9,6 +10,7 @@ interface Seller {
   email: string;
   image?: string;
   shopName?: string;
+  plan?: "basic" | "premium";
 }
 
 export default function ActiveShops() {
@@ -126,12 +128,9 @@ export default function ActiveShops() {
                   </h3>
                 </div>
               </div>
-
-              <div className="absolute top-2 right-2">
-                <span className="bg-orange-100 text-orange-700 text-xs font-medium px-2 py-1 rounded-full">
-                  Active
-                </span>
-              </div>
+              <div className="absolute top-2 right-2 flex items-center gap-1 bg-orange-500 text-white text-xs font-semibold px-2 py-1 rounded-full shadow">
+                <Crown size={14} />Shop
+                </div>
             </Link>
           ))}
         </div>

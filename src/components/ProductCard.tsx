@@ -64,6 +64,8 @@ export default function ProductCard({ product, showSponsoredBadge, badge, redire
           height="300"
           crop="fill"
           className="w-full h-44 object-cover rounded"
+          placeholder="blur"
+          blurDataURL={`${getPublicId(product.images[0])}?blur=200`}
         />
       </div>
 

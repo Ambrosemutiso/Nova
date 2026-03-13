@@ -259,18 +259,18 @@ export default function InstallmentProgressCard({ plan }: Props) {
       {/* PAY MODAL */}
       {showPay && buyerId && (
         <GlobalPayModal
-          payload={{
-            amount: monthlyAmount,
-            items: [],
-            deliveryFee: 0,
-            county: '',
-            town: '',
-            userId: buyerId,
-            purpose: 'installment-monthly',
-            refId: plan._id,
-          }}
-          onClose={() => setShowPay(false)}
-          onSuccess={() => window.location.reload()}
+        payload={{
+          amount: Math.min(monthlyAmount, balance), // ✅ prevent overcharge
+          items: [],
+          deliveryFee: 0,
+          county: '',
+          town: '',
+          userId: buyerId,
+          purpose: 'installment-monthly',
+          refId: plan._id,
+        }}
+        onClose={() => setShowPay(false)}
+        onSuccess={() => window.location.reload()}
         />
       )}
 

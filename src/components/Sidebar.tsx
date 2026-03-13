@@ -12,6 +12,7 @@ import {
 } from 'react-icons/fi';
 import { categoryTree } from '@/lib/productCategories';
 import { slugify } from '@/lib/slugify';
+import TranslateWidget from './TranslateWidget';
 
 const categoryIcons: Record<string, JSX.Element> = {
   Electronics: <FiTv />,
@@ -54,8 +55,6 @@ interface Props {
 export default function Sidebar({ isOpen = false, onClose, onOpen }: Props) {
 
   const router = useRouter();
-  const { theme, setTheme } = useTheme();
-
   const [isMobile, setIsMobile] = useState(false);
   const [fontSize, setFontSize] = useState(1);
   const [language, setLanguage] = useState('en');
@@ -77,10 +76,20 @@ export default function Sidebar({ isOpen = false, onClose, onOpen }: Props) {
   /* -------------------------------- */
   /* Font size */
   /* -------------------------------- */
-  useEffect(() => {
-    const saved = localStorage.getItem('fontSize');
-    if (saved) setFontSize(parseFloat(saved));
-  }, []);
+useEffect(() => {
+  const saved = localStorage.getItem('fontSize');
+
+  if (saved) {
+    setFontSize(parseFloat(saved));
+  } else {
+    // Default smallest font on mobile
+    if (window.innerWidth < 768) {
+      setFontSize(0.85);
+    } else {
+      setFontSize(1);
+    }
+  }
+}, []);
 
   useEffect(() => {
     document.documentElement.style.fontSize =
@@ -95,15 +104,22 @@ export default function Sidebar({ isOpen = false, onClose, onOpen }: Props) {
   /* -------------------------------- */
   /* Language */
   /* -------------------------------- */
-  useEffect(() => {
-    const savedLang =
-      localStorage.getItem('language');
-    if (savedLang) setLanguage(savedLang);
-  }, []);
+useEffect(() => {
+  const savedLang = localStorage.getItem('language');
 
-  useEffect(() => {
-    localStorage.setItem('language', language);
-  }, [language]);
+  if (savedLang) {
+    setLanguage(savedLang);
+    document.documentElement.lang = savedLang;
+  }
+}, []);
+
+useEffect(() => {
+  localStorage.setItem('language', language);
+
+  // Apply language to the document
+  document.documentElement.lang = language;
+
+}, [language]);
 
   /* -------------------------------- */
   /* Categories */
@@ -191,21 +207,7 @@ const categories = [
           <FiZoomOut className="inline mr-2" />
           Zoom Out
         </button>
-
-        <button
-          onClick={() =>
-            setTheme(theme === 'light'
-              ? 'dark'
-              : 'light')
-          }
-          className="w-full bg-orange-500 text-white py-2 rounded"
-        >
-          {theme === 'light'
-            ? <FiMoon className="inline mr-2"/>
-            : <FiSun className="inline mr-2"/>}
-          Theme
-        </button>
-
+        <TranslateWidget/>
         <select
           value={language}
           onChange={(e) =>
@@ -216,6 +218,9 @@ const categories = [
         >
           <option value="en">English</option>
           <option value="sw">Kiswahili</option>
+          <option value="fr">French</option>
+          <option value="ar">Arabic</option>
+          <option value="am">Amharic</option>
         </select>
 
       </div>
