@@ -114,10 +114,17 @@ useEffect(() => {
 }, []);
 
 useEffect(() => {
-  localStorage.setItem('language', language);
-
-  // Apply language to the document
+  localStorage.setItem("language", language);
   document.documentElement.lang = language;
+
+  const translateSelect = document.querySelector(
+    ".goog-te-combo"
+  ) as HTMLSelectElement | null;
+
+  if (translateSelect) {
+    translateSelect.value = language;
+    translateSelect.dispatchEvent(new Event("change"));
+  }
 
 }, [language]);
 

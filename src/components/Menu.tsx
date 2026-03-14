@@ -163,16 +163,15 @@ export default function CategoryMenu({ onSelectCategory }: MenuProps) {
                   >
 
                     <div className="w-16 h-16 rounded-full overflow-hidden border border-gray-300">
-
-                <Image
-                src={categoryImages[category] || "/menu/default.jpg"}
-                alt={category}
-                width={64}
-                height={64}
-                unoptimized
-                priority
-                className="object-cover w-full h-full"
-               />
+                      <Image
+                      src={categoryImages[category] || "/menu/default.jpg"}
+                      alt={category}
+                      width={64}
+                      height={64}
+                      unoptimized
+                      priority
+                      className="object-cover w-full h-full"
+                      />
 
                     </div>
 

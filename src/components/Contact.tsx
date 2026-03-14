@@ -24,7 +24,7 @@ export default function ContactUs() {
           className="text-gray-600 max-w-2xl mx-auto text-lg"
         >
           Have a question, need support, or want to partner with us? We’re always happy to hear from you.
-          Our team is here to ensure your NovaXpress experience runs smoothly.
+          Our team is here to ensure your NovaXmax experience runs smoothly.
         </motion.p>
       </section>
 
