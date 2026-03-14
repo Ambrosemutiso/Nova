@@ -103,12 +103,14 @@ export default function CategoryMenu({ onSelectCategory }: MenuProps) {
               <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-300 group-hover:border-orange-500">
 
                 <Image
-                  src={`/Menu/${slug}.jpg`}
-                  alt={category}
-                  width={64}
-                  height={64}
-                  className="object-cover w-full h-full"
-                />
+                src={categoryImages[category] || "/menu/default.jpg"}
+                alt={category}
+                width={64}
+                height={64}
+                unoptimized
+                priority
+                className="object-cover w-full h-full"
+               />
 
               </div>
 
@@ -162,13 +164,15 @@ export default function CategoryMenu({ onSelectCategory }: MenuProps) {
 
                     <div className="w-16 h-16 rounded-full overflow-hidden border border-gray-300">
 
-                      <Image
-                        src={`/Menu/${slug}.jpg`}
-                        alt={category}
-                        width={64}
-                        height={64}
-                        className="object-cover w-full h-full"
-                      />
+                <Image
+                src={categoryImages[category] || "/menu/default.jpg"}
+                alt={category}
+                width={64}
+                height={64}
+                unoptimized
+                priority
+                className="object-cover w-full h-full"
+               />
 
                     </div>
 
