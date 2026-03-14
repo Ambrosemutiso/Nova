@@ -22,8 +22,8 @@ export default function Careers() {
       {/* Intro Section */}
       <section className="max-w-6xl mx-auto px-6 py-16 grid md:grid-cols-2 gap-12 items-center">
         <motion.img
-          src="/team-collaboration.svg"
-          alt="NovaXpress Careers"
+          src="/careers.jpg"
+          alt="NovaXmax Careers"
           className="rounded-2xl shadow-md w-full object-cover"
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}

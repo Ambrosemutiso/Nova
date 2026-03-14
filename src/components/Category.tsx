@@ -15,8 +15,8 @@ import type { ProductType } from "@/app/types/product";
 const LIMIT = 12;
 
 const categoryBannerMap: Record<string, string> = {
-  phones: '/Phones.jpg',
-  laptops: '/Laptops.jpg',
+  "Mobile Phones & Accessories": '/phones.jpg',
+  "Computers & Laptops": '/Laptops.jpg',
 };
 
 type FetchResponse = {

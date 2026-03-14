@@ -60,7 +60,7 @@ export default function NovaXmaxAISuite() {
         <section className="max-w-6xl mx-auto px-6 py-16 grid md:grid-cols-2 gap-12 items-center">
 
           <motion.img
-            src="/ai-seller-tools.jpg"
+            src="/AI-tools.jpg"
             alt="AI Tools"
             className="rounded-2xl shadow-md w-full object-cover"
             initial={{ opacity: 0, y: 40 }}
