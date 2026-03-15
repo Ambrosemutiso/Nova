@@ -145,7 +145,10 @@ const categories = [
     route: `/category/${slugify(category)}`
   })),
 
-  { label: 'Ads', icon: <FiFilm />, route: '/ads' },
+  ...(isMobile
+    ? [{ label: 'Ads', icon: <FiFilm />, route: '/ads' }]
+    : []),
+
   { label: 'Shops', icon: <FiGrid />, route: '/shops' },
 ];
 

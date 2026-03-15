@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/app/context/AuthContext';
 import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { FiSend } from 'react-icons/fi';
 
 // ---------------- TYPES ----------------
 type Comment = {
@@ -16,7 +17,7 @@ type Comment = {
   text: string;
   createdAt: string;
   likes: string[];
-  replies: Comment[]; // 🔥 remove optional
+  replies: Comment[];
 };
 
 interface SpeechRecognitionEvent {
@@ -94,7 +95,6 @@ const categories = [
 ];
 
   const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
-  const fullscreenRef = useRef<HTMLVideoElement | null>(null);
 
   const lastTapRef = useRef<number>(0);
 
@@ -230,42 +230,6 @@ const startVoiceRecognition = () => {
 
   recognition.start();
 };
-
-const playFullscreen = async () => {
-  const video = fullscreenRef.current;
-  if (!video) return;
-
-  try {
-    // iOS special fullscreen
-    if ((video as any).webkitEnterFullscreen) {
-      (video as any).webkitEnterFullscreen();
-      video.muted = false;
-      return;
-    }
-
-    // Normal fullscreen
-    if (video.requestFullscreen) {
-      await video.requestFullscreen();
-    }
-
-    video.muted = false;
-    video.controls = true;
-    await video.play();
-
-    const exitFullscreen = () => {
-      video.controls = false;
-      video.muted = true;
-    };
-
-    document.addEventListener("fullscreenchange", () => {
-      if (!document.fullscreenElement) exitFullscreen();
-    }, { once: true });
-
-  } catch (error) {
-    console.log("Fullscreen Error:", error);
-  }
-};
-
 
 const handleAISearch = async () => {
   if (!searchQuery.trim()) return;
@@ -594,16 +558,24 @@ const submitComment = async () => {
 
 
       {filteredAds.map((ad, index) => (
-        <div key={ad._id} className="h-[100vh] snap-start relative" onClick={() => handleDoubleTap(ad)}>
+        <div
+  key={ad._id}
+  className="h-[100dvh] snap-start relative pb-[120px]"
+  onClick={() => handleDoubleTap(ad)}
+>
           {ad.mediaType === 'video' ? (
 <video
   ref={(el) => {
     videoRefs.current[index] = el ?? null;
   }}
-  onClick={() => {
-    fullscreenRef.current = videoRefs.current[index];
+  onClick={(e) => {
     handleDoubleTap(ad);
-    playFullscreen();
+      const video = e.currentTarget
+  if (video.paused) {
+    video.play()
+  } else {
+    video.pause()
+  }
   }}
   data-id={ad._id}
   src={ad.mediaUrl}
@@ -638,7 +610,7 @@ const submitComment = async () => {
   initial={{ opacity: 0, y: 40 }}
   animate={{ opacity: 1, y: 0 }}
   transition={{ duration: 0.4 }}
-  className="absolute left-0 bottom-0 w-full px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-12 bg-gradient-to-t from-black/95 via-black/40 to-transparent text-white pointer-events-none">
+ className="absolute left-0 bottom-20 w-full px-5 pt-12 pb-6 bg-gradient-to-t from-black/95 via-black/40 to-transparent text-white pointer-events-none">
   <h2 className="text-lg font-bold">{ad.title}</h2>
 
   {ad.description && (
@@ -655,7 +627,7 @@ const submitComment = async () => {
 
 
           {/* Reactions */}
-          <div className="absolute right-4 bottom-32 flex flex-col gap-6 text-white">
+          <div className="absolute right-4 bottom-36 flex flex-col gap-6 text-white">
             <motion.button
               whileTap={{ scale: 1.2 }}
               onClick={(e) => { e.stopPropagation(); toggleLike(ad, true); }}
@@ -695,13 +667,17 @@ const submitComment = async () => {
       {/* COMMENT DRAWER */}
       <AnimatePresence>
         {commentDrawer && (
+          <>
           <motion.div
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', bounce: 0.15 }}
-            className="fixed bottom-0 left-0 w-full h-[75vh] bg-white rounded-t-3xl z-[99999] flex flex-col"
-          >
+          className="fixed inset-0 bg-black/40 z-[99998]"
+          onClick={() => setCommentDrawer(null)}/>
+          
+          <motion.div
+          initial={{ y: '100%' }}
+          animate={{ y: 0 }}
+          exit={{ y: '100%' }}
+          transition={{ type: 'spring', bounce: 0.15 }}
+          className="fixed bottom-0 left-0 w-full h-[75vh] bg-white rounded-t-3xl z-[99999] flex flex-col">
             <div className="flex items-center justify-between px-5 py-3 border-b">
               <h3 className="text-lg font-semibold">Comments</h3>
               <button onClick={() => setCommentDrawer(null)} className="text-gray-500 text-sm">Close</button>
@@ -792,24 +768,31 @@ const submitComment = async () => {
                   className="flex-1 p-3 bg-gray-100 rounded-full outline-none"
                 />
                 <button onClick={submitComment} className="bg-orange-500 text-white px-4 py-2 rounded-full">
-                  Send
+                  <FiSend/>
                 </button>
               </div>
             </div>
           </motion.div>
+          </>
         )}
       </AnimatePresence>
 
       {/* SHARE DRAWER */}
       <AnimatePresence>
-        {shareDrawer && (
-          <motion.div
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', bounce: 0.15 }}
-            className="fixed bottom-0 left-0 w-full h-1/3 bg-white rounded-t-3xl p-6 z-[9999]"
-          >
+{shareDrawer && (
+<>
+<motion.div
+  className="fixed inset-0 bg-black/40 z-[9998]"
+  onClick={() => setShareDrawer(null)}
+/>
+
+<motion.div
+  initial={{ y: '100%' }}
+  animate={{ y: 0 }}
+  exit={{ y: '100%' }}
+  transition={{ type: 'spring', bounce: 0.15 }}
+  className="fixed bottom-0 left-0 w-full h-1/3 bg-white rounded-t-3xl p-6 z-[9999]"
+>
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold">Share</h3>
               <button onClick={() => setShareDrawer(null)}>Close</button>
@@ -834,6 +817,7 @@ const submitComment = async () => {
 </div>
 
           </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>
