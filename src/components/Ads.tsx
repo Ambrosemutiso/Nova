@@ -582,7 +582,7 @@ const submitComment = async () => {
   className="w-full h-full object-cover"
   loop
   playsInline
-  muted={true}
+  muted={false}
   controls={false}
 />
 
@@ -610,8 +610,9 @@ const submitComment = async () => {
   initial={{ opacity: 0, y: 40 }}
   animate={{ opacity: 1, y: 0 }}
   transition={{ duration: 0.4 }}
- className="absolute left-0 bottom-20 w-full px-5 pt-12 pb-6 bg-gradient-to-t from-black/95 via-black/40 to-transparent text-white pointer-events-none">
+ className="absolute left-0 bottom-20 w-full px-5 pt-12 pb-[calc(1.25rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-black/95 via-black/40 to-transparent text-white pointer-events-none">
   <h2 className="text-lg font-bold">{ad.title}</h2>
+  
 
   {ad.description && (
     <p className="text-gray-200 text-sm mt-1 line-clamp-2">
