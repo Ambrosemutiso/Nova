@@ -13,18 +13,26 @@ const CommentSchema = new Schema({
 
 const AdSchema = new Schema({
   sellerId: { type: String, required: true },
+
+  productId: { 
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Product",
+    required: true
+  },
+
   title: { type: String, required: true },
   description: String,
   mediaUrl: { type: String, required: true },
   mediaType: { type: String, enum: ['video', 'image'], required: true },
-  thumbnailUrl: String,
+
   category: String,
   country: String,
 
-  likes: { type: [String], default: [] }, // store userIds who liked
+  likes: { type: [String], default: [] },
   comments: { type: [CommentSchema], default: [] },
   views: { type: Number, default: 0 },
   shares: { type: Number, default: 0 },
+
   createdAt: { type: Date, default: Date.now }
 });
 

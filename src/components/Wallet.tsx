@@ -269,6 +269,31 @@ const maxWeeklyValue = Math.max(
         <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-white/10 rounded-full" />
       </div>
 
+      {/* Promo Banners */}
+<div className="space-y-3">
+  <h3 className="font-semibold">Offers</h3>
+
+  <div className="flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+    <BannerCard
+      image="/banners/topup.jpg"
+      title="Instant Wallet Top-Up"
+      subtitle="Deposit with M-Pesa instantly"
+    />
+
+    <BannerCard
+      image="/banners/cashback.jpg"
+      title="5% Cashback"
+      subtitle="Pay with Nova Coins & earn rewards"
+    />
+
+    <BannerCard
+      image="/banners/referral.jpg"
+      title="Invite Friends"
+      subtitle="Earn Nova Coins for every referral"
+    />
+  </div>
+</div>
+
       {/* Analytics */}
       <div className="bg-white rounded-3xl p-6 shadow">
         <h3 className="font-semibold mb-4 flex items-center gap-2">
@@ -661,7 +686,37 @@ function PaymentMethod({
     </div>
   );
 }
+function BannerCard({
+  image,
+  title,
+  subtitle,
+}: {
+  image: string
+  title: string
+  subtitle: string
+}) {
+  return (
+    <div
+      className="min-w-[85%] sm:min-w-[420px] snap-start
+      bg-white rounded-2xl shadow border overflow-hidden
+      hover:shadow-md transition"
+    >
+      <div className="relative w-full h-36">
+        <Image
+          src={image}
+          alt={title}
+          fill
+          className="object-cover"
+        />
+      </div>
 
+      <div className="p-4">
+        <h4 className="font-semibold">{title}</h4>
+        <p className="text-sm text-gray-500">{subtitle}</p>
+      </div>
+    </div>
+  )
+}
 
 
 /* 🔢 Amount Modal */
@@ -848,3 +903,4 @@ function WithdrawModal({
     </div>
   );
 }
+

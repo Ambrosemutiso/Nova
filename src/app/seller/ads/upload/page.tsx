@@ -21,6 +21,8 @@ export default function SellerAdsPage() {
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [products, setProducts] = useState<any[]>([]);
+const [selectedProduct, setSelectedProduct] = useState('');
 
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
 
@@ -39,6 +41,21 @@ export default function SellerAdsPage() {
     };
     fetchAds();
   }, [sellerId]);
+
+  useEffect(() => {
+  if (!sellerId) return;
+
+  const fetchProducts = async () => {
+    try {
+      const res = await axios.get(`/api/ads/products?sellerId=${sellerId}`);
+      setProducts(res.data.products || []);
+    } catch (err) {
+      console.error('❌ Fetch products error', err);
+    }
+  };
+
+  fetchProducts();
+}, [sellerId]);
 
   // Autoplay videos when visible
   useEffect(() => {
@@ -72,7 +89,7 @@ export default function SellerAdsPage() {
   };
 
   const handleUpload = async () => {
-    if (!sellerId || !mediaFile || !title || !category) {
+    if (!sellerId || !mediaFile || !title || !category || !selectedProduct) {
       setMessage('⚠️ Please fill all required fields.');
       return;
     }
@@ -106,15 +123,16 @@ export default function SellerAdsPage() {
       const mediaUrl = uploadRes.data.secure_url;
 
       // 3️⃣ Save ad record
-      const saveRes = await axios.post('/api/ads/save', {
-        sellerId,
-        title,
-        description,
-        category,
-        mediaUrl,
-        mediaType,
-        country: user?.country || 'Unknown',
-      });
+const saveRes = await axios.post('/api/ads/save', {
+  sellerId,
+  productId: selectedProduct,
+  title,
+  description,
+  category,
+  mediaUrl,
+  mediaType,
+  country: user?.country || 'Unknown',
+});
 
       if (saveRes.status === 201) {
         setMessage('✅ Ad uploaded successfully!');
@@ -225,7 +243,19 @@ export default function SellerAdsPage() {
             </button>
 
             <h2 className="text-lg font-semibold mb-3 text-gray-800">Upload New Ad</h2>
+<select
+  value={selectedProduct}
+  onChange={(e) => setSelectedProduct(e.target.value)}
+  className="w-full border p-2 rounded mb-2"
+>
+  <option value="">Select Product to Promote</option>
 
+  {products.map((product) => (
+    <option key={product._id} value={product._id}>
+      {product.name} — KES {product.price}
+    </option>
+  ))}
+</select>
             <input
               type="text"
               placeholder="Ad Title"

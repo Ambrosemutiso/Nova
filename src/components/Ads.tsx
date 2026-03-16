@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { FaRegHeart, FaHeart, FaRegCommentAlt, FaShare } from 'react-icons/fa';
+import { FaRegHeart, FaHeart, FaRegCommentAlt, FaShare, FaShoppingCart } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/app/context/AuthContext';
 import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FiSend } from 'react-icons/fi';
+import type { ProductType } from "@/app/types/product";
+import ProductCard from "@/components/ProductCard";
 
 // ---------------- TYPES ----------------
 type Comment = {
@@ -35,8 +37,11 @@ type Ad = {
   title: string;
   description?: string;
   mediaUrl: string;
-  mediaType: 'video' | 'image';
+  mediaType: "video" | "image";
   sellerId: string;
+
+  product?: ProductType;
+
   category?: string;
   views: number;
   likes: string[];
@@ -70,6 +75,7 @@ export default function AdsFeedPage() {
 
   const [ads, setAds] = useState<Ad[]>([]);
   const [commentDrawer, setCommentDrawer] = useState<Ad | null>(null);
+  const [productDrawer, setProductDrawer] = useState<Ad | null>(null);
   const [shareDrawer, setShareDrawer] = useState<Ad | null>(null);
   const [commentText, setCommentText] = useState('');
   const [heartBurst, setHeartBurst] = useState<string | null>(null);
@@ -560,7 +566,7 @@ const submitComment = async () => {
       {filteredAds.map((ad, index) => (
         <div
   key={ad._id}
-  className="h-[100dvh] snap-start relative pb-[120px]"
+  className="h-[100dvh] snap-start relative pb-[50px]"
   onClick={() => handleDoubleTap(ad)}
 >
           {ad.mediaType === 'video' ? (
@@ -628,11 +634,11 @@ const submitComment = async () => {
 
 
           {/* Reactions */}
-          <div className="absolute right-4 bottom-36 flex flex-col gap-6 text-white">
+          <div className="absolute right-4 bottom-120 flex flex-col gap-6 text-white">
             <motion.button
               whileTap={{ scale: 1.2 }}
               onClick={(e) => { e.stopPropagation(); toggleLike(ad, true); }}
-              className="flex flex-col items-center p-3 bg-white/20 rounded-full"
+              className="flex flex-col items-center p-3 bg-white/1 rounded-full"
             >
               {ad.likes.includes(userId) ? (
                 <motion.div animate={{ scale: [1, 1.25, 1] }} transition={{ duration: 0.3 }}>
@@ -661,6 +667,16 @@ const submitComment = async () => {
               <FaShare size={24} />
               <span className="text-xs mt-1">{shortNum(ad.shares)}</span>
             </motion.button>
+            <motion.button
+  whileTap={{ scale: 1.1 }}
+  onClick={(e) => {
+    e.stopPropagation();
+    setProductDrawer(ad);
+  }}
+  className="flex flex-col items-center p-3 bg-orange-500 rounded-full shadow-lg"
+>
+  <FaShoppingCart size={22} />
+</motion.button>
           </div>
         </div>
       ))}
@@ -821,6 +837,41 @@ const submitComment = async () => {
           </>
         )}
       </AnimatePresence>
+      {/* PRODUCT DRAWER */}
+<AnimatePresence>
+{productDrawer && productDrawer.product && (
+<>
+<motion.div
+  className="fixed inset-0 bg-black/40 z-[9998]"
+  onClick={() => setProductDrawer(null)}
+/>
+
+<motion.div
+  initial={{ y: "100%" }}
+  animate={{ y: 0 }}
+  exit={{ y: "100%" }}
+  transition={{ type: "spring", bounce: 0.15 }}
+  className="fixed bottom-0 left-0 w-full h-[50vh] bg-white rounded-t-3xl z-[9999] p-6"
+>
+
+{/* Header */}
+<div className="flex justify-between items-center mb-4">
+<h3 className="text-lg font-bold">Shop this product</h3>
+<button onClick={() => setProductDrawer(null)}>Close</button>
+</div>
+
+{/* ProductCard */}
+<div className="flex justify-center">
+<ProductCard
+  product={productDrawer.product}
+  showSponsoredBadge
+/>
+</div>
+
+</motion.div>
+</>
+)}
+</AnimatePresence>
     </div>
   );
 }

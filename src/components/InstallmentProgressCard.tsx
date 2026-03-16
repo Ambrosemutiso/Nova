@@ -61,57 +61,6 @@ export const countyTownMap: Record<string, string[]> = {
   Vihiga: ['Mbale', 'Luanda', 'Chavakali', 'Hamisi'],
 };
 
-// 🚚 Base County Delivery Fees
-const baseCountyFees: Record<string, number> = {
-  Nairobi: 0,
-  Mombasa: 180,
-  Kisumu: 160,
-  Nakuru: 170,
-  Kiambu: 150,
-  Machakos: 160,
-  'Murang\'a': 160,
-  Nyeri: 170,
-  Kirinyaga: 160,
-  Meru: 180,
-  Embu: 170,
-  TharakaNithi: 180,
-  Kitui: 200,
-  Makueni: 180,
-  Nyandarua: 180,
-  Laikipia: 190,
-  Turkana: 300,
-  WestPokot: 280,
-  Samburu: 250,
-  TransNzoia: 190,
-  UasinGishu: 180,
-  ElgeyoMarakwet: 190,
-  Nandi: 180,
-  Baringo: 190,
-  Kericho: 170,
-  Bomet: 170,
-  Kakamega: 180,
-  Bungoma: 180,
-  Busia: 180,
-  Siaya: 170,
-  HomaBay: 170,
-  Migori: 180,
-  Kisii: 170,
-  Nyamira: 170,
-  Narok: 190,
-  Kajiado: 180,
-  Kwale: 190,
-  Kilifi: 190,
-  TaitaTaveta: 200,
-  Garissa: 250,
-  Wajir: 280,
-  Mandera: 300,
-  Marsabit: 300,
-  Isiolo: 220,
-  TanaRiver: 250,
-  Lamu: 260,
-  Vihiga: 170,
-};
-
 type InstallmentPlan = {
   _id: string;
   status: 'active' | 'completed';
@@ -119,12 +68,13 @@ type InstallmentPlan = {
   totalAmount: number;
   paidAmount: number;
   monthlyAmount: number;
-  product?: {
-    _id: string;
-    name: string;
-    images: string[];
-    price: number;
-  } | null;
+product?: {
+  _id: string;
+  name: string;
+  images: string[];
+  price: number;
+  weight?: number;
+} | null;
 };
 
 interface Props {
@@ -159,29 +109,35 @@ export default function InstallmentProgressCard({ plan }: Props) {
     typeof window !== 'undefined'
       ? localStorage.getItem('userId')
       : null;
+/* ============================================================
+   🚚 WEIGHT-BASED DELIVERY FEE (MATCHES CART PAGE)
+   ============================================================ */
 
-  /* ============================================================
-     🚚 DELIVERY FEE CALCULATION (MATCHES CART LOGIC)
-     ============================================================ */
-  useEffect(() => {
-    if (!county) {
-      setDeliveryFee(0);
-      return;
-    }
+const productWeight = product?.weight ?? 1;
 
-    // 1️⃣ Base county fee
-    let fee = baseCountyFees[county] ?? 0;
+const calculateDeliveryFee = (weight: number) => {
+  const baseWeight = 5;
+  const basePrice = 200;
+  const extraPerKg = 30;
 
-    // 2️⃣ OPTIONAL: Town-based surcharge (same idea as cart)
-    // 🔌 PATCH POINT (example)
-    /*
-    if (town && remoteTowns.includes(town)) {
-      fee += 100;
-    }
-    */
+  if (weight <= baseWeight) {
+    return basePrice;
+  }
 
-    setDeliveryFee(fee);
-  }, [county, town]);
+  const extraKg = Math.ceil(weight - baseWeight);
+  return basePrice + extraKg * extraPerKg;
+};
+
+useEffect(() => {
+  if (!county) {
+    setDeliveryFee(0);
+    return;
+  }
+
+  const fee = calculateDeliveryFee(productWeight);
+  setDeliveryFee(fee);
+
+}, [county, productWeight]);
 
   const getPublicId = (url?: string) => {
     if (!url) return '';
