@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     }
 
     const products = await Product.find({ sellerId })
-      .select('_id name price images slug')
+      .select('_id name calculatedPrice images slug')
       .sort({ createdAt: -1 })
       .lean();
 

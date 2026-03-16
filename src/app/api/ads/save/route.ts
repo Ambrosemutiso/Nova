@@ -7,14 +7,15 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { sellerId, title, description, category, mediaUrl, mediaType, country } = body;
+    const { sellerId, productId, title, description, category, mediaUrl, mediaType, country } = body;
 
-    if (!sellerId || !title || !category || !mediaUrl || !mediaType) {
+    if (!sellerId || !productId || !title || !category || !mediaUrl || !mediaType) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     const newAd = await Ad.create({
       sellerId,
+      productId,
       title,
       description,
       category,

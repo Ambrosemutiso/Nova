@@ -274,23 +274,9 @@ const maxWeeklyValue = Math.max(
   <h3 className="font-semibold">Offers</h3>
 
   <div className="flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-    <BannerCard
-      image="/banners/topup.jpg"
-      title="Instant Wallet Top-Up"
-      subtitle="Deposit with M-Pesa instantly"
-    />
-
-    <BannerCard
-      image="/banners/cashback.jpg"
-      title="5% Cashback"
-      subtitle="Pay with Nova Coins & earn rewards"
-    />
-
-    <BannerCard
-      image="/banners/referral.jpg"
-      title="Invite Friends"
-      subtitle="Earn Nova Coins for every referral"
-    />
+<BannerCard image="/banners/topup.jpg" />
+<BannerCard image="/banners/cashback.jpg" />
+<BannerCard image="/banners/referral.jpg" />
   </div>
 </div>
 
@@ -530,42 +516,77 @@ const maxWeeklyValue = Math.max(
 {showAllTx && (
   <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
     <div className="bg-white rounded-3xl w-full max-w-lg max-h-[80vh] overflow-y-auto p-6">
-      <div className="flex justify-between items-center mb-4">
+
+      <div className="flex justify-between items-center mb-6">
         <h3 className="font-semibold text-lg">All Transactions</h3>
+
         <button
           onClick={() => setShowAllTx(false)}
-          className="text-gray-400 hover:text-gray-600"
+          className="text-gray-400 hover:text-gray-600 text-lg"
         >
           ✕
         </button>
       </div>
 
-      <ul className="space-y-4">
-        {transactions.map(tx => (
-          <li
-            key={tx.id}
-            className="flex justify-between items-center border-b pb-3"
-          >
-            <div>
-              <p className="font-medium">{tx.label}</p>
-              <p className="text-xs text-gray-500">
-                {new Date(tx.date).toLocaleString()}
-              </p>
-            </div>
-
-            <p
-              className={`font-semibold ${
-                tx.type === 'credit'
-                  ? 'text-green-600'
-                  : 'text-orange-600'
-              }`}
+      {transactions.length === 0 ? (
+        <div className="text-center py-10 text-gray-500">
+          <p className="font-medium">No transactions</p>
+          <p className="text-sm mt-1">
+            Your wallet activity will appear here
+          </p>
+        </div>
+      ) : (
+        <ul className="space-y-4">
+          {transactions.map(tx => (
+            <li
+              key={tx.id}
+              className={`flex items-center justify-between p-4 rounded-2xl
+                ${
+                  tx.type === 'credit'
+                    ? 'bg-green-50'
+                    : 'bg-orange-50'
+                }`}
             >
-              {tx.type === 'credit' ? '+' : '-'}
-              {tx.amount} NC
-            </p>
-          </li>
-        ))}
-      </ul>
+              {/* LEFT */}
+              <div className="flex items-center gap-4">
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center
+                    ${
+                      tx.type === 'credit'
+                        ? 'bg-green-100 text-green-600'
+                        : 'bg-orange-100 text-orange-600'
+                    }`}
+                >
+                  {tx.type === 'credit' ? <FiArrowDown /> : <FiArrowUp />}
+                </div>
+
+                <div>
+                  <p className="font-medium">{tx.label}</p>
+                  <p className="text-xs text-gray-500">
+                    {new Date(tx.date).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              {/* RIGHT */}
+              <div className="text-right">
+                <p
+                  className={`font-semibold flex items-center gap-1 justify-end
+                    ${
+                      tx.type === 'credit'
+                        ? 'text-green-600'
+                        : 'text-orange-600'
+                    }`}
+                >
+                  <span className="text-lg">🪙</span>
+                  {tx.type === 'credit' ? '+' : '-'}
+                  {tx.amount} NC
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   </div>
 )}
@@ -686,37 +707,34 @@ function PaymentMethod({
     </div>
   );
 }
+
 function BannerCard({
   image,
-  title,
-  subtitle,
 }: {
   image: string
-  title: string
-  subtitle: string
 }) {
   return (
     <div
-      className="min-w-[85%] sm:min-w-[420px] snap-start
-      relative h-40 rounded-2xl overflow-hidden
-      shadow border hover:shadow-md transition"
+      className="
+      min-w-[90%] sm:min-w-[520px]
+      snap-start
+      rounded-2xl
+      overflow-hidden
+      shadow
+      border
+      hover:shadow-md
+      transition
+      aspect-[3/1]
+      relative
+      "
     >
-      {/* Banner Image */}
       <Image
         src={image}
-        alt={title}
+        alt="Promo banner"
         fill
-        className="object-contain"
+        className="object-cover"
+        priority
       />
-
-      {/* Dark overlay for readability */}
-      <div className="absolute inset-0 bg-black/30" />
-
-      {/* Floating Text */}
-      <div className="absolute inset-0 flex flex-col justify-center px-6 text-white">
-        <h4 className="text-lg font-bold">{title}</h4>
-        <p className="text-sm opacity-90">{subtitle}</p>
-      </div>
     </div>
   )
 }
