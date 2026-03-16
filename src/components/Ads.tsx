@@ -126,6 +126,7 @@ const categories = [
           mediaUrl: String(a.mediaUrl ?? ''),
           mediaType: a.mediaType === 'image' ? 'image' : 'video',
           sellerId: String(a.sellerId ?? ''),
+          product: a.product ?? null,
           category: a.category ?? '',
           views: Number(a.views ?? 0),
           likes: Array.isArray(a.likes) ? a.likes.filter(Boolean).map(String) : [],
@@ -667,6 +668,7 @@ const submitComment = async () => {
               <FaShare size={24} />
               <span className="text-xs mt-1">{shortNum(ad.shares)}</span>
             </motion.button>
+            {ad.product &&(
             <motion.button
   whileTap={{ scale: 1.1 }}
   onClick={(e) => {
@@ -677,6 +679,7 @@ const submitComment = async () => {
 >
   <FaShoppingCart size={22} />
 </motion.button>
+            )}
           </div>
         </div>
       ))}
