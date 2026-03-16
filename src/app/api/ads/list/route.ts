@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
       const sellerResults = await Ad.find({ sellerId })
         .populate({
           path: "productId",
-          select: "name price images slug",
+          select: "name calculatedPrice images slug",
         })
         .sort({ createdAt: -1 })
         .limit(20)
@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
       })
         .populate({
           path: "productId",
-          select: "name price images slug",
+          select: "name calculatedPrice images slug",
         })
         .sort({ createdAt: -1 })
         .limit(30)
@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
       const results = await Ad.find()
         .populate({
           path: "productId",
-          select: "name price images slug",
+          select: "name calculatedPrice images slug",
         })
         .sort({ createdAt: -1 })
         .limit(50)
