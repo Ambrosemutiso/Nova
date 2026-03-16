@@ -634,11 +634,11 @@ const submitComment = async () => {
 
 
           {/* Reactions */}
-          <div className="absolute right-4 bottom-120 flex flex-col gap-6 text-white">
+          <div className="absolute right-4 bottom-36 flex flex-col gap-6 text-white">
             <motion.button
               whileTap={{ scale: 1.2 }}
               onClick={(e) => { e.stopPropagation(); toggleLike(ad, true); }}
-              className="flex flex-col items-center p-3 bg-white/1 rounded-full"
+              className="flex flex-col items-center p-3 bg-white/20 rounded-full"
             >
               {ad.likes.includes(userId) ? (
                 <motion.div animate={{ scale: [1, 1.25, 1] }} transition={{ duration: 0.3 }}>
@@ -673,7 +673,7 @@ const submitComment = async () => {
     e.stopPropagation();
     setProductDrawer(ad);
   }}
-  className="flex flex-col items-center p-3 bg-orange-500 rounded-full shadow-lg"
+  className="flex flex-col items-center p-3 bg-white/20 rounded-full shadow-lg"
 >
   <FaShoppingCart size={22} />
 </motion.button>

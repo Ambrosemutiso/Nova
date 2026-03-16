@@ -252,7 +252,7 @@ const saveRes = await axios.post('/api/ads/save', {
 
   {products.map((product) => (
     <option key={product._id} value={product._id}>
-      {product.name} — KES {product.price}
+      {product.name} — KES {product.calculatedPrice}
     </option>
   ))}
 </select>

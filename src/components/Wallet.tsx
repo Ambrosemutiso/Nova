@@ -698,21 +698,24 @@ function BannerCard({
   return (
     <div
       className="min-w-[85%] sm:min-w-[420px] snap-start
-      bg-white rounded-2xl shadow border overflow-hidden
-      hover:shadow-md transition"
+      relative h-40 rounded-2xl overflow-hidden
+      shadow border hover:shadow-md transition"
     >
-      <div className="relative w-full h-36">
-        <Image
-          src={image}
-          alt={title}
-          fill
-          className="object-cover"
-        />
-      </div>
+      {/* Banner Image */}
+      <Image
+        src={image}
+        alt={title}
+        fill
+        className="object-contain"
+      />
 
-      <div className="p-4">
-        <h4 className="font-semibold">{title}</h4>
-        <p className="text-sm text-gray-500">{subtitle}</p>
+      {/* Dark overlay for readability */}
+      <div className="absolute inset-0 bg-black/30" />
+
+      {/* Floating Text */}
+      <div className="absolute inset-0 flex flex-col justify-center px-6 text-white">
+        <h4 className="text-lg font-bold">{title}</h4>
+        <p className="text-sm opacity-90">{subtitle}</p>
       </div>
     </div>
   )
