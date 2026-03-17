@@ -5,7 +5,7 @@ import Ad from "@/app/models/Ads";
 interface ProductType {
   _id: string;
   name: string;
-  price: number;
+  calculatedPrice: number;
   images?: string[];
   slug?: string;
 }
