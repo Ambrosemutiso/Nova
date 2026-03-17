@@ -854,7 +854,7 @@ const submitComment = async () => {
   animate={{ y: 0 }}
   exit={{ y: "100%" }}
   transition={{ type: "spring", bounce: 0.15 }}
-  className="fixed bottom-0 left-0 w-full h-[50vh] bg-white rounded-t-3xl z-[9999] p-6"
+  className="fixed bottom-0 left-0 w-full h-[75vh] bg-white rounded-t-3xl z-[9999] p-6"
 >
 
 {/* Header */}

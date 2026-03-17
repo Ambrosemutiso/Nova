@@ -5,7 +5,8 @@ import Ad from "@/app/models/Ads";
 interface ProductType {
   _id: string;
   name: string;
-  calculatedPrice: number;
+  calculatedPrice?: number;
+  oldPrice?: number; 
   images?: string[];
   slug?: string;
 }
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest) {
       const sellerResults = await Ad.find({ sellerId })
         .populate({
           path: "productId",
-          select: "name calculatedPrice images slug",
+          select: "name calculatedPrice oldPrice images slug",
         })
         .sort({ createdAt: -1 })
         .limit(20)
@@ -66,7 +67,7 @@ export async function GET(req: NextRequest) {
       })
         .populate({
           path: "productId",
-          select: "name calculatedPrice images slug",
+          select: "name calculatedPrice oldPrice images slug",
         })
         .sort({ createdAt: -1 })
         .limit(30)
@@ -84,7 +85,7 @@ export async function GET(req: NextRequest) {
       const results = await Ad.find()
         .populate({
           path: "productId",
-          select: "name calculatedPrice images slug",
+          select: "name calculatedPrice oldPrice images slug",
         })
         .sort({ createdAt: -1 })
         .limit(50)
