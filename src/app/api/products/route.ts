@@ -123,6 +123,8 @@ const slug = await generateUniqueSlug(name);
       calculatedPrice,
       description,
       category,
+      subcategory,
+      productType,
       quantity,
       sellerId,
       county,
