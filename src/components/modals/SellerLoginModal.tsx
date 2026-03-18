@@ -21,7 +21,7 @@ export default function SellerLoginModal({ onClose, defaultRole = 'seller' }: Lo
   const [name, setName] = useState('');
   const [country, setCountry] = useState('');
   const [currency, setCurrency] = useState('');
-  const [countryCode, setCountryCode] = useState('+254');
+  const [countryCode, setCountryCode] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -184,28 +184,33 @@ export default function SellerLoginModal({ onClose, defaultRole = 'seller' }: Lo
                 <div className="flex items-center gap-2 mb-3">
                   <div className="flex items-center gap-2 bg-white/20 border border-white/30 rounded px-2 py-1">
                     <img
-                      src={countryData.find((c) => c.dialCode === countryCode)?.flag || 'https://flagcdn.com/w40/ke.png'}
+                      src={countryData.find((c) => c.dialCode === countryCode)?.flag}
                       alt="flag"
                       className="w-6 h-4 rounded-sm object-cover"
                     />
-                    <select
-                      value={countryCode}
-                      onChange={(e) => {
-                        const selected = countryData.find((c) => c.dialCode === e.target.value);
-                        setCountryCode(e.target.value);
-                        if (selected) {
-                          setCountry(selected.name);
-                          setCurrency(selected.currency);
-                        }
-                      }}
-                      className="bg-transparent text-white cursor-pointer focus:outline-none"
-                    >
-                      {countryData.map((c) => (
-                        <option key={c.code} value={c.dialCode} className="text-black">
-                          {c.name} ({c.dialCode})
-                        </option>
-                      ))}
-                    </select>
+<select
+  value={countryCode}
+  onChange={(e) => {
+    const selected = countryData.find((c) => c.dialCode === e.target.value);
+    setCountryCode(e.target.value);
+
+    if (selected) {
+      setCountry(selected.name);
+      setCurrency(selected.currency);
+    }
+  }}
+  className="bg-transparent text-white cursor-pointer focus:outline-none"
+>
+  <option value="" disabled className="text-black">
+    Select Country
+  </option>
+
+  {countryData.map((c) => (
+    <option key={c.code} value={c.dialCode} className="text-black">
+      {c.name} ({c.dialCode})
+    </option>
+  ))}
+</select>
                   </div>
 
                   <input
