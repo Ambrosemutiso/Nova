@@ -91,7 +91,7 @@ Games:[
 Appliances:[
 "Blenders","Microwaves","Cookers","Gas Cookers","Electric Cookers",
 "Air Fryers","Coffee Makers","Toasters","Juicers","Dishwashers",
-"Refrigerators","Freezers","Water Dispensers","Other"
+"Refrigerators","Freezers","Water Dispensers","Washing Machines","Other"
 ],
 
 Cookware:[
@@ -583,20 +583,80 @@ Accessories:[
 
 "Beauty & Personal Care": {
 
-Skincare:[
-"Face Creams","Face Wash","Serums","Sunscreen","Face Masks",
-"Body Lotion","Body Scrubs","Acne Treatments","Other"
-],
+  Skincare: [
+    "Face Creams", "Face Wash & Cleansers", "Serums & Essences",
+    "Sunscreen", "Face Masks", "Toners",
+    "Body Lotion", "Body Butter", "Body Oils",
+    "Body Scrubs & Exfoliators",
+    "Acne Treatments", "Anti-Aging Products",
+    "Eye Creams", "Lip Care", "Skincare Tools",
+    "Other"
+  ],
 
-Haircare:[
-"Shampoo","Conditioner","Hair Oils","Hair Styling Tools",
-"Hair Extensions","Hair Color","Hair Treatments","Other"
-],
+  Haircare: [
+    "Shampoo", "Conditioner", "Hair Oils",
+    "Hair Styling Tools", "Hair Dryers",
+    "Hair Straighteners", "Curling Irons",
+    "Hair Extensions & Wigs",
+    "Hair Color & Dye", "Hair Treatments",
+    "Hair Brushes & Combs",
+    "Other"
+  ],
 
-Makeup:[
-"Lipsticks","Foundation","Mascara","Eyeliners","Powders",
-"Makeup Kits","Makeup Brushes","Other"
-]
+  Makeup: [
+    "Lipsticks & Lip Gloss", "Foundation & Concealer",
+    "Mascara", "Eyeliner & Kajal",
+    "Eyeshadow", "Powder & Setting Spray",
+    "Blush & Highlighter",
+    "Makeup Kits", "Makeup Brushes & Tools",
+    "Makeup Removers",
+    "Other"
+  ],
+
+  Nailcare: [
+    "Nail Polish", "Gel Nail Polish",
+    "Nail Extensions", "Acrylic Nails",
+    "Nail Art Accessories",
+    "Nail Care Kits",
+    "Nail Polish Remover",
+    "Cuticle Care",
+    "Nail Tools & Equipment",
+    "Other"
+  ],
+
+  Fragrances: [
+    "Perfumes", "Body Sprays & Mists",
+    "Deodorants", "Roll-ons",
+    "Gift Sets",
+    "Other"
+  ],
+
+  "Personal Hygiene": [
+    "Bath Soaps", "Shower Gels",
+    "Hand Wash", "Sanitizers",
+    "Oral Care (Toothpaste, Toothbrush, Mouthwash)",
+    "Feminine Hygiene",
+    "Grooming Kits",
+    "Other"
+  ],
+
+  "Men's Grooming": [
+    "Beard Oil & Balm",
+    "Shaving Cream & Gel",
+    "Aftershave",
+    "Hair Styling for Men",
+    "Trimmers & Clippers",
+    "Other"
+  ],
+
+  "Beauty Tools & Accessories": [
+    "Facial Cleansing Brushes",
+    "Derma Rollers",
+    "Mirrors",
+    "Makeup Organizers",
+    "Tweezers & Eyebrow Tools",
+    "Other"
+  ]
 
 },
 
