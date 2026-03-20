@@ -28,9 +28,9 @@ async function generateUniqueSlug(name: string) {
 
 // 🔹 Define plan product limits
 const PLAN_LIMITS: Record<string, number> = {
-  free: 3,
-  basic: 50,
-  premium: 500,
+  free: 50,
+  basic: 500,
+  premium: 1000,
 };
 
 /* --------------------------------------------

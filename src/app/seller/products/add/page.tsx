@@ -8,7 +8,6 @@ import TextEditor from '@/components/TextEditor';
 import { categoryTree } from "@/lib/productCategories";
 type ProductCondition = 'brand_new' | 'used' | 'refurbished';
 type Category = keyof typeof categoryTree;
-type Subcategory = keyof typeof categoryTree[Category];
 
 type County = 'Nairobi' | 'Mombasa' | 'Kisumu'|'Kwale'|'Kilifi'|'TanaRiver'|'Lamu'
 |'TaitaTaveta'|'Garissa'|'Wajir'|'Mandera'|'Marsabit'|'Isiolo'|'Meru'|'TharakaNithi'

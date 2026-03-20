@@ -222,12 +222,11 @@ const amount =
           <h3 className="text-xl font-semibold text-white">Free Plan</h3>
           <p className="text-gray-300 mb-3">Ksh 0 / year</p>
           <ul className="space-y-2 text-sm text-gray-200 mb-5">
-            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Add up to 5 Products</li>
-            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Receive up to 5 Orders</li>
+            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Add up to 50 Products</li>
+            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Receive up to 50 Orders</li>
             <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Limited Analytics</li>
             <li className="flex items-center gap-2"><XCircle size={16} className="text-red-400" /> No Product Boost</li>
             <li className="flex items-center gap-2"><XCircle size={16} className="text-red-400" /> No Front Shop</li>
-            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Withdrawals capped at Ksh 1000</li>
           </ul>
           <button disabled className="w-full bg-gray-500 text-white py-2 rounded cursor-not-allowed">
             Free
@@ -244,8 +243,8 @@ const amount =
           <h3 className="text-xl font-semibold text-orange-400">Basic Plan</h3>
           <p className="text-gray-200 mb-3">Ksh 1300 / year</p>
           <ul className="space-y-2 text-sm text-gray-200 mb-5">
-            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Add up to 100 Products</li>
-            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Receive up to 100 Orders</li>
+            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Add up to 500 Products</li>
+            <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Receive up to 500 Orders</li>
             <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Standard Visibility</li>
             <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Access to Orders</li>
             <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-400" /> Product Ads Boost</li>
