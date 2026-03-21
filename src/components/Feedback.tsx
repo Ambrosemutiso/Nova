@@ -73,11 +73,11 @@ export default function FeedbackPage() {
 
               if (!res.ok) throw new Error(data.error);
 
-              toast.success("✅ Feedback sent successfully!");
+              toast.success("Feedback sent successfully!");
               form.reset();
 
             } catch (err) {
-              toast.error("❌ Failed to send feedback.");
+              toast.error("Failed to send feedback.");
             } finally {
               setLoading(false);
             }

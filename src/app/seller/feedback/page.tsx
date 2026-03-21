@@ -54,7 +54,7 @@ export default function FeedbackPage() {
             const message = payload.message as string;
 
             if (!message || message.length < 10) {
-              alert("Feedback too short");
+              toast.error("Feedback too short");
               return;
             }
 
