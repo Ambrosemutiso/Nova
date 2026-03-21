@@ -76,6 +76,7 @@ export default function Footer({
             <li><a href="/desc/help/track-order">Track Order</a></li>
             <li><a href="/desc/help/returns">Returns</a></li>
             <li><a href="/desc/help/contact">Contact Us</a></li>
+            <li><a href="/desc/help/feedback">Give Feedback</a></li>
           </ul>
         </div>
 

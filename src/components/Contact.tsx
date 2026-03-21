@@ -2,8 +2,11 @@
 
 import { Mail, Phone, MapPin, Clock, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useState } from 'react';
 
 export default function ContactUs() {
+
+  const [loading, setLoading] = useState(false);
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
       <div className="max-w-6xl mx-auto px-4 pt-28 pb-10">
@@ -83,10 +86,48 @@ export default function ContactUs() {
           whileInView={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
           className="bg-white shadow-md rounded-2xl p-8 border border-gray-100"
-          onSubmit={(e) => {
-            e.preventDefault();
-            alert('Thank you! Your message has been received.');
-          }}
+            onSubmit={async (e) => {
+  e.preventDefault();
+
+  const form = e.currentTarget;
+  const formData = new FormData(form);
+
+  const payload = {
+    name: formData.get("name"),
+    email: formData.get("email"),
+    subject: formData.get("subject"),
+    message: formData.get("message"),
+  };
+const message = payload.message as string;
+
+if (!message || message.length < 10) {
+  alert("Message too short");
+  return;
+}
+setLoading(true);
+
+try {
+  const res = await fetch("/api/contact", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) throw new Error(data.error);
+
+  alert("✅ Message sent successfully!");
+  form.reset();
+
+} catch (err: any) {
+  alert("❌ Failed to send message. Try again.");
+} finally {
+  setLoading(false);
+}
+}}
         >
           <h2 className="text-2xl font-semibold text-gray-800 mb-6">Send Us a Message</h2>
 
@@ -94,6 +135,7 @@ export default function ContactUs() {
             <div>
               <label className="block text-gray-700 mb-2 text-sm font-medium">Full Name</label>
               <input
+              name='name'
                 type="text"
                 required
                 placeholder="Your Name"
@@ -103,6 +145,7 @@ export default function ContactUs() {
             <div>
               <label className="block text-gray-700 mb-2 text-sm font-medium">Email Address</label>
               <input
+              name='email'
                 type="email"
                 required
                 placeholder="you@example.com"
@@ -114,6 +157,7 @@ export default function ContactUs() {
           <div className="mt-5">
             <label className="block text-gray-700 mb-2 text-sm font-medium">Subject</label>
             <input
+            name='subject'
               type="text"
               required
               placeholder="How can we help you?"
@@ -124,6 +168,7 @@ export default function ContactUs() {
           <div className="mt-5">
             <label className="block text-gray-700 mb-2 text-sm font-medium">Message</label>
             <textarea
+            name='message'
               required
               rows={5}
               placeholder="Write your message here..."
@@ -131,12 +176,13 @@ export default function ContactUs() {
             ></textarea>
           </div>
 
-          <button
-            type="submit"
-            className="mt-6 w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 rounded-lg transition"
-          >
-            Send Message
-          </button>
+<button
+  type="submit"
+  disabled={loading}
+  className="mt-6 w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50"
+>
+  {loading ? "Sending..." : "Send Message"}
+</button>
         </motion.form>
       </div>
 

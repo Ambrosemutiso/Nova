@@ -164,7 +164,7 @@ export default function SellerLoginModal({ onClose, defaultRole = 'seller' }: Lo
             {/* EMAIL FIELD */}
             <input
               type="email"
-              placeholder="Email Address"
+              placeholder="Your Brand/Shop Email Address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full mb-3 p-2 bg-white/20 border border-white/30 rounded placeholder-gray-300 focus:ring-2 focus:ring-blue-500"
@@ -174,7 +174,7 @@ export default function SellerLoginModal({ onClose, defaultRole = 'seller' }: Lo
               <>
                 <input
                   type="text"
-                  placeholder="Full Name"
+                  placeholder="Your Brand/Shop Name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full mb-3 p-2 bg-white/20 border border-white/30 rounded placeholder-gray-300 focus:ring-2 focus:ring-blue-500"
