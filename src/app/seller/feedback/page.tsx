@@ -54,7 +54,7 @@ export default function FeedbackPage() {
             const message = payload.message as string;
 
             if (!message || message.length < 10) {
-              toast.error("Feedback too short");
+              alert("Feedback too short");
               return;
             }
 
@@ -77,7 +77,7 @@ export default function FeedbackPage() {
               form.reset();
 
             } catch (err) {
-              toast.error("❌ Failed to send feedback.");
+              toast.success("❌ Failed to send feedback.");
             } finally {
               setLoading(false);
             }

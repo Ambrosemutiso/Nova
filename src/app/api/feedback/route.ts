@@ -13,17 +13,17 @@ export async function POST(req: Request) {
     }
 
     const transporter = nodemailer.createTransport({
-      host: "smtp.zoho.com",
-      port: 587,
-      secure: false,
+    host: process.env.ZOHO_SMTP_HOST,
+    port: Number(process.env.ZOHO_SMTP_PORT),
+    secure: false, // 587
       auth: {
-        user: process.env.ZOHO_EMAIL,
-        pass: process.env.ZOHO_PASSWORD,
+        user: process.env.ZOHO_SMTP_USER,
+        pass: process.env.ZOHO_SMTP_PASS,
       },
     });
 
     await transporter.sendMail({
-      from: `"NovaXmax Feedback" <${process.env.ZOHO_EMAIL}>`,
+      from: `"NovaXmax Feedback" <${process.env.ZOHO_SMTP_USER}>`,
       to: "support@novaxmax.com",
       replyTo: email,
       subject: `📝 Feedback (${type})`,

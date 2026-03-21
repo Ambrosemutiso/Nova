@@ -10,7 +10,8 @@ import {
   FiMessageSquare,
   FiSettings,
   FiFilm,
-  FiPhone,
+  FiMail,
+  FiCalendar,
 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
@@ -42,10 +43,11 @@ export default function SellerSidebar({ isOpen = false, onClose, onOpen }: Props
     { label: 'Inventory', icon: <FiBox size={20} />, path: '/seller/inventory' },
     { label: 'Orders', icon: <FiShoppingBag size={20} />, path: '/seller/orders' },
     { label: 'Finance', icon: <FiDollarSign size={20} />, path: '/seller/finance' },
-    { label: 'Installments', icon: <FiPhone size={20} />, path: '/seller/installments' },
+    { label: 'Installments', icon: <FiCalendar size={20} />, path: '/seller/installments' },
     { label: 'Awards', icon: <FiAward size={20} />, path: '/seller/awards' },
     { label: 'Messages', icon: <FiMessageSquare size={20} />, path: '/seller/chat' },
     { label: 'AdVideos', icon: <FiFilm size={20} />, path: '/seller/ads/upload' },
+    { label: 'Feedback', icon: <FiMail size={20} />, path: '/seller/feedback' },
     { label: 'Settings', icon: <FiSettings size={20} />, path: '/seller/settings' },
   ];
 

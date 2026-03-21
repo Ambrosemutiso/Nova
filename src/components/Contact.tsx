@@ -3,6 +3,7 @@
 import { Mail, Phone, MapPin, Clock, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { toast } from 'react-toastify';
 
 export default function ContactUs() {
 
@@ -101,7 +102,7 @@ export default function ContactUs() {
 const message = payload.message as string;
 
 if (!message || message.length < 10) {
-  alert("Message too short");
+  toast.error("Message too short");
   return;
 }
 setLoading(true);
@@ -119,11 +120,11 @@ try {
 
   if (!res.ok) throw new Error(data.error);
 
-  alert("✅ Message sent successfully!");
+  toast.success("Message sent successfully!");
   form.reset();
 
 } catch (err: any) {
-  alert("❌ Failed to send message. Try again.");
+  toast.error("Failed to send message. Try again.");
 } finally {
   setLoading(false);
 }

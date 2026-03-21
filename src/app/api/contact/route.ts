@@ -18,13 +18,13 @@ export async function POST(req: Request) {
     port: Number(process.env.ZOHO_SMTP_PORT),
     secure: false, // 587
       auth: {
-        user: process.env.ZOHO_EMAIL,
-        pass: process.env.ZOHO_PASSWORD,
+        user: process.env.ZOHO_SMTP_USER,
+        pass: process.env.ZOHO_SMTP_PASS,
       },
     });
 
     await transporter.sendMail({
-      from: `"NovaXmax Contact" <${process.env.ZOHO_EMAIL}>`,
+      from: `"NovaXmax Contact" <${process.env.ZOHO_SMTP_USER}>`,
       to: "info@novaxmax.com", // where you receive messages
       replyTo: email,
       subject: `📩 ${subject}`,
