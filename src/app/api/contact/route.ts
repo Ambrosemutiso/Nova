@@ -25,7 +25,7 @@ export async function POST(req: Request) {
 
     await transporter.sendMail({
       from: `"NovaXmax Contact" <${process.env.ZOHO_SMTP_USER}>`,
-      to: "info@novaxmax.com", // where you receive messages
+      to: "info@novaxmax.com",
       replyTo: email,
       subject: `📩 ${subject}`,
       html: `
@@ -37,17 +37,6 @@ export async function POST(req: Request) {
         <p>${message}</p>
       `,
     });
-    await transporter.sendMail({
-  from: `"NovaXmax Support" <${process.env.ZOHO_EMAIL}>`,
-  to: email,
-  subject: "We received your message ✔",
-  html: `
-    <p>Hi ${name},</p>
-    <p>Thanks for contacting NovaXmax. We've received your message and will get back to you shortly.</p>
-    <br/>
-    <p>NovaXmax Team</p>
-  `,
-});
 
     return NextResponse.json({ success: true });
 
