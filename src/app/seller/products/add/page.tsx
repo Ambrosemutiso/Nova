@@ -17,7 +17,7 @@ type County = 'Nairobi' | 'Mombasa' | 'Kisumu'|'Kwale'|'Kilifi'|'TanaRiver'|'Lam
 |'Bungoma'|'Busia'|'Siaya'|'HomaBay'|'Migori'|'Kisii'|'Nyamira'|'Nakuru'
 
 const countyTownMap: Record<County, string[]> = {
-  Nairobi: ['Westlands', 'Kasarani', 'Embakasi', 'Langata', 'Dagoretti', 'Starehe', 'Makadara', 'Kibra'],
+  Nairobi: [ 'Westlands', 'Kasarani', 'Embakasi', 'Langata', 'Dagoretti', 'Starehe', 'Makadara', 'Kibra'],
   Mombasa: ['Nyali', 'Likoni', 'Kisauni', 'Changamwe', 'Mvita', 'Jomvu'],
   Kisumu: ['Kisumu Central', 'Kisumu East', 'Kisumu West', 'Muhoroni', 'Nyando', 'Seme'],
   Nakuru: ['Nakuru Town East', 'Nakuru Town West', 'Naivasha', 'Gilgil', 'Subukia', 'Molo', 'Bahati'],
@@ -30,7 +30,7 @@ const countyTownMap: Record<County, string[]> = {
   Embu: ['Embu Town', 'Runyenjes', 'Manyatta', 'Siakago'],
   TharakaNithi: ['Chuka', 'Chogoria', 'Marimanti', 'Kanyanga'],
   Kitui: ['Kitui Town', 'Mutomo', 'Mwingi', 'Kabati', 'Kwa Vonza'],
-  Makueni: ['Wote', 'Makindu', 'Kibwezi', 'Mtito Andei', 'Emali'],
+  Makueni: ['Wote', 'Mukuyuni', 'Makindu', 'Kibwezi', 'Mtito Andei', 'Emali'],
   Nyandarua: ['Ol Kalou', 'Engineer', 'Njabini', 'Ndemi', 'Kinangop'],
   Laikipia: ['Nanyuki', 'Rumuruti', 'Nyahururu', 'Kinamba', 'Doldol'],
   Turkana: ['Lodwar', 'Kakuma', 'Lokichogio', 'Lorugum'],
@@ -75,8 +75,8 @@ export default function AddProduct() {
   const [material, setMaterial] = useState('');
   const [color, setColor] = useState('');
   const [description, setDescription] = useState('');
-  const [keyFeatures, setKeyFeatures] = useState(['']);
-  const [boxContents, setBoxContents] = useState(['']);
+const [keyFeatures, setKeyFeatures] = useState<string[]>([]);
+const [boxContents, setBoxContents] = useState<string[]>([]);
   const [warranty, setWarranty] = useState('');
   const [dimensions, setDimensions] = useState('');
   const [weight, setWeight] = useState('');
@@ -158,9 +158,22 @@ const handleCountyChange = (selectedCounty: County | '') => {
     formData.append('model', model);
     formData.append('material', material);
     formData.append('color', color);
-    formData.append('description', description);
-    formData.append('keyFeatures', JSON.stringify(keyFeatures));
-    formData.append('boxContents', JSON.stringify(boxContents));
+// ✅ Only send description if not empty
+if (description && description.trim().length > 0) {
+  formData.append('description', description);
+}
+
+// ✅ Clean key features
+const cleanedFeatures = keyFeatures.filter(f => f.trim() !== '');
+if (cleanedFeatures.length > 0) {
+  formData.append('keyFeatures', JSON.stringify(cleanedFeatures));
+}
+
+// ✅ Clean box contents
+const cleanedBox = boxContents.filter(b => b.trim() !== '');
+if (cleanedBox.length > 0) {
+  formData.append('boxContents', JSON.stringify(cleanedBox));
+}
     formData.append('warranty', warranty);
     formData.append('dimensions', dimensions);
     formData.append('weight', weight);
@@ -258,32 +271,87 @@ const handleCountyChange = (selectedCounty: County | '') => {
         <input type="text" className="w-full border px-4 py-2 rounded" placeholder="Model" value={model} onChange={(e) => setModel(e.target.value)} />
         <input type="text" className="w-full border px-4 py-2 rounded" placeholder="Main Material" value={material} onChange={(e) => setMaterial(e.target.value)} />
         <input type="text" className="w-full border px-4 py-2 rounded" placeholder="Color" value={color} onChange={(e) => setColor(e.target.value)} />
-        <label className="block font-semibold">Product Description</label>
-        <TextEditor content={description} onChange={setDescription}/>
+<label className="block font-semibold">Product Description (Optional)</label>
+<p className="text-sm text-gray-500 mb-2">
+  Add details to attract more buyers (recommended but not required)
+</p>
+<TextEditor content={description} onChange={setDescription}/>
         <div>
-          <label className="block font-semibold">Key Features:</label>
-          {keyFeatures.map((feature, idx) => (
-            <div key={idx} className="flex gap-2 mb-2">
-              <input type="text" className="flex-1 border px-4 py-2 rounded" value={feature} onChange={(e) => handleFeatureChange(idx, e.target.value)} />
-              <button type="button" onClick={() => removeFeatureField(idx)} className="text-red-500">Remove</button>
-            </div>
-          ))}
-          <button type="button" onClick={addFeatureField} className="text-orange-500">+ Add Feature</button>
-        </div>
-        <div>
-          <label className="block font-semibold">What&apos;s in the Box:</label>
-          {boxContents.map((box, idx) => (
-            <div key={idx} className="flex gap-2 mb-2">
-              <input type="text" className="flex-1 border px-4 py-2 rounded" value={box} onChange={(e) => handleBoxChange(idx, e.target.value)} />
-              <button type="button" onClick={() => removeBoxField(idx)} className="text-red-500">Remove</button>
-            </div>
-          ))}
-          <button type="button" onClick={addBoxField} className="text-orange-500">+ Add Box Content</button>
-        </div>
+          <label className="block font-semibold">
+  Key Features (Optional)
+</label>
+<p className="text-sm text-gray-500 mb-2">
+  Highlight important features (e.g. Battery life, Material, Size)
+</p>
+{keyFeatures.length === 0 ? (
+  <button
+    type="button"
+    onClick={addFeatureField}
+    className="text-orange-500"
+  >
+    + Add Key Features (Optional)
+  </button>
+) : (
+  <>
+    {keyFeatures.map((feature, idx) => (
+      <div key={idx} className="flex gap-2 mb-2">
+        <input
+          type="text"
+          className="flex-1 border px-4 py-2 rounded"
+          value={feature}
+          onChange={(e) => handleFeatureChange(idx, e.target.value)}
+        />
+        <button type="button" onClick={() => removeFeatureField(idx)} className="text-red-500">
+          Remove
+        </button>
+      </div>
+    ))}
+    <button type="button" onClick={addFeatureField} className="text-orange-500">
+      + Add Another
+    </button>
+  </>
+)}
+</div>
+<div>
+          <label className="block font-semibold">
+  What’s in the Box (Optional)
+</label>
+<p className="text-sm text-gray-500 mb-2">
+  List included items (e.g. Charger, Cable, Manual)
+</p>
+{boxContents.length === 0 ? (
+  <button
+    type="button"
+    onClick={addBoxField}
+    className="text-orange-500"
+  >
+    + Add Box Content (Optional)
+  </button>
+) : (
+  <>
+    {boxContents.map((Box, idx) => (
+      <div key={idx} className="flex gap-2 mb-2">
+        <input
+          type="text"
+          className="flex-1 border px-4 py-2 rounded"
+          value={Box}
+          onChange={(e) => handleBoxChange(idx, e.target.value)}
+        />
+        <button type="button" onClick={() => removeBoxField(idx)} className="text-red-500">
+          Remove
+        </button>
+      </div>
+    ))}
+    <button type="button" onClick={addBoxField} className="text-orange-500">
+      + Add Another
+    </button>
+  </>
+)}
+</div>
 
         <input type="string" className="w-full border px-4 py-2 rounded" placeholder="Warranty Period" value={warranty} onChange={(e) => setWarranty(e.target.value)} />
-        <input type="string" className="w-full border px-4 py-2 rounded" placeholder="Dimensions (L x W x H)" value={dimensions} onChange={(e) => setDimensions(e.target.value)} />
-        <input type="number" className="w-full border px-4 py-2 rounded" placeholder="Weight" value={weight} onChange={(e) => setWeight(e.target.value)} />
+        <input type="string" className="w-full border px-4 py-2 rounded" placeholder="Dimensions (L x W x H) in mm" value={dimensions} onChange={(e) => setDimensions(e.target.value)} />
+        <input type="number" className="w-full border px-4 py-2 rounded" placeholder="Weight(Kgs)" value={weight} onChange={(e) => setWeight(e.target.value)} />
 
         <select
           value={county}
@@ -291,7 +359,7 @@ const handleCountyChange = (selectedCounty: County | '') => {
           className="w-full border px-4 py-2 rounded"
           required
         >
-          <option value="">Select County</option>
+          <option value="">Select County (product location)</option>
           {Object.keys(countyTownMap).map((countyName) => (
             <option key={countyName} value={countyName}>{countyName}</option>
           ))}

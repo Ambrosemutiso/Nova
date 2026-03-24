@@ -34,7 +34,7 @@ export const countyTownMap: Record<string, string[]> = {
   Embu: ['Embu Town', 'Runyenjes', 'Manyatta', 'Siakago'],
   TharakaNithi: ['Chuka', 'Chogoria', 'Marimanti', 'Kanyanga'],
   Kitui: ['Kitui Town', 'Mutomo', 'Mwingi', 'Kabati', 'Kwa Vonza'],
-  Makueni: ['Wote', 'Makindu', 'Kibwezi', 'Mtito Andei', 'Emali', 'Sultan Hamud'],
+  Makueni: ['Wote', 'Mukuyuni', 'Makindu', 'Kibwezi', 'Mtito Andei', 'Emali', 'Sultan Hamud'],
   Nyandarua: ['Ol Kalou', 'Engineer', 'Njabini', 'Ndemi', 'Kinangop'],
   Laikipia: ['Nanyuki', 'Rumuruti', 'Nyahururu', 'Kinamba', 'Doldol'],
   Turkana: ['Lodwar', 'Kakuma', 'Lokichogio', 'Lorugum'],
