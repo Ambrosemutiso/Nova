@@ -75,8 +75,8 @@ export default function AddProduct() {
   const [material, setMaterial] = useState('');
   const [color, setColor] = useState('');
   const [description, setDescription] = useState('');
-const [keyFeatures, setKeyFeatures] = useState<string[]>([]);
-const [boxContents, setBoxContents] = useState<string[]>([]);
+  const [keyFeatures, setKeyFeatures] = useState<string[]>([]);
+  const [boxContents, setBoxContents] = useState<string[]>([]);
   const [warranty, setWarranty] = useState('');
   const [dimensions, setDimensions] = useState('');
   const [weight, setWeight] = useState('');
@@ -149,6 +149,7 @@ const handleCountyChange = (selectedCounty: County | '') => {
     if (!fulfillmentMode) return toast.error('Please select a fulfillment mode!');
     if (imageFiles.length === 0) return toast.error('Please upload at least one image!');
     if (!condition) return toast.error('Please select product condition!');
+    if (!weight) return toast.error('Please Enter the product weight(kgs)!');
 
     setUploading(true);
 

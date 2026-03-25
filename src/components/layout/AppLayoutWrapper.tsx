@@ -18,12 +18,46 @@ import { ToastContainer } from 'react-toastify';
 import { ThemeProvider } from 'next-themes';
 import InstallAppButton from '@/components/IstallAppBtton';
 import PWARegister from '../PWARegister';
+import { usePathname, useRouter } from 'next/navigation';
 
 /* ================= INNER UI ================= */
 function LayoutUI({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth(); // ✅ use real loading
+  const pathname = usePathname();
+  const router = useRouter();
 
   const isSeller = user?.role === 'seller';
+
+  // ✅ Redirect logic
+  useEffect(() => {
+    if (loading || !user) return;
+
+    if (user.role === 'seller' && !pathname.startsWith('/seller')) {
+      router.replace('/seller/dashboard');
+    }
+
+    if (user.role === 'buyer' && pathname.startsWith('/seller')) {
+      router.replace('/');
+    }
+  }, [user, loading, pathname, router]);
+
+  // ✅ Save last seller route
+  useEffect(() => {
+    if (user?.role === 'seller') {
+      localStorage.setItem('lastSellerRoute', pathname);
+    }
+  }, [pathname, user]);
+
+  // ✅ Restore last route (SAFE)
+  useEffect(() => {
+    if (loading || !user) return;
+
+    if (user.role === 'seller' && pathname === '/') {
+      const lastRoute = localStorage.getItem('lastSellerRoute');
+      router.replace(lastRoute || '/seller/dashboard');
+    }
+  }, [user, loading, pathname, router]);
+
 
   return (
     <>
@@ -41,6 +75,7 @@ function LayoutUI({ children }: { children: React.ReactNode }) {
       <main className="pt-[40px] md:ml-72 min-h-screen">
         {children}
       </main>
+
       <PWARegister/>
       <BackToTopButton />
       <LoginWrapper />
