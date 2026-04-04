@@ -15,116 +15,169 @@ type Banner = {
 };
 
 const SLIDE_INTERVAL = 6000;
+const PRODUCT_ROTATION_INTERVAL = 3000;
 
 export default function HeroSlider() {
-  const [banners, setBanners] = useState<Banner[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [isInView, setIsInView] = useState(true);
+  const [banners, setBanners] = useState<Banner[]>([]);
 
   // Fetch banners
   useEffect(() => {
     const fetchBanners = async () => {
       try {
         const res = await fetch('/api/products/featured');
+        if (!res.ok) throw new Error('Failed to fetch banners');
         const data = await res.json();
         setBanners(data);
       } catch (error) {
-        console.error(error);
+          console.error('Banner fetch error:', error);
       }
     };
 
     fetchBanners();
   }, []);
 
-  // Auto slide (fade style)
+  // Auto scroll logic
   useEffect(() => {
-    if (isHovered || banners.length === 0) return;
-
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % banners.length);
+      if (!containerRef.current || isHovered || !isInView || banners.length === 0) return;
+
+      const container = containerRef.current;
+      const cardWidth = container.querySelector('div')?.clientWidth || 400;
+      const maxScroll = container.scrollWidth - container.clientWidth;
+
+      if (container.scrollLeft + cardWidth >= maxScroll) {
+        container.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        container.scrollBy({ left: cardWidth, behavior: 'smooth' });
+      }
     }, SLIDE_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [isHovered, banners]);
+  }, [isHovered, isInView, banners]);
+
+  // Pause auto scroll when not in view
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsInView(entry.isIntersecting),
+      { threshold: 0.1 }
+    );
+
+    if (containerRef.current) observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+  return (
+    <div
+      ref={containerRef}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="w-full overflow-x-auto whitespace-nowrap scroll-smooth scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 px-4 pt-28 pb-10"
+    >
+      <div className="inline-flex gap-4">
+        {banners.map((banner) => (
+          <BannerCard key={banner.id} banner={banner} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BannerCard({ banner }: { banner: Banner }) {
+  const [productIndex, setProductIndex] = useState(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const currentProduct = banner.products[productIndex];
+
+  useEffect(() => {
+    startRotation();
+    return () => stopRotation();
+  }, []);
+
+  const startRotation = () => {
+    intervalRef.current = setInterval(() => {
+      setProductIndex((prev) => (prev + 1) % banner.products.length);
+    }, PRODUCT_ROTATION_INTERVAL);
+  };
+
+  const stopRotation = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+  };
+
+  const getDiscount = (oldPrice: number, calculatedPrice: number) =>
+    Math.round(((oldPrice - calculatedPrice) / oldPrice) * 100);
 
   const getPublicId = (url?: string) => {
-    if (!url) return '';
+    if (!url || typeof url !== 'string') return '';
     const match = url.match(/\/upload\/(?:v\d+\/)?([^\.]+)/);
     return match ? match[1] : url;
   };
 
   return (
     <div
-      className="relative w-full h-[320px] sm:h-[400px] md:h-[460px] overflow-hidden pt-24"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className="relative min-w-[300px] sm:min-w-[340px] md:min-w-[400px] aspect-[16/9] rounded-lg overflow-hidden shadow-md flex-shrink-0"
+      onMouseEnter={stopRotation}
+      onMouseLeave={startRotation}
     >
-      {banners.map((banner, index) => (
-        <div
-          key={banner.id}
-          className={`absolute inset-0 transition-opacity duration-1000 ${
-            index === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
-          }`}
-        >
-          {/* BACKGROUND */}
-          <Image
-            src={banner.src}
-            alt={banner.alt}
-            fill
-            className="object-cover brightness-75"
-            priority
-          />
+      <Image
+        src={banner.src}
+        alt={banner.alt}
+        fill
+        className="object-cover brightness-75 transition-all duration-700"
+        priority
+      />
 
-          {/* DARK GRADIENT */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
+      <div className="absolute inset-0 bg-black/40 flex flex-col justify-between p-4">
+        {/* Banner title */}
+        <h2 className="text-white text-xl sm:text-2xl md:text-3xl font-bold drop-shadow mb-2">
+          {banner.heading}
+        </h2>
 
-          {/* GLOW EFFECT */}
-          <div className="absolute right-20 bottom-10 w-72 h-72 bg-orange-500/20 blur-3xl rounded-full" />
-
-          {/* TEXT */}
-          <div className="absolute left-6 sm:left-10 top-1/2 -translate-y-1/2 z-20 max-w-[60%]">
-            <h2 className="text-white text-2xl sm:text-4xl md:text-5xl font-bold leading-tight mb-4 drop-shadow">
-              {banner.heading}
-            </h2>
-
-            <button className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-md text-sm sm:text-base transition">
-              {banner.cta}
-            </button>
+        {/* Product info */}
+        <div className="flex justify-between items-center bg-white p-2 rounded shadow">
+          {/* Product details */}
+          <div className="w-2/3">
+            <p className="text-gray-800 font-semibold text-sm truncate">
+              {currentProduct.name}
+            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-orange-600 font-bold text-sm">
+                KSh {currentProduct.calculatedPrice.toLocaleString()}
+              </span>
+              <span className="line-through text-gray-500 text-xs">
+                KSh {currentProduct.oldPrice.toLocaleString()}
+              </span>
+              <span className="text-xs text-green-600">
+                -{getDiscount(currentProduct.oldPrice, currentProduct.calculatedPrice)}%
+              </span>
+            </div>
+               <p className={`text-left text-sm font-semibold ${currentProduct.quantity > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                 {currentProduct.quantity > 0 ? `${currentProduct.quantity} unit${currentProduct.quantity > 1 ? 's' : ''} left` : 'Out of stock'}
+               </p>
           </div>
 
-          {/* FLOATING PRODUCTS */}
-          {banner.products.map((product, i) => {
-            const positions = [
-              'right-6 bottom-6 w-32 sm:w-40 md:w-48',
-              'right-32 top-10 w-24 sm:w-32 md:w-36',
-              'right-10 top-1/2 -translate-y-1/2 w-20 sm:w-28 md:w-32',
-              'left-1/2 bottom-6 -translate-x-1/2 w-24 sm:w-32 md:w-36',
-            ];
-
-            const rotations = [
-              'rotate-[-10deg]',
-              'rotate-[8deg]',
-              'rotate-[4deg]',
-              'rotate-[-6deg]',
-            ];
-
-            return (
-              <div
-                key={product._id}
-                className={`absolute ${positions[i]} ${rotations[i]} transition-all duration-700 hover:scale-110`}
-              >
-                <CldImage
-                  src={getPublicId(product.images[0])}
-                  alt={product.name}
-                  width="400"
-                  height="400"
-                  className="object-contain drop-shadow-2xl"
-                />
-              </div>
-            );
-          })}
+          {/* Product image */}
+          <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded overflow-hidden">
+            <CldImage
+              src={getPublicId(currentProduct.images[0])}
+              alt={currentProduct.name}
+              width="300"
+              height="300"
+              crop="fill"
+              className="object-cover rounded shadow"
+              loading="lazy"
+            />
+          </div>
         </div>
-      ))}
+
+        {/* CTA */}
+        <button
+          aria-label={`Shop now for ${currentProduct.name}`}
+          className="mt-2 bg-orange-500 text-white text-xs sm:text-sm px-3 py-1 rounded-md hover:bg-orange-600 transition self-start"
+        >
+          {banner.cta}
+        </button>
+      </div>
     </div>
   );
 }
