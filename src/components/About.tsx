@@ -23,7 +23,7 @@ export default function AboutNovaXpress() {
       <section className="max-w-6xl mx-auto px-6 py-16 grid md:grid-cols-2 gap-12 items-center">
         <motion.img
           src="/about-illustration.jpg"
-          alt="NovaXpress Marketplace"
+          alt="NovaXmax Marketplace"
           className="rounded-2xl shadow-md w-full object-cover"
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}

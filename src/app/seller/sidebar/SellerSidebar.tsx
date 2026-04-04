@@ -55,28 +55,29 @@ export default function SellerSidebar({ isOpen = false, onClose, onOpen }: Props
     <>
       <AnimatePresence>
         {/* 🌙 Overlay for mobile */}
-        {isMobile && isOpen && (
-          <motion.div
-            key="overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.5 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            onClick={onClose}
-            className="relative h-full w-72 bg-white dark:bg-gray-900 shadow-xl"
-          />
-        )}
+{isMobile && isOpen && (
+  <motion.div
+    key="overlay"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    onClick={onClose}
+    className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+  />
+)}
 
         {/* 🌟 Full Drawer Sidebar */}
         {(isOpen || !isMobile) && (
-          <motion.aside
-            key="sidebar"
-            initial={{ x: isMobile ? -260 : 0 }}
-            animate={{ x: 0 }}
-            exit={{ x: isMobile ? -260 : 0 }}
-            transition={{ duration: 0.3 }}
-            className={"h-full w-64 bg-gradient-to-b from-orange-500 to-orange-600 text-white flex flex-col"}
-          >
+<motion.aside
+  key="sidebar"
+  initial={{ x: -260 }}
+  animate={{ x: 0 }}
+  exit={{ x: -260 }}
+  transition={{ duration: 0.3 }}
+  className="fixed top-0 left-0 h-full w-64 z-50
+  bg-white/10 backdrop-blur-xl border-r border-white/20
+  shadow-2xl text-white flex flex-col"
+>
             {/* Header (mobile only) */}
             {isMobile && (
               <div className="flex justify-between items-center px-4 py-3 border-b border-orange-400">
@@ -120,9 +121,11 @@ export default function SellerSidebar({ isOpen = false, onClose, onOpen }: Props
                     router.push(item.path);
                     if (isMobile && onClose) onClose();
                   }}
-                  className="group relative flex items-center gap-3 justify-start px-5 w-full py-3 text-left text-white hover:bg-orange-700 transition-all duration-200"
+              className="group flex items-center gap-3 px-5 py-3 text-white/90 hover:text-white hover:bg-white/10 transition"
                 >
-                  <span>{item.icon}</span>
+                  <span className="text-white drop-shadow-md">
+                    {item.icon}
+                    </span>
                   <span className="font-medium">{item.label}</span>
                 </button>
               ))}

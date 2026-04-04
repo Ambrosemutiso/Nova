@@ -54,7 +54,7 @@ export default function ContactUs() {
               <Phone className="w-5 h-5 text-orange-500 mt-1" />
               <div>
                 <strong>Phone:</strong>
-                <p>+254 798 437 508</p>
+                <p>+254 741 747 433</p>
               </div>
             </li>
             <li className="flex items-start gap-3">

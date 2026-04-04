@@ -22,7 +22,7 @@ import { usePathname, useRouter } from 'next/navigation';
 
 /* ================= INNER UI ================= */
 function LayoutUI({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth(); // ✅ use real loading
+  const { user, loading } = useAuth(); 
   const pathname = usePathname();
   const router = useRouter();
 
