@@ -26,7 +26,7 @@ export default function UsedRefurbishedProducts() {
 
   return (
     <Section>
-    <div className="px-4 py-5">
+    <div className="px-1 py-1">
       <h2 className="text-xl font-semibold mb-4">
         Used & Refurbished Deals
       </h2>

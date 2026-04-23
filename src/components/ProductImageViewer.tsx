@@ -12,6 +12,7 @@ import {
   ChevronRight,
   X,
 } from 'lucide-react';
+import { Section } from './SectionWrapper';
 
 const ProductImageViewer = ({
   images,
@@ -121,7 +122,8 @@ const handleScroll = () => {
   };
 
   return (
-    <div className="p-4">
+    <Section>
+    <div className="px-1 py-1">
       {/* Horizontal Scrollable Cards */}
       <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
         {images.map((image, index) => (
@@ -259,6 +261,7 @@ onClick={(e: React.MouseEvent<SVGElement>) => {
         </div>
       )}
     </div>
+    </Section>
   );
 };
 

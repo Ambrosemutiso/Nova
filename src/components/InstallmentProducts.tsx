@@ -26,7 +26,7 @@ export default function InstallmentProducts() {
 
   return (
     <Section>
-    <div className="px-4 py-5">
+    <div className="px-1 py-1">
       <h2 className="text-xl font-semibold mb-4">Buy in Installments</h2>
 
       <div className="flex gap-4 overflow-x-auto pb-2">

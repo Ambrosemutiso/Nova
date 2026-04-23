@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useCart } from '@/app/context/CartContext';
-import { ShoppingCart, ChevronRight} from 'lucide-react';
+import { Tag, Package, MapPin, CheckCircle, XCircle, ShoppingCart, ChevronRight } from "lucide-react";
 import type { ProductType } from "@/app/types/product";
 import RelatedProducts from '@/components/RelatedProducts'
 import CustomersAlsoViewed from "@/components/CustomersAlsoViewed";
@@ -154,6 +154,7 @@ return (
           <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white max-w-6xl mx-auto px-4 pt-28 pb-10"> {/* pt-28 to offset navbar height */}
   <div className="mb-6 overflow-x-auto">
   <nav className="flex items-center text-sm text-gray-500 whitespace-nowrap flex-nowrap gap-1 px-1">
+    <Section>
     <span>Home</span>
     <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
     <span>Shop</span>
@@ -167,6 +168,7 @@ return (
     <span className="text-gray-500 font-medium">{product.productType}</span>
     <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
     <span className="text-gray-500 font-medium">{product.name}</span>
+    </Section>
   </nav>
 </div>
 
@@ -180,75 +182,92 @@ return (
 )}
 {/* Product Info Section */}
 <Section>
-<div className="px-4 py-5">
-  {/* Title */}
-  <h1 className="text-3xl font-bold leading-tight tracking-tight">
-    {product.name}
-  </h1>
+  <div className="px-1 py-1 space-y-4">
 
-  {/* Brand + Model */}
-  <div className="flex flex-wrap gap-3 text-sm text-gray-600">
-    {product.brand && (
-      <span className="bg-gray-100 px-2.5 py-1 rounded-full capitalize">
-        Brand: {product.brand}
-      </span>
-    )}
-    {product.model && (
-      <span className="bg-gray-100 px-2.5 py-1 rounded-full capitalize">
-        Model: {product.model}
-      </span>
-    )}
-  </div>
+    {/* 🏷️ Title */}
+    <h1 className="text-xl font-semibold text-gray-900 leading-snug">
+      {product.name}
+    </h1>
 
-  {/* Price Section */}
-  <div className="flex flex-wrap items-baseline gap-2 mt-2">
-    <span className="text-3xl font-extrabold text-orange-600">
-      Ksh {product.calculatedPrice.toLocaleString()}
-    </span>
-
-    {product.oldPrice && (
-      <>
-        <span className="text-base text-gray-400 line-through">
-          Ksh {product.oldPrice.toLocaleString()}
-        </span>
-        <span className="text-xs font-semibold px-2 py-1 rounded-full bg-red-50 text-red-500">
-          {Math.round(((product.oldPrice - product.calculatedPrice) / product.oldPrice) * 100)}% OFF
-        </span>
-      </>
-    )}
-  </div>
-
-  {/* Stock Info */}
-  <div className="flex items-center gap-2 mt-1">
-    <div
-      className={`w-2.5 h-2.5 rounded-full ${
-        product.quantity > 0 ? 'bg-green-500' : 'bg-red-500'
-      }`}
-    />
-    <p
-      className={`text-sm font-medium ${
-        product.quantity > 0 ? 'text-green-700' : 'text-red-500'
-      }`}
-    >
-      {product.quantity > 0
-        ? `${product.quantity} unit${product.quantity > 1 ? 's' : ''} left`
-        : 'Out of stock'}
-    </p>
-  </div>
-
-  {/* Shipping Info */}
-  {product.county && (
-    <p className="text-sm text-gray-600">
-      🚚 Shipped from{' '}
-      <span className="font-semibold text-gray-800">{product.county}</span>
-      {product.town && (
-        <>
-          , <span className="text-orange-600 font-semibold">{product.town}</span>
-        </>
+    {/* 🔖 Brand & Model */}
+    <div className="flex items-center gap-4 text-sm text-gray-600">
+      {product.brand && (
+        <div className="flex items-center gap-1">
+          <Tag className="w-4 h-4 text-gray-400" />
+          <span>{product.brand}</span>
+        </div>
       )}
-    </p>
-  )}
-</div>
+
+      {product.model && (
+        <div className="flex items-center gap-1">
+          <Package className="w-4 h-4 text-gray-400" />
+          <span>{product.model}</span>
+        </div>
+      )}
+    </div>
+
+    {/* 💰 Price Section */}
+    <div className="flex items-end justify-between">
+      <div>
+        <p className="text-2xl font-bold text-orange-600">
+          Ksh {product.calculatedPrice.toLocaleString()}
+        </p>
+
+        {product.oldPrice && (
+          <div className="flex items-center gap-2 text-sm mt-1">
+            <span className="line-through text-gray-400">
+              Ksh {product.oldPrice.toLocaleString()}
+            </span>
+            <span className="text-red-500 font-medium">
+              {Math.round(((product.oldPrice - product.calculatedPrice) / product.oldPrice) * 100)}% OFF
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* 🔥 Discount Badge */}
+      {product.oldPrice && (
+        <div className="bg-red-50 text-red-500 text-xs font-semibold px-2 py-1 rounded">
+          SAVE
+        </div>
+      )}
+    </div>
+
+    {/* 📦 Stock + Location */}
+    <div className="flex items-center justify-between text-sm">
+
+      {/* Stock */}
+      <div className="flex items-center gap-2">
+        {product.quantity > 0 ? (
+          <CheckCircle className="w-4 h-4 text-green-500" />
+        ) : (
+          <XCircle className="w-4 h-4 text-red-500" />
+        )}
+
+        <span
+          className={`font-medium ${
+            product.quantity > 0 ? "text-green-600" : "text-red-500"
+          }`}
+        >
+          {product.quantity > 0
+            ? `${product.quantity} left`
+            : "Out of stock"}
+        </span>
+      </div>
+
+      {/* Location */}
+      {product.county && (
+        <div className="flex items-center gap-1 text-gray-600">
+          <MapPin className="w-4 h-4 text-gray-400" />
+          <span>
+            {product.town ? `${product.town}, ` : ""}
+            {product.county}
+          </span>
+        </div>
+      )}
+    </div>
+
+  </div>
 </Section>
 {/* Product Description Section */}
 {product.description && (

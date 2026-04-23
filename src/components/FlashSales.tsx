@@ -87,7 +87,7 @@ export default function FlashSales() {
 
   return (
   <Section>
-    <div className="px-4 py-5">
+    <div className="px-1 py-1">
       <div className="flex justify-between items-center mb-2">
         <h2 className="text-xl font-semibold text-red-600">
           🔥 Flash Sales{' '}

@@ -29,7 +29,7 @@ export default function CategoryMenu({ onSelectCategory }: MenuProps) {
 
   return (
     <Section>
-    <div className="py-5 px-4">
+    <div className="py-1 px-1">
 
       {/* MOBILE MENU */}
       <div className="flex gap-4 overflow-x-auto md:hidden">

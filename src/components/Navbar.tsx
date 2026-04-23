@@ -231,8 +231,7 @@ useEffect(() => {
       </div>
 
       {/* 🔹 Navbar */}
-<nav className="fixed top-6 left-0 w-full z-50
-bg-gradient-to-b from-orange-50 via-white to-orange-100 py-3 px-4 flex items-center justify-between">
+<nav className="fixed top-6 left-0 w-full z-50 bg-white shadow-lg py-3 px-4 flex items-center justify-between">
         {/* Sidebar Button */}
 <button
   onClick={() => setSidebarOpen(true)}
