@@ -19,6 +19,7 @@ import { ThemeProvider } from 'next-themes';
 import InstallAppButton from '@/components/IstallAppBtton';
 import PWARegister from '../PWARegister';
 import { usePathname, useRouter } from 'next/navigation';
+import MobileBottomNav from '../MobileNav';
 
 /* ================= INNER UI ================= */
 function LayoutUI({ children }: { children: React.ReactNode }) {
@@ -80,6 +81,7 @@ function LayoutUI({ children }: { children: React.ReactNode }) {
       <BackToTopButton />
       <LoginWrapper />
       <InstallAppButton />
+      <MobileBottomNav/>
       <ToastContainer position="top-right" autoClose={3000} />
     </>
   );

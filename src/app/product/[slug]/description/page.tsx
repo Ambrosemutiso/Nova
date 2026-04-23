@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import type { ProductType } from '@/app/types/product';
+import { Section } from '@/components/SectionWrapper';
 
 export default function FullDescriptionPage() {
   const { slug } = useParams();
@@ -64,6 +65,7 @@ export default function FullDescriptionPage() {
       </div>
 
       {/* Description Section */}
+      <Section>
       <div className="bg-white shadow-md rounded-xl p-6">
         <h2 className="text-lg md:text-xl font-semibold text-gray-900 border-b pb-2 mb-3">
           Full Description
@@ -75,9 +77,11 @@ export default function FullDescriptionPage() {
           }}
         />
       </div>
+      </Section>
 
       {/* Key Features */}
       {Array.isArray(product.keyFeatures) && product.keyFeatures.length > 0 && (
+        <Section>
         <div className="mt-6 bg-white shadow-md rounded-xl p-6">
           <h2 className="text-lg md:text-xl font-semibold text-gray-900 border-b pb-2 mb-3">
             Key Features
@@ -88,10 +92,12 @@ export default function FullDescriptionPage() {
             ))}
           </ul>
         </div>
+        </Section>
       )}
 
       {/* Box Contents */}
       {Array.isArray(product.boxContents) && product.boxContents.length > 0 && (
+        <Section>
         <div className="mt-6 bg-white shadow-md rounded-xl p-6">
           <h2 className="text-lg md:text-xl font-semibold text-gray-900 border-b pb-2 mb-3">
             What&apos;s in the Box
@@ -102,6 +108,7 @@ export default function FullDescriptionPage() {
             ))}
           </ul>
         </div>
+        </Section>
       )}
     </div>
     </div>

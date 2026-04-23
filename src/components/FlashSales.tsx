@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import ProductCard from './ProductCard';
 import type { ProductType } from "@/app/types/product";
 import { toast } from 'react-toastify';
+import FlashProductCard from './FlashSaleProductCard';
 
 const FLASH_SALE_DURATION_MS = 3 * 60 * 60 * 1000; // 3 hours
 
@@ -119,7 +119,7 @@ export default function FlashSales() {
         ref={scrollContainerRef}
       >
         {filtered.map((product) => (
-          <ProductCard key={product._id} product={product} />
+          <FlashProductCard key={product._id} product={product} />
         ))}
       </div>
     </div>

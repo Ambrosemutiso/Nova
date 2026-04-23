@@ -15,6 +15,7 @@ import MoreFromSeller from '@/components/MoreFromSeller';
 import BuyerLoginModal from '@/components/modals/BuyerLoginModal';
 import Link from 'next/link';
 import { useParams } from 'next/navigation'
+import { Section } from './SectionWrapper';
 
 export default function ProductDetails() {
     const { slug } = useParams();
@@ -178,6 +179,7 @@ return (
     />
 )}
 {/* Product Info Section */}
+<Section>
 <div className="p-6 bg-white rounded-2xl shadow-md text-gray-900 space-y-3">
   {/* Title */}
   <h1 className="text-3xl font-bold leading-tight tracking-tight">
@@ -247,9 +249,10 @@ return (
     </p>
   )}
 </div>
-
+</Section>
 {/* Product Description Section */}
 {product.description && (
+  <Section>
   <div className="mt-8 bg-white shadow rounded-lg p-5">
     <div className="flex justify-between items-center border-b pb-2 mb-3">
       <h2 className="text-lg md:text-xl font-semibold text-gray-900">
@@ -278,10 +281,12 @@ return (
       }}
     />
   </div>
+  </Section>
 )}
 
 {/* Key Features */}
 {Array.isArray(product.keyFeatures) && product.keyFeatures.length > 0 && (
+  <Section>
   <div className="mt-6 bg-white shadow rounded-lg p-5">
     <h2 className="text-lg font-semibold text-gray-900 mb-2 border-b pb-1">
       Key Features
@@ -292,10 +297,12 @@ return (
       ))}
     </ul>
   </div>
+  </Section>
 )}
 
 {/* Box Contents */}
 {Array.isArray(product.boxContents) && product.boxContents.length > 0 && (
+  <Section>
   <div className="mt-6 bg-white shadow rounded-lg p-5">
     <h2 className="text-lg font-semibold text-gray-900 mb-2 border-b pb-1">
       What&apos;s in the Box
@@ -306,9 +313,11 @@ return (
       ))}
     </ul>
   </div>
+  </Section>
 )}
 
 {/* Specifications */}
+<Section>
 <div className="mt-6 bg-white shadow rounded-lg p-5">
   <h2 className="text-lg md:text-xl font-semibold mb-3 border-b pb-2">
     Specifications
@@ -351,16 +360,28 @@ return (
     )}
   </div>
 </div>
+ </Section>
 
-
+<Section>
       <SaveToRecentlyViewed id={product._id.toString()} />
+      </Section>
+      <Section>
       <RecentlyViewed />
+      </Section>
+      <Section>
       <RelatedProducts name={product.name} currentId={product._id.toString()} />
+      </Section>
+      <Section>
       <CustomersAlsoViewed productId={product._id.toString()} />
+      </Section>
+      <Section>
       <BehaviorTracker product={product} />
       {showLoginModal && <BuyerLoginModal onClose={() => setShowLoginModal(false)} />}
       <SellerSection product={product} showLoginModal={() => setShowLoginModal(true)} />
+      </Section>
+      <Section>
       <MoreFromSeller sellerId={product.sellerId} currentProductId={product._id.toString()} />
+      </Section>
 <button className="text-sm text-red-600 underline mt-4" onClick={() => setShowReportModal(true)}>Report Incorrect Product Details</button>
 {showReportModal && (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">

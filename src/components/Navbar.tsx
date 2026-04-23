@@ -17,7 +17,6 @@ import { usePathname } from "next/navigation";
 
 type NavbarProps = {
   onOpenBuyerLogin?: () => void;
-  onOpenSellerLogin?: () => void;
 };
 
 const countryData = [
@@ -31,7 +30,7 @@ const countryData = [
   { name: 'Somalia', code: 'SO', flag: 'https://flagcdn.com/w40/so.png', dialCode: '+252', currency: 'SOS' },
 ];
 
-export default function Navbar({ onOpenBuyerLogin, onOpenSellerLogin}: NavbarProps) {
+export default function Navbar({ onOpenBuyerLogin}: NavbarProps) {
   const [orderCount, setOrderCount] = useState(0);
   const [showSearch, setShowSearch] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -232,13 +231,8 @@ useEffect(() => {
       </div>
 
       {/* 🔹 Navbar */}
-<nav className="
-fixed top-6 left-0 w-full z-50
-bg-gradient-to-b from-orange-50 via-white to-orange-100
-dark:from-gray-900 dark:to-gray-800
-shadow-lg py-3 px-4
-flex items-center justify-between
-">
+<nav className="fixed top-6 left-0 w-full z-50
+bg-gradient-to-b from-orange-50 via-white to-orange-100 py-3 px-4 flex items-center justify-between">
         {/* Sidebar Button */}
 <button
   onClick={() => setSidebarOpen(true)}

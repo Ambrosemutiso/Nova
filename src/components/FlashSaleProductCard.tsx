@@ -7,11 +7,15 @@ import type { ProductType } from "@/app/types/product";
 interface ProductCardProps {
   product: ProductType;
   showSponsoredBadge?: boolean;
+  badge?: React.ReactNode;
   redirectAllTo?: string;
 }
 
-export default function ProductCard({ product, showSponsoredBadge, redirectAllTo }: ProductCardProps) {
+export default function FlashProductCard({ product, showSponsoredBadge, badge, redirectAllTo }: ProductCardProps) {
   const router = useRouter();
+
+  const calculateDiscount = (oldPrice: number, calculatedPrice: number) =>
+    Math.round(((oldPrice - calculatedPrice) / oldPrice) * 100);
 
   const getPublicId = (url: string) => {
     const regex = /\/upload\/(?:v\d+\/)?([^\.]+)/;
@@ -34,6 +38,16 @@ export default function ProductCard({ product, showSponsoredBadge, redirectAllTo
     <span className="text-blue-600">Sponsored</span>
   </div>
 )}
+
+            {/* Optional Flash Deal badge */}
+      {badge && (
+        <div className="absolute top-0 left-0 bg-yellow-400 text-black text-xs px-2 py-1 rounded-br z-10 font-bold shadow">
+          {badge}
+        </div>
+      )}
+      <div className="absolute top-0 right-0 bg-red-500 text-white px-2 py-1 rounded-bl text-xs">
+        {calculateDiscount(product.oldPrice, product.calculatedPrice)}% OFF
+      </div>
 
       <div
   onClick={() =>
@@ -58,6 +72,7 @@ export default function ProductCard({ product, showSponsoredBadge, redirectAllTo
       <h3 className="mt-2 text-sm text-gray-800 font-medium truncate">{product.name}</h3>
       <div className="text-sm mt-1 flex gap-2 items-center">
         <span className="line-through text-gray-400">Ksh.{product.oldPrice.toLocaleString()}</span>
+        <span className="text-red-600 font-bold">Ksh.{product.calculatedPrice.toLocaleString()}</span>
       </div>
     </div>
   );
