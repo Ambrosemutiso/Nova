@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import type { ProductType } from "@/app/types/product";
 import { toast } from 'react-toastify';
 import FlashProductCard from './FlashSaleProductCard';
+import { Section } from './SectionWrapper';
 
 const FLASH_SALE_DURATION_MS = 3 * 60 * 60 * 1000; // 3 hours
 
@@ -85,7 +86,8 @@ export default function FlashSales() {
       : 0;
 
   return (
-    <div className="mt-10">
+  <Section>
+    <div className="px-4 py-5">
       <div className="flex justify-between items-center mb-2">
         <h2 className="text-xl font-semibold text-red-600">
           🔥 Flash Sales{' '}
@@ -123,5 +125,6 @@ export default function FlashSales() {
         ))}
       </div>
     </div>
+    </Section>
   );
 }

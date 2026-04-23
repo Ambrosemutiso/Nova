@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import ProductCard from './ProductCard';
 import type { ProductType } from "@/app/types/product";
+import { Section } from './SectionWrapper';
 
 export default function SponsoredProducts() {
   const [sponsored, setSponsored] = useState<ProductType[]>([]);
@@ -24,7 +25,8 @@ export default function SponsoredProducts() {
   if (sponsored.length === 0) return null;
 
   return (
-    <div className="mt-10">
+    <Section>
+    <div className="px-4 py-5">
       <h2 className="text-xl font-semibold mb-4">Sponsored Products</h2>
       <div className="flex gap-4 overflow-x-auto pb-2">
         {sponsored.map((product) => (
@@ -32,5 +34,6 @@ export default function SponsoredProducts() {
         ))}
       </div>
     </div>
+    </Section>
   );
 }

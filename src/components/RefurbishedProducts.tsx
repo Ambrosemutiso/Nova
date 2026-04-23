@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import ProductCard from './ProductCard';
 import type { ProductType } from "@/app/types/product";
+import { Section } from './SectionWrapper';
 
 export default function UsedRefurbishedProducts() {
   const [products, setProducts] = useState<ProductType[]>([]);
@@ -24,7 +25,8 @@ export default function UsedRefurbishedProducts() {
   if (products.length === 0) return null;
 
   return (
-    <div className="mt-10">
+    <Section>
+    <div className="px-4 py-5">
       <h2 className="text-xl font-semibold mb-4">
         Used & Refurbished Deals
       </h2>
@@ -35,5 +37,6 @@ export default function UsedRefurbishedProducts() {
         ))}
       </div>
     </div>
+    </Section>
   );
 }

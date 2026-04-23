@@ -11,7 +11,6 @@ import FlashSales from '@/components/FlashSales';
 import InstallmentProducts from '@/components/InstallmentProducts';
 import UsedRefurbishedProducts from '@/components/RefurbishedProducts';
 import Loader from '@/components/Loader';
-import { Section } from '@/components/SectionWrapper';
 
 export default function Main() {
   const [category, setCategory] = useState('Shop');
@@ -35,22 +34,18 @@ export default function Main() {
 
   return (
     <div className="max-w-[1600px] mx-auto px-4 md:px-6 space-y-6 bg-gradient-to-b from-orange-50 to-white">
-      <Section>
+
       <Hero />
-</Section>
-<Section>
+
       <Menu onSelectCategory={setCategory} />
-</Section>
-<Section>
+
       <FlashSales />
-</Section>
-<Section>
+
       <ProductsList category={category} />
-</Section>
+
       <InstallmentProducts />
 
       <SponsoredProducts />
-
       <SuggestedForYou />
 
       <TopPicksForYou />

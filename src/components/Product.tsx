@@ -180,7 +180,7 @@ return (
 )}
 {/* Product Info Section */}
 <Section>
-<div className="p-6 bg-white rounded-2xl shadow-md text-gray-900 space-y-3">
+<div className="px-4 py-5">
   {/* Title */}
   <h1 className="text-3xl font-bold leading-tight tracking-tight">
     {product.name}
@@ -253,7 +253,7 @@ return (
 {/* Product Description Section */}
 {product.description && (
   <Section>
-  <div className="mt-8 bg-white shadow rounded-lg p-5">
+  <div className="px-4 py-5">
     <div className="flex justify-between items-center border-b pb-2 mb-3">
       <h2 className="text-lg md:text-xl font-semibold text-gray-900">
         Description
@@ -287,7 +287,7 @@ return (
 {/* Key Features */}
 {Array.isArray(product.keyFeatures) && product.keyFeatures.length > 0 && (
   <Section>
-  <div className="mt-6 bg-white shadow rounded-lg p-5">
+  <div className="px-4 py-5">
     <h2 className="text-lg font-semibold text-gray-900 mb-2 border-b pb-1">
       Key Features
     </h2>
@@ -303,7 +303,7 @@ return (
 {/* Box Contents */}
 {Array.isArray(product.boxContents) && product.boxContents.length > 0 && (
   <Section>
-  <div className="mt-6 bg-white shadow rounded-lg p-5">
+  <div className="px-4 py-5">
     <h2 className="text-lg font-semibold text-gray-900 mb-2 border-b pb-1">
       What&apos;s in the Box
     </h2>
@@ -318,7 +318,7 @@ return (
 
 {/* Specifications */}
 <Section>
-<div className="mt-6 bg-white shadow rounded-lg p-5">
+<div className="px-4 py-5">
   <h2 className="text-lg md:text-xl font-semibold mb-3 border-b pb-2">
     Specifications
   </h2>
@@ -362,9 +362,7 @@ return (
 </div>
  </Section>
 
-<Section>
       <SaveToRecentlyViewed id={product._id.toString()} />
-      </Section>
       <Section>
       <RecentlyViewed />
       </Section>

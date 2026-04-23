@@ -3,6 +3,7 @@
 
 import { ReactNode, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Section } from './SectionWrapper';
 
 interface CategorySectionProps {
   title: string;
@@ -20,7 +21,8 @@ export default function CategorySection({ title, categorySlug, children }: Categ
   const visibleChildren = childrenArray.slice(0, visibleCount);
 
   return (
-    <div className="relative my-12 bg-white shadow-md rounded-md p-4">
+    <Section>
+    <div className="relative my-12 px-4 py-5">
       {/* Title and See All */}
       <div className="absolute -top-4 left-4 right-4 bg-orange-500 text-white px-4 py-2 text-sm font-semibold rounded-md shadow-lg z-10 flex justify-between items-center">
         <span>{title}</span>
@@ -46,5 +48,6 @@ export default function CategorySection({ title, categorySlug, children }: Categ
         </div>
       </div>
     </div>
+    </Section>
   );
 }

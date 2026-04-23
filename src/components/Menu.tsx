@@ -6,6 +6,7 @@ import { slugify } from '@/lib/slugify';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { categoryImages } from "@/lib/categoryImages";
+import { Section } from './SectionWrapper';
 
 type MenuProps = {
   onSelectCategory?: (category: string) => void;
@@ -27,7 +28,8 @@ export default function CategoryMenu({ onSelectCategory }: MenuProps) {
   };
 
   return (
-    <div className="py-4 px-2">
+    <Section>
+    <div className="py-5 px-4">
 
       {/* MOBILE MENU */}
       <div className="flex gap-4 overflow-x-auto md:hidden">
@@ -193,5 +195,6 @@ export default function CategoryMenu({ onSelectCategory }: MenuProps) {
       )}
 
     </div>
+    </Section>
   );
 }

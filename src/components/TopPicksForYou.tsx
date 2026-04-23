@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import type { ProductType } from "@/app/types/product";
 import ProductCard from './ProductCard';
+import { Section } from './SectionWrapper';
 
 export default function TopPicksForYou() {
   const [products, setProducts] = useState<ProductType[]>([]);
@@ -28,7 +29,8 @@ useEffect(() => {
   if (!products.length) return null;
 
   return (
-    <section className="mt-10">
+    <Section>
+    <section className="px-4 py-5">
       <h2 className="text-xl font-semibold mb-4">Top Picks for You</h2>
       <div className="flex gap-4 overflow-x-auto pb-2">
         {products.map(p => (
@@ -36,5 +38,6 @@ useEffect(() => {
         ))}
       </div>
     </section>
+    </Section>
   );
 }
