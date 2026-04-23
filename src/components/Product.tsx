@@ -154,7 +154,6 @@ return (
           <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white max-w-6xl mx-auto px-4 pt-28 pb-10"> {/* pt-28 to offset navbar height */}
   <div className="mb-6 overflow-x-auto">
   <nav className="flex items-center text-sm text-gray-500 whitespace-nowrap flex-nowrap gap-1 px-1">
-    <Section>
     <span>Home</span>
     <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
     <span>Shop</span>
@@ -168,7 +167,6 @@ return (
     <span className="text-gray-500 font-medium">{product.productType}</span>
     <ChevronRight className="mx-2 h-4 w-4 shrink-0" />
     <span className="text-gray-500 font-medium">{product.name}</span>
-    </Section>
   </nav>
 </div>
 
