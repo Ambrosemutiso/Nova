@@ -17,6 +17,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation'
 import { Section } from './SectionWrapper';
 
+
 export default function ProductDetails() {
     const { slug } = useParams();
 const [product, setProduct] = useState<ProductType | null>(null);
@@ -146,12 +147,12 @@ useEffect(() => {
 
   if (!product)
     return (
-    <div className="flex items-center justify-center min-h-screen bg-white">
+    <div className="flex items-center justify-center min-h-screen bg-black/5 z-[999999999999999]">
       <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
     </div>
     );
 return (
-          <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white max-w-6xl mx-auto px-4 pt-28 pb-10"> {/* pt-28 to offset navbar height */}
+  <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white max-w-6xl mx-auto px-4 pt-28 pb-10"> {/* pt-28 to offset navbar height */}
   <div className="mb-6 overflow-x-auto">
   <nav className="flex items-center text-sm text-gray-500 whitespace-nowrap flex-nowrap gap-1 px-1">
     <span>Home</span>
@@ -267,6 +268,27 @@ return (
 
   </div>
 </Section>
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org/",
+      "@type": "Product",
+      name: product.name,
+      image: product.images,
+      rating: product.averageRating,
+      reviews: product.reviewCount,
+      description: product.description,
+      offers: {
+        "@type": "Offer",
+        price: product.calculatedPrice,
+        priceCurrency: "KES",
+        availability: "https://schema.org/InStock",
+      },
+    }),
+  }}
+/>
+<meta property="og:image" content={product.images[0]} />
 {/* Product Description Section */}
 {product.description && (
   <Section>

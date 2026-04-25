@@ -5,3 +5,7 @@ declare module 'jwt-decode';
 declare module 'country-data';
 declare module 'twilio';
 declare module 'lucide-react';
+declare module '@/styles/globals.css';
+declare module 'slick-carousel/slick/slick.css';
+declare module 'slick-carousel/slick/slick-theme.css';
+declare module 'react-toastify/dist/ReactToastify.css';

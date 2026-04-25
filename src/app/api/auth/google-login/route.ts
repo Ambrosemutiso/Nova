@@ -4,6 +4,7 @@ import User from '@/app/models/user';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
+import { verifyTruecallerToken } from '@/lib/verifyTruecaller';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret_ecom';
 
@@ -352,6 +353,88 @@ if (provider === 'google') {
     message: 'Google login successful',
     user: userData,
     token,
+  });
+}
+
+// ------------------------------------------------
+// 🔹 TRUECALLER LOGIN
+// ------------------------------------------------
+// ------------------------------------------------
+// 🔹 TRUECALLER LOGIN (SECURE VERSION)
+// ------------------------------------------------
+if (provider === 'truecaller') {
+
+  const { token: truecallerToken } = body;
+
+  if (!truecallerToken) {
+    return NextResponse.json(
+      { success: false, error: 'Truecaller token missing' },
+      { status: 400 }
+    );
+  }
+
+  let payload;
+
+  try {
+    payload = verifyTruecallerToken(truecallerToken);
+  } catch (err) {
+    return NextResponse.json(
+      { success: false, error: 'Invalid or expired Truecaller token' },
+      { status: 401 }
+    );
+  }
+
+  const phone = payload.phoneNumber || payload.phone;
+  const name = payload.name || 'Truecaller User';
+  const countryCode = payload.countryCode || '';
+
+  if (!phone) {
+    return NextResponse.json(
+      { success: false, error: 'Phone number not provided' },
+      { status: 400 }
+    );
+  }
+
+  let clean = phone.replace(/[\s\-()]/g, '');
+  if (clean.startsWith('+')) clean = clean.slice(1);
+
+  let user = await User.findOne({ phoneNumber: clean });
+
+  if (!user) {
+    user = await User.create({
+      provider: 'truecaller',
+      name,
+      phoneNumber: clean,
+      role: role || 'buyer',
+      country: country || countryCode,
+      currency,
+    });
+  } else {
+    if (!user.provider || !user.provider.includes('truecaller')) {
+      user.provider = user.provider
+        ? user.provider + '+truecaller'
+        : 'truecaller';
+    }
+
+    if (!user.name && name) user.name = name;
+
+    await user.save();
+  }
+
+  const authToken = jwt.sign(
+    { id: user._id.toString(), role: user.role },
+    JWT_SECRET,
+    { expiresIn: '7d' }
+  );
+
+  const userData = user.toObject();
+  delete userData.password;
+
+  return NextResponse.json({
+    success: true,
+    message: 'Truecaller login successful',
+    user: userData,
+    token: authToken,
   });
 }
 // ------------------------------------------------

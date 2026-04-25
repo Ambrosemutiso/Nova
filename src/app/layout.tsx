@@ -5,6 +5,8 @@ import AppLayoutWrapper from '@/components/layout/AppLayoutWrapper';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 
+<script src="https://sdk.truecaller.com/sdk/v1.0.0/truecaller.js"></script>
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],

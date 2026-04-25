@@ -41,8 +41,7 @@ export default function ProductCard({ product, showSponsoredBadge, redirectAllTo
       ? router.push(redirectAllTo)
       : router.push(`/product/${product.slug}`)
   }
-  className="cursor-pointer"
->
+  className="cursor-pointer">
         <CldImage
           src={getPublicId(product.images[0])}
           alt={product.name}

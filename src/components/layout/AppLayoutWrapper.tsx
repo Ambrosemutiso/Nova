@@ -73,7 +73,7 @@ function LayoutUI({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* PAGE */}
-      <main className="pt-[40px] md:ml-72 min-h-screen">
+      <main className="pt-[20px] md:ml-72 min-h-screen">
         {children}
       </main>
 
@@ -107,9 +107,9 @@ export default function AppLayoutWrapper({
 
   if (!ready) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin h-10 w-10 border-b-2 border-orange-500 rounded-full" />
-      </div>
+    <div className="flex items-center justify-center min-h-screen bg-black/5 z-[999999999999999]">
+      <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
+    </div>
     );
   }
 
