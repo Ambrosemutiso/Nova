@@ -1,24 +1,33 @@
-import jwt from 'jsonwebtoken';
 
-const TRUECALLER_PUBLIC_KEY = process.env.TRUECALLER_PUBLIC_KEY!;
+import jwt from "jsonwebtoken";
+import jwksClient from "jwks-rsa";
 
-export interface TruecallerPayload {
-  name?: string;
-  phoneNumber?: string;
-  phone?: string;
-  countryCode?: string;
-  iat?: number;
-  exp?: number;
+const client = jwksClient({
+  jwksUri: "https://api4.truecaller.com/v1/key",
+});
+
+function getKey(header: any, callback: any) {
+  client.getSigningKey(header.kid, function (err, key: any) {
+    const signingKey = key?.getPublicKey();
+    callback(null, signingKey);
+  });
 }
 
-export function verifyTruecallerToken(token: string): TruecallerPayload {
-  try {
-    const decoded = jwt.verify(token, TRUECALLER_PUBLIC_KEY, {
-      algorithms: ['RS256'],
-    }) as TruecallerPayload;
-
-    return decoded;
-  } catch (error) {
-    throw new Error('Invalid or expired Truecaller token');
-  }
+export function verifyTruecallerToken(token: string) {
+  return new Promise((resolve, reject) => {
+    jwt.verify(
+      token,
+      getKey,
+      {
+        algorithms: ["RS256"],
+      },
+      (err, decoded) => {
+        if (err) {
+          reject(new Error("Invalid or expired Truecaller token"));
+        } else {
+          resolve(decoded);
+        }
+      }
+    );
+  });
 }

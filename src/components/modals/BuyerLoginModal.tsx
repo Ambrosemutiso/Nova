@@ -257,7 +257,7 @@ const handleTruecallerLogin = () => {
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         transition={{ type: 'spring', damping: 25 }}
-        className="fixed bottom-0 left-0 right-0 bg-white z-50 rounded-t-3xl max-h-[90vh] overflow-y-auto shadow-xl"
+        className="fixed bottom-0 left-0 right-0 bg-white z-[999999999] rounded-t-3xl max-h-[90vh] overflow-y-auto shadow-xl"
       >
         {/* Handle */}
         <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mt-3 mb-2" />
@@ -308,9 +308,9 @@ const handleTruecallerLogin = () => {
                       setCurrency(selected.currency);
                     }
                   }}
-                  className="input w-1/3"
+                  className="input w-1/2"
                 >
-                  <option value="">Code</option>
+                  <option value="">Country</option>
                   {countryData.map((c) => (
                     <option key={c.code} value={c.dialCode}>
                       {c.dialCode}
@@ -376,7 +376,7 @@ const handleTruecallerLogin = () => {
 {/* Divider */}
 <div className="flex items-center my-4">
   <div className="flex-1 border-t border-gray-300"></div>
-  <span className="px-3 text-sm text-gray-500">OR CONTINUE WITH</span>
+  <span className="px-3 text-sm text-gray-500">OR</span>
   <div className="flex-1 border-t border-gray-300"></div>
 </div>
 
@@ -389,7 +389,7 @@ const handleTruecallerLogin = () => {
     src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
     className="w-5 h-5"
   />
-  Continue with Google
+  Google
 </button>
 
 {/* Truecaller */}
@@ -401,7 +401,7 @@ const handleTruecallerLogin = () => {
     src="https://upload.wikimedia.org/wikipedia/commons/7/7c/Truecaller_logo.png"
     className="w-5 h-5"
   />
-  Continue with Truecaller
+  Truecaller
 </button>
           {/* Switch */}
           <p className="text-center text-sm">

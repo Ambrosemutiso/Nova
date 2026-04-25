@@ -357,14 +357,10 @@ if (provider === 'google') {
 }
 
 // ------------------------------------------------
-// 🔹 TRUECALLER LOGIN
-// ------------------------------------------------
-// ------------------------------------------------
 // 🔹 TRUECALLER LOGIN (SECURE VERSION)
 // ------------------------------------------------
 if (provider === 'truecaller') {
-
-  const { token: truecallerToken } = body;
+  const { token: truecallerToken, nonce } = body;
 
   if (!truecallerToken) {
     return NextResponse.json(
@@ -373,10 +369,17 @@ if (provider === 'truecaller') {
     );
   }
 
-  let payload;
+  if (truecallerToken.split('.').length !== 3) {
+    return NextResponse.json(
+      { success: false, error: 'Invalid token format' },
+      { status: 400 }
+    );
+  }
+
+  let payload: any;
 
   try {
-    payload = verifyTruecallerToken(truecallerToken);
+    payload = await verifyTruecallerToken(truecallerToken);
   } catch (err) {
     return NextResponse.json(
       { success: false, error: 'Invalid or expired Truecaller token' },
@@ -384,9 +387,28 @@ if (provider === 'truecaller') {
     );
   }
 
-  const phone = payload.phoneNumber || payload.phone;
-  const name = payload.name || 'Truecaller User';
-  const countryCode = payload.countryCode || '';
+  // ✅ NONCE VALIDATION
+  if (nonce && payload.nonce && nonce !== payload.nonce) {
+    return NextResponse.json(
+      { success: false, error: 'Invalid nonce' },
+      { status: 401 }
+    );
+  }
+
+  const phone =
+    payload.phoneNumber ||
+    payload.phone ||
+    payload.phone_number;
+
+  const name =
+    payload.name ||
+    `${payload.given_name || ''} ${payload.family_name || ''}`.trim() ||
+    'Truecaller User';
+
+  const countryCode =
+    payload.countryCode ||
+    payload.country_code ||
+    '';
 
   if (!phone) {
     return NextResponse.json(
@@ -395,8 +417,9 @@ if (provider === 'truecaller') {
     );
   }
 
+  // ✅ Normalize phone (E.164)
   let clean = phone.replace(/[\s\-()]/g, '');
-  if (clean.startsWith('+')) clean = clean.slice(1);
+  if (!clean.startsWith('+')) clean = '+' + clean;
 
   let user = await User.findOne({ phoneNumber: clean });
 
@@ -410,7 +433,7 @@ if (provider === 'truecaller') {
       currency,
     });
   } else {
-    if (!user.provider || !user.provider.includes('truecaller')) {
+    if (!user.provider?.includes('truecaller')) {
       user.provider = user.provider
         ? user.provider + '+truecaller'
         : 'truecaller';

@@ -48,6 +48,7 @@
     "jsbarcode": "^3.12.1",
     "jspdf": "^3.0.4",
     "jspdf-autotable": "^5.0.7",
+    "jwks-rsa": "^4.0.1",
     "jwt-decode": "^4.0.0",
     "libphonenumber-js": "^1.12.16",
     "lottie-react": "^2.4.1",
