@@ -389,7 +389,7 @@ const handleTruecallerLogin = () => {
     src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
     className="w-5 h-5"
   />
-  Google
+  Continue with Google
 </button>
 
 {/* Truecaller */}
@@ -397,11 +397,12 @@ const handleTruecallerLogin = () => {
   onClick={handleTruecallerLogin}
   className="w-full flex items-center justify-center gap-3 bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 transition font-semibold mt-3"
 >
-  <img
-    src="https://upload.wikimedia.org/wikipedia/commons/7/7c/Truecaller_logo.png"
-    className="w-5 h-5"
-  />
-  Truecaller
+<img
+  src="https://cdn.worldvectorlogo.com/logos/truecaller.svg"
+  alt="Truecaller"
+  className="w-5 h-5"
+/>
+  Continue with Truecaller
 </button>
           {/* Switch */}
           <p className="text-center text-sm">

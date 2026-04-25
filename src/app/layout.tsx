@@ -5,6 +5,7 @@ import AppLayoutWrapper from '@/components/layout/AppLayoutWrapper';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import Script from "next/script";
+import TruecallerScript from "@/components/TruecallerScript";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -83,10 +84,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <Script
-          src="https://sdk.truecaller.com/sdk/v1.0.0/truecaller.js"
-          strategy="afterInteractive"
-        />
+        <TruecallerScript/>
         <AppLayoutWrapper>{children}</AppLayoutWrapper>
       </body>
     </html>
