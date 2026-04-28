@@ -12,9 +12,9 @@ import {
   FiRepeat,
   FiLock,
 } from 'react-icons/fi';
-import GlobalPayModal from '@/components/payments/GlobalPayModal';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/app/context/AuthContext';
+import WalletPayModal from './payments/WalletPayModal';
 
 /* ---------------- Utils ---------------- */
 type WeeklyStat = {
@@ -594,7 +594,7 @@ const maxWeeklyValue = Math.max(
 
       {/* 📲 GlobalPayModal */}
       {showPayModal && topUpAmount && (
-        <GlobalPayModal
+        <WalletPayModal
           payload={{
             amount: topUpAmount,
             items: [],

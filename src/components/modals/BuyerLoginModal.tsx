@@ -205,12 +205,12 @@ const handleTruecallerLogin = () => {
     if (!isLogin) {
       if (password !== confirmPassword) return toast.error("Passwords don't match.");
       if (!strongPassword(password))
-        return toast.error('Password must be strong.');
+        return toast.error('Password must be 8 characters, include uppercase, lowercase, number, and a special character.');
       if (!validatePhone(phoneNumber))
-        return toast.error('Invalid phone number.');
+        return toast.error('Enter a valid phone number without starting with 0, 07, 06, or 05.');
 
       const emailUsed = await handleEmailCheck(email);
-      if (emailUsed) return toast.error('Email already registered.');
+      if (emailUsed) return toast.error('Email already registered. Try logging in.');
     }
 
     try {
@@ -297,35 +297,35 @@ const handleTruecallerLogin = () => {
                 className="input"
               />
 
-              <div className="flex gap-2">
-                <select
-                  value={countryCode}
-                  onChange={(e) => {
-                    const selected = countryData.find((c) => c.dialCode === e.target.value);
-                    setCountryCode(e.target.value);
-                    if (selected) {
-                      setCountry(selected.name);
-                      setCurrency(selected.currency);
-                    }
-                  }}
-                  className="input w-1/2"
-                >
-                  <option value="">Country</option>
-                  {countryData.map((c) => (
-                    <option key={c.code} value={c.dialCode}>
-                      {c.dialCode}
-                    </option>
-                  ))}
-                </select>
+<div className="flex gap-2 w-full">
+  <select
+    value={countryCode}
+    onChange={(e) => {
+      const selected = countryData.find((c) => c.dialCode === e.target.value);
+      setCountryCode(e.target.value);
+      if (selected) {
+        setCountry(selected.name);
+        setCurrency(selected.currency);
+      }
+    }}
+    className="input w-1/4 min-w-[90px]"
+  >
+    <option value="">+Code</option>
+    {countryData.map((c) => (
+      <option key={c.code} value={c.dialCode}>
+        {c.dialCode}
+      </option>
+    ))}
+  </select>
 
-                <input
-                  type="text"
-                  placeholder="Phone Number"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  className="input flex-1"
-                />
-              </div>
+  <input
+    type="text"
+    placeholder="Phone Number"
+    value={phoneNumber}
+    onChange={(e) => setPhoneNumber(e.target.value)}
+    className="input w-3/4"
+  />
+</div>
             </>
           )}
 

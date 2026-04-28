@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { initiateCheckoutPayment } from '@/lib/checkoutPayment';
 
-type PaymentMethod = 'mpesa' | 'airtel' | 'npay';
+type PaymentMethod = 'mpesa' | 'npay';
 
 type Props = {
   payload: {
@@ -71,8 +71,7 @@ export default function GlobalPayModal({
       setProcessing(false);
       onClose();
       onSuccess();
-    } catch (err) {
-      console.error(err);
+    } catch {
       setError('Wallet payment failed');
       setProcessing(false);
     }
@@ -125,16 +124,33 @@ export default function GlobalPayModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center">
-      <div className="bg-white rounded-xl w-full max-w-md p-6 space-y-4 shadow-xl">
+    <div className="fixed inset-0 bg-black/40 z-[9999]">
 
-        <h2 className="text-xl font-bold text-center">
-          Checkout Payment
-        </h2>
+      {/* Drawer */}
+      <div className="
+        fixed bottom-0 left-0 right-0 
+        md:top-0 md:right-0 md:left-auto md:w-[400px] md:h-full
+        bg-white rounded-t-2xl md:rounded-none
+        p-5 space-y-4 shadow-xl
+        animate-slideUp
+      ">
 
-        <p className="text-center text-orange-600 font-semibold">
-          Total: Ksh {safeAmount.toLocaleString()}
-        </p>
+        {/* Handle (mobile UX) */}
+        <div className="w-10 h-1 bg-gray-300 rounded mx-auto md:hidden"></div>
+
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-bold">Checkout</h2>
+          <button onClick={onClose} className="text-gray-500">✕</button>
+        </div>
+
+        {/* Amount */}
+        <div className="text-center">
+          <p className="text-sm text-gray-500">Total Amount</p>
+          <p className="text-2xl font-bold text-orange-600">
+            Ksh {safeAmount.toLocaleString()}
+          </p>
+        </div>
 
         {error && (
           <p className="text-sm text-red-600 text-center">
@@ -143,80 +159,71 @@ export default function GlobalPayModal({
         )}
 
         {/* Payment Methods */}
-        <div className="grid grid-cols-3 gap-2">
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-gray-600">
+            Select Payment Method
+          </p>
 
           <button
             onClick={() => setMethod('mpesa')}
-            className={`border p-2 rounded font-medium ${
+            className={`w-full flex items-center justify-between border p-3 rounded-lg ${
               method === 'mpesa'
                 ? 'border-green-500 bg-green-50'
                 : ''
             }`}
           >
-            M-Pesa
-          </button>
-
-          <button
-            onClick={() => setMethod('airtel')}
-            className={`border p-2 rounded font-medium ${
-              method === 'airtel'
-                ? 'border-red-500 bg-red-50'
-                : ''
-            }`}
-          >
-            Airtel
+            <span className="font-medium">M-Pesa</span>
+            {method === 'mpesa' && '✓'}
           </button>
 
           <button
             onClick={() => setMethod('npay')}
-            className={`border p-2 rounded font-medium ${
+            className={`w-full flex items-center justify-between border p-3 rounded-lg ${
               method === 'npay'
                 ? 'border-orange-500 bg-orange-50'
                 : ''
             }`}
           >
-            N-PAY
+            <span className="font-medium">N-PAY Wallet</span>
+            {method === 'npay' && '✓'}
           </button>
-
         </div>
 
-        {/* Phone field (telco only) */}
-        {method !== 'npay' && (
+        {/* Phone Input */}
+        {method === 'mpesa' && (
           <input
             value={phone}
             onChange={(e) =>
               setPhone(e.target.value.trim())
             }
-            placeholder="e.g. 0712345678"
-            className="w-full border rounded p-2"
+            placeholder="Enter M-Pesa Number (e.g. 0712345678)"
+            className="w-full border rounded p-3"
           />
         )}
 
-        {/* Wallet Notice */}
+        {/* Wallet Info */}
         {method === 'npay' && (
-          <div className="text-sm bg-orange-50 border border-orange-200 p-3 rounded text-orange-700 text-center">
+          <div className="text-sm bg-orange-50 border border-orange-200 p-3 rounded text-orange-700">
             Payment will be deducted from your <b>N-PAY Wallet</b>.
           </div>
         )}
 
-        <div className="flex gap-3 pt-2">
-
-          <button
-            onClick={onClose}
-            disabled={processing}
-            className="flex-1 border rounded py-2"
-          >
-            Cancel
-          </button>
-
+        {/* Sticky CTA */}
+        <div className="pt-2">
           <button
             onClick={handlePay}
             disabled={processing}
-            className="flex-1 bg-orange-600 text-white rounded py-2"
+            className="w-full bg-orange-600 text-white rounded-lg py-3 font-semibold"
           >
             {processing ? 'Processing...' : 'Pay Now'}
           </button>
 
+          <button
+            onClick={onClose}
+            className="w-full mt-2 text-sm text-gray-500"
+          >
+            Cancel
+          </button>
         </div>
 
       </div>

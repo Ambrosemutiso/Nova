@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { FaBoxOpen, FaStore, FaTruck, FaUsers } from 'react-icons/fa';
 import { CheckCircle } from 'lucide-react';
 import SellerLoginModal from '@/components/modals/SellerLoginModal';
-
 export default function SellOnNovaXpress() {
   const [showLogin, setShowLogin] = useState(false);
 

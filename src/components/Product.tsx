@@ -356,50 +356,83 @@ return (
 )}
 
 {/* Specifications */}
+{/* Specifications */}
 <Section>
-<div className="px-4 py-5">
-  <h2 className="text-lg md:text-xl font-semibold mb-3 border-b pb-2">
-    Specifications
-  </h2>
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-gray-700 text-sm md:text-base">
-    {product.brand && (
-      <div>
-        <span className="font-medium">Brand:</span> {product.brand}
-      </div>
-    )}
-    {product.model && (
-      <div>
-        <span className="font-medium">Model:</span> {product.model}
-      </div>
-    )}
-    {product.material && (
-      <div>
-        <span className="font-medium">Main Material:</span> {product.material}
-      </div>
-    )}
-    {product.color && (
-      <div>
-        <span className="font-medium">Color:</span> {product.color}
-      </div>
-    )}
-    {product.dimensions && (
-      <div>
-        <span className="font-medium">Dimensions:</span> {product.dimensions}
-      </div>
-    )}
-    {product.weight && (
-      <div>
-        <span className="font-medium">Weight:</span> {product.weight}
-      </div>
-    )}
-    {product.warranty && (
-      <div>
-        <span className="font-medium">Warranty:</span> {product.warranty}
-      </div>
-    )}
+  <div className="px-4 py-5">
+    <h2 className="text-lg md:text-xl font-semibold mb-4 border-b pb-2">
+      Specifications
+    </h2>
+
+    <div className="space-y-4 text-sm md:text-base">
+
+      {/* 🏷 Product Details */}
+      {(product.brand || product.model || product.color) && (
+        <div>
+          <h3 className="font-semibold text-gray-800 mb-2">Product Details</h3>
+          <div className="space-y-1 text-gray-700">
+            {product.brand && (
+              <div className="flex justify-between">
+                <span className="text-gray-500">Brand</span>
+                <span className="font-medium">{product.brand}</span>
+              </div>
+            )}
+            {product.model && (
+              <div className="flex justify-between">
+                <span className="text-gray-500">Model</span>
+                <span>{product.model}</span>
+              </div>
+            )}
+            {product.color && (
+              <div className="flex justify-between">
+                <span className="text-gray-500">Color</span>
+                <span>{product.color}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 📦 Physical Specs */}
+      {(product.material || product.dimensions || product.weight) && (
+        <div>
+          <h3 className="font-semibold text-gray-800 mb-2">Physical Specs</h3>
+          <div className="space-y-1 text-gray-700">
+            {product.material && (
+              <div className="flex justify-between">
+                <span className="text-gray-500">Material</span>
+                <span>{product.material}</span>
+              </div>
+            )}
+            {product.dimensions && (
+              <div className="flex justify-between">
+                <span className="text-gray-500">Dimensions</span>
+                <span>{product.dimensions}</span>
+              </div>
+            )}
+            {product.weight && (
+              <div className="flex justify-between">
+                <span className="text-gray-500">Weight</span>
+                <span>{product.weight}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 🛡 Warranty */}
+      {product.warranty && (
+        <div>
+          <h3 className="font-semibold text-gray-800 mb-2">Warranty</h3>
+          <div className="flex justify-between text-gray-700">
+            <span className="text-gray-500">Coverage</span>
+            <span>{product.warranty}</span>
+          </div>
+        </div>
+      )}
+
+    </div>
   </div>
-</div>
- </Section>
+</Section>
 
       <SaveToRecentlyViewed id={product._id.toString()} />
       <Section>

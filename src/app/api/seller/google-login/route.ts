@@ -4,6 +4,7 @@ import Seller from '@/app/models/seller';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
+import { verifyTruecallerToken } from '@/lib/verifyTruecaller';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret_ecom'; 
 
@@ -259,7 +260,6 @@ async function sendResetEmail(email: string, name: string, role: string, token: 
 
   await transporter.sendMail(mailOptions);
 }
-
 // --- API Route ---
 export async function POST(req: Request) {
   await dbConnect();
@@ -267,22 +267,94 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const {
+      provider,
       mode, 
       name,
       email,
       password,
       confirmPassword,
       token,
+      role,
       phoneNumber,
       country,
       currency,
       image,
     } = body;
 
-    if (!mode) {
-      return NextResponse.json({ success: false, error: 'Mode is required!' }, { status: 400 });
+  if (!mode && provider !== 'google') {
+      return NextResponse.json(
+        { success: false, error: 'Mode is required!' },
+        { status: 400 }
+      );
     }
 
+    // ------------------------------------------------
+    // 🔹Google Login
+    // ------------------------------------------------
+    if (provider === 'google') {
+    
+      if (!email) {
+        return NextResponse.json(
+          { success: false, error: 'Google email missing' },
+          { status: 400 }
+        );
+      }
+    
+      const normalizedEmail = email.trim().toLowerCase();
+    
+      let seller = await Seller.findOne({ email: normalizedEmail });
+    
+      // ------------------------------------------------
+      // 🆕 USER DOES NOT EXIST → CREATE
+      // ------------------------------------------------
+      if (!seller) {
+        seller = await Seller.create({
+          provider: 'google',
+          name,
+          email: normalizedEmail,
+          role: role || 'buyer',
+          image,
+          phoneNumber: phoneNumber || null,
+          country,
+          currency,
+        });
+      }
+    
+      // ------------------------------------------------
+      // 🆕 USER EXISTS → LINK GOOGLE PROVIDER
+      // ------------------------------------------------
+      else {
+    
+        // If account created with email/password
+        if (seller.provider === 'email') {
+          seller.provider = 'email+google';
+        }
+    
+        // Update profile picture if missing
+        if (!seller.image && image) {
+          seller.image = image;
+        }
+    
+        await seller.save();
+      }
+    
+      const token = jwt.sign(
+        { id: seller._id.toString(), role: seller.role },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+    
+      const sellerData = seller.toObject();
+      delete sellerData.password;
+    
+      return NextResponse.json({
+        success: true,
+        message: 'Google login successful',
+        user: sellerData,
+        token,
+      });
+    }
+    
     // ------------------------------------------------
     // 🔹 SIGNUP
     // ------------------------------------------------
@@ -344,6 +416,111 @@ export async function POST(req: Request) {
         message: 'Seller account created successfully!',
         user: sellerData,
         token,
+      });
+    }
+
+    // ------------------------------------------------
+    // 🔹 TRUECALLER LOGIN (SECURE VERSION)
+    // ------------------------------------------------
+    if (provider === 'truecaller') {
+      const { token: truecallerToken, nonce } = body;
+    
+      if (!truecallerToken) {
+        return NextResponse.json(
+          { success: false, error: 'Truecaller token missing' },
+          { status: 400 }
+        );
+      }
+    
+      if (truecallerToken.split('.').length !== 3) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid token format' },
+          { status: 400 }
+        );
+      }
+    
+      let payload: any;
+    
+      try {
+        payload = await verifyTruecallerToken(truecallerToken);
+      } catch (err) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid or expired Truecaller token' },
+          { status: 401 }
+        );
+      }
+    
+      // ✅ NONCE VALIDATION
+      if (nonce && payload.nonce && nonce !== payload.nonce) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid nonce' },
+          { status: 401 }
+        );
+      }
+    
+      const phone =
+        payload.phoneNumber ||
+        payload.phone ||
+        payload.phone_number;
+    
+      const name =
+        payload.name ||
+        `${payload.given_name || ''} ${payload.family_name || ''}`.trim() ||
+        'Truecaller User';
+    
+      const countryCode =
+        payload.countryCode ||
+        payload.country_code ||
+        '';
+    
+      if (!phone) {
+        return NextResponse.json(
+          { success: false, error: 'Phone number not provided' },
+          { status: 400 }
+        );
+      }
+    
+      // ✅ Normalize phone (E.164)
+      let clean = phone.replace(/[\s\-()]/g, '');
+      if (!clean.startsWith('+')) clean = '+' + clean;
+    
+      let seller = await Seller.findOne({ phoneNumber: clean });
+    
+      if (!seller) {
+        seller = await Seller.create({
+          provider: 'truecaller',
+          name,
+          phoneNumber: clean,
+          role: role || 'buyer',
+          country: country || countryCode,
+          currency,
+        });
+      } else {
+        if (!seller.provider?.includes('truecaller')) {
+          seller.provider = seller.provider
+            ? seller.provider + '+truecaller'
+            : 'truecaller';
+        }
+    
+        if (!seller.name && name) seller.name = name;
+    
+        await seller.save();
+      }
+    
+      const authToken = jwt.sign(
+        { id: seller._id.toString(), role: seller.role },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+    
+      const sellerData = seller.toObject();
+      delete sellerData.password;
+    
+      return NextResponse.json({
+        success: true,
+        message: 'Truecaller login successful',
+        seller: sellerData,
+        token: authToken,
       });
     }
 
