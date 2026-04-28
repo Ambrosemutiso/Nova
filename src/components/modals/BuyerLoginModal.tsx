@@ -313,7 +313,7 @@ const handleTruecallerLogin = () => {
     <option value="">+Code</option>
     {countryData.map((c) => (
       <option key={c.code} value={c.dialCode}>
-        {c.dialCode}
+        {c.flag} {c.dialCode} {c.name}
       </option>
     ))}
   </select>

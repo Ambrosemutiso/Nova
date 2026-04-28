@@ -302,13 +302,13 @@ export async function POST(req: Request) {
     
       const normalizedEmail = email.trim().toLowerCase();
     
-      let seller = await Seller.findOne({ email: normalizedEmail });
+      let user = await Seller.findOne({ email: normalizedEmail });
     
       // ------------------------------------------------
       // 🆕 USER DOES NOT EXIST → CREATE
       // ------------------------------------------------
-      if (!seller) {
-        seller = await Seller.create({
+      if (!user) {
+        user = await Seller.create({
           provider: 'google',
           name,
           email: normalizedEmail,
@@ -326,31 +326,31 @@ export async function POST(req: Request) {
       else {
     
         // If account created with email/password
-        if (seller.provider === 'email') {
-          seller.provider = 'email+google';
+        if (user.provider === 'email') {
+          user.provider = 'email+google';
         }
     
         // Update profile picture if missing
-        if (!seller.image && image) {
-          seller.image = image;
+        if (!user.image && image) {
+          user.image = image;
         }
     
-        await seller.save();
+        await user.save();
       }
     
       const token = jwt.sign(
-        { id: seller._id.toString(), role: seller.role },
+        { id: user._id.toString(), role: user.role },
         JWT_SECRET,
         { expiresIn: '7d' }
       );
     
-      const sellerData = seller.toObject();
-      delete sellerData.password;
+      const userData = user.toObject();
+      delete userData.password;
     
       return NextResponse.json({
         success: true,
         message: 'Google login successful',
-        user: sellerData,
+        user: userData,
         token,
       });
     }
@@ -484,10 +484,10 @@ export async function POST(req: Request) {
       let clean = phone.replace(/[\s\-()]/g, '');
       if (!clean.startsWith('+')) clean = '+' + clean;
     
-      let seller = await Seller.findOne({ phoneNumber: clean });
+      let user = await Seller.findOne({ phoneNumber: clean });
     
-      if (!seller) {
-        seller = await Seller.create({
+      if (!user) {
+        user = await Seller.create({
           provider: 'truecaller',
           name,
           phoneNumber: clean,
@@ -496,30 +496,30 @@ export async function POST(req: Request) {
           currency,
         });
       } else {
-        if (!seller.provider?.includes('truecaller')) {
-          seller.provider = seller.provider
-            ? seller.provider + '+truecaller'
+        if (!user.provider?.includes('truecaller')) {
+          user.provider = user.provider
+            ? user.provider + '+truecaller'
             : 'truecaller';
         }
     
-        if (!seller.name && name) seller.name = name;
+        if (!user.name && name) user.name = name;
     
-        await seller.save();
+        await user.save();
       }
     
       const authToken = jwt.sign(
-        { id: seller._id.toString(), role: seller.role },
+        { id: user._id.toString(), role: user.role },
         JWT_SECRET,
         { expiresIn: '7d' }
       );
     
-      const sellerData = seller.toObject();
-      delete sellerData.password;
+      const userData = user.toObject();
+      delete userData.password;
     
       return NextResponse.json({
         success: true,
         message: 'Truecaller login successful',
-        seller: sellerData,
+        user: userData,
         token: authToken,
       });
     }

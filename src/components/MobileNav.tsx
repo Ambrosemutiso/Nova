@@ -4,13 +4,11 @@ import { useEffect, useState } from "react";
 import { Home, Heart, Plus, Megaphone, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import SellerLoginModal from '@/components/modals/SellerLoginModal';
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
   const [visible, setVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
-  const [showLogin, setShowLogin] = useState(false);
 
   useEffect(() => {
     let ticking = false;
@@ -62,7 +60,6 @@ export default function MobileBottomNav() {
         visible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0"
       }`}
     >
-      {showLogin && <SellerLoginModal onClose={() => setShowLogin(false)} />}
       <div className="flex items-center justify-between w-[92vw] max-w-md px-6 py-3 rounded-full border border-gray-200 shadow-xl backdrop-blur-md bg-white/80">
 
         {/* Home */}
@@ -72,14 +69,14 @@ export default function MobileBottomNav() {
         {navItem("/wishlist", Heart, "Fav")}
 
         {/* SELL BUTTON (CENTER) */}
-        <button
-          onClick={() => setShowLogin(true)}
+        <Link
+          href="/desc/sell-on-novaxmax"
           className="relative -mt-10"
         >
           <div className="bg-orange-600 text-white p-4 rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition">
             <Plus className="w-6 h-6" />
           </div>
-        </button>
+        </Link>
 
         {/* Ads */}
         {navItem("/ads", Megaphone, "Ads")}

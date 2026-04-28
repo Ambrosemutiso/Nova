@@ -214,7 +214,7 @@ const handleTruecallerLogin = () => {
     }
 
     try {
-      const res = await axios.post('/api/auth/google-login', {
+      const res = await axios.post('/api/seller/google-login', {
         provider: 'email',
         mode: isLogin ? 'login' : 'signup',
         name,
@@ -313,7 +313,7 @@ const handleTruecallerLogin = () => {
     <option value="">+Code</option>
     {countryData.map((c) => (
       <option key={c.code} value={c.dialCode}>
-        {c.dialCode}
+        {c.flag} {c.dialCode} {c.name}
       </option>
     ))}
   </select>
