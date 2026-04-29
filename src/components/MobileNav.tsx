@@ -88,7 +88,7 @@ export default function MobileBottomNav() {
 
       {navItem("/seller/dashboard", LayoutDashboard, "Home")}
 
-      {navItem("/seller/products", Package, "Inventory")}
+      {navItem("/seller/inventory", Package, "Inventory")}
 
       <Link href="/seller/products/add" className="relative -mt-10">
         <div className="bg-orange-600 text-white p-4 rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition">

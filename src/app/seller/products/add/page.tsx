@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/app/context/AuthContext';
@@ -93,6 +93,10 @@ export default function AddProduct() {
   const [town, setTown] = useState('');
   const [fulfillmentMode, setFulfillmentMode] = useState('');
   const [condition, setCondition] = useState<ProductCondition | ''>('');
+  const [showDraftPrompt, setShowDraftPrompt] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const DRAFT_KEY = 'novax_draft_product';
 
   const handleFeatureChange = (index: number, value: string) => {
     const updated = [...keyFeatures];
@@ -140,6 +144,95 @@ const handleCountyChange = (selectedCounty: County | '') => {
   setTown('');
 };
 
+useEffect(() => {
+  const draft = {
+    name,
+    brand,
+    model,
+    material,
+    color,
+    description,
+    keyFeatures,
+    boxContents,
+    warranty,
+    dimensions,
+    weight,
+    category,
+    subcategory,
+    productType,
+    price,
+    oldPrice,
+    quantity,
+    county,
+    town,
+    fulfillmentMode,
+    condition,
+  };
+
+setSaving(true);
+const timeout = setTimeout(() => {
+  localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  setSaving(false);
+}, 800);
+
+  return () => clearTimeout(timeout);
+}, [
+  name, brand, model, material, color,
+  description, keyFeatures, boxContents,
+  warranty, dimensions, weight,
+  category, subcategory, productType,
+  price, oldPrice, quantity,
+  county, town, fulfillmentMode, condition
+]);
+
+useEffect(() => {
+  const saved = localStorage.getItem(DRAFT_KEY);
+  if (saved) {
+    setShowDraftPrompt(true);
+  }
+}, []);
+
+const loadDraft = () => {
+  const saved = localStorage.getItem(DRAFT_KEY);
+  if (!saved) return;
+
+
+  const draft = JSON.parse(saved);
+
+  setName(draft.name || '');
+  setBrand(draft.brand || '');
+  setModel(draft.model || '');
+  setMaterial(draft.material || '');
+  setColor(draft.color || '');
+  setDescription(draft.description || '');
+  setKeyFeatures(draft.keyFeatures || []);
+  setBoxContents(draft.boxContents || []);
+  setWarranty(draft.warranty || '');
+  setDimensions(draft.dimensions || '');
+  setWeight(draft.weight || '');
+  setCategory(draft.category || '');
+  setSubcategory(draft.subcategory || '');
+  setProductType(draft.productType || '');
+  setPrice(draft.price || '');
+  setOldPrice(draft.oldPrice || '');
+  setQuantity(draft.quantity || '');
+  setCounty(draft.county || '');
+  setTown(draft.town || '');
+  setFulfillmentMode(draft.fulfillmentMode || '');
+  setCondition(draft.condition || '');
+
+  setShowDraftPrompt(false);
+};
+
+useEffect(() => {
+  const handler = (e: BeforeUnloadEvent) => {
+    e.preventDefault();
+    e.returnValue = '';
+  };
+
+  window.addEventListener('beforeunload', handler);
+  return () => window.removeEventListener('beforeunload', handler);
+}, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -201,6 +294,7 @@ if (cleanedBox.length > 0) {
 
       const data = await res.json();
       if (res.ok) {
+        localStorage.removeItem(DRAFT_KEY); // 🔥 important
         toast.success('Product added successfully!');
         router.push('/seller/products/add');
       } else {
@@ -224,7 +318,7 @@ if (cleanedBox.length > 0) {
   <div>
     <label className="block font-semibold">Product Images</label>
     <p className="text-sm text-gray-500 mb-2">
-      Add clear images (1–5 is enough to go live fast)
+      Add clear images (1–10 is enough to go live fast)
     </p>
     <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="w-full border px-4 py-2 rounded"/>
   </div>
@@ -310,9 +404,17 @@ if (cleanedBox.length > 0) {
   </select>
 )}
 
+    {/* OldPrice */}
+    <input type="number" className="w-full border px-4 py-2 rounded"
+    placeholder="Old Price (KES)"
+    value={oldPrice}
+    onChange={(e) => setOldPrice(e.target.value)}
+    required
+  />
+
   {/* Price */}
   <input type="number" className="w-full border px-4 py-2 rounded"
-    placeholder="Price (KES)"
+    placeholder="New Price (KES)"
     value={price}
     onChange={(e) => handlePriceChange(e.target.value)}
     required
@@ -365,7 +467,7 @@ if (cleanedBox.length > 0) {
       required
     >
       <option value="">Select Fulfillment Option</option>
-      <option value="company">Fulfilled by Novaxpress</option>
+      <option value="company">Fulfilled by Novaxmax</option>
       <option value="seller">Fulfilled by Seller</option>
       <option value="thirdparty">Dropshipping / Third-Party</option>
     </select>
@@ -475,6 +577,36 @@ if (cleanedBox.length > 0) {
   </button>
 
 </form>
+
+{showDraftPrompt && (
+  <div className="bg-yellow-50 border border-yellow-300 p-4 rounded mb-4">
+    <p className="text-sm text-yellow-800 font-medium">
+      You have an unsaved draft
+    </p>
+
+    <div className="flex gap-3 mt-3">
+      <button
+        onClick={loadDraft}
+        className="bg-orange-600 text-white px-4 py-2 rounded"
+      >
+        Continue Draft
+      </button>
+
+      <button
+        onClick={() => {
+          localStorage.removeItem(DRAFT_KEY);
+          setShowDraftPrompt(false);
+        }}
+        className="border px-4 py-2 rounded"
+      >
+        Start New
+      </button>
+    </div>
+  </div>
+)}
+{saving && (
+  <p className="text-xs text-gray-500">Saving draft...</p>
+)}
     </div>
   );
 }
