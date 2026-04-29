@@ -192,10 +192,48 @@ useEffect(() => {
   }
 }, []);
 
+useEffect(() => {
+  const saved = localStorage.getItem(DRAFT_KEY);
+  if (saved) {
+    const draft = JSON.parse(saved);
+
+    setName(draft.name || '');
+    setBrand(draft.brand || '');
+    setModel(draft.model || '');
+    setMaterial(draft.material || '');
+    setColor(draft.color || '');
+    setDescription(draft.description || '');
+    setKeyFeatures(draft.keyFeatures || []);
+    setBoxContents(draft.boxContents || []);
+    setWarranty(draft.warranty || '');
+    setDimensions(draft.dimensions || '');
+    setWeight(draft.weight || '');
+    setCategory(draft.category || '');
+    setSubcategory(draft.subcategory || '');
+    setProductType(draft.productType || '');
+    setPrice(draft.price || '');
+    setOldPrice(draft.oldPrice || '');
+    setQuantity(draft.quantity || '');
+    setCounty(draft.county || '');
+    setTown(draft.town || '');
+    setFulfillmentMode(draft.fulfillmentMode || '');
+    setCondition(draft.condition || '');
+  }
+}, []);
+
+useEffect(() => {
+  const handler = (e: BeforeUnloadEvent) => {
+    e.preventDefault();
+    e.returnValue = '';
+  };
+
+  window.addEventListener('beforeunload', handler);
+  return () => window.removeEventListener('beforeunload', handler);
+}, []);
+
 const loadDraft = () => {
   const saved = localStorage.getItem(DRAFT_KEY);
   if (!saved) return;
-
 
   const draft = JSON.parse(saved);
 
@@ -221,19 +259,8 @@ const loadDraft = () => {
   setFulfillmentMode(draft.fulfillmentMode || '');
   setCondition(draft.condition || '');
 
-  setShowDraftPrompt(false);
+  setShowDraftPrompt(false); // close modal
 };
-
-useEffect(() => {
-  const handler = (e: BeforeUnloadEvent) => {
-    e.preventDefault();
-    e.returnValue = '';
-  };
-
-  window.addEventListener('beforeunload', handler);
-  return () => window.removeEventListener('beforeunload', handler);
-}, []);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?._id) return toast.error('You are not logged in!');
@@ -579,28 +606,35 @@ if (cleanedBox.length > 0) {
 </form>
 
 {showDraftPrompt && (
-  <div className="bg-yellow-50 border border-yellow-300 p-4 rounded mb-4">
-    <p className="text-sm text-yellow-800 font-medium">
-      You have an unsaved draft
-    </p>
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div className="bg-white rounded-xl p-6 w-[90%] max-w-md shadow-xl">
+      
+      <h2 className="text-lg font-semibold mb-2">
+        Continue your draft?
+      </h2>
 
-    <div className="flex gap-3 mt-3">
-      <button
-        onClick={loadDraft}
-        className="bg-orange-600 text-white px-4 py-2 rounded"
-      >
-        Continue Draft
-      </button>
+      <p className="text-sm text-gray-600 mb-4">
+        We found a saved product draft. Do you want to continue editing it?
+      </p>
 
-      <button
-        onClick={() => {
-          localStorage.removeItem(DRAFT_KEY);
-          setShowDraftPrompt(false);
-        }}
-        className="border px-4 py-2 rounded"
-      >
-        Start New
-      </button>
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={() => {
+            localStorage.removeItem(DRAFT_KEY);
+            setShowDraftPrompt(false);
+          }}
+          className="px-4 py-2 border rounded"
+        >
+          Start New
+        </button>
+
+        <button
+          onClick={loadDraft}
+          className="px-4 py-2 bg-orange-600 text-white rounded"
+        >
+          Continue Draft
+        </button>
+      </div>
     </div>
   </div>
 )}
