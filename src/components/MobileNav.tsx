@@ -1,14 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Home, Heart, Plus, Megaphone, User } from "lucide-react";
+import { Home, Heart, Plus, Megaphone, User, LayoutDashboard, Package, PlusSquare, BarChart3, Award } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/app/context/AuthContext";
 
 export default function MobileBottomNav() {
+  const { user } = useAuth();
   const pathname = usePathname();
   const [visible, setVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+
+  const role = user?.role || "buyer";
 
   useEffect(() => {
     let ticking = false;
@@ -60,31 +64,45 @@ export default function MobileBottomNav() {
         visible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0"
       }`}
     >
-      <div className="flex items-center justify-between w-[92vw] max-w-md px-6 py-3 rounded-full border border-gray-200 shadow-xl backdrop-blur-md bg-white/80">
+<div className="flex items-center justify-between w-[92vw] max-w-md px-6 py-3 rounded-full border border-gray-200 shadow-xl backdrop-blur-md bg-white/80">
 
-        {/* Home */}
-        {navItem("/", Home, "Home")}
+  {role === "buyer" ? (
+    <>
+      {/* Buyer Nav */}
 
-        {/* Favorites */}
-        {navItem("/wishlist", Heart, "Fav")}
+      {navItem("/", Home, "Home")}
+      {navItem("/wishlist", Heart, "Fav")}
 
-        {/* SELL BUTTON (CENTER) */}
-        <Link
-          href="/desc/sell-on-novaxmax"
-          className="relative -mt-10"
-        >
-          <div className="bg-orange-600 text-white p-4 rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition">
-            <Plus className="w-6 h-6" />
-          </div>
-        </Link>
+      <Link href="/desc/sell-on-novaxmax" className="relative -mt-10">
+        <div className="bg-orange-600 text-white p-4 rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition">
+          <Plus className="w-6 h-6" />
+        </div>
+      </Link>
 
-        {/* Ads */}
-        {navItem("/ads", Megaphone, "Ads")}
+      {navItem("/ads", Megaphone, "Ads")}
+      {navItem("/vouchers", User, "Me")}
+    </>
+  ) : (
+    <>
+      {/* Seller Nav */}
 
-        {/* Account */}
-        {navItem("/vouchers", User, "Me")}
+      {navItem("/seller/dashboard", LayoutDashboard, "Home")}
 
-      </div>
+      {navItem("/seller/products", Package, "Inventory")}
+
+      <Link href="/seller/products/add" className="relative -mt-10">
+        <div className="bg-orange-600 text-white p-4 rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition">
+          <PlusSquare className="w-6 h-6" />
+        </div>
+      </Link>
+
+      {navItem("/seller/ads/upload", BarChart3, "Ads")}
+
+      {navItem("/seller/awards", Award, "Awards")}
+    </>
+  )}
+
+</div>
     </div>
   );
 }

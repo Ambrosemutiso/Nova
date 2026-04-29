@@ -15,10 +15,12 @@ const userSchema = new mongoose.Schema({
   type: String,
   default: null, 
 },
-    password: {
-      type: String,
-      required: [true, 'Password is required'],
-    },
+password: {
+  type: String,
+  required: function () {
+    return this.provider === 'email';
+  },
+},
   country: { type: String },
   currency: { type: String },
 }, { timestamps: true });

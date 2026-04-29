@@ -253,14 +253,19 @@ const handleTruecallerLogin = () => {
 
       {/* Drawer */}
       <motion.div
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
+initial={{
+  y: typeof window !== 'undefined' && window.innerWidth < 768 ? '100%' : 0,
+  x: typeof window !== 'undefined' && window.innerWidth >= 768 ? '100%' : 0,
+}}
+animate={{ x: 0, y: 0 }}
+exit={{
+  y: typeof window !== 'undefined' && window.innerWidth < 768 ? '100%' : 0,
+  x: typeof window !== 'undefined' && window.innerWidth >= 768 ? '100%' : 0,
+}}
         transition={{ type: 'spring', damping: 25 }}
-        className="fixed bottom-0 left-0 right-0 bg-white z-[999999999] rounded-t-3xl max-h-[90vh] overflow-y-auto shadow-xl"
-      >
+        className="fixed z-[999999999] bg-white shadow-xl overflow-y-auto bottom-0 left-0 right-0 rounded-t-3xl max-h-[90vh] md:top-0 md:right-0 md:left-auto md:bottom-auto md:w-[420px] md:h-full md:rounded-none">
         {/* Handle */}
-        <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mt-3 mb-2" />
+        <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mt-3 mb-2 md:hidden" />
 
         {/* Header */}
         <div className="flex justify-between items-center px-5 py-3 border-b">
