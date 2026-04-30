@@ -356,7 +356,6 @@ return (
 )}
 
 {/* Specifications */}
-{/* Specifications */}
 <Section>
   <div className="px-4 py-5">
     <h2 className="text-lg md:text-xl font-semibold mb-4 border-b pb-2">

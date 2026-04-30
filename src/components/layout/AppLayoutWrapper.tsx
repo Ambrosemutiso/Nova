@@ -20,6 +20,7 @@ import InstallAppButton from '@/components/IstallAppBtton';
 import PWARegister from '../PWARegister';
 import { usePathname, useRouter } from 'next/navigation';
 import MobileBottomNav from '../MobileNav';
+import { listenToMessages, requestPermissionAndToken } from '@/lib/notifications';
 
 /* ================= INNER UI ================= */
 function LayoutUI({ children }: { children: React.ReactNode }) {
@@ -58,6 +59,22 @@ function LayoutUI({ children }: { children: React.ReactNode }) {
       router.replace(lastRoute || '/seller/dashboard');
     }
   }, [user, loading, pathname, router]);
+
+  useEffect(() => {
+  const setup = async () => {
+    const token = await requestPermissionAndToken();
+
+    if (token) {
+      await fetch("/api/save-token", {
+        method: "POST",
+        body: JSON.stringify({ token }),
+      });
+    }
+  };
+
+  setup();
+  listenToMessages();
+}, []);
 
 
   return (

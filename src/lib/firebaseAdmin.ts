@@ -1,23 +1,40 @@
-import admin from 'firebase-admin';
-import { getApps } from 'firebase-admin/app';
-import path from 'path';
-import { readFileSync } from 'fs';
+// lib/firebaseAdmin.ts
 
-// Ensure we don’t reinitialize in dev/hot reload
-if (!getApps().length) {
-  const serviceAccountPath = path.resolve(process.cwd(), 'serviceAccountKey.json');
-  const serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
+import admin from "firebase-admin";
+import { getApps } from "firebase-admin/app";
+import path from "path";
+import { readFileSync } from "fs";
 
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
+function initializeFirebaseAdmin() {
+  if (getApps().length) return;
+
+  try {
+    // ✅ OPTION 1: Use serviceAccountKey.json (your current setup)
+    const serviceAccountPath = path.resolve(process.cwd(), "serviceAccountKey.json");
+    const serviceAccount = JSON.parse(readFileSync(serviceAccountPath, "utf8"));
+
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+
+  } catch (error) {
+    // ✅ OPTION 2: Fallback to environment variables (production-safe)
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECTID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      }),
+    });
+  }
 }
 
-// 🔹 Firestore instance (for any admin DB actions)
+// 🔥 Initialize once
+initializeFirebaseAdmin();
+
+// ✅ Services (ALL preserved + messaging added)
 export const adminDb = admin.firestore();
-
-// 🔹 Firebase Admin Auth (for ID token verification)
 export const adminAuth = admin.auth();
+export const adminMessaging = admin.messaging(); // ⭐ NEW
 
-// 🔹 Default export (optional — makes importing cleaner)
 export default admin;

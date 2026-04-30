@@ -9,3 +9,4 @@ declare module '@/styles/globals.css';
 declare module 'slick-carousel/slick/slick.css';
 declare module 'slick-carousel/slick/slick-theme.css';
 declare module 'react-toastify/dist/ReactToastify.css';
+declare module "./firebase";

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/dbConnect';
 import Review from '@/app/models/review';
 import Product from '@/app/models/product';
-import User from '@/app/models/user'; // 🔑 make sure this exists and is correct
+import User from '@/app/models/user'; 
 
 export async function GET(req: NextRequest) {
   try {
