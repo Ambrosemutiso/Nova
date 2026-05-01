@@ -12,6 +12,7 @@ import Mailing from "@/app/NovaXmax/dashboard/components/mailing/page";
 import Settings from "@/app/NovaXmax/dashboard/components/orders/page";
 import Analytics from "@/app/NovaXmax/dashboard/components/orders/page";
 import Withdrawals from "@/app/NovaXmax/dashboard/components/Withdrawals/page";
+import Notifications from "@/app/NovaXmax/dashboard/components/notifications/page";
 
 const navItems = [
   { name: "Dashboard", key: "dashboard" },
@@ -19,6 +20,7 @@ const navItems = [
   { name: "Sellers", key: "sellers" },
   { name: "Products", key: "products" },
   { name: "Orders", key: "orders" },
+  { name: "Notifications", key: "notifications" },
   { name: "Transactions", key: "transactions" },
   { name: "Withdrawals", key: "withdrawals" },
   { name: "Reports", key: "reports" },
@@ -36,6 +38,7 @@ const components: Record<string, React.ReactNode> = {
   products: <Products />,
   orders: <Orders />,
   transactions: <Transactions/>,
+  notifications: <Notifications/>,
   withdrawals: <Withdrawals/>,
   reports: <Reports/>,
   coupons: <Coupons/>,
