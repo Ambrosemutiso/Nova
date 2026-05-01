@@ -2,7 +2,9 @@
 
 import admin from "@/lib/firebaseAdmin";
 import { dbConnect } from "@/lib/dbConnect";
-import { ObjectId } from "mongodb";
+import mongoose from "mongoose";
+import User from "@/app/models/user";
+import FcmToken from "@/app/models/FcmToken";
 
 type TargetType = "all" | "role" | "users";
 
@@ -18,7 +20,6 @@ type SendOptions = {
 
 export async function sendNotification(options: SendOptions) {
   await dbConnect();
-  const db = (global as any)._mongoClient.db();
 
   const { title, body, data = {}, target } = options;
 
@@ -26,34 +27,31 @@ export async function sendNotification(options: SendOptions) {
     notificationsEnabled: { $ne: false },
   };
 
-  // 🎯 TARGET LOGIC
+  // 🎯 TARGETING
   if (target.type === "users" && Array.isArray(target.value)) {
     userQuery._id = {
-      $in: target.value.map((id) => new ObjectId(id)),
+      $in: target.value.map(id => new mongoose.Types.ObjectId(id)),
     };
   }
 
-  if (target.type === "role" && typeof target.value === "string") {
+  if (target.type === "role") {
     userQuery.role = target.value;
   }
 
-  // "all" → no extra filter
-
   // 👥 GET USERS
-  const users = await db.collection("users").find(userQuery).toArray();
-  const userIds = users.map((u: any) => u._id);
+  const users = await User.find(userQuery).select("_id");
+  const userIds = users.map(u => u._id);
 
   if (!userIds.length) {
     return { success: false, message: "No users found" };
   }
 
   // 🔑 GET TOKENS
-  const tokens = await db
-    .collection("fcm_tokens")
-    .find({ userId: { $in: userIds } })
-    .toArray();
+  const tokens = await FcmToken.find({
+    userId: { $in: userIds },
+  });
 
-  const tokenList = tokens.map((t: any) => t.token);
+  const tokenList = tokens.map(t => t.token);
 
   if (!tokenList.length) {
     return { success: false, message: "No tokens found" };
@@ -76,7 +74,7 @@ export async function sendNotification(options: SendOptions) {
   });
 
   if (invalidTokens.length) {
-    await db.collection("fcm_tokens").deleteMany({
+    await FcmToken.deleteMany({
       token: { $in: invalidTokens },
     });
   }
