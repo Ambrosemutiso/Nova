@@ -60,21 +60,30 @@ function LayoutUI({ children }: { children: React.ReactNode }) {
     }
   }, [user, loading, pathname, router]);
 
-  useEffect(() => {
+useEffect(() => {
+  if (!user?._id) return; // ✅ wait for user
+
   const setup = async () => {
     const token = await requestPermissionAndToken();
 
     if (token) {
       await fetch("/api/save-token", {
         method: "POST",
-        body: JSON.stringify({ token }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          token,
+          userId: user._id,
+        }),
       });
     }
   };
 
   setup();
   listenToMessages();
-}, []);
+
+}, [user]); // ✅ dependency added
 
 
   return (

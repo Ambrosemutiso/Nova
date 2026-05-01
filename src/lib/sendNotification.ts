@@ -1,86 +1,72 @@
+// lib/sendNotification.ts
+
 import admin from "@/lib/firebaseAdmin";
 import { dbConnect } from "@/lib/dbConnect";
 import { ObjectId } from "mongodb";
+
+type TargetType = "all" | "role" | "users";
 
 type SendOptions = {
   title: string;
   body: string;
   data?: Record<string, string>;
-  userIds?: string[];
-  role?: "seller" | "buyer";
-  county?: string;
-};
-
-// ✅ Add types
-type User = {
-  _id: ObjectId;
-  role?: string;
-  county?: string;
-  notificationsEnabled?: boolean;
-};
-
-type FcmToken = {
-  token: string;
-  userId: ObjectId;
+  target: {
+    type: TargetType;
+    value?: string | string[];
+  };
 };
 
 export async function sendNotification(options: SendOptions) {
   await dbConnect();
   const db = (global as any)._mongoClient.db();
 
-  const {
-    title,
-    body,
-    data = {},
-    userIds,
-    role,
-    county,
-  } = options;
+  const { title, body, data = {}, target } = options;
 
-  const userQuery: any = {
+  let userQuery: any = {
     notificationsEnabled: { $ne: false },
   };
 
-  if (userIds?.length) {
-    userQuery._id = { $in: userIds.map(id => new ObjectId(id)) };
+  // 🎯 TARGET LOGIC
+  if (target.type === "users" && Array.isArray(target.value)) {
+    userQuery._id = {
+      $in: target.value.map((id) => new ObjectId(id)),
+    };
   }
 
-  if (role) userQuery.role = role;
-  if (county) userQuery.county = county;
+  if (target.type === "role" && typeof target.value === "string") {
+    userQuery.role = target.value;
+  }
 
-  // ✅ Type the result
-  const users: User[] = await db
-    .collection("users")
-    .find(userQuery)
-    .toArray();
+  // "all" → no extra filter
 
-  const userIdsList = users.map((u: User) => u._id);
+  // 👥 GET USERS
+  const users = await db.collection("users").find(userQuery).toArray();
+  const userIds = users.map((u: any) => u._id);
 
-  if (!userIdsList.length) {
+  if (!userIds.length) {
     return { success: false, message: "No users found" };
   }
 
-  // ✅ Type tokens
-  const tokens: FcmToken[] = await db
+  // 🔑 GET TOKENS
+  const tokens = await db
     .collection("fcm_tokens")
-    .find({ userId: { $in: userIdsList } })
+    .find({ userId: { $in: userIds } })
     .toArray();
 
-  const tokenList = tokens.map((t: FcmToken) => t.token);
+  const tokenList = tokens.map((t: any) => t.token);
 
   if (!tokenList.length) {
     return { success: false, message: "No tokens found" };
   }
 
+  // 🚀 SEND
   const response = await admin.messaging().sendEachForMulticast({
     tokens: tokenList,
-    notification: {
-      title,
-      body,
-    },
+    notification: { title, body },
     data,
   });
 
+  // 🧹 CLEAN INVALID TOKENS
   const invalidTokens: string[] = [];
 
   response.responses.forEach((res, idx) => {

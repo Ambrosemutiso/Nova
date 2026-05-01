@@ -1,6 +1,9 @@
+// app/api/notifications/send/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { sendNotification } from "@/lib/sendNotification";
-import {dbConnect} from "@/lib/dbConnect";
+import { dbConnect } from "@/lib/dbConnect";
+import { ObjectId } from "mongodb";
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,8 +12,10 @@ export async function POST(req: NextRequest) {
     await dbConnect();
     const db = (global as any)._mongoClient.db();
 
-    // 🔒 Check if admin
-    const user = await db.collection("users").findOne({ _id: userId });
+    // 🔒 ADMIN CHECK
+    const user = await db.collection("users").findOne({
+      _id: new ObjectId(userId),
+    });
 
     if (!user || user.role !== "admin") {
       return NextResponse.json(

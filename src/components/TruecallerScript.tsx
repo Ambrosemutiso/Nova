@@ -1,4 +1,3 @@
-// components/TruecallerScript.tsx
 'use client';
 
 import Script from 'next/script';
@@ -11,6 +10,10 @@ export default function TruecallerScript() {
       onLoad={() => {
         console.log("Truecaller SDK loaded");
         (window as any).isTruecallerReady = true;
+      }}
+      onError={() => {
+        console.warn("Truecaller SDK failed to load");
+        (window as any).isTruecallerReady = false;
       }}
     />
   );

@@ -3,13 +3,13 @@
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 
-type Role = 'seller' | 'buyer' | '';
+type TargetType = "all" | "role" | "users";
 
 export default function AdminNotificationsPage() {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
-  const [role, setRole] = useState<Role>('');
-  const [county, setCounty] = useState('');
+  const [targetType, setTargetType] = useState<TargetType>('all');
+  const [role, setRole] = useState('');
   const [userIds, setUserIds] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -21,39 +21,32 @@ export default function AdminNotificationsPage() {
     setLoading(true);
 
     try {
-      const payload: any = {
-        title,
-        body,
-      };
+      let target: any = { type: targetType };
 
-      // 🎯 Optional targeting
-      if (role) payload.role = role;
-      if (county) payload.county = county;
-      if (userIds.trim()) {
-        payload.userIds = userIds.split(',').map(id => id.trim());
+      if (targetType === "role") {
+        target.value = role;
+      }
+
+      if (targetType === "users") {
+        target.value = userIds.split(',').map(id => id.trim());
       }
 
       const res = await fetch('/api/notifications/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ title, body, target }),
       });
 
       const data = await res.json();
 
       if (res.ok) {
         toast.success(`Sent: ${data.sent} | Failed: ${data.failed}`);
-        setTitle('');
-        setBody('');
-        setRole('');
-        setCounty('');
-        setUserIds('');
       } else {
-        toast.error(data.error || 'Failed to send');
+        toast.error(data.error);
       }
 
-    } catch (error) {
-      toast.error('Something went wrong');
+    } catch {
+      toast.error('Error sending notification');
     } finally {
       setLoading(false);
     }
@@ -62,62 +55,65 @@ export default function AdminNotificationsPage() {
   return (
     <div className="p-6 max-w-2xl mx-auto pt-24">
       <h1 className="text-2xl font-bold mb-6 text-orange-600">
-        Send Notification
+        Smart Notifications
       </h1>
 
       <div className="space-y-4">
 
-        {/* Title */}
         <input
           type="text"
-          placeholder="Notification Title"
+          placeholder="Title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           className="w-full border px-4 py-2 rounded"
         />
 
-        {/* Message */}
         <textarea
-          placeholder="Notification Message"
+          placeholder="Message"
           value={body}
           onChange={(e) => setBody(e.target.value)}
           className="w-full border px-4 py-2 rounded h-28"
         />
 
-        {/* Role */}
+        {/* TARGET TYPE */}
         <select
-          value={role}
-          onChange={(e) => setRole(e.target.value as Role)}
+          value={targetType}
+          onChange={(e) => setTargetType(e.target.value as TargetType)}
           className="w-full border px-4 py-2 rounded"
         >
-          <option value="">All Users</option>
-          <option value="buyer">Buyers Only</option>
-          <option value="seller">Sellers Only</option>
+          <option value="all">All Users</option>
+          <option value="role">By Role</option>
+          <option value="users">Specific Users</option>
         </select>
 
-        {/* County */}
-        <input
-          type="text"
-          placeholder="Target County (Optional)"
-          value={county}
-          onChange={(e) => setCounty(e.target.value)}
-          className="w-full border px-4 py-2 rounded"
-        />
+        {/* ROLE */}
+        {targetType === "role" && (
+          <select
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            className="w-full border px-4 py-2 rounded"
+          >
+            <option value="">Select Role</option>
+            <option value="buyer">Buyers</option>
+            <option value="seller">Sellers</option>
+          </select>
+        )}
 
-        {/* Specific Users */}
-        <input
-          type="text"
-          placeholder="Specific User IDs (comma separated)"
-          value={userIds}
-          onChange={(e) => setUserIds(e.target.value)}
-          className="w-full border px-4 py-2 rounded"
-        />
+        {/* USER IDS */}
+        {targetType === "users" && (
+          <input
+            type="text"
+            placeholder="Comma-separated user IDs"
+            value={userIds}
+            onChange={(e) => setUserIds(e.target.value)}
+            className="w-full border px-4 py-2 rounded"
+          />
+        )}
 
-        {/* Send Button */}
         <button
           onClick={handleSend}
           disabled={loading}
-          className="w-full bg-orange-600 text-white py-3 rounded font-semibold"
+          className="w-full bg-orange-600 text-white py-3 rounded"
         >
           {loading ? 'Sending...' : 'Send Notification'}
         </button>
