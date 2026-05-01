@@ -3,23 +3,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendNotification } from "@/lib/sendNotification";
 import { dbConnect } from "@/lib/dbConnect";
-import User from "@/app/models/user"; // 👈 use your model
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, ...payload } = await req.json();
+    const payload = await req.json();
 
     await dbConnect();
-
-    // 🔒 ADMIN CHECK (MONGOOSE WAY)
-    const user = await User.findById(userId);
-
-    if (!user || user.role !== "admin") {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 403 }
-      );
-    }
 
     const result = await sendNotification(payload);
 
