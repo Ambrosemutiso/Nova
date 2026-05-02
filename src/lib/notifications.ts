@@ -1,3 +1,4 @@
+//lib/notifications.ts
 import { messaging } from "@/lib/firebaseConfig";
 import { getToken, onMessage, Messaging } from "firebase/messaging";
 import { toast } from "react-toastify";

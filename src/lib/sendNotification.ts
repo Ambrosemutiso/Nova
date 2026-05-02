@@ -28,13 +28,35 @@ export async function sendNotification(options: SendOptions) {
   };
 
   // 🎯 TARGETING
-  if (target.type === "users" && Array.isArray(target.value)) {
+  if (target.type === "users") {
+    if (!Array.isArray(target.value)) {
+      return {
+        success: false,
+        sent: 0,
+        failed: 0,
+        message: "Invalid user IDs",
+      };
+    }
+
+    const validIds = target.value.filter(id =>
+      mongoose.Types.ObjectId.isValid(id)
+    );
+
     userQuery._id = {
-      $in: target.value.map(id => new mongoose.Types.ObjectId(id)),
+      $in: validIds.map(id => new mongoose.Types.ObjectId(id)),
     };
   }
 
   if (target.type === "role") {
+    if (!target.value) {
+      return {
+        success: false,
+        sent: 0,
+        failed: 0,
+        message: "Role not provided",
+      };
+    }
+
     userQuery.role = target.value;
   }
 
@@ -43,7 +65,12 @@ export async function sendNotification(options: SendOptions) {
   const userIds = users.map(u => u._id);
 
   if (!userIds.length) {
-    return { success: false, message: "No users found" };
+    return {
+      success: false,
+      sent: 0,
+      failed: 0,
+      message: "No users found",
+    };
   }
 
   // 🔑 GET TOKENS
@@ -54,25 +81,46 @@ export async function sendNotification(options: SendOptions) {
   const tokenList = tokens.map(t => t.token);
 
   if (!tokenList.length) {
-    return { success: false, message: "No tokens found" };
+    return {
+      success: false,
+      sent: 0,
+      failed: 0,
+      message: "No tokens found",
+    };
   }
 
-  // 🚀 SEND
-  const response = await admin.messaging().sendEachForMulticast({
-    tokens: tokenList,
-    notification: { title, body },
-    data,
-  });
-
-  // 🧹 CLEAN INVALID TOKENS
+  // 🚀 SEND (handle 500 limit)
+  const chunkSize = 500;
+  let totalSent = 0;
+  let totalFailed = 0;
   const invalidTokens: string[] = [];
 
-  response.responses.forEach((res, idx) => {
-    if (!res.success) {
-      invalidTokens.push(tokenList[idx]);
-    }
-  });
+  for (let i = 0; i < tokenList.length; i += chunkSize) {
+    const chunk = tokenList.slice(i, i + chunkSize);
 
+    const response = await admin.messaging().sendEachForMulticast({
+      tokens: chunk,
+      notification: { title, body },
+      data,
+    });
+
+    totalSent += response.successCount;
+    totalFailed += response.failureCount;
+
+    response.responses.forEach((res, idx) => {
+      if (
+        !res.success &&
+        (
+          res.error?.code === "messaging/registration-token-not-registered" ||
+          res.error?.code === "messaging/invalid-registration-token"
+        )
+      ) {
+        invalidTokens.push(chunk[idx]);
+      }
+    });
+  }
+
+  // 🧹 CLEAN INVALID TOKENS
   if (invalidTokens.length) {
     await FcmToken.deleteMany({
       token: { $in: invalidTokens },
@@ -81,7 +129,7 @@ export async function sendNotification(options: SendOptions) {
 
   return {
     success: true,
-    sent: response.successCount,
-    failed: response.failureCount,
+    sent: totalSent,
+    failed: totalFailed,
   };
 }

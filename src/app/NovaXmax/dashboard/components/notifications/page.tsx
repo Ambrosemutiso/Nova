@@ -39,11 +39,11 @@ export default function AdminNotificationsPage() {
 
       const data = await res.json();
 
-      if (res.ok) {
-        toast.success(`Sent: ${data.sent} | Failed: ${data.failed}`);
-      } else {
-        toast.error(data.error);
-      }
+if (data.success) {
+  toast.success(`Sent: ${data.sent} | Failed: ${data.failed}`);
+} else {
+  toast.warning(data.message || "No notifications sent");
+}
 
     } catch {
       toast.error('Error sending notification');
