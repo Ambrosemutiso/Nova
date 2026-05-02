@@ -19,23 +19,14 @@ type SendOptions = {
 };
 
 export async function sendNotification(options: SendOptions) {
-  await dbConnect();
-
   const { title, body, data = {}, target } = options;
 
-  let userQuery: any = {
-    notificationsEnabled: { $ne: false },
-  };
+  let userQuery: any = {};
 
   // 🎯 TARGETING
   if (target.type === "users") {
     if (!Array.isArray(target.value)) {
-      return {
-        success: false,
-        sent: 0,
-        failed: 0,
-        message: "Invalid user IDs",
-      };
+      return { success: false, sent: 0, failed: 0, message: "Invalid user IDs" };
     }
 
     const validIds = target.value.filter(id =>
@@ -49,31 +40,21 @@ export async function sendNotification(options: SendOptions) {
 
   if (target.type === "role") {
     if (!target.value) {
-      return {
-        success: false,
-        sent: 0,
-        failed: 0,
-        message: "Role not provided",
-      };
+      return { success: false, sent: 0, failed: 0, message: "Role not provided" };
     }
 
     userQuery.role = target.value;
   }
 
-  // 👥 GET USERS
+  // 👥 USERS
   const users = await User.find(userQuery).select("_id");
-  const userIds = users.map(u => u._id);
+  const userIds = users.map(u => u._id.toString());
 
   if (!userIds.length) {
-    return {
-      success: false,
-      sent: 0,
-      failed: 0,
-      message: "No users found",
-    };
+    return { success: false, sent: 0, failed: 0, message: "No users found" };
   }
 
-  // 🔑 GET TOKENS
+  // 🔑 TOKENS (FIXED)
   const tokens = await FcmToken.find({
     userId: { $in: userIds },
   });
@@ -81,55 +62,26 @@ export async function sendNotification(options: SendOptions) {
   const tokenList = tokens.map(t => t.token);
 
   if (!tokenList.length) {
-    return {
-      success: false,
-      sent: 0,
-      failed: 0,
-      message: "No tokens found",
-    };
+    return { success: false, sent: 0, failed: 0, message: "No tokens found" };
   }
 
-  // 🚀 SEND (handle 500 limit)
-  const chunkSize = 500;
-  let totalSent = 0;
-  let totalFailed = 0;
-  const invalidTokens: string[] = [];
+  // 🚀 SEND
+  const response = await admin.messaging().sendEachForMulticast({
+    tokens: tokenList,
+    notification: { title, body },
+    data,
+  });
 
-  for (let i = 0; i < tokenList.length; i += chunkSize) {
-    const chunk = tokenList.slice(i, i + chunkSize);
-
-    const response = await admin.messaging().sendEachForMulticast({
-      tokens: chunk,
-      notification: { title, body },
-      data,
-    });
-
-    totalSent += response.successCount;
-    totalFailed += response.failureCount;
-
-    response.responses.forEach((res, idx) => {
-      if (
-        !res.success &&
-        (
-          res.error?.code === "messaging/registration-token-not-registered" ||
-          res.error?.code === "messaging/invalid-registration-token"
-        )
-      ) {
-        invalidTokens.push(chunk[idx]);
-      }
-    });
-  }
-
-  // 🧹 CLEAN INVALID TOKENS
-  if (invalidTokens.length) {
-    await FcmToken.deleteMany({
-      token: { $in: invalidTokens },
-    });
-  }
+  // DEBUG (VERY IMPORTANT)
+  response.responses.forEach((res, i) => {
+    if (!res.success) {
+      console.log("❌ FCM ERROR:", res.error);
+    }
+  });
 
   return {
     success: true,
-    sent: totalSent,
-    failed: totalFailed,
+    sent: response.successCount,
+    failed: response.failureCount,
   };
 }
