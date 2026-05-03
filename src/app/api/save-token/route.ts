@@ -1,3 +1,4 @@
+//app/api/save-token/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { dbConnect } from "@/lib/dbConnect";
 import FcmToken from "@/app/models/FcmToken";

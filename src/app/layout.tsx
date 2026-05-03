@@ -4,7 +4,6 @@ import '@/styles/globals.css';
 import AppLayoutWrapper from '@/components/layout/AppLayoutWrapper';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-import Script from "next/script";
 import TruecallerScript from "@/components/TruecallerScript";
 
 const geistSans = Geist({

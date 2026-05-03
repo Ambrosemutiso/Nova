@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
@@ -24,13 +24,17 @@ import { listenToMessages, requestPermissionAndToken } from '@/lib/notifications
 
 /* ================= INNER UI ================= */
 function LayoutUI({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth(); 
+  const { user, loading } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
 
+  // ✅ FIX 1: Track whether FCM has already been set up to prevent
+  // re-registering the SW and re-saving the token on every re-render
+  const fcmInitialized = useRef(false);
+
   const isSeller = user?.role === 'seller';
 
-  // ✅ Redirect logic
+  // Redirect logic
   useEffect(() => {
     if (loading || !user) return;
 
@@ -43,14 +47,14 @@ function LayoutUI({ children }: { children: React.ReactNode }) {
     }
   }, [user, loading, pathname, router]);
 
-  // ✅ Save last seller route
+  // Save last seller route
   useEffect(() => {
     if (user?.role === 'seller') {
       localStorage.setItem('lastSellerRoute', pathname);
     }
   }, [pathname, user]);
 
-  // ✅ Restore last route (SAFE)
+  // Restore last route
   useEffect(() => {
     if (loading || !user) return;
 
@@ -60,45 +64,47 @@ function LayoutUI({ children }: { children: React.ReactNode }) {
     }
   }, [user, loading, pathname, router]);
 
-useEffect(() => {
-  if (!user?._id) return; // ✅ wait for user
+  // ✅ FIX 2: FCM setup — runs once per user session, not on every render
+  useEffect(() => {
+    if (!user?._id || fcmInitialized.current) return;
 
-  const setup = async () => {
-    const token = await requestPermissionAndToken();
+    fcmInitialized.current = true;
 
-    if (token) {
-      await fetch("/api/save-token", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          token,
-          userId: user._id,
-        }),
-      });
-    }
-  };
+    const setup = async () => {
+      try {
+        const token = await requestPermissionAndToken();
 
-  setup();
-  listenToMessages();
+        if (token) {
+          const res = await fetch("/api/save-token", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token, userId: user._id }),
+          });
 
-}, [user]); // ✅ dependency added
+          if (!res.ok) {
+            console.error("Failed to save FCM token:", await res.text());
+          }
+        }
 
+        // ✅ Start listening for foreground messages only after token is ready
+        await listenToMessages();
+      } catch (err) {
+        console.error("FCM setup error:", err);
+      }
+    };
+
+    setup();
+  }, [user?._id]); // ✅ depend only on _id, not the entire user object
 
   return (
     <>
       <CartNotification />
-
-      {/* NAVBAR */}
       <Navbar/>
 
-      {/* DESKTOP SIDEBAR */}
       <aside className="hidden md:block fixed top-[40px] left-0 w-72 h-[calc(100vh-110px)] z-40">
         {isSeller ? <SellerSidebar /> : <Sidebar isOpen />}
       </aside>
 
-      {/* PAGE */}
       <main className="pt-[20px] md:ml-72 min-h-screen">
         {children}
       </main>
@@ -124,18 +130,15 @@ export default function AppLayoutWrapper({
   useEffect(() => {
     setTimeout(() => setReady(true), 600);
 
-    const zoom =
-      parseFloat(localStorage.getItem('fontSize') || '1');
-
-    document.documentElement.style.fontSize =
-      `${zoom * 100}%`;
+    const zoom = parseFloat(localStorage.getItem('fontSize') || '1');
+    document.documentElement.style.fontSize = `${zoom * 100}%`;
   }, []);
 
   if (!ready) {
     return (
-    <div className="flex items-center justify-center min-h-screen bg-black/5 z-[999999999999999]">
-      <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
-    </div>
+      <div className="flex items-center justify-center min-h-screen bg-black/5 z-[999999999999999]">
+        <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin"></div>
+      </div>
     );
   }
 
