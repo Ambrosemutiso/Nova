@@ -157,7 +157,7 @@ export default function SellerSidebar({ isOpen = false, onClose, onOpen }: Props
           bg-white/20 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl z-20"
           style={{ width: '60px' }}
         >
-          {menuItems.slice(0, 10).map((item, index) => (
+          {menuItems.slice(0, 11).map((item, index) => (
             <button
               key={index}
               onClick={() => router.push(item.path)}
