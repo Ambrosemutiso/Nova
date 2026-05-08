@@ -1,3 +1,4 @@
+// i think the frontend is now fine?
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -21,10 +22,13 @@ interface SellerProfile {
   bio?: string;
   location?: string;
   website?: string;
+
   shop?: {
     plan?: "free" | "basic" | "premium";
     name?: string;
   };
+
+  businessPreferences?: BusinessPreferences;
 }
 
 interface EditForm {
@@ -36,7 +40,65 @@ interface EditForm {
   shopName: string;
 }
 
+interface WorkingDay {
+  open: string;
+  close: string;
+  enabled: boolean;
+}
+
+interface BusinessPreferences {
+  delivery: {
+    sameDay: boolean;
+    pickupAvailable: boolean;
+    estimatedDelivery: string;
+    deliveryFee: number;
+    freeDeliveryThreshold: number;
+  };
+
+  returns: {
+    acceptsReturns: boolean;
+    returnWindow: number;
+    conditions: string;
+  };
+
+  workingHours: {
+    monday: WorkingDay;
+    tuesday: WorkingDay;
+    wednesday: WorkingDay;
+    thursday: WorkingDay;
+    friday: WorkingDay;
+    saturday: WorkingDay;
+    sunday: WorkingDay;
+  };
+}
+
 // ─── Constants ────────────────────────────────────────────────────────────────
+
+const DEFAULT_BUSINESS_PREFS: BusinessPreferences = {
+  delivery: {
+    sameDay: false,
+    pickupAvailable: false,
+    estimatedDelivery: "",
+    deliveryFee: 0,
+    freeDeliveryThreshold: 0,
+  },
+
+  returns: {
+    acceptsReturns: false,
+    returnWindow: 0,
+    conditions: "",
+  },
+
+  workingHours: {
+    monday: { open: "08:00", close: "18:00", enabled: true },
+    tuesday: { open: "08:00", close: "18:00", enabled: true },
+    wednesday: { open: "08:00", close: "18:00", enabled: true },
+    thursday: { open: "08:00", close: "18:00", enabled: true },
+    friday: { open: "08:00", close: "18:00", enabled: true },
+    saturday: { open: "08:00", close: "18:00", enabled: false },
+    sunday: { open: "08:00", close: "18:00", enabled: false },
+  },
+};
 
 const PLAN_COLORS = {
   premium: "bg-blue-600 text-white",
@@ -75,6 +137,53 @@ export default function SellerSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Partial<EditForm>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [savingBusinessPrefs, setSavingBusinessPrefs] = useState(false);
+  const [businessPrefs, setBusinessPrefs] =
+  useState<BusinessPreferences>(DEFAULT_BUSINESS_PREFS);
+
+const handleSaveBusinessPreferences = async () => {
+  try {
+    setSavingBusinessPrefs(true);
+
+    const res = await fetch('/api/seller/business-preferences', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        sellerId: seller?._id,
+        delivery: businessPrefs.delivery,
+        returns: businessPrefs.returns,
+        workingHours: businessPrefs.workingHours,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || 'Failed to save preferences');
+    }
+
+    const updatedSeller = {
+      ...seller,
+      businessPreferences: businessPrefs,
+    };
+
+    localStorage.setItem(
+      'sellerUser',
+      JSON.stringify(updatedSeller)
+    );
+
+    setSeller(updatedSeller as any);
+
+    toast.success('Business preferences updated');
+
+  } catch (error: any) {
+    toast.error(error.message || 'Something went wrong');
+  } finally {
+    setSavingBusinessPrefs(false);
+  }
+};
 
   // ── Load seller from localStorage ──
   useEffect(() => {
@@ -82,6 +191,9 @@ export default function SellerSettingsPage() {
     if (stored) {
       const parsed: SellerProfile = JSON.parse(stored);
       setSeller(parsed);
+      if (parsed.businessPreferences) {
+        setBusinessPrefs(parsed.businessPreferences);
+      }
       setForm({
         name: parsed.name || "",
         phoneNumber: parsed.phoneNumber || "",
@@ -118,66 +230,61 @@ export default function SellerSettingsPage() {
   };
 
   // ── Save handler ──
-  const handleSave = async () => {
-    if (!validate()) return;
-    setSaving(true);
+const handleSave = async () => {
+  if (!validate()) return;
 
-    try {
-      let imageUrl = seller?.image;
+  setSaving(true);
 
-      // 1. Upload avatar to Cloudinary if a new one was picked
-      if (avatarFile) {
-        const formData = new FormData();
-        formData.append("file", avatarFile);
-        formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "");
-        formData.append("folder", "sellers");
+  try {
+    const formData = new FormData();
 
-        const cloudRes = await fetch(
-          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-          { method: "POST", body: formData }
-        );
-        const cloudData = await cloudRes.json();
-        if (!cloudRes.ok) throw new Error("Image upload failed");
-        imageUrl = cloudData.secure_url;
-      }
+    formData.append("sellerId", seller?._id || "");
+    formData.append("name", form.name.trim());
+    formData.append("phoneNumber", form.phoneNumber.trim());
+    formData.append("bio", form.bio.trim());
+    formData.append("location", form.location.trim());
+    formData.append("website", form.website.trim());
+    formData.append("shopName", form.shopName.trim());
 
-      // 2. Save profile to your API
-      const res = await fetch("/api/seller/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sellerId: seller?._id,
-          name: form.name.trim(),
-          phoneNumber: form.phoneNumber.trim(),
-          bio: form.bio.trim(),
-          location: form.location.trim(),
-          website: form.website.trim(),
-          shopName: form.shopName.trim(),
-          image: imageUrl,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Update failed");
-
-      // 3. Sync to localStorage + local state
-      const updated: SellerProfile = {
-        ...seller!,
-        ...data.seller,
-        image: imageUrl,
-      };
-      localStorage.setItem("sellerUser", JSON.stringify(updated));
-      setSeller(updated);
-      setShowEditModal(false);
-      setAvatarFile(null);
-      setAvatarPreview(null);
-      toast.success("Profile updated successfully!");
-    } catch (err: any) {
-      toast.error(err.message || "Something went wrong");
-    } finally {
-      setSaving(false);
+    // ✅ append image only if selected
+    if (avatarFile) {
+      formData.append("image", avatarFile);
     }
-  };
+
+    const res = await fetch("/api/seller/profile", {
+      method: "PATCH",
+      body: formData,
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Update failed");
+    }
+
+    // ✅ sync local state
+    const updated: SellerProfile = {
+      ...seller!,
+      ...data.seller,
+    };
+
+    localStorage.setItem("sellerUser", JSON.stringify(updated));
+
+    setSeller(updated);
+
+    // ✅ cleanup
+    setAvatarFile(null);
+    setAvatarPreview(null);
+    setShowEditModal(false);
+
+    toast.success("Profile updated successfully!");
+
+  } catch (err: any) {
+    toast.error(err.message || "Something went wrong");
+  } finally {
+    setSaving(false);
+  }
+};
 
   const openPaymentModal = (plan: "basic" | "premium") => {
     setSelectedPlan(plan);
@@ -203,7 +310,7 @@ export default function SellerSettingsPage() {
 
       {/* ── Page Header ── */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="max-w-5xl mx-auto mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Seller Settings</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
         <p className="text-gray-500 text-sm mt-1">Manage your shop details, plan & preferences.</p>
       </motion.div>
 
@@ -292,15 +399,276 @@ export default function SellerSettingsPage() {
         </motion.div>
 
         {/* ── Business Preferences ── */}
-        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={2}
-          className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <Gem className="text-gray-400" size={20} />
-            <h2 className="text-lg font-semibold text-gray-800">Business Preferences</h2>
+<motion.div
+  variants={fadeUp}
+  initial="hidden"
+  animate="visible"
+  custom={2}
+  className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm"
+>
+
+  <div className="flex items-center justify-between mb-6">
+    <div>
+      <h2 className="text-lg font-semibold text-gray-800">
+        Business Preferences
+      </h2>
+
+      <p className="text-sm text-gray-500 mt-1">
+        Configure delivery, returns and operating hours.
+      </p>
+    </div>
+
+    <button
+      onClick={handleSaveBusinessPreferences}
+      disabled={savingBusinessPrefs}
+      className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
+    >
+      {savingBusinessPrefs ? 'Saving...' : 'Save Preferences'}
+    </button>
+  </div>
+
+  <div className="space-y-8">
+
+    {/* DELIVERY */}
+    <div className="border border-gray-100 rounded-xl p-4">
+      <h3 className="font-semibold text-gray-800 mb-4">
+        Delivery Settings
+      </h3>
+
+      <div className="grid sm:grid-cols-2 gap-4">
+
+        <label className="flex items-center justify-between border rounded-lg px-4 py-3">
+          <span className="text-sm text-gray-700">
+            Same Day Delivery
+          </span>
+
+          <input
+            type="checkbox"
+            checked={businessPrefs.delivery.sameDay}
+            onChange={(e) =>
+              setBusinessPrefs((prev) => ({
+                ...prev,
+                delivery: {
+                  ...prev.delivery,
+                  sameDay: e.target.checked,
+                },
+              }))
+            }
+          />
+        </label>
+
+        <label className="flex items-center justify-between border rounded-lg px-4 py-3">
+          <span className="text-sm text-gray-700">
+            Pickup Available
+          </span>
+
+          <input
+            type="checkbox"
+            checked={businessPrefs.delivery.pickupAvailable}
+            onChange={(e) =>
+              setBusinessPrefs((prev) => ({
+                ...prev,
+                delivery: {
+                  ...prev.delivery,
+                  pickupAvailable: e.target.checked,
+                },
+              }))
+            }
+          />
+        </label>
+
+        <input
+          type="text"
+          placeholder="Estimated Delivery (e.g. 1-3 days)"
+          value={businessPrefs.delivery.estimatedDelivery}
+          onChange={(e) =>
+            setBusinessPrefs((prev) => ({
+              ...prev,
+              delivery: {
+                ...prev.delivery,
+                estimatedDelivery: e.target.value,
+              },
+            }))
+          }
+          className="border rounded-lg px-4 py-3 text-sm"
+        />
+
+        <input
+          type="number"
+          placeholder="Delivery Fee"
+          value={businessPrefs.delivery.deliveryFee}
+          onChange={(e) =>
+            setBusinessPrefs((prev) => ({
+              ...prev,
+              delivery: {
+                ...prev.delivery,
+                deliveryFee: Number(e.target.value),
+              },
+            }))
+          }
+          className="border rounded-lg px-4 py-3 text-sm"
+        />
+
+        <input
+          type="number"
+          placeholder="Free Delivery Threshold"
+          value={businessPrefs.delivery.freeDeliveryThreshold}
+          onChange={(e) =>
+            setBusinessPrefs((prev) => ({
+              ...prev,
+              delivery: {
+                ...prev.delivery,
+                freeDeliveryThreshold: Number(e.target.value),
+              },
+            }))
+          }
+          className="border rounded-lg px-4 py-3 text-sm sm:col-span-2"
+        />
+      </div>
+    </div>
+
+    {/* RETURNS */}
+    <div className="border border-gray-100 rounded-xl p-4">
+      <h3 className="font-semibold text-gray-800 mb-4">
+        Return Policy
+      </h3>
+
+      <div className="space-y-4">
+
+        <label className="flex items-center justify-between border rounded-lg px-4 py-3">
+          <span className="text-sm text-gray-700">
+            Accept Returns
+          </span>
+
+          <input
+            type="checkbox"
+            checked={businessPrefs.returns.acceptsReturns}
+            onChange={(e) =>
+              setBusinessPrefs((prev) => ({
+                ...prev,
+                returns: {
+                  ...prev.returns,
+                  acceptsReturns: e.target.checked,
+                },
+              }))
+            }
+          />
+        </label>
+
+        <input
+          type="number"
+          placeholder="Return Window (Days)"
+          value={businessPrefs.returns.returnWindow}
+          onChange={(e) =>
+            setBusinessPrefs((prev) => ({
+              ...prev,
+              returns: {
+                ...prev.returns,
+                returnWindow: Number(e.target.value),
+              },
+            }))
+          }
+          className="border rounded-lg px-4 py-3 text-sm"
+        />
+
+        <textarea
+          placeholder="Return Conditions"
+          value={businessPrefs.returns.conditions}
+          onChange={(e) =>
+            setBusinessPrefs((prev) => ({
+              ...prev,
+              returns: {
+                ...prev.returns,
+                conditions: e.target.value,
+              },
+            }))
+          }
+          rows={3}
+          className="w-full border rounded-lg px-4 py-3 text-sm resize-none"
+        />
+      </div>
+    </div>
+
+    {/* WORKING HOURS */}
+    <div className="border border-gray-100 rounded-xl p-4">
+      <h3 className="font-semibold text-gray-800 mb-4">
+        Working Hours
+      </h3>
+
+      <div className="space-y-3">
+
+        {Object.entries(businessPrefs.workingHours).map(([day, value]) => (
+          <div
+            key={day}
+            className="grid grid-cols-4 gap-3 items-center border rounded-lg p-3"
+          >
+
+            <div className="capitalize text-sm font-medium text-gray-700">
+              {day}
+            </div>
+
+            <input
+              type="time"
+              value={value.open}
+              onChange={(e) =>
+                setBusinessPrefs((prev) => ({
+                  ...prev,
+                  workingHours: {
+                    ...prev.workingHours,
+                    [day]: {
+                      ...value,
+                      open: e.target.value,
+                    },
+                  },
+                }))
+              }
+              className="border rounded px-3 py-2 text-sm"
+            />
+
+            <input
+              type="time"
+              value={value.close}
+              onChange={(e) =>
+                setBusinessPrefs((prev) => ({
+                  ...prev,
+                  workingHours: {
+                    ...prev.workingHours,
+                    [day]: {
+                      ...value,
+                      close: e.target.value,
+                    },
+                  },
+                }))
+              }
+              className="border rounded px-3 py-2 text-sm"
+            />
+
+            <label className="flex items-center justify-end gap-2 text-sm text-gray-600">
+              Open
+
+              <input
+                type="checkbox"
+                checked={value.enabled}
+                onChange={(e) =>
+                  setBusinessPrefs((prev) => ({
+                    ...prev,
+                    workingHours: {
+                      ...prev.workingHours,
+                      [day]: {
+                        ...value,
+                        enabled: e.target.checked,
+                      },
+                    },
+                  }))
+                }
+              />
+            </label>
           </div>
-          <p className="text-gray-400 text-sm">Coming soon — configure delivery, policies & working hours.</p>
-        </motion.div>
+        ))}
+      </div>
+    </div>
+  </div>
+</motion.div>
       </div>
 
       {/* ═══════════════════════════════════════════════════

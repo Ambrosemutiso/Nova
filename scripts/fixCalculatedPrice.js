@@ -40,10 +40,60 @@ var dotenv = require("dotenv");
 dotenv.config();
 var mongoose_1 = require("mongoose");
 var dbConnect_1 = require("../lib/dbConnect");
-var productCategories_1 = require("../lib/productCategories");
-function autoClassifyProducts() {
+var DEFAULT_BUSINESS_PREFERENCES = {
+    delivery: {
+        sameDay: false,
+        pickupAvailable: false,
+        estimatedDelivery: "",
+        deliveryFee: 0,
+        freeDeliveryThreshold: 0,
+    },
+    returns: {
+        acceptsReturns: false,
+        returnWindow: 0,
+        conditions: "",
+    },
+    workingHours: {
+        monday: {
+            open: "08:00",
+            close: "18:00",
+            enabled: true,
+        },
+        tuesday: {
+            open: "08:00",
+            close: "18:00",
+            enabled: true,
+        },
+        wednesday: {
+            open: "08:00",
+            close: "18:00",
+            enabled: true,
+        },
+        thursday: {
+            open: "08:00",
+            close: "18:00",
+            enabled: true,
+        },
+        friday: {
+            open: "08:00",
+            close: "18:00",
+            enabled: true,
+        },
+        saturday: {
+            open: "08:00",
+            close: "18:00",
+            enabled: false,
+        },
+        sunday: {
+            open: "08:00",
+            close: "18:00",
+            enabled: false,
+        },
+    },
+};
+function injectSellerFields() {
     return __awaiter(this, void 0, void 0, function () {
-        var db, collection, products, _i, products_1, product, category, categoryData, subcategories, subcategory, productTypes, productType, err_1;
+        var db, collection, sellers, _i, sellers_1, seller, updates, err_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -52,62 +102,71 @@ function autoClassifyProducts() {
                 case 1:
                     _a.sent();
                     db = mongoose_1.default.connection.db;
-                    if (!db)
+                    if (!db) {
                         throw new Error("Database connection not established.");
-                    collection = db.collection("products");
-                    console.log("🔍 Searching products needing classification...");
+                    }
+                    collection = db.collection("sellers");
+                    console.log("🔍 Searching sellers with missing fields...");
                     return [4 /*yield*/, collection
                             .find({
                             $or: [
-                                { subcategory: "" },
-                                { productType: "" }
-                            ]
+                                { bio: { $exists: false } },
+                                { location: { $exists: false } },
+                                { website: { $exists: false } },
+                                { phoneNumber: { $exists: false } },
+                                { businessPreferences: { $exists: false } },
+                            ],
                         })
                             .toArray()];
                 case 2:
-                    products = _a.sent();
-                    console.log("\uD83E\uDDE9 Found ".concat(products.length, " products to classify"));
-                    _i = 0, products_1 = products;
+                    sellers = _a.sent();
+                    console.log("\uD83E\uDDE9 Found ".concat(sellers.length, " sellers to update"));
+                    _i = 0, sellers_1 = sellers;
                     _a.label = 3;
                 case 3:
-                    if (!(_i < products_1.length)) return [3 /*break*/, 6];
-                    product = products_1[_i];
-                    if (!product.category) {
-                        console.log("\u26A0\uFE0F Skipping ".concat(product._id, " (no category)"));
+                    if (!(_i < sellers_1.length)) return [3 /*break*/, 6];
+                    seller = sellers_1[_i];
+                    updates = {};
+                    // ── Basic profile fields ──
+                    if (seller.bio === undefined) {
+                        updates.bio = "";
+                    }
+                    if (seller.location === undefined) {
+                        updates.location = "";
+                    }
+                    if (seller.website === undefined) {
+                        updates.website = "";
+                    }
+                    if (seller.phoneNumber === undefined) {
+                        updates.phoneNumber = null;
+                    }
+                    // ── Business Preferences ──
+                    if (!seller.businessPreferences) {
+                        updates.businessPreferences = DEFAULT_BUSINESS_PREFERENCES;
+                    }
+                    // Skip if nothing to update
+                    if (Object.keys(updates).length === 0) {
                         return [3 /*break*/, 5];
                     }
-                    category = product.category;
-                    categoryData = productCategories_1.categoryTree[category];
-                    if (!categoryData) {
-                        console.log("\u26A0\uFE0F Unknown category for ".concat(product._id));
-                        return [3 /*break*/, 5];
-                    }
-                    subcategories = Object.keys(categoryData);
-                    subcategory = subcategories[0];
-                    productTypes = categoryData[subcategory];
-                    productType = (productTypes === null || productTypes === void 0 ? void 0 : productTypes[0]) || "";
-                    return [4 /*yield*/, collection.updateOne({ _id: product._id }, {
-                            $set: {
-                                subcategory: subcategory,
-                                productType: productType
-                            }
+                    return [4 /*yield*/, collection.updateOne({ _id: seller._id }, {
+                            $set: updates,
                         })];
                 case 4:
                     _a.sent();
-                    console.log("\u2705 ".concat(product._id, " \u2192 ").concat(category, " / ").concat(subcategory, " / ").concat(productType));
+                    console.log("\u2705 Updated seller ".concat(seller._id));
                     _a.label = 5;
                 case 5:
                     _i++;
                     return [3 /*break*/, 3];
                 case 6:
-                    console.log("🎯 Auto classification completed!");
+                    console.log("🎯 Seller field injection completed!");
                     return [4 /*yield*/, mongoose_1.default.connection.close()];
                 case 7:
                     _a.sent();
                     return [3 /*break*/, 10];
                 case 8:
                     err_1 = _a.sent();
-                    console.error("❌ Auto classification failed:", err_1);
+                    console.error("❌ Injection failed:", err_1);
                     return [4 /*yield*/, mongoose_1.default.connection.close()];
                 case 9:
                     _a.sent();
@@ -117,4 +176,4 @@ function autoClassifyProducts() {
         });
     });
 }
-autoClassifyProducts();
+injectSellerFields();

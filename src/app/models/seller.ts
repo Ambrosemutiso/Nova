@@ -12,6 +12,107 @@ const sellerSchema = new mongoose.Schema({
   image: { type: String , default: null},
   logo: { type: String , default: "" },
   banner: { type: String , default: ""},
+  bio: { type: String },
+  location: { type: String },
+  website:{ type: String },
+businessPreferences: {
+  delivery: {
+    sameDay: {
+      type: Boolean,
+      default: false,
+    },
+
+    pickupAvailable: {
+      type: Boolean,
+      default: false,
+    },
+
+    estimatedDelivery: {
+      type: String,
+      default: '',
+    },
+
+    deliveryFee: {
+      type: Number,
+      default: 0,
+    },
+
+    freeDeliveryThreshold: {
+      type: Number,
+      default: 0,
+    },
+  },
+
+  returns: {
+    acceptsReturns: {
+      type: Boolean,
+      default: false,
+    },
+
+    returnWindow: {
+      type: Number,
+      default: 0,
+    },
+
+    conditions: {
+      type: String,
+      default: '',
+    },
+  },
+
+  workingHours: {
+    monday: {
+      open: {
+        type: String,
+        default: '08:00',
+      },
+      close: {
+        type: String,
+        default: '18:00',
+      },
+      enabled: {
+        type: Boolean,
+        default: true,
+      },
+    },
+
+    tuesday: {
+      open: String,
+      close: String,
+      enabled: Boolean,
+    },
+
+    wednesday: {
+      open: String,
+      close: String,
+      enabled: Boolean,
+    },
+
+    thursday: {
+      open: String,
+      close: String,
+      enabled: Boolean,
+    },
+
+    friday: {
+      open: String,
+      close: String,
+      enabled: Boolean,
+    },
+
+    saturday: {
+      open: String,
+      close: String,
+      enabled: Boolean,
+    },
+
+    sunday: {
+      open: String,
+      close: String,
+      enabled: Boolean,
+    },
+  },
+},
   phoneNumber: {
   type: String,
   default: null,   

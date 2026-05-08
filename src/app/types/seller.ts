@@ -9,6 +9,9 @@ export interface Seller {
   country: string;
   currency: string;
   phoneNumber: string;
+  bio: string;
+  location: string;
+  website: string;
   shopName?: string;
   isVerified: boolean;
   followers: {

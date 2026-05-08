@@ -3,87 +3,155 @@ dotenv.config();
 
 import mongoose from "mongoose";
 import { dbConnect } from "@/lib/dbConnect";
-import { categoryTree } from "@/lib/productCategories";
 
-interface ProductDoc {
+interface SellerDoc {
   _id: mongoose.Types.ObjectId;
-  name?: string;
-  category?: string;
-  subcategory?: string;
-  productType?: string;
+
+  bio?: string;
+  location?: string;
+  website?: string;
+  phoneNumber?: string | null;
+
+  businessPreferences?: any;
 }
 
-async function autoClassifyProducts() {
+const DEFAULT_BUSINESS_PREFERENCES = {
+  delivery: {
+    sameDay: false,
+    pickupAvailable: false,
+    estimatedDelivery: "",
+    deliveryFee: 0,
+    freeDeliveryThreshold: 0,
+  },
+
+  returns: {
+    acceptsReturns: false,
+    returnWindow: 0,
+    conditions: "",
+  },
+
+  workingHours: {
+    monday: {
+      open: "08:00",
+      close: "18:00",
+      enabled: true,
+    },
+
+    tuesday: {
+      open: "08:00",
+      close: "18:00",
+      enabled: true,
+    },
+
+    wednesday: {
+      open: "08:00",
+      close: "18:00",
+      enabled: true,
+    },
+
+    thursday: {
+      open: "08:00",
+      close: "18:00",
+      enabled: true,
+    },
+
+    friday: {
+      open: "08:00",
+      close: "18:00",
+      enabled: true,
+    },
+
+    saturday: {
+      open: "08:00",
+      close: "18:00",
+      enabled: false,
+    },
+
+    sunday: {
+      open: "08:00",
+      close: "18:00",
+      enabled: false,
+    },
+  },
+};
+
+async function injectSellerFields() {
   try {
     await dbConnect();
 
     const db = mongoose.connection.db;
-    if (!db) throw new Error("Database connection not established.");
 
-    const collection = db.collection<ProductDoc>("products");
+    if (!db) {
+      throw new Error("Database connection not established.");
+    }
 
-    console.log("🔍 Searching products needing classification...");
+    const collection = db.collection<SellerDoc>("sellers");
 
-    const products = await collection
+    console.log("🔍 Searching sellers with missing fields...");
+
+    const sellers = await collection
       .find({
         $or: [
-          { subcategory: "" },
-          { productType: "" }
-        ]
+          { bio: { $exists: false } },
+          { location: { $exists: false } },
+          { website: { $exists: false } },
+          { phoneNumber: { $exists: false } },
+          { businessPreferences: { $exists: false } },
+        ],
       })
       .toArray();
 
-    console.log(`🧩 Found ${products.length} products to classify`);
+    console.log(`🧩 Found ${sellers.length} sellers to update`);
 
-    for (const product of products) {
+    for (const seller of sellers) {
+      const updates: Record<string, any> = {};
 
-      if (!product.category) {
-        console.log(`⚠️ Skipping ${product._id} (no category)`);
-        continue;
+      // ── Basic profile fields ──
+      if (seller.bio === undefined) {
+        updates.bio = "";
       }
 
-      const category = product.category as keyof typeof categoryTree;
-
-      const categoryData = categoryTree[category];
-
-      if (!categoryData) {
-        console.log(`⚠️ Unknown category for ${product._id}`);
-        continue;
+      if (seller.location === undefined) {
+        updates.location = "";
       }
 
-      const subcategories = Object.keys(categoryData);
+      if (seller.website === undefined) {
+        updates.website = "";
+      }
 
-      // pick first subcategory
-      const subcategory = subcategories[0];
+      if (seller.phoneNumber === undefined) {
+        updates.phoneNumber = null;
+      }
 
-      const productTypes =
-        categoryData[subcategory as keyof typeof categoryData];
+      // ── Business Preferences ──
+      if (!seller.businessPreferences) {
+        updates.businessPreferences = DEFAULT_BUSINESS_PREFERENCES;
+      }
 
-      const productType = productTypes?.[0] || "";
+      // Skip if nothing to update
+      if (Object.keys(updates).length === 0) {
+        continue;
+      }
 
       await collection.updateOne(
-        { _id: product._id },
+        { _id: seller._id },
         {
-          $set: {
-            subcategory,
-            productType
-          }
+          $set: updates,
         }
       );
 
-      console.log(
-        `✅ ${product._id} → ${category} / ${subcategory} / ${productType}`
-      );
+      console.log(`✅ Updated seller ${seller._id}`);
     }
 
-    console.log("🎯 Auto classification completed!");
+    console.log("🎯 Seller field injection completed!");
 
     await mongoose.connection.close();
 
   } catch (err) {
-    console.error("❌ Auto classification failed:", err);
+    console.error("❌ Injection failed:", err);
+
     await mongoose.connection.close();
   }
 }
 
-autoClassifyProducts();
+injectSellerFields();
