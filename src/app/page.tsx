@@ -33,7 +33,7 @@ export default function Main() {
       if (loading) return <Loader />;
 
   return (
-    <div className="max-w-[1600px] mx-auto px-4 md:px-6 space-y-6 bg-gradient-to-b from-orange-50 to-white">
+    <div className="max-w-[1600px] mx-auto px-4 md:px-6 space-y-6 bg-wite">
 
       <Hero />
 

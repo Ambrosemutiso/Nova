@@ -5,7 +5,7 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getMessaging, isSupported } from "firebase/messaging";
 
-// 🔥 Your existing config (UNCHANGED)
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyD3kH_yW6xnLCHzsYDQVSl_BHE_w5vkrBE",
   authDomain: "novamart-8742a.firebaseapp.com",
@@ -16,14 +16,14 @@ const firebaseConfig = {
   measurementId: "G-7R42QB0RSH"
 };
 
-// ✅ Initialize app safely
+// Initialize app safely
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// ✅ Existing services (unchanged)
+// Existing services
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-// ✅ Messaging (SAFE for SSR)
+// Messaging
 export const messaging = async () => {
   if (typeof window === "undefined") return null;
 

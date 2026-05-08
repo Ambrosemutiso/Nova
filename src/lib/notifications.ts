@@ -40,11 +40,11 @@ export const requestPermissionAndToken = async (): Promise<string | null> => {
     });
 
     if (!token) {
-      console.error("FCM token was empty — check your VAPID key and service worker");
+      console.error("FCM token was empty, check your VAPID key and service worker");
       return null;
     }
 
-    console.log("✅ FCM Token obtained:", token);
+    console.log("FCM Token obtained:", token);
     return token;
   } catch (error) {
     console.error("FCM token error:", error);
@@ -63,8 +63,6 @@ export const listenToMessages = async (): Promise<void> => {
       const title = payload.notification?.title || "New Notification";
       const body  = payload.notification?.body  || "";
 
-      // ✅ Plain string — no JSX, no type errors
-      // \n combined with whiteSpace: "pre-line" renders title and body on separate lines
       const message = body ? `${title}\n${body}` : title;
 
       toast.success(message, {

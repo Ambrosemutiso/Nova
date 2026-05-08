@@ -37,7 +37,7 @@ export async function initiateCheckoutPayment(
       }
     };
 
-    // 🔥 SSE
+    // SSE
     const es = new EventSource(
       `/api/payments/stream?paymentIntentId=${paymentIntentId}`
     );
@@ -61,7 +61,7 @@ export async function initiateCheckoutPayment(
       es.close();
     });
 
-    // ⏱️ POLLING FALLBACK
+    // POLLING FALLBACK
     const poll = setInterval(async () => {
       if (resolved) return clearInterval(poll);
 

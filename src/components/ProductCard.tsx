@@ -20,9 +20,9 @@ export default function ProductCard({ product, showSponsoredBadge, redirectAllTo
   };
 
   return (
-    <div className="w-52 flex-shrink-0 relative bg-white p-3 shadow rounded hover:shadow-lg transition">
+    <div className="w-52 flex-shrink-0 relative bg-white p-3 rounded hover:shadow-lg transition">
 {showSponsoredBadge && (
-  <div className="absolute top-0 left-0 flex items-center gap-1 bg-white px-2 py-1 rounded-br z-10 shadow text-xs font-semibold">
+  <div className="absolute top-0 left-0 flex items-center gap-1 bg-white px-2 py-1 rounded-br z-10 text-xs font-semibold">
     <svg
       className="w-4 h-4 text-blue-600"
       xmlns="http://www.w3.org/2000/svg"

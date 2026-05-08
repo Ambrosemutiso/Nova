@@ -17,16 +17,13 @@ const countryCurrencyMap: Record<string, string> = {
   SO: 'SOS',
   SS: 'SSP',
 };
-/**
- * 🔹 Start Google sign-in
- * Automatically saves a redirect marker (so modal reopens after redirect)
- */
+
 export const signInWithGoogle = async (role: 'buyer' | 'seller') => {
   const provider = new GoogleAuthProvider();
   provider.addScope('profile');
   provider.addScope('email');
 
-  // ✅ Save marker before any attempt
+  // Save marker before any attempt
   localStorage.setItem('pendingGoogleRedirect', role);
 
   let country = 'KE';
@@ -45,7 +42,7 @@ export const signInWithGoogle = async (role: 'buyer' | 'seller') => {
     const user = result.user;
     const token = await user.getIdToken();
 
-    localStorage.removeItem('pendingGoogleRedirect'); // ✅ Done, clear marker
+    localStorage.removeItem('pendingGoogleRedirect');
 
     return {
       name: user.displayName || '',

@@ -28,7 +28,7 @@ function LayoutUI({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  // ✅ FIX 1: Track whether FCM has already been set up to prevent
+  // FIX 1: Track whether FCM has already been set up to prevent
   // re-registering the SW and re-saving the token on every re-render
   const fcmInitialized = useRef(false);
 
@@ -64,7 +64,7 @@ function LayoutUI({ children }: { children: React.ReactNode }) {
     }
   }, [user, loading, pathname, router]);
 
-  // ✅ FIX 2: FCM setup — runs once per user session, not on every render
+  // FIX 2: FCM setup — runs once per user session, not on every render
   useEffect(() => {
     if (!user?._id || fcmInitialized.current) return;
 
@@ -86,7 +86,7 @@ function LayoutUI({ children }: { children: React.ReactNode }) {
           }
         }
 
-        // ✅ Start listening for foreground messages only after token is ready
+        // Start listening for foreground messages only after token is ready
         await listenToMessages();
       } catch (err) {
         console.error("FCM setup error:", err);
@@ -94,7 +94,7 @@ function LayoutUI({ children }: { children: React.ReactNode }) {
     };
 
     setup();
-  }, [user?._id]); // ✅ depend only on _id, not the entire user object
+  }, [user?._id]); // depend only on _id, not the entire user object
 
   return (
     <>

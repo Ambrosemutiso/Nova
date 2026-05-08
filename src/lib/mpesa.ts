@@ -9,7 +9,7 @@ const tillNumber = process.env.MPESA_TILL_NUMBER!;
 const callbackURL = process.env.MPESA_CALLBACK_URL!;
 
 if (!callbackURL) {
-  throw new Error('❌ MPESA_CALLBACK_URL is not set');
+  throw new Error('MPESA_CALLBACK_URL is not set');
 }
 
 export async function initiateSTKPush({
@@ -24,7 +24,7 @@ export async function initiateSTKPush({
   description?: string;
 }) {
   try {
-    // 🔐 Auth
+    //Auth
     const auth = Buffer.from(
       `${consumerKey}:${consumerSecret}`
     ).toString('base64');
@@ -39,7 +39,7 @@ const tokenRes = await axios.get(
 
     const accessToken = tokenRes.data.access_token;
 
-    // ⏱ Password
+    // Password
     const timestamp = moment().format('YYYYMMDDHHmmss');
     const password = Buffer.from(
       `${shortCode}${passkey}${timestamp}`
@@ -70,7 +70,7 @@ const formattedPhone = phone
       }
     );
 
-    console.log('✅ STK PUSH ACCEPTED:', stkRes.data);
+    console.log('STK PUSH ACCEPTED:', stkRes.data);
 
     return {
       ok: true,
@@ -79,7 +79,7 @@ const formattedPhone = phone
       raw: stkRes.data,
     };
   } catch (err: any) {
-    console.error('❌ STK PUSH ERROR:', err.response?.data || err.message);
+    console.error('STK PUSH ERROR:', err.response?.data || err.message);
     return {
       ok: false,
       error: err.response?.data || err.message,

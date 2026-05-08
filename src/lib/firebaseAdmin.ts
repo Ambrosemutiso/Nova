@@ -9,7 +9,7 @@ function initializeFirebaseAdmin() {
   if (getApps().length) return;
 
   try {
-    // ✅ OPTION 1: Use serviceAccountKey.json (your current setup)
+    // OPTION 1: Use serviceAccountKey.json (current setup)
     const serviceAccountPath = path.resolve(process.cwd(), "serviceAccountKey.json");
     const serviceAccount = JSON.parse(readFileSync(serviceAccountPath, "utf8"));
 
@@ -17,7 +17,7 @@ function initializeFirebaseAdmin() {
       credential: admin.credential.cert(serviceAccount),
     });
   } catch (error) {
-    // ✅ OPTION 2: Fallback to environment variables (production-safe)
+    // OPTION 2: Fallback to environment variables
     admin.initializeApp({
       credential: admin.credential.cert({
         projectId: process.env.FIREBASE_PROJECTID,

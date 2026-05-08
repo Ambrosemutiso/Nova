@@ -318,7 +318,12 @@ exit={{
     <option value="">+Code</option>
     {countryData.map((c) => (
       <option key={c.code} value={c.dialCode}>
-        {c.flag} {c.dialCode} {c.name}
+          <img
+            src={c.flag}
+            alt={c.name}
+            className="w-6 h-4 rounded-sm object-cover"
+          />
+        {c.dialCode} {c.name}
       </option>
     ))}
   </select>

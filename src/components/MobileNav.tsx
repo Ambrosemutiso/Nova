@@ -23,9 +23,9 @@ export default function MobileBottomNav() {
           const currentScrollY = window.scrollY;
 
           if (currentScrollY > lastScrollY && currentScrollY > 60) {
-            setVisible(false); // scrolling down
+            setVisible(false); 
           } else {
-            setVisible(true); // scrolling up
+            setVisible(true); 
           }
 
           setLastScrollY(currentScrollY);
@@ -79,7 +79,7 @@ export default function MobileBottomNav() {
         </div>
       </Link>
 
-      {navItem("/ads", Megaphone, "Ads")}
+      {navItem("/ads", Megaphone, "Discover")}
       {navItem("/vouchers", User, "Me")}
     </>
   ) : (

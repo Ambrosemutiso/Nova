@@ -309,7 +309,7 @@ useEffect(() => {
           {/* Search */}
 <div
   ref={searchRef}
-  className="relative flex items-center"
+  className="relative flex items-center md:hidden"
 >
   <AnimatePresence>
 {showSearch && (

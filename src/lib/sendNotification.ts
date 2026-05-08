@@ -27,15 +27,10 @@ export async function sendNotification(options: SendOptions) {
     if (!Array.isArray(target.value) || target.value.length === 0) {
       return { success: false, sent: 0, failed: 0, message: "Invalid or empty user IDs" };
     }
-
-    const validIds = target.value.filter((id) =>
-      mongoose.Types.ObjectId.isValid(id)
-    );
-
+    const validIds = target.value.filter((id) => mongoose.Types.ObjectId.isValid(id));
     if (!validIds.length) {
       return { success: false, sent: 0, failed: 0, message: "No valid ObjectIds provided" };
     }
-
     userQuery._id = {
       $in: validIds.map((id) => new mongoose.Types.ObjectId(id)),
     };
@@ -47,8 +42,6 @@ export async function sendNotification(options: SendOptions) {
     }
     userQuery.role = target.value;
   }
-
-  // target.type === "all" → userQuery stays {} → finds everyone
 
   // ── USERS ──────────────────────────────────────────────────────────────────
 
@@ -62,12 +55,14 @@ export async function sendNotification(options: SendOptions) {
   }
 
   // ── TOKENS ─────────────────────────────────────────────────────────────────
-  // ✅ FIX: Query by ObjectId, not string — avoids type mismatch
+
   const fcmDocs = await FcmToken.find({
     userId: { $in: userObjectIds },
   }).lean();
 
-  const tokenList: string[] = fcmDocs.map((t: any) => t.token).filter(Boolean);
+  const tokenList: string[] = fcmDocs
+    .map((t: any) => t.token)
+    .filter((t) => t && t.length > 20);
 
   console.log(`🔑 Tokens found: ${tokenList.length}`);
 
@@ -79,13 +74,49 @@ export async function sendNotification(options: SendOptions) {
 
   const response = await admin.messaging().sendEachForMulticast({
     tokens: tokenList,
+
     notification: { title, body },
-    data,
-    webpush: {
+
+    // ✅ Duplicate into data so SW can access even if notification is stripped
+    data: {
+      ...data,
+      title,
+      body,
+      url: data?.url || "/",
+    },
+
+    // ✅ Android — high priority wakes device from doze mode immediately
+    android: {
+      priority: "high",
+      ttl: 60 * 1000, // 60 seconds — if not delivered in 60s, drop it (for flash sales etc)
       notification: {
         title,
         body,
-        icon: "/icon.png", // update to your actual icon path
+        color: "#EA580C",
+        sound: "default",
+        channelId: "default",
+        priority: "max",        // ✅ heads-up notification (pops on screen)
+        defaultSound: true,
+        defaultVibrateTimings: true,
+        notificationCount: 1,
+      },
+    },
+
+    // ✅ Web/PWA — Urgency high bypasses browser push throttling
+    webpush: {
+      headers: {
+        Urgency: "high",        // ✅ critical — delivers immediately
+        TTL: "60",              // 60 seconds TTL
+      },
+      notification: {
+        title,
+        body,
+        icon: "/icons/icon-192x192.png",
+        badge: "/icons/icon-72x72.png",
+        tag: "Novaxmax",
+        renotify: true,
+        requireInteraction: false,
+        vibrate: [200, 100, 200],
       },
       fcmOptions: {
         link: data?.url || "/",
@@ -100,13 +131,11 @@ export async function sendNotification(options: SendOptions) {
   response.responses.forEach((res, i) => {
     if (!res.success) {
       const errCode = res.error?.code ?? "unknown";
-      const errMsg = res.error?.message ?? "no message";
-
-      console.error(`❌ FCM failure for token[${i}]: ${tokenList[i]}`);
+      const errMsg  = res.error?.message ?? "no message";
+      console.error(`❌ FCM failure for token[${i}]`);
       console.error(`   Code   : ${errCode}`);
       console.error(`   Message: ${errMsg}`);
 
-      // Collect stale/unregistered tokens for cleanup
       if (
         errCode === "messaging/registration-token-not-registered" ||
         errCode === "messaging/invalid-registration-token"

@@ -1,15 +1,15 @@
 // utils/currency.ts
 export type CurrencyCode = "KES" | "UGX" | "TZS" | "USD";
 
-// --- Local fallback rates (ALWAYS available) ---
+//Local fallback rates
 const FALLBACK_RATES: Record<CurrencyCode, Record<CurrencyCode, number>> = {
   KES: { KES: 1, UGX: 27.5,  TZS: 18.3, USD: 0.0071 },
   UGX: { UGX: 1, KES: 0.036, TZS: 0.66, USD: 0.00026 },
   TZS: { TZS: 1, KES: 0.055, UGX: 1.52, USD: 0.00039 },
-  USD: { USD: 1, KES: 141.0, UGX: 3875, TZS: 2550 },
+  USD: { USD: 1, KES: 129.0, UGX: 3875, TZS: 2550 },
 };
 
-// --- Fetch live rate with retry + timeout ---
+// Fetch live rate with retry + timeout 
 async function fetchRate(from: CurrencyCode, to: CurrencyCode): Promise<number> {
   try {
     const controller = new AbortController();
@@ -28,19 +28,19 @@ async function fetchRate(from: CurrencyCode, to: CurrencyCode): Promise<number> 
 
     // Validate response
     if (!json.result || typeof json.result !== "number" || json.result <= 0) {
-      console.warn(`⚠️ Invalid live rate for ${from} → ${to}. Using fallback.`);
+      console.warn(`Invalid live rate for ${from} → ${to}. Using fallback.`);
       return FALLBACK_RATES[from][to];
     }
 
     return json.result;
 
   } catch (err) {
-    console.warn(`⚠️ Live rate fetch failed (${from}→${to}). Using fallback.`);
+    console.warn(`Live rate fetch failed (${from}→${to}). Using fallback.`);
     return FALLBACK_RATES[from][to];
   }
 }
 
-// --- Public function ---
+// Public function
 export async function convertCurrency(
   amount: number,
   from: CurrencyCode,
@@ -53,7 +53,7 @@ export async function convertCurrency(
   return amount * rate;
 }
 
-// --- Format output ---
+//Format output
 export function formatCurrency(amount: number, currency: CurrencyCode) {
   const symbols: Record<CurrencyCode, string> = {
     KES: "KSh",
@@ -65,9 +65,7 @@ export function formatCurrency(amount: number, currency: CurrencyCode) {
   return `${symbols[currency]} ${amount.toLocaleString()}`;
 }
 
-// ---------------------------
 // Convert Array of Products
-// ---------------------------
 export async function convertProducts(products: any[], userCurrency: CurrencyCode) {
   const converted = [];
 
