@@ -112,6 +112,29 @@ businessPreferences: {
       enabled: Boolean,
     },
   },
+  paymentMethods: [
+    {
+      id: {
+        type: String,
+        required: true,
+      },
+
+      label: {
+        type: String,
+        required: true,
+      },
+
+      enabled: {
+        type: Boolean,
+        default: false,
+      },
+
+      details: {
+        type: String,
+        default: "",
+      },
+    },
+  ],
 },
   phoneNumber: {
   type: String,

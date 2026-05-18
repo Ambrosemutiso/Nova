@@ -40,6 +40,14 @@ var dotenv = require("dotenv");
 dotenv.config();
 var mongoose_1 = require("mongoose");
 var dbConnect_1 = require("../lib/dbConnect");
+// ─── Defaults ─────────────────────────────────────────────────────────────────
+var DEFAULT_PAYMENT_METHODS = [
+    { id: "mpesa", label: "M-Pesa", enabled: false, details: "" },
+    { id: "card", label: "Credit / Debit Card", enabled: false, details: "" },
+    { id: "bank", label: "Bank Transfer", enabled: false, details: "" },
+    { id: "cash", label: "Cash on Delivery", enabled: false, details: "" },
+    { id: "paypal", label: "PayPal", enabled: false, details: "" },
+];
 var DEFAULT_BUSINESS_PREFERENCES = {
     delivery: {
         sameDay: false,
@@ -54,59 +62,37 @@ var DEFAULT_BUSINESS_PREFERENCES = {
         conditions: "",
     },
     workingHours: {
-        monday: {
-            open: "08:00",
-            close: "18:00",
-            enabled: true,
-        },
-        tuesday: {
-            open: "08:00",
-            close: "18:00",
-            enabled: true,
-        },
-        wednesday: {
-            open: "08:00",
-            close: "18:00",
-            enabled: true,
-        },
-        thursday: {
-            open: "08:00",
-            close: "18:00",
-            enabled: true,
-        },
-        friday: {
-            open: "08:00",
-            close: "18:00",
-            enabled: true,
-        },
-        saturday: {
-            open: "08:00",
-            close: "18:00",
-            enabled: false,
-        },
-        sunday: {
-            open: "08:00",
-            close: "18:00",
-            enabled: false,
-        },
+        monday: { open: "08:00", close: "18:00", enabled: true },
+        tuesday: { open: "08:00", close: "18:00", enabled: true },
+        wednesday: { open: "08:00", close: "18:00", enabled: true },
+        thursday: { open: "08:00", close: "18:00", enabled: true },
+        friday: { open: "08:00", close: "18:00", enabled: true },
+        saturday: { open: "08:00", close: "18:00", enabled: false },
+        sunday: { open: "08:00", close: "18:00", enabled: false },
     },
+    paymentMethods: DEFAULT_PAYMENT_METHODS,
 };
+// ─── Script ───────────────────────────────────────────────────────────────────
 function injectSellerFields() {
     return __awaiter(this, void 0, void 0, function () {
-        var db, collection, sellers, _i, sellers_1, seller, updates, err_1;
+        var totalUpdated, totalSkipped, totalNewPrefs, totalAddedPay, db, collection, sellers, _i, sellers_1, seller, $set, pm, needsPaymentMethods, err_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    _a.trys.push([0, 8, , 10]);
-                    return [4 /*yield*/, (0, dbConnect_1.dbConnect)()];
+                    totalUpdated = 0;
+                    totalSkipped = 0;
+                    totalNewPrefs = 0;
+                    totalAddedPay = 0;
+                    _a.label = 1;
                 case 1:
+                    _a.trys.push([1, 8, 9, 11]);
+                    return [4 /*yield*/, (0, dbConnect_1.dbConnect)()];
+                case 2:
                     _a.sent();
                     db = mongoose_1.default.connection.db;
-                    if (!db) {
+                    if (!db)
                         throw new Error("Database connection not established.");
-                    }
                     collection = db.collection("sellers");
-                    console.log("🔍 Searching sellers with missing fields...");
                     return [4 /*yield*/, collection
                             .find({
                             $or: [
@@ -115,63 +101,78 @@ function injectSellerFields() {
                                 { website: { $exists: false } },
                                 { phoneNumber: { $exists: false } },
                                 { businessPreferences: { $exists: false } },
+                                // Has businessPreferences but paymentMethods key is absent
+                                { "businessPreferences.paymentMethods": { $exists: false } },
+                                // Has the key but the array is empty
+                                { "businessPreferences.paymentMethods": { $size: 0 } },
                             ],
                         })
                             .toArray()];
-                case 2:
-                    sellers = _a.sent();
-                    console.log("\uD83E\uDDE9 Found ".concat(sellers.length, " sellers to update"));
-                    _i = 0, sellers_1 = sellers;
-                    _a.label = 3;
                 case 3:
-                    if (!(_i < sellers_1.length)) return [3 /*break*/, 6];
-                    seller = sellers_1[_i];
-                    updates = {};
-                    // ── Basic profile fields ──
-                    if (seller.bio === undefined) {
-                        updates.bio = "";
-                    }
-                    if (seller.location === undefined) {
-                        updates.location = "";
-                    }
-                    if (seller.website === undefined) {
-                        updates.website = "";
-                    }
-                    if (seller.phoneNumber === undefined) {
-                        updates.phoneNumber = null;
-                    }
-                    // ── Business Preferences ──
-                    if (!seller.businessPreferences) {
-                        updates.businessPreferences = DEFAULT_BUSINESS_PREFERENCES;
-                    }
-                    // Skip if nothing to update
-                    if (Object.keys(updates).length === 0) {
-                        return [3 /*break*/, 5];
-                    }
-                    return [4 /*yield*/, collection.updateOne({ _id: seller._id }, {
-                            $set: updates,
-                        })];
+                    sellers = _a.sent();
+                    console.log("\n\uD83D\uDD0D Found ".concat(sellers.length, " seller(s) that need updating\n"));
+                    _i = 0, sellers_1 = sellers;
+                    _a.label = 4;
                 case 4:
-                    _a.sent();
-                    console.log("\u2705 Updated seller ".concat(seller._id));
-                    _a.label = 5;
+                    if (!(_i < sellers_1.length)) return [3 /*break*/, 7];
+                    seller = sellers_1[_i];
+                    $set = {};
+                    // ── Basic profile fields ──────────────────────────────────────────────
+                    if (seller.bio === undefined)
+                        $set["bio"] = "";
+                    if (seller.location === undefined)
+                        $set["location"] = "";
+                    if (seller.website === undefined)
+                        $set["website"] = "";
+                    if (seller.phoneNumber === undefined)
+                        $set["phoneNumber"] = null;
+                    // ── businessPreferences completely absent → inject full default ───────
+                    if (!seller.businessPreferences) {
+                        $set["businessPreferences"] = DEFAULT_BUSINESS_PREFERENCES;
+                        totalNewPrefs++;
+                    }
+                    else {
+                        pm = seller.businessPreferences.paymentMethods;
+                        needsPaymentMethods = !pm || pm.length === 0;
+                        if (needsPaymentMethods) {
+                            // Use dot-notation so we don't clobber delivery/returns/workingHours
+                            $set["businessPreferences.paymentMethods"] = DEFAULT_PAYMENT_METHODS;
+                            totalAddedPay++;
+                        }
+                    }
+                    if (Object.keys($set).length === 0) {
+                        totalSkipped++;
+                        return [3 /*break*/, 6];
+                    }
+                    return [4 /*yield*/, collection.updateOne({ _id: seller._id }, { $set: $set })];
                 case 5:
-                    _i++;
-                    return [3 /*break*/, 3];
-                case 6:
-                    console.log("🎯 Seller field injection completed!");
-                    return [4 /*yield*/, mongoose_1.default.connection.close()];
-                case 7:
                     _a.sent();
-                    return [3 /*break*/, 10];
+                    console.log("  \u2705 Updated seller ".concat(seller._id, "  \u2192  fields: ").concat(Object.keys($set).join(", ")));
+                    totalUpdated++;
+                    _a.label = 6;
+                case 6:
+                    _i++;
+                    return [3 /*break*/, 4];
+                case 7:
+                    // ── Summary ──────────────────────────────────────────────────────────────
+                    console.log("\n─────────────────────────────────────────");
+                    console.log("\uD83C\uDFAF  Migration complete");
+                    console.log("    Updated : ".concat(totalUpdated));
+                    console.log("    Skipped : ".concat(totalSkipped, "  (already had all fields)"));
+                    console.log("    New businessPreferences injected : ".concat(totalNewPrefs));
+                    console.log("    paymentMethods added to existing prefs : ".concat(totalAddedPay));
+                    console.log("─────────────────────────────────────────\n");
+                    return [3 /*break*/, 11];
                 case 8:
                     err_1 = _a.sent();
-                    console.error("❌ Injection failed:", err_1);
-                    return [4 /*yield*/, mongoose_1.default.connection.close()];
-                case 9:
+                    console.error("❌ Migration failed:", err_1);
+                    return [3 /*break*/, 11];
+                case 9: return [4 /*yield*/, mongoose_1.default.connection.close()];
+                case 10:
                     _a.sent();
-                    return [3 /*break*/, 10];
-                case 10: return [2 /*return*/];
+                    console.log("🔌 DB connection closed.");
+                    return [7 /*endfinally*/];
+                case 11: return [2 /*return*/];
             }
         });
     });

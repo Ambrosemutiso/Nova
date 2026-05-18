@@ -13,6 +13,7 @@ export async function PATCH(req: NextRequest) {
       delivery,
       returns,
       workingHours,
+      paymentMethods,
     } = body;
 
     if (!sellerId) {
@@ -30,6 +31,7 @@ export async function PATCH(req: NextRequest) {
             delivery,
             returns,
             workingHours,
+            paymentMethods,
           },
         },
       },
