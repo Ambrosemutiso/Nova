@@ -602,7 +602,7 @@ export default function SellerSettingsPage() {
       ═══════════════════════════════════════════════════ */}
       <AnimatePresence>
         {showEditModal && (
-          <motion.div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center px-4 py-6"
+          <motion.div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[999999999] flex items-center justify-center px-4 py-6"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }} transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
@@ -689,7 +689,7 @@ export default function SellerSettingsPage() {
       <AnimatePresence>
         {showUpgradeModal && (
           <motion.div
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center px-4 py-8 overflow-y-auto"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[999999999] flex items-center justify-center px-4 py-8 overflow-y-auto"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={() => setShowUpgradeModal(false)}
           >
