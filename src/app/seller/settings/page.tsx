@@ -1,16 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Store, Gem, Crown, CheckCircle, XCircle,
+  Store, Crown, Gem,
   Camera, User, Phone, Mail, MapPin, FileText,
   Save, X, Loader2, AlertCircle, Globe,
-  Zap, ShieldCheck, TrendingUp, Package, Sparkles,
-  ArrowRight, Check,
 } from "lucide-react";
 import { toast } from "react-toastify";
-import GlobalPayModal from "@/components/payments/GlobalPayModal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -23,56 +21,28 @@ interface SellerProfile {
   bio?: string;
   location?: string;
   website?: string;
-  shop?: {
-    plan?: "free" | "basic" | "premium";
-    name?: string;
-  };
+  shop?: { plan?: "free" | "basic" | "premium"; name?: string };
   businessPreferences?: BusinessPreferences;
 }
 
 interface EditForm {
-  name: string;
-  phoneNumber: string;
-  bio: string;
-  location: string;
-  website: string;
-  shopName: string;
+  name: string; phoneNumber: string; bio: string;
+  location: string; website: string; shopName: string;
 }
 
-interface WorkingDay {
-  open: string;
-  close: string;
-  enabled: boolean;
-}
+interface WorkingDay { open: string; close: string; enabled: boolean }
 
-interface PaymentMethod {
-  id: string;
-  label: string;
-  enabled: boolean;
-  details: string;
-}
+interface PaymentMethod { id: string; label: string; enabled: boolean; details: string }
 
 interface BusinessPreferences {
   delivery: {
-    sameDay: boolean;
-    pickupAvailable: boolean;
-    estimatedDelivery: string;
-    deliveryFee: number;
-    freeDeliveryThreshold: number;
+    sameDay: boolean; pickupAvailable: boolean;
+    estimatedDelivery: string; deliveryFee: number; freeDeliveryThreshold: number;
   };
-  returns: {
-    acceptsReturns: boolean;
-    returnWindow: number;
-    conditions: string;
-  };
+  returns: { acceptsReturns: boolean; returnWindow: number; conditions: string };
   workingHours: {
-    monday: WorkingDay;
-    tuesday: WorkingDay;
-    wednesday: WorkingDay;
-    thursday: WorkingDay;
-    friday: WorkingDay;
-    saturday: WorkingDay;
-    sunday: WorkingDay;
+    monday: WorkingDay; tuesday: WorkingDay; wednesday: WorkingDay;
+    thursday: WorkingDay; friday: WorkingDay; saturday: WorkingDay; sunday: WorkingDay;
   };
   paymentMethods: PaymentMethod[];
 }
@@ -80,26 +50,16 @@ interface BusinessPreferences {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const DEFAULT_PAYMENT_METHODS: PaymentMethod[] = [
-  { id: "mpesa",  label: "M-Pesa",              enabled: false, details: "" },
-  { id: "card",   label: "Credit / Debit Card",  enabled: false, details: "" },
-  { id: "bank",   label: "Bank Transfer",        enabled: false, details: "" },
-  { id: "cash",   label: "Cash on Delivery",     enabled: false, details: "" },
-  { id: "paypal", label: "PayPal",               enabled: false, details: "" },
+  { id: "mpesa",  label: "M-Pesa",             enabled: false, details: "" },
+  { id: "card",   label: "Credit / Debit Card", enabled: false, details: "" },
+  { id: "bank",   label: "Bank Transfer",       enabled: false, details: "" },
+  { id: "cash",   label: "Cash on Delivery",    enabled: false, details: "" },
+  { id: "paypal", label: "PayPal",              enabled: false, details: "" },
 ];
 
 const DEFAULT_BUSINESS_PREFS: BusinessPreferences = {
-  delivery: {
-    sameDay: false,
-    pickupAvailable: false,
-    estimatedDelivery: "",
-    deliveryFee: 0,
-    freeDeliveryThreshold: 0,
-  },
-  returns: {
-    acceptsReturns: false,
-    returnWindow: 0,
-    conditions: "",
-  },
+  delivery: { sameDay: false, pickupAvailable: false, estimatedDelivery: "", deliveryFee: 0, freeDeliveryThreshold: 0 },
+  returns:  { acceptsReturns: false, returnWindow: 0, conditions: "" },
   workingHours: {
     monday:    { open: "08:00", close: "18:00", enabled: true  },
     tuesday:   { open: "08:00", close: "18:00", enabled: true  },
@@ -118,18 +78,6 @@ const PLAN_COLORS = {
   free:    "bg-gray-100 text-gray-600",
 };
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  visible: (i: number) => ({
-    opacity: 1, y: 0,
-    transition: {
-      delay: i * 0.08,
-      duration: 0.38,
-      ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
-    },
-  }),
-};
-
 const PAYMENT_DETAIL_LABELS: Record<string, string> = {
   mpesa:  "M-Pesa Till / Paybill / Phone Number",
   card:   "Stripe / Payment processor account",
@@ -137,7 +85,6 @@ const PAYMENT_DETAIL_LABELS: Record<string, string> = {
   cash:   "Collection address or instructions",
   paypal: "PayPal email address",
 };
-
 const PAYMENT_DETAIL_PLACEHOLDERS: Record<string, string> = {
   mpesa:  "e.g. Till 123456 or +254 7XX XXX XXX",
   card:   "e.g. Stripe account ID or merchant ID",
@@ -145,7 +92,6 @@ const PAYMENT_DETAIL_PLACEHOLDERS: Record<string, string> = {
   cash:   "e.g. Collect at Shop B2, Westgate Mall, Nairobi",
   paypal: "e.g. payments@yourbusiness.com",
 };
-
 const PAYMENT_DETAIL_HINTS: Record<string, string> = {
   mpesa:  "Buyers will be prompted to pay to this number or till at checkout.",
   card:   "Your payment processor handles card transactions and deposits earnings to you.",
@@ -154,98 +100,21 @@ const PAYMENT_DETAIL_HINTS: Record<string, string> = {
   paypal: "Buyers pay via PayPal; funds are sent to this email address.",
 };
 
-// ─── Plan definitions (single source of truth) ────────────────────────────────
-
-interface Plan {
-  id:           "free" | "basic" | "premium";
-  name:         string;
-  price:        string;
-  period:       string;
-  description:  string;
-  icon:         React.ReactNode;
-  iconBg:       string;
-  accent:       string;
-  btnClass:     string;
-  topupPrice?:  string;
-  recommended?: boolean;
-  features:     { ok: boolean; text: string }[];
-}
-
-const PLANS: Plan[] = [
-  {
-    id:          "free" as const,
-    name:        "Free",
-    price:       "Ksh 0",
-    period:      "forever",
-    description: "Get started and test the waters.",
-    icon:        <Package size={22} className="text-gray-500" />,
-    iconBg:      "bg-gray-100",
-    accent:      "border-gray-200",
-    btnClass:    "bg-gray-100 text-gray-400 cursor-not-allowed",
-    features: [
-      { ok: true,  text: "Up to 50 active products"          },
-      { ok: true,  text: "Up to 50 orders / month"           },
-      { ok: true,  text: "Basic sales dashboard"             },
-      { ok: false, text: "Product boost & ads"               },
-      { ok: false, text: "Featured shop page"                },
-      { ok: false, text: "Priority customer support"         },
-      { ok: false, text: "Unlimited withdrawals"             },
-    ],
-  },
-  {
-    id:          "basic" as const,
-    name:        "Basic",
-    price:       "Ksh 1,300",
-    period:      "per year",
-    description: "For sellers ready to grow.",
-    icon:        <Zap size={22} className="text-orange-500" />,
-    iconBg:      "bg-orange-50",
-    accent:      "border-orange-400",
-    btnClass:    "bg-orange-600 hover:bg-orange-700 text-white",
-    features: [
-      { ok: true,  text: "Up to 500 active products"         },
-      { ok: true,  text: "Up to 500 orders / month"          },
-      { ok: true,  text: "Standard analytics & reports"      },
-      { ok: true,  text: "Product boost & ads"               },
-      { ok: true,  text: "Shop page visibility"              },
-      { ok: false, text: "Priority customer support"         },
-      { ok: false, text: "Unlimited withdrawals"             },
-    ],
-  },
-  {
-    id:          "premium" as const,
-    name:        "Premium",
-    price:       "Ksh 3,000",
-    period:      "per year",
-    topupPrice:  "Ksh 1,700",
-    description: "Maximum reach. Zero limits.",
-    icon:        <Sparkles size={22} className="text-blue-500" />,
-    iconBg:      "bg-blue-50",
-    accent:      "border-blue-500",
-    btnClass:    "bg-blue-600 hover:bg-blue-700 text-white",
-    recommended: true,
-    features: [
-      { ok: true, text: "Unlimited active products"          },
-      { ok: true, text: "Unlimited orders"                   },
-      { ok: true, text: "Advanced analytics & reports"       },
-      { ok: true, text: "Product boost & premium ads"        },
-      { ok: true, text: "Featured shop + Premium badge"      },
-      { ok: true, text: "Priority customer support"          },
-      { ok: true, text: "Unlimited withdrawals"              },
-    ],
-  },
-];
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  visible: (i: number) => ({
+    opacity: 1, y: 0,
+    transition: { delay: i * 0.08, duration: 0.38, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
+  }),
+};
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function SellerSettingsPage() {
-  const [seller, setSeller]                   = useState<SellerProfile | null>(null);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [showEditModal, setShowEditModal]       = useState(false);
-  const [selectedPlan, setSelectedPlan]         = useState<"basic" | "premium" | null>(null);
-  const [activatingShop, setActivatingShop]     = useState(false);
+  const router = useRouter();
 
+  const [seller, setSeller]             = useState<SellerProfile | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [form, setForm] = useState<EditForm>({
     name: "", phoneNumber: "", bio: "", location: "", website: "", shopName: "",
   });
@@ -260,22 +129,21 @@ export default function SellerSettingsPage() {
   // ── Load seller ──
   useEffect(() => {
     const stored = localStorage.getItem("sellerUser");
-    if (stored) {
-      const parsed: SellerProfile = JSON.parse(stored);
-      setSeller(parsed);
-      if (parsed.businessPreferences) setBusinessPrefs(parsed.businessPreferences);
-      setForm({
-        name:        parsed.name            || "",
-        phoneNumber: parsed.phoneNumber     || "",
-        bio:         parsed.bio             || "",
-        location:    parsed.location        || "",
-        website:     parsed.website         || "",
-        shopName:    parsed.shop?.name      || "",
-      });
-    }
+    if (!stored) return;
+    const parsed: SellerProfile = JSON.parse(stored);
+    setSeller(parsed);
+    if (parsed.businessPreferences) setBusinessPrefs(parsed.businessPreferences);
+    setForm({
+      name:        parsed.name        || "",
+      phoneNumber: parsed.phoneNumber || "",
+      bio:         parsed.bio         || "",
+      location:    parsed.location    || "",
+      website:     parsed.website     || "",
+      shopName:    parsed.shop?.name  || "",
+    });
   }, []);
 
-  // ── Business prefs save ──
+  // ── Business prefs ──
   const handleSaveBusinessPreferences = async () => {
     try {
       setSavingBusinessPrefs(true);
@@ -283,27 +151,27 @@ export default function SellerSettingsPage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sellerId:       seller?._id,
-          delivery:       businessPrefs.delivery,
-          returns:        businessPrefs.returns,
+          sellerId: seller?._id,
+          delivery: businessPrefs.delivery,
+          returns:  businessPrefs.returns,
           workingHours:   businessPrefs.workingHours,
           paymentMethods: businessPrefs.paymentMethods,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to save preferences");
-      const updatedSeller = { ...seller, businessPreferences: businessPrefs };
-      localStorage.setItem("sellerUser", JSON.stringify(updatedSeller));
-      setSeller(updatedSeller as any);
+      const updated = { ...seller, businessPreferences: businessPrefs };
+      localStorage.setItem("sellerUser", JSON.stringify(updated));
+      setSeller(updated as SellerProfile);
       toast.success("Business preferences updated");
-    } catch (error: any) {
-      toast.error(error.message || "Something went wrong");
+    } catch (err: any) {
+      toast.error(err.message || "Something went wrong");
     } finally {
       setSavingBusinessPrefs(false);
     }
   };
 
-  // ── Avatar picker ──
+  // ── Avatar ──
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -329,17 +197,17 @@ export default function SellerSettingsPage() {
     if (!validate()) return;
     setSaving(true);
     try {
-      const formData = new FormData();
-      formData.append("sellerId",    seller?._id   || "");
-      formData.append("name",        form.name.trim());
-      formData.append("phoneNumber", form.phoneNumber.trim());
-      formData.append("bio",         form.bio.trim());
-      formData.append("location",    form.location.trim());
-      formData.append("website",     form.website.trim());
-      formData.append("shopName",    form.shopName.trim());
-      if (avatarFile) formData.append("image", avatarFile);
+      const fd = new FormData();
+      fd.append("sellerId",    seller?._id   || "");
+      fd.append("name",        form.name.trim());
+      fd.append("phoneNumber", form.phoneNumber.trim());
+      fd.append("bio",         form.bio.trim());
+      fd.append("location",    form.location.trim());
+      fd.append("website",     form.website.trim());
+      fd.append("shopName",    form.shopName.trim());
+      if (avatarFile) fd.append("image", avatarFile);
 
-      const res  = await fetch("/api/seller/profile", { method: "PATCH", body: formData });
+      const res  = await fetch("/api/seller/profile", { method: "PATCH", body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Update failed");
 
@@ -357,28 +225,15 @@ export default function SellerSettingsPage() {
     }
   };
 
-  const openPaymentModal = (plan: "basic" | "premium") => {
-    setSelectedPlan(plan);
-    setShowPaymentModal(true);
-    setShowUpgradeModal(false);
-  };
-
-  const amount =
-    selectedPlan === "basic"    ? 1300
-    : selectedPlan === "premium"
-      ? seller?.shop?.plan === "basic" ? 1700 : 3000
-    : 0;
-
-  const planLabel    = seller?.shop?.plan || "free";
+  const planLabel     = seller?.shop?.plan || "free";
   const displayAvatar = avatarPreview || seller?.image;
 
-  // ─── Render ───────────────────────────────────────────────────────────────
+  // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 pt-24 pb-16 px-4 md:px-8 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-r from-orange-500/10 to-gray-200/5 blur-3xl -z-10" />
 
-      {/* Page Header */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="max-w-5xl mx-auto mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
         <p className="text-gray-500 text-sm mt-1">Manage your shop details, plan & preferences.</p>
@@ -415,12 +270,12 @@ export default function SellerSettingsPage() {
               </button>
             </div>
             <div className="grid md:grid-cols-2 gap-x-8 gap-y-3">
-              <InfoRow icon={<User size={15} />}    label="Full Name"  value={seller?.name} />
-              <InfoRow icon={<Mail size={15} />}    label="Email"      value={seller?.email} />
-              <InfoRow icon={<Phone size={15} />}   label="Phone"      value={seller?.phoneNumber} />
-              <InfoRow icon={<Store size={15} />}   label="Shop Name"  value={seller?.shop?.name} />
-              <InfoRow icon={<MapPin size={15} />}  label="Location"   value={seller?.location} />
-              <InfoRow icon={<Globe size={15} />}   label="Website"    value={seller?.website} link />
+              <InfoRow icon={<User size={15} />}   label="Full Name"  value={seller?.name} />
+              <InfoRow icon={<Mail size={15} />}   label="Email"      value={seller?.email} />
+              <InfoRow icon={<Phone size={15} />}  label="Phone"      value={seller?.phoneNumber} />
+              <InfoRow icon={<Store size={15} />}  label="Shop Name"  value={seller?.shop?.name} />
+              <InfoRow icon={<MapPin size={15} />} label="Location"   value={seller?.location} />
+              <InfoRow icon={<Globe size={15} />}  label="Website"    value={seller?.website} link />
               {seller?.bio && (
                 <div className="md:col-span-2">
                   <InfoRow icon={<FileText size={15} />} label="Bio" value={seller.bio} />
@@ -445,8 +300,11 @@ export default function SellerSettingsPage() {
                 {planLabel.charAt(0).toUpperCase() + planLabel.slice(1)} Plan
               </span>
             </div>
-            <button onClick={() => setShowUpgradeModal(true)}
-              className="bg-orange-600 hover:bg-orange-700 text-white px-5 py-2 rounded-lg text-sm font-medium shadow-sm transition">
+            {/* ── Navigates to the standalone packages page ── */}
+            <button
+              onClick={() => router.push("/seller/shop/upgrade")}
+              className="bg-orange-600 hover:bg-orange-700 text-white px-5 py-2 rounded-lg text-sm font-medium shadow-sm transition"
+            >
               {planLabel === "premium" ? "Manage Plan" : "Upgrade Plan"}
             </button>
           </div>
@@ -597,9 +455,7 @@ export default function SellerSettingsPage() {
 
       </div>
 
-      {/* ═══════════════════════════════════════════════════
-          EDIT PROFILE MODAL
-      ═══════════════════════════════════════════════════ */}
+      {/* ── Edit Profile Modal ── */}
       <AnimatePresence>
         {showEditModal && (
           <motion.div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[999999999] flex items-center justify-center px-4 py-6"
@@ -618,6 +474,7 @@ export default function SellerSettingsPage() {
                 </button>
               </div>
               <div className="px-6 py-6 space-y-6">
+                {/* Avatar upload */}
                 <div className="flex flex-col items-center gap-3">
                   <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                     <div className="w-24 h-24 rounded-full border-4 border-orange-100 overflow-hidden bg-orange-50 flex items-center justify-center shadow">
@@ -682,193 +539,14 @@ export default function SellerSettingsPage() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* ═══════════════════════════════════════════════════
-          UPGRADE PLAN MODAL — redesigned Meta-style
-      ═══════════════════════════════════════════════════ */}
-      <AnimatePresence>
-        {showUpgradeModal && (
-          <motion.div
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[999999999] flex items-center justify-center px-4 py-8 overflow-y-auto"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={() => setShowUpgradeModal(false)}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96, y: 24 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 24 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Modal header */}
-              <div className="px-8 pt-8 pb-6 border-b border-gray-100 flex items-start justify-between">
-                <div>
-                  <p className="text-xs font-semibold text-orange-500 uppercase tracking-widest mb-1">Shop Plans</p>
-                  <h2 className="text-2xl font-bold text-gray-900">Choose the right plan for your shop</h2>
-                  <p className="text-sm text-gray-500 mt-1.5">
-                    Unlock more products, visibility, and earning power. Upgrade anytime — cancel anytime.
-                  </p>
-                </div>
-                <button onClick={() => setShowUpgradeModal(false)}
-                  className="ml-4 mt-0.5 flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-full border border-gray-200 hover:bg-gray-50 text-gray-500 transition">
-                  <X size={17} />
-                </button>
-              </div>
-
-              {/* Current plan callout */}
-              <div className="px-8 py-3 bg-gray-50 border-b border-gray-100 flex items-center gap-2 text-sm text-gray-600">
-                <ShieldCheck size={15} className="text-orange-500 flex-shrink-0" />
-                You are currently on the <span className="font-semibold text-gray-900 capitalize ml-1 mr-1">{planLabel}</span> plan.
-                {planLabel !== "free" && <span className="text-gray-400">· Renews annually.</span>}
-              </div>
-
-              {/* Plan cards */}
-              <div className="p-8">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {PLANS.map((plan) => {
-                    const isCurrent   = planLabel === plan.id;
-                    const isDowngrade = plan.id === "basic" && planLabel === "premium";
-                    const isDisabled  = isCurrent || isDowngrade || plan.id === "free";
-
-                    // Price shown (topup for premium if already basic)
-                    const displayPrice =
-                      plan.id === "premium" && planLabel === "basic" && plan.topupPrice
-                        ? plan.topupPrice
-                        : plan.price;
-
-                    return (
-                      <div
-                        key={plan.id}
-                        className={`relative flex flex-col rounded-2xl border-2 transition-all ${
-                          plan.recommended
-                            ? "border-blue-500 shadow-lg shadow-blue-100"
-                            : isCurrent
-                              ? "border-orange-400 shadow-md shadow-orange-50"
-                              : "border-gray-200 hover:border-gray-300"
-                        } bg-white overflow-hidden`}
-                      >
-                        {/* Recommended ribbon */}
-                        {plan.recommended && (
-                          <div className="bg-blue-500 text-white text-[11px] font-bold text-center py-1.5 tracking-wider uppercase">
-                            Recommended
-                          </div>
-                        )}
-
-                        {/* Current plan ribbon */}
-                        {isCurrent && !plan.recommended && (
-                          <div className="bg-orange-500 text-white text-[11px] font-bold text-center py-1.5 tracking-wider uppercase">
-                            Current Plan
-                          </div>
-                        )}
-
-                        <div className="p-6 flex flex-col flex-1">
-                          {/* Icon + name */}
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className={`w-10 h-10 rounded-xl ${plan.iconBg} flex items-center justify-center flex-shrink-0`}>
-                              {plan.icon}
-                            </div>
-                            <div>
-                              <p className="font-bold text-gray-900 text-base">{plan.name}</p>
-                              <p className="text-xs text-gray-400">{plan.description}</p>
-                            </div>
-                          </div>
-
-                          {/* Price */}
-                          <div className="mb-5">
-                            <span className="text-3xl font-extrabold text-gray-900">{displayPrice}</span>
-                            <span className="text-sm text-gray-400 ml-1.5">{plan.period}</span>
-                            {plan.id === "premium" && planLabel === "basic" && (
-                              <p className="text-[11px] text-blue-500 font-medium mt-1">
-                                Top-up from Basic — save Ksh 1,300
-                              </p>
-                            )}
-                          </div>
-
-                          {/* Features */}
-                          <ul className="space-y-2.5 mb-6 flex-1">
-                            {plan.features.map((f, i) => (
-                              <li key={i} className="flex items-start gap-2.5">
-                                {f.ok
-                                  ? <Check size={14} className="text-green-500 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
-                                  : <X     size={14} className="text-gray-300 flex-shrink-0 mt-0.5"  strokeWidth={2.5} />
-                                }
-                                <span className={`text-sm ${f.ok ? "text-gray-700" : "text-gray-400"}`}>{f.text}</span>
-                              </li>
-                            ))}
-                          </ul>
-
-                          {/* CTA */}
-                          <button
-                            disabled={isDisabled || activatingShop}
-                            onClick={() => !isDisabled && plan.id !== "free" && openPaymentModal(plan.id)}
-                            className={`w-full py-2.5 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2 ${
-                              isDisabled
-                                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                : plan.btnClass
-                            }`}
-                          >
-                            {isCurrent ? (
-                              <>
-                                <Check size={14} strokeWidth={2.5} /> Current Plan
-                              </>
-                            ) : isDowngrade ? (
-                              "Not available"
-                            ) : plan.id === "free" ? (
-                              "Free"
-                            ) : activatingShop ? (
-                              <><Loader2 size={14} className="animate-spin" /> Processing…</>
-                            ) : (
-                              <>Upgrade to {plan.name} <ArrowRight size={14} /></>
-                            )}
-                          </button>
-
-                          {/* Downgrade notice */}
-                          {isDowngrade && (
-                            <p className="text-[11px] text-center text-gray-400 mt-2">
-                              You're already on a higher plan
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Footer trust line */}
-                <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-gray-400">
-                  <span className="flex items-center gap-1.5"><ShieldCheck size={13} className="text-green-500" />Secure payment via M-Pesa & card</span>
-                  <span className="flex items-center gap-1.5"><TrendingUp  size={13} className="text-blue-400"  />Instant plan activation after payment</span>
-                  <span className="flex items-center gap-1.5"><Zap         size={13} className="text-orange-400"/>Cancel or change plan anytime</span>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-
-        {/* Payment Modal */}
-        {showPaymentModal && seller && (
-          <motion.div className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white p-6 rounded-xl w-full max-w-md relative shadow-xl">
-              <GlobalPayModal
-                payload={{ amount, items: [], deliveryFee: 0, county: "", town: "", userId: seller._id, purpose: "shop-upgrade", refId: seller._id }}
-                onClose={() => setShowPaymentModal(false)}
-                onSuccess={() => { toast.success("Shop upgraded successfully!"); window.location.reload(); }}
-              />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function InfoRow({ icon, label, value, link }: { icon: React.ReactNode; label: string; value?: string; link?: boolean }) {
+function InfoRow({ icon, label, value, link }:
+  { icon: React.ReactNode; label: string; value?: string; link?: boolean }) {
   if (!value) return null;
   return (
     <div className="flex items-start gap-2.5 py-1">
@@ -885,7 +563,8 @@ function InfoRow({ icon, label, value, link }: { icon: React.ReactNode; label: s
 }
 
 function FormField({ label, icon, value, onChange, error, placeholder, type = "text", required }:
-  { label: string; icon: React.ReactNode; value: string; onChange: (v: string) => void; error?: string; placeholder?: string; type?: string; required?: boolean }) {
+  { label: string; icon: React.ReactNode; value: string; onChange: (v: string) => void;
+    error?: string; placeholder?: string; type?: string; required?: boolean }) {
   return (
     <div>
       <label className="block text-xs font-medium text-gray-600 mb-1.5">
@@ -898,26 +577,14 @@ function FormField({ label, icon, value, onChange, error, placeholder, type = "t
   );
 }
 
-function PlanFeatures({ features }: { features: { ok: boolean; text: string }[] }) {
-  return (
-    <ul className="space-y-2 text-sm text-gray-200">
-      {features.map((f, i) => (
-        <li key={i} className="flex items-center gap-2">
-          {f.ok ? <CheckCircle size={15} className="text-green-400 flex-shrink-0" /> : <XCircle size={15} className="text-red-400 flex-shrink-0" />}
-          {f.text}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 function PaymentMethodIcon({ id }: { id: string }) {
   const icons: Record<string, string> = { mpesa: "📱", card: "💳", bank: "🏦", cash: "💵", paypal: "🅿️" };
   return <span className="text-lg leading-none">{icons[id] ?? "💰"}</span>;
 }
 
 function LabeledInput({ label, hint, placeholder, type = "text", value, onChange, prefix, suffix, className = "" }:
-  { label: string; hint?: string; placeholder?: string; type?: string; value: string; onChange: (v: string) => void; prefix?: string; suffix?: string; className?: string }) {
+  { label: string; hint?: string; placeholder?: string; type?: string; value: string;
+    onChange: (v: string) => void; prefix?: string; suffix?: string; className?: string }) {
   return (
     <div className={className}>
       <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
