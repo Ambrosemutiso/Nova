@@ -83,7 +83,7 @@ export default function SellerSidebar({ isOpen = false, onClose, onOpen }: Props
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-40"
+            className="fixed inset-0 z-[999]"
             style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
           />
         )}
@@ -96,7 +96,7 @@ export default function SellerSidebar({ isOpen = false, onClose, onOpen }: Props
             animate={{ x: 0 }}
             exit={{ x: -280 }}
             transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
-            className="fixed top-0 left-0 h-full z-50 flex flex-col"
+            className="fixed top-0 left-0 h-full z-[999] flex flex-col"
             style={{
               width: '268px',
               background: 'linear-gradient(160deg, #0f0f13 0%, #18141f 60%, #1a1016 100%)',
@@ -184,7 +184,7 @@ export default function SellerSidebar({ isOpen = false, onClose, onOpen }: Props
                   }}
                 >
                   <Image
-                    src={user?.image || '/avatar.png'}
+                    src={user?.image || user?.name?.charAt(0)?.toUpperCase() || "S"}
                     alt={user?.name || 'Seller'}
                     width={42}
                     height={42}
@@ -380,23 +380,40 @@ export default function SellerSidebar({ isOpen = false, onClose, onOpen }: Props
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.3 }}
-          style={{
-            position: 'fixed',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            left: 8,
-            zIndex: 20,
-            background: 'linear-gradient(160deg,#0f0f13,#18141f)',
-            border: '1px solid rgba(249,115,22,0.2)',
-            borderRadius: 16,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.45)',
-            padding: '12px 6px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 2,
-            width: 68,
-          }}
+style={{
+  position: 'fixed',
+  top: 12,
+  bottom: 12,
+  left: 10,
+  zIndex: 20,
+
+  background:
+    'linear-gradient(180deg, rgba(20,20,25,0.96), rgba(10,10,15,0.98))',
+
+  backdropFilter: 'blur(14px)',
+
+  border: '1px solid rgba(249,115,22,0.2)',
+  borderLeft: '1px solid rgba(255,255,255,0.04)',
+
+  borderRadius: 16,
+
+  boxShadow: '0 8px 32px rgba(0,0,0,0.45)',
+
+  padding: '12px 6px',
+
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: 2,
+
+  width: 68,
+
+  overflowY: 'auto',
+  overflowX: 'hidden',
+
+  scrollbarWidth: 'none',
+  WebkitOverflowScrolling: 'touch',
+}}
         >
           {menuItems.map((item) => {
             const active = isActive(item.path);
