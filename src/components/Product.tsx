@@ -289,6 +289,11 @@ return (
   }}
 />
 <meta property="og:image" content={product.images[0]} />
+<SellerSection product={product} showLoginModal={() => setShowLoginModal(true)} />
+      <SaveToRecentlyViewed id={product._id.toString()} />
+      <Section>
+      <RecentlyViewed />
+      </Section>
 {/* Product Description Section */}
 {product.description && (
   <Section>
@@ -432,11 +437,6 @@ return (
     </div>
   </div>
 </Section>
-
-      <SaveToRecentlyViewed id={product._id.toString()} />
-      <Section>
-      <RecentlyViewed />
-      </Section>
       <Section>
       <RelatedProducts name={product.name} currentId={product._id.toString()} />
       </Section>
@@ -446,7 +446,6 @@ return (
       <Section>
       <BehaviorTracker product={product} />
       {showLoginModal && <BuyerLoginModal onClose={() => setShowLoginModal(false)} />}
-      <SellerSection product={product} showLoginModal={() => setShowLoginModal(true)} />
       </Section>
       <Section>
       <MoreFromSeller sellerId={product.sellerId} currentProductId={product._id.toString()} />
