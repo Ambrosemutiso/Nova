@@ -12,7 +12,7 @@ export async function GET() {
     const verifiedSellers = await Seller.find({
       followers: { $exists: true },
       $expr: { $gte: [{ $size: '$followers' }, 1] },
-    }).select('_id');
+    }).select('_id').sort({ createdAt: -1 }).limit(15);
 
     const sellerIds = verifiedSellers.map((s) => s._id);
 

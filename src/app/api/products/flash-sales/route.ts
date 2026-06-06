@@ -6,9 +6,9 @@ export async function GET() {
   try {
     await dbConnect();
 
-    const products = await Product.find({ calculatedPrice: { $lt: 1000 } })
+    const products = await Product.find({ calculatedPrice: { $lt: 20000 } })
       .sort({ createdAt: -1 }) // optional: newest first
-      .limit(30); // limit for flash sale
+      .limit(15); // limit for flash sale
 
     return NextResponse.json({ products });
   } catch (error) {

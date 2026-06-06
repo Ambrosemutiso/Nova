@@ -90,7 +90,7 @@ export default function FlashSales() {
     <div className="px-1 py-1">
       <div className="flex justify-between items-center mb-2">
         <h2 className="text-xl font-semibold text-red-600">
-          🔥 Flash Sales{' '}
+          ⚡ Flash Sales{' '}
           <span className="ml-2 text-sm text-black">Ends in: {timeLeft}</span>
         </h2>
 
