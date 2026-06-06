@@ -217,3 +217,34 @@ html {
 .hide-footer footer {
   display: none !important;
 }
+
+
+/* Add these inside your globals.css or tailwind.config.js theme.extend.keyframes */
+
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* If using tailwind.config.js instead, add to theme.extend: */
+/*
+keyframes: {
+  shimmer: {
+    '0%':   { backgroundPosition: '-400px 0' },
+    '100%': { backgroundPosition: '400px 0' },
+  },
+  fadeIn: {
+    from: { opacity: '0', transform: 'scale(0.8)' },
+    to:   { opacity: '1', transform: 'scale(1)' },
+  },
+},
+animation: {
+  shimmer: 'shimmer 1.4s infinite linear',
+  fadeIn:  'fadeIn 0.3s ease',
+},
+*/
