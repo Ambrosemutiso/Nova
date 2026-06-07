@@ -108,7 +108,7 @@ export default function HeroSlider() {
   }
 
   return (
-    <div className="w-full relative select-none">
+    <div className="w-full top-20 relative select-none">
 
       {/* ── Main slider track ── */}
       <div

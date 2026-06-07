@@ -78,7 +78,7 @@ export default function FlashProductCard({
   const handleBuyNow = (e: React.MouseEvent) => {
     e.stopPropagation();
     handleAddToCart(e);
-    router.push('/checkout');
+    router.push('/cart');
   };
 
   /* ── derived ── */
