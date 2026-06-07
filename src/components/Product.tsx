@@ -5,8 +5,8 @@ import { useCart } from '@/app/context/CartContext';
 import {
   Tag, Package, MapPin, CheckCircle, XCircle, ShoppingCart,
   ChevronRight, ShieldCheck, Truck, RotateCcw, BadgeCheck,
-  Star, Eye, Zap, Lock, Clock, AlertTriangle, ChevronDown,
-  MoreVertical, Flag, CreditCard, Smartphone
+  Star, Eye, Zap, Lock, Clock, AlertTriangle,
+  MoreVertical, Flag, CreditCard, Smartphone, Headphones
 } from "lucide-react";
 import type { ProductType } from "@/app/types/product";
 import RelatedProducts from '@/components/RelatedProducts';
@@ -630,7 +630,7 @@ export default function ProductDetails() {
                 Add to Cart
               </button>
               <Link
-                href="/checkout"
+                href="/cart"
                 onClick={handleAddToCart}
                 className="flex-1 flex items-center justify-center gap-2 bg-gray-900 text-white font-bold py-3.5 rounded-2xl hover:bg-gray-800 active:scale-[0.98] transition text-sm"
               >
@@ -729,6 +729,77 @@ export default function ProductDetails() {
         }}
       />
       <meta property="og:image" content={product.images[0]} />
+              {/* 12 · Bottom trust strip — closes the page with confidence */}
+        <Section>
+          <BottomTrustStrip />
+        </Section>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TRUST BADGES
+═══════════════════════════════════════════════════════════════ */
+const trustItems = [
+  { icon: <ShieldCheck className="w-5 h-5 text-orange-500" />, title: 'Secure Payment',    sub: 'M-Pesa · Visa · Mastercard' },
+  { icon: <Truck       className="w-5 h-5 text-orange-500" />, title: 'Fast Delivery',     sub: 'Same-day in Nairobi'        },
+  { icon: <RotateCcw   className="w-5 h-5 text-orange-500" />, title: '7-Day Returns',     sub: 'Hassle-free policy'         },
+  { icon: <Headphones  className="w-5 h-5 text-orange-500" />, title: '24/7 Support',      sub: 'Always here for you'        },
+];
+
+function TrustBadges() {
+  return (
+    <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+      <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-gray-100">
+        {trustItems.map((item, i) => (
+          <div key={i} className="flex items-center gap-3 px-4 py-4 hover:bg-orange-50/40 transition-colors">
+            <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center shrink-0">
+              {item.icon}
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-900 leading-tight">{item.title}</p>
+              <p className="text-xs text-gray-500 mt-0.5">{item.sub}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+/* ═══════════════════════════════════════════════════════════════
+   BOTTOM TRUST STRIP
+═══════════════════════════════════════════════════════════════ */
+function BottomTrustStrip() {
+  return (
+    <div
+      className="rounded-2xl overflow-hidden"
+      style={{ background: 'linear-gradient(135deg, #1c1c1e 0%, #2d2d30 100%)' }}
+    >
+      <div className="px-6 py-8 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
+        {[
+          {
+            icon: <ShieldCheck className="w-8 h-8 text-orange-400" />,
+            title: '100% Buyer Protection',
+            body: "Your money is safe. Full refund if item doesn't arrive or isn't as described.",
+          },
+          {
+            icon: <Truck className="w-8 h-8 text-orange-400" />,
+            title: 'Nationwide Delivery',
+            body: 'Same-day Nairobi. 1–3 days to all 47 counties across Kenya.',
+          },
+          {
+            icon: <RotateCcw className="w-8 h-8 text-orange-400" />,
+            title: 'Easy 7-Day Returns',
+            body: "Not happy? Return it within 7 days, no questions asked.",
+          },
+        ].map((item, i) => (
+          <div key={i} className="flex flex-col items-center gap-2">
+            {item.icon}
+            <p className="text-white font-bold text-sm">{item.title}</p>
+            <p className="text-gray-400 text-xs leading-relaxed">{item.body}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

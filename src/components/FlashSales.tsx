@@ -1,73 +1,112 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import type { ProductType } from "@/app/types/product";
+import type { ProductType } from '@/app/types/product';
 import { toast } from 'react-toastify';
 import FlashProductCard from './FlashSaleProductCard';
-import { Section } from './SectionWrapper';
+import { Zap, ChevronRight, RefreshCw } from 'lucide-react';
 
 const FLASH_SALE_DURATION_MS = 3 * 60 * 60 * 1000; // 3 hours
 
-export default function FlashSales() {
-  const [flashProducts, setFlashProducts] = useState<ProductType[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [timeLeft, setTimeLeft] = useState('');
-  const saleEndRef = useRef<Date | null>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+/* ── flip-digit display ── */
+function Digit({ value }: { value: string }) {
+  const [display, setDisplay] = useState(value);
+  const [flip,    setFlip]    = useState(false);
+  const prev = useRef(value);
 
-  const initializeSaleEnd = () => {
-    const now = new Date();
-    const end = new Date(now.getTime() + FLASH_SALE_DURATION_MS);
-    saleEndRef.current = end;
+  useEffect(() => {
+    if (value !== prev.current) {
+      setFlip(true);
+      const t = setTimeout(() => { setDisplay(value); setFlip(false); prev.current = value; }, 200);
+      return () => clearTimeout(t);
+    }
+  }, [value]);
+
+  return (
+    <span
+      className="inline-flex items-center justify-center w-9 h-10 rounded-lg tabular-nums
+        font-black text-xl text-white bg-white/20 backdrop-blur-sm shadow-inner"
+      style={{
+        transform:  flip ? 'scaleY(0.6)' : 'scaleY(1)',
+        transition: 'transform 0.18s ease',
+      }}
+    >
+      {display}
+    </span>
+  );
+}
+
+function pad(n: number) { return String(n).padStart(2, '0'); }
+
+/* ══════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+══════════════════════════════════════════════════════════════ */
+export default function FlashSales() {
+  const [flashProducts,     setFlashProducts]     = useState<ProductType[]>([]);
+  const [categories,        setCategories]        = useState<string[]>([]);
+  const [selectedCategory,  setSelectedCategory]  = useState<string>('All');
+  const [time,              setTime]              = useState({ h: 0, m: 0, s: 0 });
+  const [progressPct,       setProgressPct]       = useState(0);
+  const [loading,           setLoading]           = useState(true);
+  const [headerVisible,     setHeaderVisible]     = useState(false);
+
+  const saleEndRef      = useRef<Date | null>(null);
+  const headerRef       = useRef<HTMLDivElement>(null);
+
+  /* ── header entrance observer ── */
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setHeaderVisible(true); obs.disconnect(); } },
+      { threshold: 0.1 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  const initSaleEnd = () => {
+    saleEndRef.current = new Date(Date.now() + FLASH_SALE_DURATION_MS);
   };
 
   const fetchFlashSales = async () => {
+    setLoading(true);
     try {
-      const res = await fetch('/api/products/flash-sales');
+      const res  = await fetch('/api/products/flash-sales');
       const data = await res.json();
-      const products = data.products || [];
-
+      const products: ProductType[] = data.products || [];
       setFlashProducts(products);
       setSelectedCategory('All');
-
-      // ✅ Extract categories from the fetched products
-      const uniqueCategories = [...new Set(products.map((p: ProductType) => p.category))] as string[];
-      setCategories(uniqueCategories);
-
-      // ✅ Reset scroll
-      if (scrollContainerRef.current) {
-        scrollContainerRef.current.scrollLeft = 0;
-      }
-
-      // ✅ Notify user
-      toast.success('New flash sale started!');
+      setCategories([...new Set(products.map((p) => p.category))] as string[]);
     } catch (err) {
-      console.error('Failed to fetch flash sale products:', err);
+      console.error('Flash sales fetch failed:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    initializeSaleEnd();
+    initSaleEnd();
     fetchFlashSales();
 
     const timer = setInterval(() => {
-      const now = new Date();
-      const end = saleEndRef.current!;
-      const diff = end.getTime() - now.getTime();
+      const diff = Math.max(0, (saleEndRef.current?.getTime() ?? 0) - Date.now());
 
-      if (diff <= 0) {
-        initializeSaleEnd();
+      if (diff === 0) {
+        initSaleEnd();
         fetchFlashSales();
+        toast.success('🔥 New flash sale started!');
       }
 
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor((diff / (1000 * 60)) % 60);
-      const seconds = Math.floor((diff / 1000) % 60);
-      setTimeLeft(
-        `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(
-          seconds
-        ).padStart(2, '0')}`
+      setTime({
+        h: Math.floor(diff / 3_600_000),
+        m: Math.floor((diff % 3_600_000) / 60_000),
+        s: Math.floor((diff % 60_000) / 1_000),
+      });
+      setProgressPct(
+        saleEndRef.current
+          ? ((FLASH_SALE_DURATION_MS - diff) / FLASH_SALE_DURATION_MS) * 100
+          : 0
       );
     }, 1000);
 
@@ -78,53 +117,140 @@ export default function FlashSales() {
     ? flashProducts
     : flashProducts.filter((p) => p.category === selectedCategory);
 
-  if (flashProducts.length === 0) return null;
-
-  const progressPercent =
-    saleEndRef.current && FLASH_SALE_DURATION_MS
-      ? ((FLASH_SALE_DURATION_MS - (saleEndRef.current.getTime() - Date.now())) / FLASH_SALE_DURATION_MS) * 100
-      : 0;
+  if (!loading && flashProducts.length === 0) return null;
 
   return (
-  <Section>
-    <div className="px-1 py-1">
-      <div className="flex justify-between items-center mb-2">
-        <h2 className="text-xl font-semibold text-red-600">
-          ⚡ Flash Sales{' '}
-          <span className="ml-2 text-sm text-black">Ends in: {timeLeft}</span>
-        </h2>
-
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="border p-1 rounded text-sm"
-        >
-          <option value="All">All Categories</option>
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Progress bar */}
-      <div className="h-2 w-full bg-gray-200 rounded overflow-hidden mb-2">
-        <div
-          className="bg-red-500 h-full transition-all duration-1000"
-          style={{ width: `${progressPercent}%` }}
-        ></div>
-      </div>
-
+    <div>
+      {/* ══ HEADER BANNER ══ */}
       <div
-        className="flex gap-4 overflow-x-auto pb-2 scroll-smooth"
-        ref={scrollContainerRef}
+        ref={headerRef}
+        className="relative rounded-2xl overflow-hidden mb-5"
+        style={{
+          background: 'linear-gradient(135deg, #111827 0%, #1f2937 40%, #7f1d1d 100%)',
+          opacity:    headerVisible ? 1 : 0,
+          transform:  headerVisible ? 'translateY(0)' : 'translateY(-12px)',
+          transition: 'opacity 0.5s ease, transform 0.5s ease',
+        }}
       >
-        {filtered.map((product) => (
-          <FlashProductCard key={product._id} product={product} />
-        ))}
+        {/* decorative glows */}
+        <div className="absolute -top-12 -left-12 w-48 h-48 rounded-full bg-red-600/20 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-10 right-10 w-36 h-36 rounded-full bg-orange-500/20 blur-2xl pointer-events-none" />
+
+        <div className="relative px-5 py-5">
+
+          {/* top row: title + countdown */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+
+            {/* left: title */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-500/30 flex items-center justify-center shrink-0">
+                <Zap className="w-5 h-5 text-yellow-300 fill-yellow-300" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-white font-black text-xl tracking-tight">FLASH SALE</span>
+                  <span className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5
+                    rounded-full animate-pulse">
+                    LIVE
+                  </span>
+                </div>
+                <p className="text-gray-400 text-xs mt-0.5">
+                  Up to 60% off — refreshes every 3 hours
+                </p>
+              </div>
+            </div>
+
+            {/* right: countdown */}
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400 text-xs">Ends in</span>
+              <div className="flex items-center gap-1">
+                <Digit value={pad(time.h)} />
+                <span className="text-white font-black text-lg">:</span>
+                <Digit value={pad(time.m)} />
+                <span className="text-white font-black text-lg">:</span>
+                <Digit value={pad(time.s)} />
+              </div>
+            </div>
+          </div>
+
+          {/* progress bar — "time burning" */}
+          <div className="mt-4 h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-1000"
+              style={{
+                width: `${progressPct}%`,
+                background: 'linear-gradient(90deg, #f97316, #ef4444)',
+              }}
+            />
+          </div>
+
+          {/* category pills */}
+          {categories.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto mt-4 pb-0.5 no-scrollbar">
+              {['All', ...categories].map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full transition-all duration-200
+                    ${selectedCategory === cat
+                      ? 'bg-red-500 text-white shadow-md shadow-red-500/30'
+                      : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                    }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* ══ PRODUCT GRID ══ */}
+      {loading ? (
+        /* skeleton grid */
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className="rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm">
+              <div className="aspect-square bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100
+                animate-[shimmer_1.4s_infinite_linear]"
+                style={{ backgroundSize: '800px 100%' }}
+              />
+              <div className="p-3 space-y-2">
+                <div className="h-3 bg-gray-100 rounded animate-pulse w-4/5" />
+                <div className="h-3 bg-gray-100 rounded animate-pulse w-3/5" />
+                <div className="h-2 bg-gray-100 rounded animate-pulse w-full mt-1" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+          <RefreshCw className="w-8 h-8 mb-2 animate-spin" />
+          <p className="text-sm">No products in this category</p>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {filtered.map((product, i) => (
+              <FlashProductCard
+                key={product._id}
+                product={product}
+                index={i}
+              />
+            ))}
+          </div>
+
+          {/* see all CTA */}
+          <div className="flex justify-center mt-6">
+            <button className="flex items-center gap-2 bg-red-500 hover:bg-red-600 active:scale-95
+              text-white text-sm font-bold px-6 py-3 rounded-full shadow-lg shadow-red-200
+              transition-all duration-200">
+              See All Flash Deals
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </>
+      )}
     </div>
-    </Section>
   );
 }

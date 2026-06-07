@@ -54,11 +54,12 @@ const [isMobile, setIsMobile] = useState(false);
   const isSeller = user?.role === 'seller';
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
-  const promos = [
-    '🔥 Flash Sale! Up to 50% off selected products!',
-    '🚚 Free delivery for orders above Ksh 2,000!',
-    '💳 Secure Payments via M-Pesa & AirtelMoney',
-  ];
+const promos = [
+  '🎉 Free delivery on orders over Ksh 2,000 in Nairobi',
+  '🔒 100% Secure Payments — M-Pesa, Visa & Mastercard accepted',
+  '↩️ 7-day hassle-free returns on all orders',
+  '⚡ Flash Sale live now — up to 60% OFF selected items',
+];
 
   const x = useMotionValue(-288); // drawer width
 const pathname = usePathname();

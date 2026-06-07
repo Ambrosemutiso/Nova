@@ -338,7 +338,7 @@ export default function Main() {
         <Section>
           <div className="bg-white border border-gray-100 rounded-2xl shadow-sm px-4 py-5">
             <SectionHeading
-              title="Promoted Products"
+              title="Sponsored Products"
               sub="Hand-picked deals from top sellers"
             />
             <SponsoredProducts />

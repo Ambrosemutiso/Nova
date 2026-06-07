@@ -2,77 +2,262 @@
 
 import { useRouter } from 'next/navigation';
 import { CldImage } from 'next-cloudinary';
-import type { ProductType } from "@/app/types/product";
+import type { ProductType } from '@/app/types/product';
+import { useCart } from '@/app/context/CartContext';
+import { ShoppingCart, Zap } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 
-interface ProductCardProps {
+interface FlashProductCardProps {
   product: ProductType;
   showSponsoredBadge?: boolean;
   badge?: React.ReactNode;
   redirectAllTo?: string;
+  index?: number;
+  maxQuantity?: number; // original stock for progress bar; pass from parent if available
 }
 
-export default function FlashProductCard({ product, showSponsoredBadge, badge, redirectAllTo }: ProductCardProps) {
+export default function FlashProductCard({
+  product,
+  showSponsoredBadge,
+  badge,
+  redirectAllTo,
+  index = 0,
+  maxQuantity,
+}: FlashProductCardProps) {
   const router = useRouter();
+  const { addToCart, cartItems } = useCart();
 
-  const calculateDiscount = (oldPrice: number, calculatedPrice: number) =>
-    Math.round(((oldPrice - calculatedPrice) / oldPrice) * 100);
+  const [visible,     setVisible]     = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [addedFlash,  setAddedFlash]  = useState(false);
+  const [stockAnim,   setStockAnim]   = useState(false); // triggers bar animation
+  const cardRef = useRef<HTMLDivElement>(null);
 
+  /* ── entrance observer ── */
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          setVisible(true);
+          // slight delay so bar animates after card fades in
+          setTimeout(() => setStockAnim(true), 400);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  /* ── helpers ── */
   const getPublicId = (url: string) => {
-    const regex = /\/upload\/(?:v\d+\/)?([^\.]+)/;
-    const match = url.match(regex);
-    return match ? match[1] : url;
+    const m = url.match(/\/upload\/(?:v\d+\/)?([^.]+)/);
+    return m ? m[1] : url;
   };
 
+  const handleNavigate = () =>
+    router.push(redirectAllTo ?? `/product/${product.slug}`);
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    addToCart({
+      id: product._id, name: product.name, images: product.images,
+      brand: product.brand, model: product.model, county: product.county,
+      town: product.town, weight: product.weight,
+      calculatedPrice: product.calculatedPrice, quantity: 1,
+      fulfillmentMode: product.fulfillmentMode, sellerId: product.sellerId,
+      productId: product._id,
+    });
+    setAddedFlash(true);
+    setTimeout(() => setAddedFlash(false), 1500);
+  };
+
+  const handleBuyNow = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    handleAddToCart(e);
+    router.push('/checkout');
+  };
+
+  /* ── derived ── */
+  const inCart       = cartItems.some((i) => i.id === product._id);
+  const isOutOfStock = product.quantity === 0;
+  const isLowStock   = product.quantity > 0 && product.quantity <= 5;
+  const discount     = product.oldPrice && product.oldPrice > product.calculatedPrice
+    ? Math.round(((product.oldPrice - product.calculatedPrice) / product.oldPrice) * 100)
+    : null;
+
+  // stock progress: how much is LEFT (depleted bar looks more urgent)
+  const stockMax     = maxQuantity ?? Math.max(product.quantity, 20); // fallback cap
+  const stockPct     = Math.min(100, Math.round((product.quantity / stockMax) * 100));
+  // colour shifts red as stock runs low
+  const barColor     = stockPct <= 20 ? '#ef4444' : stockPct <= 50 ? '#f97316' : '#22c55e';
+
+  const staggerDelay = Math.min(index * 70, 500);
+
   return (
-    <div className="w-52 flex-shrink-0 relative bg-white p-3 rounded hover:shadow-lg transition">
-{showSponsoredBadge && (
-  <div className="absolute top-0 left-0 flex items-center gap-1 bg-white px-2 py-1 rounded-br z-10 text-xs font-semibold">
-    <svg
-      className="w-4 h-4 text-blue-600"
-      xmlns="http://www.w3.org/2000/svg"
-      fill="currentColor"
-      viewBox="0 0 24 24"
+    <div
+      ref={cardRef}
+      className="group relative flex flex-col bg-white rounded-2xl overflow-hidden
+        border border-gray-100 shadow-sm hover:shadow-2xl
+        transition-shadow duration-300 cursor-pointer"
+      style={{
+        opacity:    visible ? 1 : 0,
+        transform:  visible ? 'translateY(0)' : 'translateY(24px)',
+        transition: `opacity 0.45s ease ${staggerDelay}ms,
+                     transform 0.45s ease ${staggerDelay}ms,
+                     box-shadow 0.3s ease`,
+      }}
+      onClick={handleNavigate}
     >
-      <path d="M12 0c-1.654 0-3 1.346-3 3H7.5c-.827 0-1.5.673-1.5 1.5v2.085c0 .408-.246.775-.623.923l-1.727.69a1.5 1.5 0 000 2.78l1.727.69c.377.149.623.515.623.923V16.5c0 .827.673 1.5 1.5 1.5H9c0 1.654 1.346 3 3 3s3-1.346 3-3h1.5c.827 0 1.5-.673 1.5-1.5v-2.085c0-.408.246-.775.623-.923l1.727-.69a1.5 1.5 0 000-2.78l-1.727-.69a1.001 1.001 0 01-.623-.923V4.5c0-.827-.673-1.5-1.5-1.5H15c0-1.654-1.346-3-3-3zm-1 15l-3-3 1.414-1.414L11 12.172l4.586-4.586L17 9l-6 6z" />
-    </svg>
-    <span className="text-blue-600">Sponsored</span>
-  </div>
-)}
 
-            {/* Optional Flash Deal badge */}
-      {badge && (
-        <div className="absolute top-0 left-0 bg-yellow-400 text-black text-xs px-2 py-1 rounded-br z-10 font-bold shadow">
-          {badge}
+      {/* ══ IMAGE ══ */}
+      <div className="relative overflow-hidden bg-gray-50" style={{ aspectRatio: '1/1' }}>
+
+        {/* zoom on hover */}
+        <div className="w-full h-full transition-transform duration-500 group-hover:scale-105">
+          <CldImage
+            src={getPublicId(product.images[0])}
+            alt={product.name}
+            width={400}
+            height={400}
+            crop="fill"
+            className={`w-full h-full object-cover transition-opacity duration-300
+              ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+            placeholder="blur"
+            blurDataURL={`${getPublicId(product.images[0])}?blur=200`}
+            onLoad={() => setImageLoaded(true)}
+          />
         </div>
-      )}
-      <div className="absolute top-0 right-0 bg-red-500 text-white px-2 py-1 rounded-bl text-xs">
-        {calculateDiscount(product.oldPrice, product.calculatedPrice)}% OFF
+
+        {/* shimmer skeleton */}
+        {!imageLoaded && (
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100
+            animate-[shimmer_1.4s_infinite_linear]"
+            style={{ backgroundSize: '800px 100%' }}
+          />
+        )}
+
+        {/* discount badge */}
+        {discount && (
+          <div className="absolute top-2 left-2 bg-red-500 text-white text-[11px] font-black
+            px-2 py-0.5 rounded-lg shadow-md">
+            -{discount}%
+          </div>
+        )}
+
+        {/* sponsored */}
+        {showSponsoredBadge && (
+          <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-blue-600
+            text-[9px] font-bold px-1.5 py-0.5 rounded-md shadow">
+            Ad
+          </div>
+        )}
+
+        {/* custom badge (e.g. "⭐ Deal") */}
+        {badge && !showSponsoredBadge && (
+          <div className="absolute top-2 right-2 bg-yellow-400 text-black text-[9px] font-black
+            px-1.5 py-0.5 rounded-md shadow">
+            {badge}
+          </div>
+        )}
+
+        {/* out-of-stock overlay */}
+        {isOutOfStock && (
+          <div className="absolute inset-0 bg-white/75 flex items-center justify-center">
+            <span className="text-xs font-bold text-gray-500 bg-white border border-gray-200
+              px-3 py-1 rounded-full">
+              Out of Stock
+            </span>
+          </div>
+        )}
+
+        {/* ── Quick actions — slide up on hover ── */}
+        {!isOutOfStock && (
+          <div
+            className="absolute bottom-0 inset-x-0 flex gap-0 translate-y-full
+              group-hover:translate-y-0 transition-transform duration-300 ease-out"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={handleAddToCart}
+              className={`flex-1 flex items-center justify-center gap-1 py-2.5 text-[11px] font-bold
+                transition-colors duration-150
+                ${addedFlash
+                  ? 'bg-green-500 text-white'
+                  : inCart
+                  ? 'bg-orange-100 text-orange-700'
+                  : 'bg-orange-500 text-white hover:bg-orange-600'
+                }`}
+            >
+              <ShoppingCart className="w-3.5 h-3.5" />
+              {addedFlash ? '✓ Added' : inCart ? 'In Cart' : 'Add'}
+            </button>
+            <div className="w-px bg-white/30" />
+            <button
+              onClick={handleBuyNow}
+              className="flex-1 flex items-center justify-center gap-1 py-2.5 text-[11px] font-bold
+                bg-gray-900 text-white hover:bg-gray-800 transition-colors duration-150"
+            >
+              <Zap className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+              Buy Now
+            </button>
+          </div>
+        )}
       </div>
 
-      <div
-  onClick={() =>
-    redirectAllTo
-      ? router.push(redirectAllTo)
-      : router.push(`/product/${product.slug}`)
-  }
-  className="cursor-pointer"
->
-        <CldImage
-          src={getPublicId(product.images[0])}
-          alt={product.name}
-          width="300"
-          height="300"
-          crop="fill"
-          className="w-full h-44 object-cover rounded"
-          placeholder="blur"
-          blurDataURL={`${getPublicId(product.images[0])}?blur=200`}
-        />
-      </div>
+      {/* ══ CONTENT ══ */}
+      <div className="px-3 pt-2.5 pb-3 flex flex-col gap-1.5">
 
-      <h3 className="mt-2 text-sm text-gray-800 font-medium truncate">{product.name}</h3>
-      <div className="text-sm mt-1 flex gap-2 items-center">
-        <span className="line-through text-gray-400">Ksh.{product.oldPrice.toLocaleString()}</span>
-        <span className="text-red-600 font-bold">Ksh.{product.calculatedPrice.toLocaleString()}</span>
+        {/* name */}
+        <h3 className="text-sm text-gray-800 font-semibold leading-snug line-clamp-2">
+          {product.name}
+        </h3>
+
+        {/* price */}
+        <div className="flex items-baseline gap-2">
+          <span className="text-base font-black text-red-600 leading-none">
+            Ksh {product.calculatedPrice.toLocaleString()}
+          </span>
+          {product.oldPrice > product.calculatedPrice && (
+            <span className="text-[10px] line-through text-gray-400">
+              Ksh {product.oldPrice.toLocaleString()}
+            </span>
+          )}
+        </div>
+
+        {/* ── animated stock bar ── */}
+        <div className="mt-1">
+          <div className="flex items-center justify-between mb-1">
+            {isLowStock ? (
+              <span className="text-[10px] font-bold text-red-500 flex items-center gap-0.5">
+                <Zap className="w-2.5 h-2.5 animate-pulse" />
+                Only {product.quantity} left!
+              </span>
+            ) : isOutOfStock ? (
+              <span className="text-[10px] font-semibold text-gray-400">Sold out</span>
+            ) : (
+              <span className="text-[10px] text-gray-500">{product.quantity} available</span>
+            )}
+            <span className="text-[10px] font-semibold" style={{ color: barColor }}>
+              {stockPct}% left
+            </span>
+          </div>
+
+          {/* track */}
+          <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-[1200ms] ease-out"
+              style={{
+                width:      stockAnim ? `${stockPct}%` : '100%',
+                backgroundColor: barColor,
+              }}
+            />
+          </div>
+        </div>
+
       </div>
     </div>
   );
