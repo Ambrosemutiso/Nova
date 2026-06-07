@@ -30,6 +30,8 @@ export interface ProductType {
   createdAt: string;
   updatedAt: string;
   averageRating: number;
+  views: number;
+  visits: number;
   currency: string;
   reviewCount: number;
   installmentEnabled: boolean;

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Hero from '@/components/Hero';
 import Menu from '@/components/Menu';
-import ProductsList from '@/components/ProductsList';
+import TrendingProducts from '@/components/TrendingProducts';
 import TopPicksForYou from '@/components/TopPicksForYou';
 import SuggestedForYou from '@/components/SuggestedForYou';
 import SponsoredProducts from '@/components/SponsoredProducts';
@@ -250,7 +250,7 @@ export default function Main() {
       {/* Full-bleed announcement bar */}
       <AnnouncementBar />
 
-      <div className="max-w-[1600px] mx-auto px-4 md:px-6 pt-4 pb-12 space-y-5">
+      <div className="max-w-[1600px] mx-auto px-4 md:px-6 pt-28 pb-12 space-y-5">
 
         {/* 1 · Hero slider */}
         <Section>
@@ -281,6 +281,8 @@ export default function Main() {
           </div>
         </Section>
 
+        <TrendingProducts />
+
         {/* 5 · Featured brands */}
         <Section>
           <FeaturedBrands />
@@ -295,18 +297,6 @@ export default function Main() {
               cta="See more"
             />
             <SuggestedForYou />
-          </div>
-        </Section>
-
-        {/* 7 · All products by category */}
-        <Section>
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm px-4 py-5">
-            <SectionHeading
-              title="Browse Products"
-              sub="Thousands of items across every category"
-              cta="View all"
-            />
-            <ProductsList category={category} />
           </div>
         </Section>
 
