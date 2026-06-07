@@ -101,7 +101,7 @@ export default function MyVouchersPage() {
   const cashEquivalent = novaPoints * 120;
 
   return (
-    <div className="min-h-screen bg-[#FDE8D8] font-sans">
+    <div className="min-h-screen pt-20 bg-[#FDE8D8] font-sans">
       {showConfetti && <Confetti recycle={false} numberOfPieces={500} />}
 
       {/* ── Top nav bar ── */}
@@ -240,7 +240,7 @@ export default function MyVouchersPage() {
           <div className="flex items-start justify-between mb-4">
             <div>
               <p className="text-base font-bold text-gray-900">NovaPoints Bonus:</p>
-              <p className="text-lg font-extrabold text-orange-500 leading-tight">KSh 24,000+ up for grabs</p>
+              <p className="text-lg font-extrabold text-orange-500 leading-tight">KSh 540,000+ up for grabs</p>
               <p className="text-sm text-gray-500 mt-1">Keep ordering to climb milestones and earn cash bundles</p>
             </div>
             <button className="ml-3 mt-1 flex-shrink-0">

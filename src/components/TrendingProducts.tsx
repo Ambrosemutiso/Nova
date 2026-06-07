@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import ProductCard from './ProductCard';
 import type { ProductType } from '@/app/types/product';
+import FlashProductCard from './FlashSaleProductCard';
 
 export default function TrendingProducts() {
   const [products, setProducts] = useState<ProductType[]>([]);
@@ -192,7 +192,7 @@ export default function TrendingProducts() {
                 </div>
 
                 <div className="card-hover-wrapper">
-                  <ProductCard product={product} />
+                  <FlashProductCard product={product} />
                 </div>
 
                 {/* Stats overlay */}

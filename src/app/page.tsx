@@ -250,11 +250,11 @@ export default function Main() {
       {/* Full-bleed announcement bar */}
       <AnnouncementBar />
 
-      <div className="max-w-[1600px] mx-auto px-4 md:px-6 pt-28 pb-12 space-y-5">
+      <div className="max-w-[1600px] mx-auto px-4 md:px-6 pt-20 pb-12 space-y-5">
 
         {/* 1 · Hero slider */}
         <Section>
-          <Hero />
+          <TrendingProducts />
         </Section>
 
         {/* 2 · Trust badges — appear immediately below hero */}
@@ -280,8 +280,6 @@ export default function Main() {
             <Menu onSelectCategory={setCategory} />
           </div>
         </Section>
-
-        <TrendingProducts />
 
         {/* 5 · Featured brands */}
         <Section>
