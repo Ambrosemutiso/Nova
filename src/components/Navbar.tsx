@@ -60,7 +60,7 @@ const LIVE_ACTIVITY = [
 
 // ─── Trending search terms ────────────────────────────────────────────────────
 const TRENDING_SEARCHES = [
-  'iPhone 15', 'Samsung TV', 'Nike Air Max', 'MacBook', 'Airpods Pro',
+  'iphone 16', 'iPhone 15', 'Samsung Galaxy', 'Nike Air Max', 'MacBook', 'Airpods Pro',
 ];
 
 export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {

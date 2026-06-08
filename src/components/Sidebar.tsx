@@ -1,3 +1,4 @@
+//kindly check on the height of the sidebar because it is leaving a white space at the bottom
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -154,7 +155,7 @@ export default function Sidebar({ isOpen = false, onClose, onOpen }: Props) {
         <motion.button
           whileTap={{ scale: 0.88 }}
           onClick={onClose}
-          className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:bg-orange-100 hover:text-orange-600 transition"
+          className="md:hidden w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:bg-orange-100 hover:text-orange-600 transition"
         >
           <FiX size={15} />
         </motion.button>
