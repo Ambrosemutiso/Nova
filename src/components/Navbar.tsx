@@ -583,7 +583,7 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
       </nav>
 
       {/* ── Trust + Live Activity Sub-bar ──────────────────────────────────── */}
-      <div className="fixed top-[88px] left-0 w-full bg-white border-b border-orange-100 z-40 flex items-center justify-between px-4 py-1.5 overflow-hidden">
+      <div className="fixed top-[60px] left-0 w-full bg-white border-b border-orange-100 z-40 flex items-center justify-between px-4 py-1.5 overflow-hidden">
         {/* Trust signals — desktop */}
         <div className="hidden md:flex items-center gap-6">
           {trustSignals.map((t, i) => (
