@@ -4,454 +4,544 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
-import { Eye, EyeOff, X } from 'lucide-react';
+import {
+  Eye, EyeOff, X, ShieldCheck, Lock, Mail,
+  User, Phone, ChevronRight, ArrowLeft,
+  Store, ShoppingBag
+} from 'lucide-react';
 import { useAuth } from '@/app/context/AuthContext';
 import 'react-toastify/dist/ReactToastify.css';
 import { signInWithGoogle, checkGoogleRedirectResult } from '@/lib/authUtils';
+
+// ── Field-input styles injected once at module level (avoids jsx pragma) ──────
+const FIELD_INPUT_CSS = `
+  .field-input {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 12px;
+    padding: 11px 14px;
+    font-size: 14px;
+    color: #fff;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .field-input::placeholder { color: rgba(255,255,255,0.22); }
+  .field-input:focus {
+    border-color: rgba(249,115,22,0.5);
+    box-shadow: 0 0 0 3px rgba(249,115,22,0.12);
+  }
+  select.field-input option { background: #1c1f2a; color: #fff; }
+`;
 
 interface LoginModalProps {
   onClose: () => void;
   defaultRole?: 'buyer' | 'seller' | null;
 }
 
+const countryData = [
+  { name: 'Kenya',       code: 'KE', dialCode: '+254', currency: 'KES' },
+  { name: 'Uganda',      code: 'UG', dialCode: '+256', currency: 'UGX' },
+  { name: 'Tanzania',    code: 'TZ', dialCode: '+255', currency: 'TZS' },
+  { name: 'Rwanda',      code: 'RW', dialCode: '+250', currency: 'RWF' },
+  { name: 'Burundi',     code: 'BI', dialCode: '+257', currency: 'BIF' },
+  { name: 'South Sudan', code: 'SS', dialCode: '+211', currency: 'SSP' },
+  { name: 'Ethiopia',    code: 'ET', dialCode: '+251', currency: 'ETB' },
+  { name: 'Somalia',     code: 'SO', dialCode: '+252', currency: 'SOS' },
+];
+
+const TruecallerIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="48" height="48" rx="12" fill="#009688"/>
+    <path d="M24 10C16.268 10 10 16.268 10 24C10 31.732 16.268 38 24 38C31.732 38 38 31.732 38 24C38 16.268 31.732 10 24 10Z" fill="white"/>
+    <path d="M29.5 28.5L26 25L22 29L18.5 19.5L28.5 23L25 27L29.5 28.5Z" fill="#009688"/>
+    <circle cx="24" cy="24" r="3" fill="#009688"/>
+  </svg>
+);
+
 export default function BuyerLoginDrawer({ onClose, defaultRole = 'buyer' }: LoginModalProps) {
-  const [isLogin, setIsLogin] = useState(true);
-  const [isForgot, setIsForgot] = useState(false);
-  const [role, setRole] = useState<'buyer' | 'seller' | null>(defaultRole);
-  const [name, setName] = useState('');
-  const [country, setCountry] = useState('');
-  const [currency, setCurrency] = useState('');
-  const [countryCode, setCountryCode] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [isLogin, setIsLogin]                     = useState(true);
+  const [isForgot, setIsForgot]                   = useState(false);
+  const [role, setRole]                           = useState<'buyer' | 'seller' | null>(defaultRole);
+  const [name, setName]                           = useState('');
+  const [country, setCountry]                     = useState('');
+  const [currency, setCurrency]                   = useState('');
+  const [countryCode, setCountryCode]             = useState('');
+  const [phoneNumber, setPhoneNumber]             = useState('');
+  const [email, setEmail]                         = useState('');
+  const [password, setPassword]                   = useState('');
+  const [confirmPassword, setConfirmPassword]     = useState('');
+  const [showPassword, setShowPassword]           = useState(false);
+  const [isMobile, setIsMobile]                   = useState(false);
+  const [loading, setLoading]                     = useState(false);
+
   const { login } = useAuth();
 
   useEffect(() => setRole(defaultRole), [defaultRole]);
 
-  const countryData = [
-    { name: 'Kenya', code: 'KE', flag: 'https://flagcdn.com/w40/ke.png', dialCode: '+254', currency: 'KES' },
-    { name: 'Uganda', code: 'UG', flag: 'https://flagcdn.com/w40/ug.png', dialCode: '+256', currency: 'UGX' },
-    { name: 'Tanzania', code: 'TZ', flag: 'https://flagcdn.com/w40/tz.png', dialCode: '+255', currency: 'TZS' },
-    { name: 'Rwanda', code: 'RW', flag: 'https://flagcdn.com/w40/rw.png', dialCode: '+250', currency: 'RWF' },
-    { name: 'Burundi', code: 'BI', flag: 'https://flagcdn.com/w40/bi.png', dialCode: '+257', currency: 'BIF' },
-    { name: 'South Sudan', code: 'SS', flag: 'https://flagcdn.com/w40/ss.png', dialCode: '+211', currency: 'SSP' },
-    { name: 'Ethiopia', code: 'ET', flag: 'https://flagcdn.com/w40/et.png', dialCode: '+251', currency: 'ETB' },
-    { name: 'Somalia', code: 'SO', flag: 'https://flagcdn.com/w40/so.png', dialCode: '+252', currency: 'SOS' },
-  ];
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
-  const strongPassword = (pwd: string) =>
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$/.test(pwd);
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
 
-  const validatePhone = (num: string): string | null => {
-    if (!num) return null;
-    let clean = num.replace(/[\s\-()]/g, '');
-    if (clean.startsWith('+254')) clean = clean.slice(4);
-    else if (clean.startsWith('254')) clean = clean.slice(3);
-    if (clean.startsWith('0')) clean = clean.slice(1);
-    if (/^[1-9]\d{8}$/.test(clean)) return clean;
-    return null;
-  };
-
-  // ✅ GOOGLE REDIRECT (UNCHANGED)
   useEffect(() => {
     const handleRedirect = async () => {
       const googleUser = await checkGoogleRedirectResult();
       if (!googleUser) return;
-
-      const res = await axios.post('/api/auth/google-login', {
-        provider: 'google',
-        role: role || 'buyer',
-        ...googleUser,
-      });
-
+      const res = await axios.post('/api/auth/google-login', { provider: 'google', role: role || 'buyer', ...googleUser });
       const { token, user } = res.data;
-
       localStorage.setItem(`${user.role}Token`, token);
       login(user);
-
       toast.success('Google login successful!');
-
-      window.location.href =
-        user.role === 'seller' ? '/seller/dashboard' : '/';
+      window.location.href = user.role === 'seller' ? '/seller/dashboard' : '/';
     };
-
     handleRedirect();
   }, []);
 
-useEffect(() => {
-  const handleTruecallerResponse = async () => {
-    if (typeof window === "undefined") return;
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get("token");
-
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const token = new URLSearchParams(window.location.search).get('token');
     if (!token) return;
+    const run = async () => {
+      try {
+        const res = await axios.post('/api/auth/google-login', { provider: 'truecaller', token, role: role || 'buyer' });
+        const { user, token: authToken } = res.data;
+        localStorage.setItem(`${user.role}Token`, authToken);
+        login(user);
+        toast.success('Truecaller login successful!');
+        window.location.href = user.role === 'seller' ? '/seller/dashboard' : '/';
+      } catch {
+        toast.error('Truecaller authentication failed');
+      }
+    };
+    run();
+  }, []);
 
-    try {
-      const res = await axios.post("/api/auth/google-login", {
-        provider: 'truecaller',
-        token,
-        role: role || "buyer",
-      });
+  const strongPassword = (pwd: string) =>
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$/.test(pwd);
 
-      const { user, token: authToken } = res.data;
-
-      localStorage.setItem(`${user.role}Token`, authToken);
-
-      login(user);
-
-      toast.success("Truecaller login successful!");
-
-      window.location.href =
-        user.role === "seller"
-          ? "/seller/dashboard"
-          : "/";
-    } catch (err: any) {
-      console.error(err);
-      toast.error("Truecaller authentication failed");
-    }
+  const validatePhone = (num: string) => {
+    let clean = num.replace(/[\s\-()]/g, '');
+    if (clean.startsWith('+254')) clean = clean.slice(4);
+    else if (clean.startsWith('254')) clean = clean.slice(3);
+    if (clean.startsWith('0')) clean = clean.slice(1);
+    return /^[1-9]\d{8}$/.test(clean) ? clean : null;
   };
 
-  handleTruecallerResponse();
-}, []);
-  // ✅ GOOGLE LOGIN (UNCHANGED)
   const handleGoogleLogin = async () => {
     try {
+      setLoading(true);
       const googleUser = await signInWithGoogle(role || 'buyer');
       if (!googleUser) return;
-
-      const res = await axios.post('/api/auth/google-login', {
-        provider: 'google',
-        mode: 'google',
-        role: role || 'buyer',
-        ...googleUser,
-      });
-
+      const res = await axios.post('/api/auth/google-login', { provider: 'google', mode: 'google', role: role || 'buyer', ...googleUser });
       const { token, user } = res.data;
-
       localStorage.setItem(`${user.role}Token`, token);
       login(user);
-
       toast.success('Google login successful!');
       onClose();
-
-      window.location.href =
-        user.role === 'seller' ? '/seller/dashboard' : '/';
-
-    } catch (err: any) {
-      console.error(err);
+      window.location.href = user.role === 'seller' ? '/seller/dashboard' : '/';
+    } catch {
       toast.error('Google login failed');
+    } finally {
+      setLoading(false);
     }
   };
-const handleTruecallerLogin = () => {
-  try {
-    if (typeof window === "undefined" || !(window as any).Truecaller) {
-      toast.error("Truecaller SDK not loaded");
-      return;
-    }
 
-(window as any).Truecaller.init({
-  clientId: process.env.NEXT_PUBLIC_TRUECALLER_CLIENT_ID,
-  redirectUri: "https://novaxmax.com/auth/truecaller/callback",
-  scope: "profile phone",
-  state: "login",
-  nonce: crypto.randomUUID(),
-});
-
-    (window as any).Truecaller.login();
-  } catch (err) {
-    console.error(err);
-    toast.error("Truecaller login failed");
-  }
-};
-
-  const handleEmailCheck = async (email: string) => {
+  const handleTruecallerLogin = () => {
     try {
-      const res = await axios.post('/api/auth/google-login', { email });
-      return res.data.exists;
+      if (typeof window === 'undefined' || !(window as any).Truecaller) {
+        toast.error('Truecaller not available');
+        return;
+      }
+      (window as any).Truecaller.init({
+        clientId: process.env.NEXT_PUBLIC_TRUECALLER_CLIENT_ID,
+        redirectUri: 'https://novaxmax.com/auth/truecaller/callback',
+        scope: 'profile phone',
+        state: 'login',
+        nonce: crypto.randomUUID(),
+      });
+      (window as any).Truecaller.login();
     } catch {
-      return false;
+      toast.error('Truecaller login failed');
     }
   };
 
   const handleForgotPassword = async () => {
-    if (!email) return toast.error('Please enter your email address.');
-
+    if (!email) return toast.error('Enter your email address first.');
     try {
-      const res = await axios.post('/api/auth/google-login', {
-        mode: 'forgot-password',
-        email,
-      });
-
-      toast.success(res.data.message || 'Password reset link sent to your email.');
+      setLoading(true);
+      const res = await axios.post('/api/auth/google-login', { mode: 'forgot-password', email });
+      toast.success(res.data.message || 'Password reset link sent.');
       setIsForgot(false);
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Failed to send reset link.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  // ✅ MAIN SUBMIT (UNCHANGED)
   const handleSubmit = async () => {
-    if (!role) return toast.error('Please select account type');
+    if (!role) return toast.error('Select account type');
     if (isForgot) return handleForgotPassword();
-
-    if (!email || !password || (!isLogin && (!name || !country || !confirmPassword || !phoneNumber))) {
-      return toast.error('Please fill in all required fields.');
-    }
-
+    if (!email || !password || (!isLogin && (!name || !country || !confirmPassword || !phoneNumber)))
+      return toast.error('Fill in all required fields.');
     if (!isLogin) {
       if (password !== confirmPassword) return toast.error("Passwords don't match.");
       if (!strongPassword(password))
-        return toast.error('Password must be 8 characters, include uppercase, lowercase, number, and a special character.');
+        return toast.error('Password needs 8+ chars, uppercase, lowercase, number, and a special character.');
       if (!validatePhone(phoneNumber))
-        return toast.error('Enter a valid phone number without starting with 0, 07, 06, or 05.');
-
-      const emailUsed = await handleEmailCheck(email);
-      if (emailUsed) return toast.error('Email already registered. Try logging in.');
+        return toast.error('Enter a valid phone number.');
+      try {
+        const { data } = await axios.post('/api/auth/google-login', { email });
+        if (data.exists) return toast.error('Email already registered. Try logging in.');
+      } catch {}
     }
-
     try {
+      setLoading(true);
       const res = await axios.post('/api/auth/google-login', {
         provider: 'email',
         mode: isLogin ? 'login' : 'signup',
-        name,
-        email,
-        password,
+        name, email, password,
         phoneNumber: `${countryCode}${phoneNumber}`,
-        country,
-        currency,
-        role,
+        country, currency, role,
       });
-
       const { token, user } = res.data;
-
       localStorage.setItem(`${role}Token`, token);
       login(user);
-
-      toast.success(isLogin ? 'Login successful!' : 'Account created successfully!');
+      toast.success(isLogin ? 'Welcome back!' : 'Account created!');
       onClose();
-
       window.location.href = role === 'buyer' ? '/' : '/seller/dashboard';
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Authentication failed.');
+    } finally {
+      setLoading(false);
     }
   };
 
+  const title = isForgot ? 'Reset Password' : isLogin
+    ? `Sign in as ${role === 'seller' ? 'Seller' : 'Buyer'}`
+    : `Create ${role === 'seller' ? 'Seller' : 'Buyer'} Account`;
+
   return (
     <AnimatePresence>
-      {/* Overlay */}
+      {/* Inject field-input styles — plain <style> tag, no jsx pragma */}
+      <style dangerouslySetInnerHTML={{ __html: FIELD_INPUT_CSS }} />
+
+      {/* Backdrop */}
       <motion.div
-        className="fixed inset-0 bg-black/50 z-50"
-        onClick={onClose}
+        key="backdrop"
+        className="fixed inset-0 z-[9998]"
+        style={{ background: 'rgba(5,7,12,0.65)', backdropFilter: 'blur(6px)' }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
+        onClick={onClose}
       />
 
       {/* Drawer */}
       <motion.div
-initial={{
-  y: typeof window !== 'undefined' && window.innerWidth < 768 ? '100%' : 0,
-  x: typeof window !== 'undefined' && window.innerWidth >= 768 ? '100%' : 0,
-}}
-animate={{ x: 0, y: 0 }}
-exit={{
-  y: typeof window !== 'undefined' && window.innerWidth < 768 ? '100%' : 0,
-  x: typeof window !== 'undefined' && window.innerWidth >= 768 ? '100%' : 0,
-}}
-        transition={{ type: 'spring', damping: 25 }}
-         className="fixed z-[999999999] bg-white shadow-xl overflow-y-auto bottom-0 left-0 right-0 rounded-t-3xl max-h-[90vh] md:top-0 md:right-0 md:left-auto md:bottom-auto md:w-[420px] md:h-full md:rounded-none">
-        {/* Handle */}
-<div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mt-3 mb-2 md:hidden" />
+        key="drawer"
+        initial={{ y: isMobile ? '100%' : 0, x: !isMobile ? '100%' : 0 }}
+        animate={{ y: 0, x: 0 }}
+        exit={{ y: isMobile ? '100%' : 0, x: !isMobile ? '100%' : 0 }}
+        transition={{ type: 'spring', stiffness: 340, damping: 36 }}
+        className="fixed z-[9999] bg-[#0f1117] text-white bottom-0 left-0 right-0 rounded-t-3xl md:top-0 md:right-0 md:left-auto md:bottom-auto md:rounded-none md:w-[420px] md:h-full flex flex-col overflow-hidden"
+        style={{ maxHeight: '94vh' }}
+      >
+        {/* Ambient glow */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-80 h-32 rounded-full"
+          style={{ background: 'radial-gradient(ellipse, rgba(249,115,22,0.13) 0%, transparent 70%)', filter: 'blur(20px)' }}
+        />
+
+        {/* Drag handle */}
+        <div className="w-10 h-1 bg-white/15 rounded-full mx-auto mt-3 mb-1 md:hidden flex-shrink-0" />
 
         {/* Header */}
-        <div className="flex justify-between items-center px-5 py-3 border-b">
-          <h2 className="font-semibold text-lg text-gray-800">
-            {isForgot
-              ? 'Reset Password'
-              : isLogin
-              ? `${role === 'seller' ? 'Seller Login' : 'Buyer Login'}`
-              : `Create ${role === 'seller' ? 'Seller' : 'Buyer'} Account`}
-          </h2>
-          <button onClick={onClose}>
-            <X />
+        <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-white/[0.07] relative">
+          <div className="flex items-center gap-3">
+            {isForgot && (
+              <button
+                onClick={() => setIsForgot(false)}
+                className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition"
+              >
+                <ArrowLeft size={14} />
+              </button>
+            )}
+            <div>
+              <p className="text-[10px] font-bold text-white/35 uppercase tracking-widest leading-none mb-0.5">NovaXmax</p>
+              <p className="text-sm font-bold text-white leading-none">{title}</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white transition"
+          >
+            <X size={15} />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-5 space-y-4">
-          {/* EMAIL */}
-          <input
-            type="email"
-            placeholder="Email Address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="input"
-          />
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
 
-          {!isLogin && !isForgot && (
+          {/* Role toggle */}
+          {!isForgot && (
+            <div className="grid grid-cols-2 gap-2 p-1 bg-white/[0.04] rounded-2xl border border-white/[0.07]">
+              {(['buyer', 'seller'] as const).map(r => (
+                <button
+                  key={r}
+                  onClick={() => setRole(r)}
+                  className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${
+                    role === r
+                      ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/25'
+                      : 'text-white/35 hover:text-white/60'
+                  }`}
+                >
+                  {r === 'buyer' ? <ShoppingBag size={14} /> : <Store size={14} />}
+                  {r === 'buyer' ? 'Buyer' : 'Seller'}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Forgot password */}
+          {isForgot && (
+            <motion.div key="forgot" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+              <p className="text-sm text-white/50 leading-relaxed">
+                Enter your email and we'll send a password reset link.
+              </p>
+              <Field icon={<Mail size={14} />} label="Email address">
+                <input
+                  type="email" value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="field-input"
+                />
+              </Field>
+            </motion.div>
+          )}
+
+          {/* Login / Register */}
+          {!isForgot && (
+            <motion.div key={isLogin ? 'login' : 'register'} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
+              <Field icon={<Mail size={14} />} label="Email address">
+                <input
+                  type="email" value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="field-input"
+                />
+              </Field>
+
+              {!isLogin && (
+                <>
+                  <Field icon={<User size={14} />} label="Full name">
+                    <input
+                      type="text" value={name}
+                      onChange={e => setName(e.target.value)}
+                      placeholder="Jane Mwangi"
+                      className="field-input"
+                    />
+                  </Field>
+
+                  <div className="flex gap-2">
+                    <div className="w-[42%]">
+                      <Field icon={<Phone size={14} />} label="Country">
+                        <select
+                          value={countryCode}
+                          onChange={e => {
+                            const sel = countryData.find(c => c.dialCode === e.target.value);
+                            setCountryCode(e.target.value);
+                            if (sel) { setCountry(sel.name); setCurrency(sel.currency); }
+                          }}
+                          className="field-input"
+                        >
+                          <option value="">+Code</option>
+                          {countryData.map(c => (
+                            <option key={c.code} value={c.dialCode}>{c.dialCode} {c.name}</option>
+                          ))}
+                        </select>
+                      </Field>
+                    </div>
+                    <div className="flex-1">
+                      <Field icon={null} label="Phone number">
+                        <input
+                          type="tel" value={phoneNumber}
+                          onChange={e => setPhoneNumber(e.target.value)}
+                          placeholder="712 345 678"
+                          className="field-input"
+                        />
+                      </Field>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <Field icon={<Lock size={14} />} label="Password">
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="field-input pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(p => !p)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition"
+                  >
+                    {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </Field>
+
+              {!isLogin && (
+                <Field icon={<Lock size={14} />} label="Confirm password">
+                  <input
+                    type="password" value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="field-input"
+                  />
+                </Field>
+              )}
+
+              {isLogin && (
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => setIsForgot(true)}
+                    className="text-xs text-orange-400 hover:text-orange-300 transition font-medium"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* Trust strip */}
+          {!isForgot && (
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { icon: ShieldCheck, label: 'Buyer Protected' },
+                { icon: Lock,        label: '256-bit SSL' },
+                { icon: ShieldCheck, label: 'Privacy Safe' },
+              ].map(({ icon: Icon, label }, i) => (
+                <div key={i} className="flex flex-col items-center gap-1.5 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                  <Icon size={13} className="text-emerald-400/70" />
+                  <span className="text-[10px] text-white/35 font-medium text-center leading-tight">{label}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Social login */}
+          {!isForgot && (
             <>
-              <input
-                type="text"
-                placeholder="Full Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="input"
-              />
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-white/[0.08]" />
+                <span className="text-[11px] text-white/30 font-medium">or continue with</span>
+                <div className="flex-1 h-px bg-white/[0.08]" />
+              </div>
 
-<div className="flex gap-2 w-full">
-  <select
-    value={countryCode}
-    onChange={(e) => {
-      const selected = countryData.find((c) => c.dialCode === e.target.value);
-      setCountryCode(e.target.value);
-      if (selected) {
-        setCountry(selected.name);
-        setCurrency(selected.currency);
-      }
-    }}
-    className="input w-1/4 min-w-[90px]"
-  >
-    <option value="">+Code</option>
-    {countryData.map((c) => (
-      <option key={c.code} value={c.dialCode}>
-          <img
-            src={c.flag}
-            alt={c.name}
-            className="w-6 h-4 rounded-sm object-cover"
-          />
-        {c.dialCode} {c.name}
-      </option>
-    ))}
-  </select>
+              <div className="space-y-2.5">
+                <button
+                  onClick={handleGoogleLogin}
+                  disabled={loading}
+                  className="w-full flex items-center justify-center gap-3 bg-white/5 hover:bg-white/[0.08] border border-white/10 hover:border-white/20 text-white py-3 rounded-2xl font-semibold text-sm transition-all duration-200 disabled:opacity-50"
+                >
+                  <img
+                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                    alt="Google"
+                    className="w-5 h-5"
+                  />
+                  Continue with Google
+                </button>
 
-  <input
-    type="text"
-    placeholder="Phone Number"
-    value={phoneNumber}
-    onChange={(e) => setPhoneNumber(e.target.value)}
-    className="input w-3/4"
-  />
-</div>
+                <button
+                  onClick={handleTruecallerLogin}
+                  disabled={loading}
+                  className="md:hidden w-full flex items-center justify-center gap-3 bg-[#009688]/15 hover:bg-[#009688]/25 border border-[#009688]/30 text-white py-3 rounded-2xl font-semibold text-sm transition-all duration-200 disabled:opacity-50"
+                >
+                  <TruecallerIcon />
+                  Continue with Truecaller
+                </button>
+              </div>
             </>
           )}
 
-          {!isForgot && (
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="input pr-10"
-              />
-              <span
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 cursor-pointer"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </span>
-            </div>
-          )}
-
-          {!isLogin && !isForgot && (
-            <input
-              type="password"
-              placeholder="Confirm Password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="input"
-            />
-          )}
-
-          {isLogin && !isForgot && (
-            <div className="text-right">
-              <button onClick={() => setIsForgot(true)} className="text-sm text-orange-600">
-                Forgot password?
-              </button>
-            </div>
-          )}
-
-          {/* CTA */}
-          <button
-            onClick={handleSubmit}
-            className="w-full bg-orange-600 text-white py-3 rounded-xl font-semibold"
-          >
-            {isForgot ? 'Send Reset Link' : isLogin ? 'Login' : 'Register'}
-          </button>
-
-{/* Divider */}
-<div className="flex items-center my-4">
-  <div className="flex-1 border-t border-gray-300"></div>
-  <span className="px-3 text-sm text-gray-500">OR</span>
-  <div className="flex-1 border-t border-gray-300"></div>
-</div>
-
-{/* Google */}
-<button
-  onClick={handleGoogleLogin}
-  className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-800 py-3 rounded-xl hover:bg-gray-50 transition font-semibold"
->
-  <img
-    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-    className="w-5 h-5"
-  />
-  Continue with Google
-</button>
-
-{/* Truecaller */}
-<button
-  onClick={handleTruecallerLogin}
-  className="w-full flex items-center justify-center gap-3 bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 transition font-semibold mt-3"
->
-<img
-  src="https://cdn.worldvectorlogo.com/logos/truecaller.svg"
-  alt="Truecaller"
-  className="w-5 h-5"
-/>
-  Continue with Truecaller
-</button>
           {/* Switch */}
-          <p className="text-center text-sm">
-            {isForgot ? (
-              <button onClick={() => setIsForgot(false)} className="text-orange-600">
-                Back to Login
-              </button>
-            ) : isLogin ? (
-              <>
-                Don't have an account?{' '}
-                <button onClick={() => setIsLogin(false)} className="text-orange-600">
-                  Register
-                </button>
-              </>
+          {!isForgot && (
+            <p className="text-center text-xs text-white/35 pb-2">
+              {isLogin ? (
+                <>
+                  No account?{' '}
+                  <button onClick={() => setIsLogin(false)} className="text-orange-400 hover:text-orange-300 font-semibold transition">
+                    Create one
+                  </button>
+                </>
+              ) : (
+                <>
+                  Already registered?{' '}
+                  <button onClick={() => setIsLogin(true)} className="text-orange-400 hover:text-orange-300 font-semibold transition">
+                    Sign in
+                  </button>
+                </>
+              )}
+            </p>
+          )}
+        </div>
+
+        {/* Sticky CTA */}
+        <div className="flex-shrink-0 px-6 pb-6 pt-3 border-t border-white/[0.07] bg-[#0f1117] space-y-2">
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            onClick={handleSubmit}
+            disabled={loading}
+            className="w-full py-4 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)', boxShadow: '0 6px 24px rgba(249,115,22,0.3)' }}
+          >
+            {loading ? (
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
+                className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white"
+              />
             ) : (
               <>
-                Already registered?{' '}
-                <button onClick={() => setIsLogin(true)} className="text-orange-600">
-                  Login
-                </button>
+                {isForgot ? 'Send Reset Link' : isLogin ? 'Sign In' : 'Create Account'}
+                <ChevronRight size={16} />
               </>
             )}
-          </p>
+          </motion.button>
+
+          <div className="flex items-center justify-center gap-1.5">
+            <Lock size={9} className="text-white/20" />
+            <span className="text-[10px] text-white/20">Secured by NovaXmax · TLS 1.3 encryption</span>
+          </div>
         </div>
       </motion.div>
-
-      <style jsx>{`
-        .input {
-          width: 100%;
-          padding: 12px;
-          border-radius: 12px;
-          border: 1px solid #e5e7eb;
-          outline: none;
-        }
-        .input:focus {
-          border-color: #f97316;
-          box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
-        }
-      `}</style>
     </AnimatePresence>
+  );
+}
+
+function Field({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <label className="flex items-center gap-1.5 text-[10px] font-bold text-white/35 uppercase tracking-[0.12em] pl-0.5">
+        {icon && <span className="text-white/25">{icon}</span>}
+        {label}
+      </label>
+      {children}
+    </div>
   );
 }
