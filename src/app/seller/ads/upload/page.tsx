@@ -552,7 +552,7 @@ function UploadModal({ products, sellerId, userCountry, onClose, onSuccess, tota
         </div>
 
         {/* footer CTA */}
-        <div className="px-5 pb-6 pt-3 border-t border-gray-100 shrink-0">
+        <div className="px-5 pb-6 pt-3 border-t border-gray-100 shrink-0 z-[99999999999]">
           {step < 3 ? (
             <button
               onClick={() => setStep((s) => (s + 1) as 1 | 2 | 3)}

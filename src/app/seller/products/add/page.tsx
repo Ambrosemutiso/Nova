@@ -1,20 +1,30 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/app/context/AuthContext';
 import TextEditor from '@/components/TextEditor';
 import { categoryTree } from '@/lib/productCategories';
 import {
-  Camera, X, Plus, ChevronDown, ChevronRight,
+  Camera, X, Plus,
   Package, Tag, MapPin, Truck, FileText, CheckCircle2,
   AlertCircle, Info, Eye, Loader2, ImageOff, Star
 } from 'lucide-react';
 
 type ProductCondition = 'brand_new' | 'used' | 'refurbished';
 type Category = keyof typeof categoryTree;
-type County = keyof typeof countyTownMap;
+
+// ── Helper: get subcategory map for a given category ─────────────────────────
+function getSubcategoryMap(cat: Category): Record<string, readonly string[]> {
+  return categoryTree[cat] as unknown as Record<string, readonly string[]>;
+}
+
+// ── Helper: get product types for a given category + subcategory ──────────────
+function getProductTypes(cat: Category, sub: string): string[] {
+  const subMap = getSubcategoryMap(cat);
+  return subMap[sub] ? [...subMap[sub]] : [];
+}
 
 const countyTownMap: Record<string, string[]> = {
   Nairobi: ['Westlands','Kasarani','Embakasi','Langata','Dagoretti','Starehe','Makadara','Kibra'],
@@ -51,7 +61,7 @@ const countyTownMap: Record<string, string[]> = {
   Migori: ['Migori Town','Awendo','Rongo','Kehancha','Isebania'],
   Kisii: ['Kisii Town','Ogembo','Nyamache','Keroka'],
   Nyamira: ['Nyamira Town','Keroka','Ekerenyo','Nyansiongo'],
-  Narok: ["Narok Town",'Kilgoris',"Ololulung'a",'Suswa'],
+  Narok: ['Narok Town','Kilgoris',"Ololulung'a",'Suswa'],
   Kajiado: ['Kajiado Town','Ngong','Kitengela','Ongata Rongai','Loitokitok'],
   Kwale: ['Ukunda','Msambweni','Lunga Lunga','Kinango'],
   Kilifi: ['Kilifi Town','Malindi','Kaloleni','Rabai','Mariakani'],
@@ -68,19 +78,11 @@ const countyTownMap: Record<string, string[]> = {
 
 const DRAFT_KEY = 'novax_draft_product';
 
-// ── Safely creates an object URL, returns null on failure ─────────────────────
 function safeObjectURL(file: File): string | null {
-  try {
-    return URL.createObjectURL(file);
-  } catch {
-    return null;
-  }
+  try { return URL.createObjectURL(file); } catch { return null; }
 }
 
-// ── Section wrapper ───────────────────────────────────────────────────────────
-function Section({
-  id, icon: Icon, title, badge, children,
-}: {
+function Section({ id, icon: Icon, title, badge, children }: {
   id: string; icon: React.ElementType; title: string; badge?: string; children: React.ReactNode;
 }) {
   return (
@@ -99,10 +101,7 @@ function Section({
   );
 }
 
-// ── Labelled input wrapper ────────────────────────────────────────────────────
-function Field({
-  label, hint, required, error, children,
-}: {
+function Field({ label, hint, required, error, children }: {
   label: string; hint?: string; required?: boolean; error?: string; children: React.ReactNode;
 }) {
   return (
@@ -110,9 +109,7 @@ function Field({
       <label className="flex items-center gap-1 text-xs font-semibold text-gray-600">
         {label}
         {required && <span className="text-orange-500">*</span>}
-        {hint && (
-          <span className="ml-1 text-[10px] font-normal text-gray-400 bg-gray-100 rounded-full px-2 py-0.5">{hint}</span>
-        )}
+        {hint && <span className="ml-1 text-[10px] font-normal text-gray-400 bg-gray-100 rounded-full px-2 py-0.5">{hint}</span>}
       </label>
       {children}
       {error && (
@@ -127,48 +124,58 @@ function Field({
 const inputCls = `w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800
   placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400/30 focus:border-orange-400 transition-all`;
 
-const selectCls = `${inputCls} cursor-pointer appearance-none bg-[url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")] bg-no-repeat bg-[right_14px_center]`;
+const selectCls = `${inputCls} cursor-pointer`;
 
 export default function AddProduct() {
   const { user } = useAuth();
   const router = useRouter();
 
-  const [name, setName]             = useState('');
-  const [brand, setBrand]           = useState('');
-  const [model, setModel]           = useState('');
-  const [material, setMaterial]     = useState('');
-  const [color, setColor]           = useState('');
+  const [name, setName]               = useState('');
+  const [brand, setBrand]             = useState('');
+  const [model, setModel]             = useState('');
+  const [material, setMaterial]       = useState('');
+  const [color, setColor]             = useState('');
   const [description, setDescription] = useState('');
   const [keyFeatures, setKeyFeatures] = useState<string[]>([]);
   const [boxContents, setBoxContents] = useState<string[]>([]);
-  const [warranty, setWarranty]     = useState('');
-  const [dimensions, setDimensions] = useState('');
-  const [weight, setWeight]         = useState('');
-  const [category, setCategory]     = useState<Category | ''>('');
+  const [warranty, setWarranty]       = useState('');
+  const [dimensions, setDimensions]   = useState('');
+  const [weight, setWeight]           = useState('');
+  const [category, setCategory]       = useState<Category | ''>('');
   const [subcategory, setSubcategory] = useState('');
   const [productType, setProductType] = useState('');
-  const [price, setPrice]           = useState('');
-  const [oldPrice, setOldPrice]     = useState('');
+  const [price, setPrice]             = useState('');
+  const [oldPrice, setOldPrice]       = useState('');
   const [calculatedPrice, setCalculatedPrice] = useState(0);
-  const [quantity, setQuantity]     = useState('');
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const [previews, setPreviews]     = useState<(string | null)[]>([]);
-  const [uploading, setUploading]   = useState(false);
-  const [county, setCounty]         = useState('');
-  const [town, setTown]             = useState('');
+  const [quantity, setQuantity]       = useState('');
+  const [imageFiles, setImageFiles]   = useState<File[]>([]);
+  const [previews, setPreviews]       = useState<(string | null)[]>([]);
+  const [uploading, setUploading]     = useState(false);
+  const [county, setCounty]           = useState('');
+  const [town, setTown]               = useState('');
   const [fulfillmentMode, setFulfillmentMode] = useState('');
-  const [condition, setCondition]   = useState<ProductCondition | ''>('');
+  const [condition, setCondition]     = useState<ProductCondition | ''>('');
   const [showDraftPrompt, setShowDraftPrompt] = useState(false);
-  const [saving, setSaving]         = useState(false);
-  const [priceError, setPriceError] = useState('');
+  const [saving, setSaving]           = useState(false);
+  const [priceError, setPriceError]   = useState('');
 
-  // ── Price validation ────────────────────────────────────────────────────────
+  // ── Derived ────────────────────────────────────────────────────────────────
   const priceNum    = parseFloat(price) || 0;
   const oldPriceNum = parseFloat(oldPrice) || 0;
-  const discount    = oldPriceNum > 0 && priceNum > 0
+  const discount    = oldPriceNum > priceNum && priceNum > 0
     ? Math.round(((oldPriceNum - priceNum) / oldPriceNum) * 100)
     : 0;
 
+  // ── Subcategory & type lists ───────────────────────────────────────────────
+  const subcategoryList: string[] = category
+    ? Object.keys(getSubcategoryMap(category as Category))
+    : [];
+
+  const productTypeList: string[] = category && subcategory
+    ? getProductTypes(category as Category, subcategory)
+    : [];
+
+  // ── Price validation ───────────────────────────────────────────────────────
   useEffect(() => {
     if (oldPriceNum > 0 && priceNum > 0 && oldPriceNum <= priceNum) {
       setPriceError('Original price must be higher than the selling price to show a discount.');
@@ -177,41 +184,35 @@ export default function AddProduct() {
     }
   }, [price, oldPrice]);
 
-  // ── Safe image previews ─────────────────────────────────────────────────────
+  // ── Safe previews ──────────────────────────────────────────────────────────
   useEffect(() => {
     const urls = imageFiles.map(f => safeObjectURL(f));
     setPreviews(urls);
-    return () => {
-      urls.forEach(u => { if (u) URL.revokeObjectURL(u); });
-    };
+    return () => { urls.forEach(u => { if (u) URL.revokeObjectURL(u); }); };
   }, [imageFiles]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    // Filter to valid image types only
     const validTypes = ['image/jpeg','image/png','image/webp','image/gif','image/avif'];
     const valid = files.filter(f => validTypes.includes(f.type));
-    const invalid = files.length - valid.length;
-    if (invalid > 0) toast.warn(`${invalid} file(s) skipped — only JPEG, PNG, WebP, GIF, and AVIF are accepted.`);
-    if (valid.length + imageFiles.length > 10) {
+    const skipped = files.length - valid.length;
+    if (skipped > 0) toast.warn(`${skipped} file(s) skipped — unsupported format.`);
+    const slots = 10 - imageFiles.length;
+    if (valid.length > slots) {
       toast.warn('Maximum 10 images allowed.');
-      const remaining = 10 - imageFiles.length;
-      setImageFiles(prev => [...prev, ...valid.slice(0, remaining)]);
+      setImageFiles(prev => [...prev, ...valid.slice(0, slots)]);
     } else {
       setImageFiles(prev => [...prev, ...valid]);
     }
-    // Reset input so the same file can be selected again
     e.target.value = '';
   };
 
-  const removeImage = (index: number) => {
-    setImageFiles(prev => prev.filter((_, i) => i !== index));
-  };
+  const removeImage = (i: number) =>
+    setImageFiles(prev => prev.filter((_, j) => j !== i));
 
-  // ── Draft ───────────────────────────────────────────────────────────────────
+  // ── Draft ──────────────────────────────────────────────────────────────────
   useEffect(() => {
-    const saved = localStorage.getItem(DRAFT_KEY);
-    if (saved) setShowDraftPrompt(true);
+    if (localStorage.getItem(DRAFT_KEY)) setShowDraftPrompt(true);
   }, []);
 
   const draftValues = {
@@ -227,12 +228,13 @@ export default function AddProduct() {
       setSaving(false);
     }, 800);
     return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, Object.values(draftValues));
 
   const loadDraft = () => {
-    const saved = localStorage.getItem(DRAFT_KEY);
-    if (!saved) return;
-    const d = JSON.parse(saved);
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw);
     setName(d.name || ''); setBrand(d.brand || ''); setModel(d.model || '');
     setMaterial(d.material || ''); setColor(d.color || ''); setDescription(d.description || '');
     setKeyFeatures(d.keyFeatures || []); setBoxContents(d.boxContents || []);
@@ -253,62 +255,50 @@ export default function AddProduct() {
   const handlePriceChange = (value: string) => {
     setPrice(value);
     const parsed = parseFloat(value);
-    setCalculatedPrice(isNaN(parsed) ? 0 : parsed + parsed * 0.05);
+    setCalculatedPrice(isNaN(parsed) ? 0 : parsed * 1.05);
   };
 
-  // ── Submit ──────────────────────────────────────────────────────────────────
+  // ── Submit ─────────────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?._id)       return toast.error('You are not logged in.');
-    if (!user?.currency)  return toast.error('Your account currency is not set.');
-    if (!category)        return toast.error('Select a category.');
-    if (!fulfillmentMode) return toast.error('Select a fulfillment mode.');
-    if (imageFiles.length === 0) return toast.error('Upload at least one product image.');
-    if (!condition)       return toast.error('Select the product condition.');
-    if (!weight)          return toast.error('Enter the product weight (kg).');
-    if (priceError)       return toast.error(priceError);
+    if (!user?._id)            return toast.error('You are not logged in.');
+    if (!user?.currency)       return toast.error('Account currency not set.');
+    if (!category)             return toast.error('Select a category.');
+    if (!fulfillmentMode)      return toast.error('Select a fulfillment mode.');
+    if (!imageFiles.length)    return toast.error('Upload at least one image.');
+    if (!condition)            return toast.error('Select product condition.');
+    if (!weight)               return toast.error('Enter the product weight (kg).');
+    if (priceError)            return toast.error(priceError);
 
-    // Validate all previews are loadable before submitting
     const brokenIndexes = previews.reduce<number[]>((acc, p, i) => {
-      if (!p) acc.push(i);
+      if (p === null) acc.push(i + 1);
       return acc;
     }, []);
-    if (brokenIndexes.length > 0) {
-      return toast.error(`Image${brokenIndexes.length > 1 ? 's' : ''} ${brokenIndexes.map(i => i+1).join(', ')} could not be read. Please re-upload them.`);
+    if (brokenIndexes.length) {
+      return toast.error(`Image${brokenIndexes.length > 1 ? 's' : ''} ${brokenIndexes.join(', ')} are broken. Remove and re-upload.`);
     }
 
     setUploading(true);
-    const formData = new FormData();
-    formData.append('name', name);
-    formData.append('brand', brand);
-    formData.append('model', model);
-    formData.append('material', material);
-    formData.append('color', color);
-    if (description?.trim()) formData.append('description', description);
+    const fd = new FormData();
+    fd.append('name', name); fd.append('brand', brand); fd.append('model', model);
+    fd.append('material', material); fd.append('color', color);
+    if (description?.trim()) fd.append('description', description);
     const cleanFeatures = keyFeatures.filter(f => f.trim());
-    if (cleanFeatures.length) formData.append('keyFeatures', JSON.stringify(cleanFeatures));
+    if (cleanFeatures.length) fd.append('keyFeatures', JSON.stringify(cleanFeatures));
     const cleanBox = boxContents.filter(b => b.trim());
-    if (cleanBox.length) formData.append('boxContents', JSON.stringify(cleanBox));
-    formData.append('warranty', warranty);
-    formData.append('dimensions', dimensions);
-    formData.append('weight', weight);
-    formData.append('category', category);
-    formData.append('subcategory', subcategory);
-    formData.append('productType', productType);
-    formData.append('condition', condition);
-    formData.append('price', price);
-    formData.append('oldPrice', oldPrice);
-    formData.append('calculatedPrice', String(calculatedPrice));
-    formData.append('county', county);
-    formData.append('town', town);
-    formData.append('quantity', quantity);
-    formData.append('sellerId', user._id);
-    formData.append('fulfillmentMode', fulfillmentMode);
-    formData.append('currency', user.currency);
-    imageFiles.forEach(f => formData.append('images', f));
+    if (cleanBox.length) fd.append('boxContents', JSON.stringify(cleanBox));
+    fd.append('warranty', warranty); fd.append('dimensions', dimensions); fd.append('weight', weight);
+    fd.append('category', category); fd.append('subcategory', subcategory);
+    fd.append('productType', productType); fd.append('condition', condition);
+    fd.append('price', price); fd.append('oldPrice', oldPrice);
+    fd.append('calculatedPrice', String(calculatedPrice));
+    fd.append('county', county); fd.append('town', town);
+    fd.append('quantity', quantity); fd.append('sellerId', user._id);
+    fd.append('fulfillmentMode', fulfillmentMode); fd.append('currency', user.currency);
+    imageFiles.forEach(f => fd.append('images', f));
 
     try {
-      const res  = await fetch('/api/products', { method: 'POST', body: formData });
+      const res  = await fetch('/api/products', { method: 'POST', body: fd });
       const data = await res.json();
       if (res.ok) {
         localStorage.removeItem(DRAFT_KEY);
@@ -318,7 +308,7 @@ export default function AddProduct() {
         toast.error(data.error || 'Failed to list product.');
       }
     } catch {
-      toast.error('Upload failed. Check your connection and try again.');
+      toast.error('Upload failed. Check your connection.');
     } finally {
       setUploading(false);
     }
@@ -329,7 +319,7 @@ export default function AddProduct() {
   return (
     <div className="min-h-screen bg-[#f8f7f4] pt-24 pb-16">
 
-      {/* ── Page header ──────────────────────────────────────────────────── */}
+      {/* Page header */}
       <div className="max-w-5xl mx-auto px-4 mb-8">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
@@ -337,7 +327,7 @@ export default function AddProduct() {
             <h1 className="text-3xl font-black text-gray-900 tracking-tight leading-none">
               List a Product<span className="text-orange-500">.</span>
             </h1>
-            <p className="text-sm text-gray-500 mt-1.5">Fill in the required fields to go live. Optional fields help buyers find your product faster.</p>
+            <p className="text-sm text-gray-500 mt-1.5">Required fields get you live. Optional fields help buyers discover you faster.</p>
           </div>
           {saving && (
             <div className="flex items-center gap-2 text-xs text-gray-400 bg-white border border-gray-100 rounded-full px-3 py-1.5 shadow-sm">
@@ -349,12 +339,11 @@ export default function AddProduct() {
 
       <div className="max-w-5xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 items-start">
 
-        {/* ── Form column ──────────────────────────────────────────────────── */}
+        {/* ── Form ──────────────────────────────────────────────────────── */}
         <form onSubmit={handleSubmit} className="space-y-5">
 
           {/* Images */}
           <Section id="images" icon={Camera} title="Product Images" badge="Required · Up to 10 photos">
-            {/* Upload zone */}
             <label className="flex flex-col items-center justify-center w-full h-32 rounded-2xl border-2 border-dashed border-orange-300 bg-orange-50/40 hover:bg-orange-50 cursor-pointer transition-colors group">
               <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple onChange={handleImageUpload} className="sr-only" />
               <Camera size={22} className="text-orange-400 mb-2 group-hover:scale-110 transition-transform" />
@@ -362,41 +351,30 @@ export default function AddProduct() {
               <p className="text-[11px] text-gray-400 mt-0.5">JPEG · PNG · WebP · GIF · AVIF</p>
             </label>
 
-            {/* Grid preview */}
             {imageFiles.length > 0 && (
               <div className="grid grid-cols-5 gap-2 mt-2">
-                {imageFiles.map((file, i) => {
+                {imageFiles.map((_, i) => {
                   const url = previews[i];
-                  const isBroken = url === null;
+                  const broken = url === null;
                   return (
-                    <div key={i} className={`relative aspect-square rounded-xl overflow-hidden border-2 ${isBroken ? 'border-red-300 bg-red-50' : i === 0 ? 'border-orange-400' : 'border-gray-200 bg-gray-50'}`}>
-                      {isBroken ? (
+                    <div key={i} className={`relative aspect-square rounded-xl overflow-hidden border-2 ${broken ? 'border-red-300 bg-red-50' : i === 0 ? 'border-orange-400' : 'border-gray-200 bg-gray-50'}`}>
+                      {broken ? (
                         <div className="w-full h-full flex flex-col items-center justify-center gap-1">
                           <ImageOff size={16} className="text-red-400" />
-                          <span className="text-[9px] text-red-400 font-semibold text-center px-1">Re-upload</span>
+                          <span className="text-[9px] text-red-400 font-semibold px-1 text-center">Re-upload</span>
                         </div>
                       ) : (
-                        <img
-                          src={url!}
-                          alt={`Preview ${i + 1}`}
-                          className="w-full h-full object-cover"
+                        <img src={url!} alt={`Preview ${i + 1}`} className="w-full h-full object-cover"
                           onError={() => {
-                            // Mark as broken by revoking and setting null
                             if (url) URL.revokeObjectURL(url);
-                            setPreviews(prev => {
-                              const next = [...prev];
-                              next[i] = null;
-                              return next;
-                            });
+                            setPreviews(prev => { const n = [...prev]; n[i] = null; return n; });
                           }}
                         />
                       )}
-                      {i === 0 && !isBroken && (
+                      {i === 0 && !broken && (
                         <span className="absolute bottom-1 left-1 bg-orange-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full">Cover</span>
                       )}
-                      <button
-                        type="button"
-                        onClick={() => removeImage(i)}
+                      <button type="button" onClick={() => removeImage(i)}
                         className="absolute top-1 right-1 w-5 h-5 bg-gray-900/70 hover:bg-red-500 text-white rounded-full flex items-center justify-center transition-colors"
                       >
                         <X size={10} />
@@ -404,7 +382,6 @@ export default function AddProduct() {
                     </div>
                   );
                 })}
-                {/* Add more slot */}
                 {imageFiles.length < 10 && (
                   <label className="aspect-square rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center cursor-pointer hover:border-orange-300 hover:bg-orange-50/40 transition-colors">
                     <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple onChange={handleImageUpload} className="sr-only" />
@@ -414,50 +391,65 @@ export default function AddProduct() {
               </div>
             )}
             <p className="text-[11px] text-gray-400 flex items-center gap-1">
-              <Info size={10} /> First image is the cover photo shown to buyers.
-              {previews.some(p => p === null) && <span className="text-red-500 font-semibold ml-1">⚠ Remove broken images before submitting.</span>}
+              <Info size={10} /> First image is the cover shown to buyers.
+              {previews.some(p => p === null) && (
+                <span className="text-red-500 font-semibold ml-1">⚠ Remove broken images before submitting.</span>
+              )}
             </p>
           </Section>
 
-          {/* Basic Info */}
+          {/* Product Details */}
           <Section id="basics" icon={Package} title="Product Details" badge="Required">
             <Field label="Product Name" required>
-              <input
-                type="text" value={name}
-                onChange={e => setName(e.target.value)}
+              <input type="text" value={name} onChange={e => setName(e.target.value)}
                 placeholder="e.g. Samsung Galaxy A14 128GB Dual SIM"
-                className={inputCls}
-                required
+                className={inputCls} required
               />
             </Field>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Category */}
               <Field label="Category" required>
-                <select value={category} onChange={e => { setCategory(e.target.value as Category); setSubcategory(''); setProductType(''); }} className={selectCls} required>
+                <select
+                  value={category}
+                  onChange={e => {
+                    setCategory(e.target.value as Category);
+                    setSubcategory('');
+                    setProductType('');
+                  }}
+                  className={selectCls} required
+                >
                   <option value="">Select…</option>
-                  {Object.keys(categoryTree).map(c => <option key={c} value={c}>{c}</option>)}
+                  {(Object.keys(categoryTree) as Category[]).map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
                 </select>
               </Field>
-              <Field label="Subcategory">
-                <select value={subcategory} onChange={e => { setSubcategory(e.target.value); setProductType(''); }} className={selectCls} disabled={!category}>
-                  <option value="">Select…</option>
-                  {category && Object.keys(categoryTree[category as Category]).map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </Field>
-              <Field label="Type">
-                  <select
-    value={productType}
-    onChange={(e) => setProductType(e.target.value)}
-    className={selectCls} disabled={!subcategory}
-  >
-    <option value="">Select Product Type</option>
 
-    {(categoryTree[category as Category][subcategory as keyof typeof categoryTree[Category]] as string[]).map((type) => (
-      <option key={type} value={type}>
-        {type}
-      </option>
-    ))}
-  </select>
+              {/* Subcategory */}
+              <Field label="Subcategory">
+                <select
+                  value={subcategory}
+                  onChange={e => { setSubcategory(e.target.value); setProductType(''); }}
+                  className={selectCls}
+                  disabled={!category}
+                >
+                  <option value="">Select…</option>
+                  {subcategoryList.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </Field>
+
+              {/* Product Type — ✅ fixed: no `as any` indexing */}
+              <Field label="Type">
+                <select
+                  value={productType}
+                  onChange={e => setProductType(e.target.value)}
+                  className={selectCls}
+                  disabled={!subcategory}
+                >
+                  <option value="">Select…</option>
+                  {productTypeList.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
               </Field>
             </div>
 
@@ -478,11 +470,10 @@ export default function AddProduct() {
 
           {/* Pricing */}
           <Section id="pricing" icon={Tag} title="Pricing" badge="Required">
-            {/* Info callout */}
             <div className="flex items-start gap-2.5 bg-blue-50 border border-blue-200 rounded-xl p-3">
               <Info size={14} className="text-blue-500 flex-shrink-0 mt-0.5" />
               <p className="text-xs text-blue-700 leading-relaxed">
-                <strong>Original price</strong> is crossed out for buyers — it must be <strong>higher</strong> than the selling price to display a discount badge. If you have no discount, leave Original Price blank.
+                <strong>Original price</strong> is shown crossed-out to buyers and <strong>must be higher</strong> than the selling price to display a discount badge. Leave it blank if there's no discount.
               </p>
             </div>
 
@@ -490,30 +481,21 @@ export default function AddProduct() {
               <Field label="Original Price (KES)" hint="Before discount" error={priceError}>
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">Ksh</span>
-                  <input
-                    type="number" min="0" value={oldPrice}
-                    onChange={e => setOldPrice(e.target.value)}
-                    placeholder="e.g. 5999"
-                    className={`${inputCls} pl-12`}
+                  <input type="number" min="0" value={oldPrice} onChange={e => setOldPrice(e.target.value)}
+                    placeholder="e.g. 5999" className={`${inputCls} pl-12`}
                   />
                 </div>
               </Field>
-
               <Field label="Selling Price (KES)" required>
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">Ksh</span>
-                  <input
-                    type="number" min="0" value={price}
-                    onChange={e => handlePriceChange(e.target.value)}
-                    placeholder="e.g. 3999"
-                    className={`${inputCls} pl-12`}
-                    required
+                  <input type="number" min="0" value={price} onChange={e => handlePriceChange(e.target.value)}
+                    placeholder="e.g. 3999" className={`${inputCls} pl-12`} required
                   />
                 </div>
               </Field>
             </div>
 
-            {/* Live pricing preview */}
             {priceNum > 0 && (
               <div className="flex flex-wrap items-center gap-4 bg-gray-50 rounded-xl border border-gray-100 px-4 py-3 text-sm">
                 <div>
@@ -540,7 +522,7 @@ export default function AddProduct() {
             )}
           </Section>
 
-          {/* Shipping & Location */}
+          {/* Shipping */}
           <Section id="shipping" icon={Truck} title="Shipping & Location" badge="Required">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="Fulfillment" required>
@@ -555,7 +537,6 @@ export default function AddProduct() {
                 <input type="number" min="0" step="0.01" value={weight} onChange={e => setWeight(e.target.value)} placeholder="e.g. 0.5" className={inputCls} required />
               </Field>
             </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="County" required>
                 <select value={county} onChange={e => { setCounty(e.target.value); setTown(''); }} className={selectCls} required>
@@ -573,48 +554,44 @@ export default function AddProduct() {
           </Section>
 
           {/* Description */}
-          <Section id="description" icon={FileText} title="Description & Features" badge="Optional — helps buyers find & trust your product">
+          <Section id="description" icon={FileText} title="Description & Features" badge="Optional">
             <Field label="Product Description" hint="Optional">
               <TextEditor content={description} onChange={setDescription} />
             </Field>
-
-            <Field label="Key Features" hint="Optional — e.g. battery life, storage, size">
+            <Field label="Key Features" hint="Optional">
               <div className="space-y-2">
                 {keyFeatures.map((f, i) => (
                   <div key={i} className="flex gap-2">
-                    <input
-                      value={f}
-                      onChange={e => { const u = [...keyFeatures]; u[i] = e.target.value; setKeyFeatures(u); }}
-                      placeholder={`Feature ${i + 1}`}
-                      className={`${inputCls} flex-1`}
+                    <input value={f} onChange={e => { const u = [...keyFeatures]; u[i] = e.target.value; setKeyFeatures(u); }}
+                      placeholder={`Feature ${i + 1}`} className={`${inputCls} flex-1`}
                     />
-                    <button type="button" onClick={() => setKeyFeatures(keyFeatures.filter((_, j) => j !== i))} className="w-9 h-9 rounded-xl bg-red-50 hover:bg-red-100 flex items-center justify-center text-red-500 transition flex-shrink-0">
+                    <button type="button" onClick={() => setKeyFeatures(keyFeatures.filter((_, j) => j !== i))}
+                      className="w-9 h-9 rounded-xl bg-red-50 hover:bg-red-100 flex items-center justify-center text-red-500 transition flex-shrink-0">
                       <X size={14} />
                     </button>
                   </div>
                 ))}
-                <button type="button" onClick={() => setKeyFeatures([...keyFeatures, ''])} className="flex items-center gap-1.5 text-xs font-semibold text-orange-500 hover:text-orange-600 transition">
+                <button type="button" onClick={() => setKeyFeatures([...keyFeatures, ''])}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-orange-500 hover:text-orange-600 transition">
                   <Plus size={13} /> Add feature
                 </button>
               </div>
             </Field>
-
             <Field label="What's in the Box" hint="Optional">
               <div className="space-y-2">
                 {boxContents.map((b, i) => (
                   <div key={i} className="flex gap-2">
-                    <input
-                      value={b}
-                      onChange={e => { const u = [...boxContents]; u[i] = e.target.value; setBoxContents(u); }}
-                      placeholder={`Item ${i + 1}`}
-                      className={`${inputCls} flex-1`}
+                    <input value={b} onChange={e => { const u = [...boxContents]; u[i] = e.target.value; setBoxContents(u); }}
+                      placeholder={`Item ${i + 1}`} className={`${inputCls} flex-1`}
                     />
-                    <button type="button" onClick={() => setBoxContents(boxContents.filter((_, j) => j !== i))} className="w-9 h-9 rounded-xl bg-red-50 hover:bg-red-100 flex items-center justify-center text-red-500 transition flex-shrink-0">
+                    <button type="button" onClick={() => setBoxContents(boxContents.filter((_, j) => j !== i))}
+                      className="w-9 h-9 rounded-xl bg-red-50 hover:bg-red-100 flex items-center justify-center text-red-500 transition flex-shrink-0">
                       <X size={14} />
                     </button>
                   </div>
                 ))}
-                <button type="button" onClick={() => setBoxContents([...boxContents, ''])} className="flex items-center gap-1.5 text-xs font-semibold text-orange-500 hover:text-orange-600 transition">
+                <button type="button" onClick={() => setBoxContents([...boxContents, ''])}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-orange-500 hover:text-orange-600 transition">
                   <Plus size={13} /> Add item
                 </button>
               </div>
@@ -624,16 +601,16 @@ export default function AddProduct() {
           {/* Specs */}
           <Section id="specs" icon={FileText} title="Specifications" badge="Optional">
             <div className="grid grid-cols-2 gap-3">
-              {[
+              {([
                 ['Brand', brand, setBrand, 'e.g. Samsung'],
                 ['Model', model, setModel, 'e.g. SM-A145F'],
                 ['Material', material, setMaterial, 'e.g. Polycarbonate'],
                 ['Color', color, setColor, 'e.g. Black'],
                 ['Warranty', warranty, setWarranty, 'e.g. 1 Year'],
                 ['Dimensions', dimensions, setDimensions, 'e.g. 16.5 × 7.6 × 0.9 cm'],
-              ].map(([label, val, setter, ph]) => (
-                <Field key={label as string} label={label as string} hint="Optional">
-                  <input type="text" value={val as string} onChange={e => (setter as any)(e.target.value)} placeholder={ph as string} className={inputCls} />
+              ] as [string, string, (v: string) => void, string][]).map(([label, val, setter, ph]) => (
+                <Field key={label} label={label} hint="Optional">
+                  <input type="text" value={val} onChange={e => setter(e.target.value)} placeholder={ph} className={inputCls} />
                 </Field>
               ))}
             </div>
@@ -644,45 +621,39 @@ export default function AddProduct() {
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
                 <p className="text-sm font-bold text-gray-800">Ready to publish?</p>
-                <p className="text-xs text-gray-400 mt-0.5">Your product will go live immediately after submission.</p>
+                <p className="text-xs text-gray-400 mt-0.5">Your product goes live immediately.</p>
               </div>
               <button
                 type="submit"
                 disabled={uploading || !!priceError || previews.some(p => p === null && imageFiles.length > 0)}
                 className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-sm px-8 py-3.5 rounded-2xl transition-all shadow-lg shadow-orange-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {uploading ? (
-                  <><Loader2 size={15} className="animate-spin" /> Uploading…</>
-                ) : (
-                  <><CheckCircle2 size={15} /> Publish Product</>
-                )}
+                {uploading
+                  ? <><Loader2 size={15} className="animate-spin" /> Uploading…</>
+                  : <><CheckCircle2 size={15} /> Publish Product</>
+                }
               </button>
             </div>
           </div>
         </form>
 
-        {/* ── Sticky sidebar preview ────────────────────────────────────── */}
+        {/* ── Sidebar ───────────────────────────────────────────────────── */}
         <div className="hidden lg:block sticky top-28 space-y-4">
-
-          {/* Live product card preview */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
               <Eye size={13} className="text-gray-400" />
               <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Buyer Preview</p>
             </div>
             <div className="p-4">
-              {/* Image preview */}
               <div className="aspect-square rounded-xl bg-gray-100 overflow-hidden mb-3">
                 {primaryImage ? (
                   <img src={primaryImage} alt="Preview" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center text-gray-300 gap-2">
-                    <Camera size={28} />
-                    <p className="text-xs">No image yet</p>
+                    <Camera size={28} /><p className="text-xs">No image yet</p>
                   </div>
                 )}
               </div>
-              {/* Card info */}
               <p className="text-sm font-bold text-gray-800 leading-snug line-clamp-2 mb-1">
                 {name || <span className="text-gray-300">Product name…</span>}
               </p>
@@ -714,7 +685,6 @@ export default function AddProduct() {
             </div>
           </div>
 
-          {/* Checklist */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-4">
             <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-3">Listing Checklist</p>
             <div className="space-y-2">
@@ -741,7 +711,7 @@ export default function AddProduct() {
         </div>
       </div>
 
-      {/* ── Draft modal ───────────────────────────────────────────────────── */}
+      {/* Draft modal */}
       {showDraftPrompt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(5,7,12,0.6)', backdropFilter: 'blur(6px)' }}>
           <div className="bg-white rounded-2xl shadow-2xl w-[90%] max-w-sm p-6">
@@ -750,7 +720,7 @@ export default function AddProduct() {
             </div>
             <h2 className="text-base font-black text-gray-900 mb-1">Unsaved draft found</h2>
             <p className="text-sm text-gray-500 mb-5 leading-relaxed">
-              You started a product listing earlier. Would you like to continue where you left off?
+              You started a product listing earlier. Continue where you left off?
             </p>
             <div className="flex gap-2">
               <button
