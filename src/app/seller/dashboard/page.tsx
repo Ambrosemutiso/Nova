@@ -1,126 +1,205 @@
 "use client";
-import { useEffect, useState } from "react";
-import { ShoppingCart, DollarSign, Eye, BarChart3, Gift, Box } from "lucide-react";
-import { ResponsiveContainer,CartesianGrid, Tooltip, PieChart, Pie, Cell, Label, AreaChart, Area } from "recharts";
-import { motion } from "framer-motion";
 
-const iconMap: Record<string, any> = { ShoppingCart, DollarSign, Eye, BarChart3, Box };
+import { useEffect, useState, useRef } from "react";
+import Link from "next/link";
+import {
+  ShoppingCart, DollarSign, Eye, BarChart3, Box,
+  TrendingUp, TrendingDown, Plus, Megaphone,
+  Package, Star, ChevronRight, Zap, Users,
+  ArrowUpRight, Medal, Target
+} from "lucide-react";
+import {
+  ResponsiveContainer, CartesianGrid, Tooltip,
+  PieChart, Pie, Cell, Label,
+  AreaChart, Area, XAxis, YAxis
+} from "recharts";
+import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 
-// ---------- Professional Stats Card ----------
-function StatsCard({ id, title, value, change, icon, trend, series }: any) {
-  const isUp = trend === "up";
-  const strokeColor = isUp ? "#10b981" : "#ef4444";
-  const gradientId = `grad-spark-${id}`;
-  const Icon = iconMap[icon] || ShoppingCart;
+// ─── Icon map ─────────────────────────────────────────────────────────────────
+const ICON_MAP: Record<string, React.ElementType> = {
+  ShoppingCart, DollarSign, Eye, BarChart3, Box
+};
 
-  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+// ─── Token system ─────────────────────────────────────────────────────────────
+const C = {
+  bg:       "#070c18",
+  card:     "#0f1520",
+  border:   "#1a2236",
+  orange:   "#f97316",
+  emerald:  "#10b981",
+  red:      "#ef4444",
+  blue:     "#3b82f6",
+  violet:   "#8b5cf6",
+  muted:    "#4b5563",
+  dim:      "#1e2d45",
+};
 
-  const chartSeries = months.map((m, idx) =>
-    series[idx]
-      ? { month: m, v: series[idx].v }
-      : { month: m, v: 0 }
-  );
+// ─── Animated counter ─────────────────────────────────────────────────────────
+function AnimatedNumber({ value, prefix = "", suffix = "", decimals = 0 }: {
+  value: number; prefix?: string; suffix?: string; decimals?: number;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const controls = animate(0, value, {
+      duration: 1.2,
+      ease: "easeOut",
+      onUpdate(v) {
+        node.textContent = prefix + v.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ",") + suffix;
+      },
+    });
+    return controls.stop;
+  }, [value]);
+  return <span ref={ref}>{prefix}0{suffix}</span>;
+}
+
+// ─── Performance Score Ring (signature element) ───────────────────────────────
+function PerformanceRing({ score, revenue, seller }: {
+  score: number; revenue: number; seller: any;
+}) {
+  const size = 180;
+  const radius = 76;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (score / 100) * circumference;
+  const tier = score >= 90 ? "Elite" : score >= 70 ? "Gold" : score >= 50 ? "Silver" : "Rising";
+  const tierColor = score >= 90 ? "#f59e0b" : score >= 70 ? "#f97316" : score >= 50 ? "#8b5cf6" : C.emerald;
 
   return (
-    <div
-      className="
-        relative
-        bg-white dark:bg-gray-900
-        rounded-2xl
-        border border-gray-100 dark:border-gray-800
-        shadow-sm
-        hover:shadow-lg
-        transition-all duration-300
-        p-5
-        flex flex-col
-        justify-between
-        h-[150px]
-      "
+    <div className="relative flex flex-col items-center justify-center"
+      style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="absolute inset-0 -rotate-90">
+        {/* Track */}
+        <circle cx={size/2} cy={size/2} r={radius}
+          fill="none" stroke={C.dim} strokeWidth={10} />
+        {/* Progress */}
+        <motion.circle
+          cx={size/2} cy={size/2} r={radius}
+          fill="none" stroke="url(#ring-grad)" strokeWidth={10}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          initial={{ strokeDashoffset: circumference }}
+          animate={{ strokeDashoffset: offset }}
+          transition={{ duration: 1.4, ease: "easeOut" }}
+        />
+        <defs>
+          <linearGradient id="ring-grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor={C.orange} />
+            <stop offset="100%" stopColor="#fbbf24" />
+          </linearGradient>
+        </defs>
+      </svg>
+      {/* Centre text */}
+      <div className="flex flex-col items-center z-10">
+        <span className="font-mono text-3xl font-black text-white leading-none">
+          <AnimatedNumber value={score} />
+        </span>
+        <span className="text-[10px] font-bold uppercase tracking-[0.18em] mt-0.5" style={{ color: tierColor }}>{tier}</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Stats card ───────────────────────────────────────────────────────────────
+function StatsCard({ id, title, value, change, icon, trend, series }: any) {
+  const isUp = trend === "up";
+  const Icon = ICON_MAP[icon] || ShoppingCart;
+  const gradId = `sg-${id}`;
+  const strokeColor = isUp ? C.emerald : C.red;
+
+  const months = ["J","F","M","A","M","J","J","A","S","O","N","D"];
+  const chartData = months.map((m, i) => ({ m, v: series?.[i]?.v || 0 }));
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: id * 0.08 }}
+      className="relative overflow-hidden rounded-2xl p-5 flex flex-col justify-between"
+      style={{
+        background: C.card,
+        border: `1px solid ${C.border}`,
+        height: 155,
+      }}
     >
-      {/* TOP SECTION */}
+      {/* Subtle corner glow */}
+      <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full pointer-events-none"
+        style={{ background: `radial-gradient(circle, ${C.orange}18 0%, transparent 70%)` }} />
+
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs text-gray-500 font-medium tracking-wide">
-            {title}
-          </p>
-
-          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-            {value}
-          </h3>
-
-          <p
-            className={`text-xs mt-1 font-semibold flex items-center gap-1
-            ${isUp ? "text-emerald-600" : "text-red-500"}`}
-          >
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: C.muted }}>{title}</p>
+          <h3 className="font-mono text-2xl font-black text-white mt-1 leading-none">{value}</h3>
+          <p className={`text-[11px] font-bold mt-1.5 flex items-center gap-1 ${isUp ? "text-emerald-400" : "text-red-400"}`}>
+            {isUp ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
             {change}
           </p>
         </div>
-
-        {/* ICON */}
-        <div
-          className="
-            h-10 w-10
-            flex items-center justify-center
-            rounded-xl
-            bg-orange-50
-            dark:bg-orange-900/20
-          "
-        >
-          <Icon size={20} className="text-orange-500" />
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{ background: `${C.orange}15`, border: `1px solid ${C.orange}30` }}>
+          <Icon size={16} className="text-orange-400" />
         </div>
       </div>
 
-      {/* MINI CHART */}
-      <div className="w-full h-10 mt-3">
+      <div className="w-full h-10">
         <ResponsiveContainer>
-          <AreaChart data={chartSeries}>
+          <AreaChart data={chartData}>
             <defs>
-              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={strokeColor} stopOpacity={0.25}/>
-                <stop offset="100%" stopColor={strokeColor} stopOpacity={0}/>
+              <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={strokeColor} stopOpacity={0.3} />
+                <stop offset="100%" stopColor={strokeColor} stopOpacity={0} />
               </linearGradient>
             </defs>
-
-            <Area
-              type="monotone"
-              dataKey="v"
-              stroke={strokeColor}
-              strokeWidth={2}
-              fill={`url(#${gradientId})`}
-              dot={false}
-            />
+            <Area type="monotone" dataKey="v" stroke={strokeColor} strokeWidth={1.5}
+              fill={`url(#${gradId})`} dot={false} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
-// ---------- Sales & Views Chart ----------
-function SalesChart({ data }: { data: any[] }) {
-  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+// ─── Sales/Views chart ────────────────────────────────────────────────────────
+function AreaMetricChart({ title, dataKey, color, data }: {
+  title: string; dataKey: string; color: string; data: any[];
+}) {
+  const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const chartData = MONTHS.map((m, i) => ({ m, [dataKey]: Number(data[i]?.[dataKey]) || 0 }));
+  const gradId = `area-${dataKey}`;
 
-  const chartData = months.map((m, i) => ({
-    name: m,
-    sales: Number(data[i]?.sales) || 0,
-  }));
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null;
+    return (
+      <div className="rounded-xl px-3 py-2 text-xs font-semibold"
+        style={{ background: C.card, border: `1px solid ${C.border}`, color: "#e5e7eb" }}>
+        <p className="text-gray-400 mb-0.5">{label}</p>
+        <p style={{ color }}>{payload[0].value.toLocaleString()}</p>
+      </div>
+    );
+  };
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-      <h2 className="font-semibold text-gray-700 mb-4">Sales (Yearly)</h2>
-
-      <div style={{ width: "100%", height: 260 }}>
+    <div className="rounded-2xl p-5" style={{ background: C.card, border: `1px solid ${C.border}` }}>
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: C.muted }}>{title}</p>
+        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+          style={{ background: `${color}15`, color }}>Yearly</span>
+      </div>
+      <div style={{ height: 200 }}>
         <ResponsiveContainer>
           <AreaChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <Tooltip cursor={{ strokeDasharray: "3 3" }} />
-            <Area
-              type="monotone"
-              dataKey="sales"
-              stroke="#f97316"
-              fill="#f97316"
-              fillOpacity={0.2}
-            />
+            <defs>
+              <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={color} stopOpacity={0.25} />
+                <stop offset="100%" stopColor={color} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
+            <XAxis dataKey="m" tick={{ fontSize: 10, fill: C.muted }} axisLine={false} tickLine={false} />
+            <YAxis hide />
+            <Tooltip content={<CustomTooltip />} cursor={{ stroke: C.border, strokeWidth: 1 }} />
+            <Area type="monotone" dataKey={dataKey} stroke={color} strokeWidth={2}
+              fill={`url(#${gradId})`} dot={false} activeDot={{ r: 4, fill: color, strokeWidth: 0 }} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -128,286 +207,408 @@ function SalesChart({ data }: { data: any[] }) {
   );
 }
 
-
-function ViewsChart({ data }: { data: any[] }) {
-  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-
-  const chartData = months.map((m, i) => ({
-    name: m,
-    views: Number(data[i]?.views) || 0,
-  }));
-
-  return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-      <h2 className="font-semibold text-gray-700 mb-4">Product Views (Yearly)</h2>
-      <div style={{ width: "100%", height: 260 }}>
-        <ResponsiveContainer>
-          <AreaChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <Tooltip cursor={{ strokeDasharray: "3 3" }} />
-            <Area
-              type="monotone"
-              dataKey="views"
-              stroke="#3b82f6"
-              fill="#3b82f6"
-              fillOpacity={0.2}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
-  );
-}
-
-
-// ---------- Order Status Donut ----------
+// ─── Order status donut ───────────────────────────────────────────────────────
 function OrderStatusDonut({ data }: { data: { name: string; value: number }[] }) {
-  const COLORS = ["#3b82f6", "#f97316", "#10b981", "#ef4444", "#8b5cf6", "#14b8a6"];
+  const COLORS = [C.blue, C.orange, C.emerald, C.red, C.violet, "#14b8a6"];
+  const total = data.reduce((s, d) => s + d.value, 0);
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-      <h3 className="text-gray-700 font-semibold mb-4">Order Status</h3>
-      <div className="flex items-center gap-6">
-        <div style={{ width: 160, height: 160 }}>
+    <div className="rounded-2xl p-5" style={{ background: C.card, border: `1px solid ${C.border}` }}>
+      <p className="text-[10px] font-bold uppercase tracking-[0.14em] mb-4" style={{ color: C.muted }}>Order Breakdown</p>
+      <div className="flex items-center gap-5">
+        <div style={{ width: 130, height: 130, flexShrink: 0 }}>
           <ResponsiveContainer>
             <PieChart>
-              <Pie
-                data={data}
-                dataKey="value"
-                innerRadius={50}
-                outerRadius={70}
-                paddingAngle={3}
-                startAngle={90}
-                endAngle={-270}
-              >
-                {data.map((_, index) => (
-                  <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                ))}
+              <Pie data={data} dataKey="value" innerRadius={42} outerRadius={58}
+                paddingAngle={3} startAngle={90} endAngle={-270}>
+                {data.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                <Label value={total} position="center" fontSize={18} fontWeight={800} fill="#f9fafb" />
               </Pie>
             </PieChart>
           </ResponsiveContainer>
         </div>
-        <div className="text-gray-700">
-          <ul className="mt-3 text-sm space-y-1">
-            {data.map((d, i) => (
-              <li key={i}>
-                <span
-                  className="inline-block w-3 h-3 mr-2 rounded-sm"
-                  style={{ backgroundColor: COLORS[i % COLORS.length] }}
-                />
-                {d.name}: {d.value}
-              </li>
-            ))}
-          </ul>
+        <ul className="flex-1 space-y-2 min-w-0">
+          {data.map((d, i) => (
+            <li key={i} className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
+                <span className="text-[11px] text-gray-400 truncate">{d.name}</span>
+              </div>
+              <span className="font-mono text-xs font-bold text-gray-200 flex-shrink-0">{d.value}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+// ─── Conversion CTA banner ────────────────────────────────────────────────────
+function ConversionBanner({ type }: { type: "product" | "ad" }) {
+  const isProduct = type === "product";
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.5 }}
+      className="rounded-2xl p-4 flex items-center gap-4 cursor-pointer group"
+      style={{
+        background: isProduct ? `${C.orange}0f` : `${C.violet}0f`,
+        border: `1px solid ${isProduct ? C.orange : C.violet}30`,
+      }}
+    >
+      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+        style={{ background: isProduct ? `${C.orange}20` : `${C.violet}20` }}>
+        {isProduct ? <Package size={17} className="text-orange-400" /> : <Megaphone size={17} className="text-violet-400" />}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-bold text-white leading-tight">
+          {isProduct ? "List a new product" : "Run an ad campaign"}
+        </p>
+        <p className="text-[11px] mt-0.5" style={{ color: C.muted }}>
+          {isProduct ? "More listings = more sales" : "Reach 50K+ active buyers"}
+        </p>
+      </div>
+      <Link
+        href={isProduct ? "/seller/products/add" : "/seller/ads"}
+        className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-full flex-shrink-0 transition-all group-hover:scale-105"
+        style={{
+          background: isProduct ? C.orange : C.violet,
+          color: "#fff",
+          boxShadow: `0 4px 16px ${isProduct ? C.orange : C.violet}40`,
+        }}
+      >
+        <Plus size={12} /> {isProduct ? "Add" : "Boost"}
+      </Link>
+    </motion.div>
+  );
+}
+
+// ─── Followers ring ───────────────────────────────────────────────────────────
+function FollowersCard({ value }: { value: number }) {
+  const capped = Math.min(value, 100);
+  const data = [{ v: capped }, { v: Math.max(0, 100 - capped) }];
+  return (
+    <div className="rounded-2xl p-5" style={{ background: C.card, border: `1px solid ${C.border}` }}>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: C.muted }}>Store Followers</p>
+        <Users size={14} className="text-violet-400" />
+      </div>
+      <div className="flex items-center gap-4">
+        <div style={{ width: 80, height: 80, flexShrink: 0 }}>
+          <ResponsiveContainer>
+            <PieChart>
+              <Pie data={data} dataKey="v" innerRadius={28} outerRadius={36} startAngle={90} endAngle={-270}>
+                <Cell fill={C.violet} />
+                <Cell fill={C.dim} />
+                <Label value={value.toLocaleString()} position="center"
+                  fontSize={13} fontWeight={800} fill="#f9fafb" />
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div>
+          <p className="font-mono text-2xl font-black text-white">
+            <AnimatedNumber value={value} />
+          </p>
+          <p className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1 mt-0.5">
+            <TrendingUp size={10} /> Growing
+          </p>
         </div>
       </div>
     </div>
   );
 }
 
-
-// ---------- Mini Donut ----------
-function MiniDonut({ label, value, color, percent, usd }: any) {
-  const chartData = [{ name: "progress", value: percent }, { name: "rest", value: Math.max(0, 100 - percent) }];
-  const gradId = `mini-donut-grad-${label}`;
-
+// ─── Mini stat pair ───────────────────────────────────────────────────────────
+function MiniStat({ label, value, color, percent }: any) {
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex flex-col items-center">
-      <div style={{ width: 90, height: 90 }}>
-        <ResponsiveContainer>
-          <PieChart>
-            <defs>
-              <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor={color} stopOpacity={0.95} />
-                <stop offset="100%" stopColor={color} stopOpacity={0.6} />
-              </linearGradient>
-            </defs>
-            <Pie data={chartData} dataKey="value" innerRadius={30} outerRadius={40} startAngle={90} endAngle={-270}>
-              {chartData.map((_, index) => <Cell key={index} fill={index === 0 ? `url(#${gradId})` : "#e5e7eb"} />)}
-              <Label value={`${percent}%`} position="center" fontSize={14} fill="#374151" fontWeight={600} />
-            </Pie>
-          </PieChart>
-        </ResponsiveContainer>
+    <div className="rounded-xl p-3" style={{ background: C.card, border: `1px solid ${C.border}` }}>
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: C.muted }}>{label}</p>
+        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+          style={{ background: `${color}15`, color }}>{percent}%</span>
       </div>
-      <p className="text-xs text-gray-500 mt-2">{label}</p>
-      <p className="text-lg font-bold text-gray-900">{Number(value).toLocaleString()}</p>
-      <p className="text-sm font-medium text-green-600">+{percent}% {usd}</p>
-    </div>
-  );
-}
-
-function FollowersDonut({ value }: { value: number }) {
-  const data = [
-    { name: "Followers", value },
-    { name: "Spacer", value: Math.max(1, 100 - value) }, // 👈 prevents empty pie
-  ];
-
-  const COLORS = ["#8b5cf6", "#e5e7eb"];
-
-  return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-      <h3 className="font-semibold text-gray-700 mb-4">Followers</h3>
-
-      <div style={{ width: 160, height: 160 }} className="mx-auto">
-        <ResponsiveContainer>
-          <PieChart>
-            <Pie
-              data={data}
-              dataKey="value"
-              innerRadius={55}
-              outerRadius={70}
-              startAngle={90}
-              endAngle={-270}
-            >
-              {data.map((_, i) => (
-                <Cell key={i} fill={COLORS[i]} />
-              ))}
-
-              <Label
-                value={value.toLocaleString()}
-                position="center"
-                fontSize={20}
-                fontWeight={700}
-                fill="#374151"
-              />
-            </Pie>
-          </PieChart>
-        </ResponsiveContainer>
+      <p className="font-mono text-lg font-black text-white">{Number(value).toLocaleString()}</p>
+      {/* micro bar */}
+      <div className="mt-2 h-1 rounded-full" style={{ background: C.dim }}>
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${Math.min(percent, 100)}%` }}
+          transition={{ duration: 0.9, ease: "easeOut" }}
+          className="h-full rounded-full"
+          style={{ background: color }}
+        />
       </div>
     </div>
   );
 }
 
-// ---------- Main Dashboard ----------
+// ─── Main dashboard ───────────────────────────────────────────────────────────
 export default function DashboardPage() {
-  const [stats, setStats] = useState<any[]>([]);
-  const [salesData, setSalesData] = useState<any[]>([]);
+  const [stats, setStats]           = useState<any[]>([]);
+  const [salesData, setSalesData]   = useState<any[]>([]);
   const [orderStatus, setOrderStatus] = useState<any[]>([]);
-  const [summary, setSummary] = useState<any[]>([]);
-  const [sellerPerformance, setSellerPerformance] = useState<any>(null);
-  const [followersDonut, setFollowersDonut] = useState<any[]>([]);
-
+  const [summary, setSummary]       = useState<any[]>([]);
+  const [sellerPerf, setSellerPerf] = useState<any>(null);
+  const [followers, setFollowers]   = useState(0);
+  const [score, setScore]           = useState(0);
 
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
         const storedUser = localStorage.getItem("sellerUser");
         if (!storedUser) return;
-        const seller = JSON.parse(storedUser);
-        const sellerId = seller._id;
+        const { _id: sellerId } = JSON.parse(storedUser);
         if (!sellerId) return;
 
-        const res = await fetch(`/api/seller/metrics/dashboard?sellerId=${sellerId}`);
+        const res  = await fetch(`/api/seller/metrics/dashboard?sellerId=${sellerId}`);
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to fetch metrics");
+        if (!res.ok) throw new Error(data.error || "Failed");
 
         setStats(data.stats || []);
         setSalesData(data.salesData || []);
         setOrderStatus(data.donutData || []);
         setSummary([...(data.summary || []), ...(data.activeProductsSummary || [])]);
-        setSellerPerformance(data.sellerPerformance || null);
-        setFollowersDonut(data.followersDonut || []);
+        setSellerPerf(data.sellerPerformance || null);
+        setFollowers(data.followersDonut?.[0]?.value || 0);
+
+        // Derive a seller score from available data
+        const rev = data.sellerPerformance?.revenue || 0;
+        const perf = data.sellerPerformance?.progressPercent || 0;
+        setScore(Math.min(100, Math.round(perf)));
       } catch (err) {
-        console.error("Dashboard metrics error:", err);
+        console.error("Dashboard error:", err);
       }
     };
     fetchMetrics();
   }, []);
 
+  const totalSales  = salesData.reduce((s, d) => s + (Number(d?.sales) || 0), 0);
+  const totalViews  = salesData.reduce((s, d) => s + (Number(d?.views) || 0), 0);
+
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 flex flex-col">
-      <main className="flex-1 pt-28 p-8 space-y-8">
-{sellerPerformance && (
-  <motion.div
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.3 }}
-    className="relative rounded-2xl p-6 text-white shadow-lg overflow-hidden bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700"
-  >
-    {/* 🔥 Animated Aura */}
-    <div className="absolute inset-0 -z-10 flex items-center justify-center">
-      <div className="absolute w-[160%] h-[160%] rounded-full blur-3xl opacity-40 animate-pulse-slow bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600" />
-    </div>
+    <div className="min-h-screen text-gray-100" style={{ background: C.bg }}>
+      <main className="max-w-7xl mx-auto px-4 pt-28 pb-16 space-y-6">
 
-    {/* 🏆 Card Content */}
-    <div className="relative z-10">
-      {sellerPerformance.isTopSeller ? (
-        <>
-          <h2 className="text-2xl font-bold">🏆 Top Seller of the Month!</h2>
-          <p className="text-white/90 mt-1">
-            Congratulations — you’ve achieved the highest sales this month!
-          </p>
-        </>
-      ) : (
-        <>
-          <h2 className="text-2xl font-bold">🥇 {sellerPerformance.rank} Seller</h2>
-          <p className="text-white/90 mt-1">
-            You’ve earned <span className="font-semibold">{sellerPerformance.rank}</span> status!
-          </p>
-        </>
-      )}
+        {/* ── Hero row ──────────────────────────────────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-5">
 
-      {/* 💰 Revenue */}
-      <h3 className="text-4xl font-extrabold mt-4">
-        Ksh {sellerPerformance.revenue.toLocaleString()}
-      </h3>
+          {/* Performance + Revenue hero card */}
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative rounded-2xl p-6 overflow-hidden flex flex-col sm:flex-row items-start sm:items-center gap-6"
+            style={{
+              background: `linear-gradient(135deg, #0f1e35 0%, #0a1625 100%)`,
+              border: `1px solid ${C.border}`,
+            }}
+          >
+            {/* Radial glow */}
+            <div className="absolute top-0 left-0 w-64 h-64 rounded-full pointer-events-none"
+              style={{ background: `radial-gradient(circle, ${C.orange}14 0%, transparent 65%)`, filter: "blur(30px)" }} />
 
-      {!sellerPerformance.isTopSeller && (
-        <>
-          {/* 📈 Progress Bar */}
-          <div className="mt-4 bg-white/20 rounded-full h-3 overflow-hidden shadow-inner">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${sellerPerformance.progressPercent}%` }}
-              transition={{ duration: 0.8 }}
-              className="h-3 rounded-full bg-white"
-            />
-          </div>
+            {/* Score ring */}
+            <PerformanceRing score={score} revenue={sellerPerf?.revenue || 0} seller={sellerPerf} />
 
-          <div className="flex justify-between text-xs mt-2 text-white/80">
-            <span>
-              {sellerPerformance.progressPercent}% toward {sellerPerformance.nextTier}
-            </span>
-            <span>
-              Target: Ksh {sellerPerformance.nextThreshold.toLocaleString()}
-            </span>
-          </div>
-        </>
-      )}
+            {/* Text */}
+            <div className="relative z-10 flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                {sellerPerf?.isTopSeller && (
+                  <span className="flex items-center gap-1 text-[10px] font-bold text-amber-400 bg-amber-400/10 border border-amber-400/25 rounded-full px-2 py-0.5">
+                    <Medal size={10} /> Top Seller
+                  </span>
+                )}
+                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: C.muted }}>
+                  Performance Score
+                </span>
+              </div>
 
-      {/* 🧡 Button */}
-      <button
-        onClick={() => (window.location.href = "/seller/awards")}
-        className="mt-5 bg-white text-orange-600 font-semibold px-4 py-2 rounded-full text-sm shadow hover:bg-gray-100 transition"
-      >
-        View Awards
-      </button>
-    </div>
-  </motion.div>
-)}
+              <h1 className="text-3xl font-black text-white leading-tight tracking-tight">
+                {sellerPerf?.isTopSeller ? "You're #1 this month" : `${sellerPerf?.rank || "Rising"} Seller`}
+                <span style={{ color: C.orange }}>.</span>
+              </h1>
 
+              {sellerPerf?.revenue != null && (
+                <div className="mt-3">
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: C.muted }}>Total Revenue</p>
+                  <p className="font-mono text-4xl font-black text-white">
+                    Ksh <AnimatedNumber value={sellerPerf.revenue} />
+                  </p>
+                </div>
+              )}
 
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((s) => <StatsCard key={s.id} {...s} />)}
-        </section>
+              {!sellerPerf?.isTopSeller && sellerPerf?.progressPercent != null && (
+                <div className="mt-4 max-w-xs">
+                  <div className="flex justify-between text-[11px] mb-1.5" style={{ color: C.muted }}>
+                    <span>{sellerPerf.progressPercent}% to {sellerPerf.nextTier}</span>
+                    <span>Target: Ksh {sellerPerf.nextThreshold?.toLocaleString()}</span>
+                  </div>
+                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: C.dim }}>
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${sellerPerf.progressPercent}%` }}
+                      transition={{ duration: 1, ease: "easeOut" }}
+                      className="h-full rounded-full"
+                      style={{ background: `linear-gradient(90deg, ${C.orange}, #fbbf24)` }}
+                    />
+                  </div>
+                </div>
+              )}
 
-        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-  <SalesChart data={salesData} />
-  <ViewsChart data={salesData} />
-</section>
-
-          </div>
-
-          <div className="space-y-6">
-            <OrderStatusDonut data={orderStatus} />
-            <div className="grid grid-cols-2 gap-4">
-              {summary.map((s) => <MiniDonut key={s.label} {...s} />)}
+              <div className="flex items-center gap-3 mt-5">
+                <Link href="/seller/products/add"
+                  className="flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-full transition-all hover:scale-105"
+                  style={{ background: C.orange, color: "#fff", boxShadow: `0 4px 20px ${C.orange}50` }}>
+                  <Plus size={13} /> Add Product
+                </Link>
+                <Link href="/seller/ads"
+                  className="flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-full transition-all hover:scale-105"
+                  style={{ background: `${C.violet}20`, color: "#c4b5fd", border: `1px solid ${C.violet}40` }}>
+                  <Megaphone size={13} /> Run Ad
+                </Link>
+                <Link href="/seller/awards"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-white transition-colors">
+                  Awards <ChevronRight size={13} />
+                </Link>
+              </div>
             </div>
-            <FollowersDonut value={followersDonut[0]?.value || 0} />
+          </motion.div>
+
+          {/* Right quick-actions column */}
+          <div className="flex flex-col gap-3 lg:w-[220px]">
+            <ConversionBanner type="product" />
+            <ConversionBanner type="ad" />
+
+            {/* Quick stat: Total views */}
+            <div className="rounded-2xl p-4 flex items-center gap-3"
+              style={{ background: C.card, border: `1px solid ${C.border}` }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: `${C.blue}15`, border: `1px solid ${C.blue}30` }}>
+                <Eye size={15} className="text-blue-400" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: C.muted }}>Total Views</p>
+                <p className="font-mono text-lg font-black text-white">
+                  <AnimatedNumber value={totalViews} />
+                </p>
+              </div>
+            </div>
+
+            {/* Quick stat: Total sales */}
+            <div className="rounded-2xl p-4 flex items-center gap-3"
+              style={{ background: C.card, border: `1px solid ${C.border}` }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: `${C.emerald}15`, border: `1px solid ${C.emerald}30` }}>
+                <TrendingUp size={15} className="text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: C.muted }}>Yearly Sales</p>
+                <p className="font-mono text-lg font-black text-white">
+                  Ksh <AnimatedNumber value={totalSales} />
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Stats cards ─────────────────────────────────────────────────── */}
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {stats.map((s, i) => <StatsCard key={s.id} {...s} id={i} />)}
+        </section>
+
+        {/* ── Charts + right panel ─────────────────────────────────────────── */}
+        <section className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5">
+
+          {/* Charts */}
+          <div className="space-y-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <AreaMetricChart title="Revenue (Yearly)" dataKey="sales" color={C.orange} data={salesData} />
+              <AreaMetricChart title="Product Views (Yearly)" dataKey="views" color={C.blue} data={salesData} />
+            </div>
+
+            {/* Insight prompt */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7 }}
+              className="rounded-2xl p-4 flex items-center gap-4"
+              style={{ background: `${C.emerald}09`, border: `1px solid ${C.emerald}25` }}
+            >
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: `${C.emerald}18` }}>
+                <Zap size={15} className="text-emerald-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs font-bold text-white">Boost your reach</p>
+                <p className="text-[11px] mt-0.5" style={{ color: C.muted }}>
+                  Sellers with 10+ products get 3× more views. You're{" "}
+                  <span className="text-emerald-400 font-semibold">almost there.</span>
+                </p>
+              </div>
+              <Link href="/seller/products/add"
+                className="flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full flex-shrink-0"
+                style={{ background: `${C.emerald}20`, color: "#34d399" }}>
+                Add now <ArrowUpRight size={11} />
+              </Link>
+            </motion.div>
+          </div>
+
+          {/* Right panel */}
+          <div className="space-y-4">
+            <OrderStatusDonut data={orderStatus} />
+
+            {/* Mini stats grid */}
+            {summary.length > 0 && (
+              <div className="grid grid-cols-2 gap-3">
+                {summary.slice(0, 4).map((s: any) => (
+                  <MiniStat key={s.label} {...s} />
+                ))}
+              </div>
+            )}
+
+            <FollowersCard value={followers} />
           </div>
         </section>
+
+        {/* ── Bottom conversion strip ──────────────────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          className="rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+          style={{
+            background: `linear-gradient(135deg, ${C.orange}10 0%, ${C.violet}10 100%)`,
+            border: `1px solid ${C.border}`,
+          }}
+        >
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-orange-400 mb-1">💡 Seller Tip</p>
+            <p className="text-sm font-semibold text-white">
+              Promoted listings get <span className="text-orange-400">5× more clicks</span> than organic listings.
+            </p>
+            <p className="text-[11px] mt-1" style={{ color: C.muted }}>
+              Start an ad for as little as Ksh 200 and reach targeted buyers today.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <Link href="/seller/ads"
+              className="flex items-center gap-1.5 text-xs font-bold px-5 py-2.5 rounded-full transition-all hover:scale-105"
+              style={{
+                background: `linear-gradient(135deg, ${C.orange}, #fbbf24)`,
+                color: "#fff",
+                boxShadow: `0 4px 20px ${C.orange}45`,
+              }}>
+              <Megaphone size={13} /> Start Ad Campaign
+            </Link>
+            <Link href="/seller/inventory"
+              className="text-xs font-semibold hover:text-white transition-colors flex items-center gap-1"
+              style={{ color: C.muted }}>
+              View Inventory <ChevronRight size={12} />
+            </Link>
+          </div>
+        </motion.div>
+
       </main>
     </div>
   );
