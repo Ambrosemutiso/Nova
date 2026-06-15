@@ -1,157 +1,121 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import Link from "next/link";
+import { useEffect, useState } from "react";
 import {
   ShoppingCart, DollarSign, Eye, BarChart3, Box,
-  TrendingUp, TrendingDown, Plus, Megaphone,
-  Package, Star, ChevronRight, Zap, Users,
-  ArrowUpRight, Medal, Target
+  TrendingUp, TrendingDown, Award, ChevronRight, Users,
+  ArrowUpRight,
 } from "lucide-react";
 import {
-  ResponsiveContainer, CartesianGrid, Tooltip,
+  ResponsiveContainer, CartesianGrid, Tooltip, TooltipProps,
   PieChart, Pie, Cell, Label,
-  AreaChart, Area, XAxis, YAxis
+  AreaChart, Area, XAxis, YAxis,
 } from "recharts";
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
-// ─── Icon map ─────────────────────────────────────────────────────────────────
-const ICON_MAP: Record<string, React.ElementType> = {
-  ShoppingCart, DollarSign, Eye, BarChart3, Box
-};
-
-// ─── Token system ─────────────────────────────────────────────────────────────
-const C = {
-  bg:       "#070c18",
-  card:     "#0f1520",
-  border:   "#1a2236",
-  orange:   "#f97316",
-  emerald:  "#10b981",
-  red:      "#ef4444",
-  blue:     "#3b82f6",
-  violet:   "#8b5cf6",
-  muted:    "#4b5563",
-  dim:      "#1e2d45",
-};
-
-// ─── Animated counter ─────────────────────────────────────────────────────────
-function AnimatedNumber({ value, prefix = "", suffix = "", decimals = 0 }: {
-  value: number; prefix?: string; suffix?: string; decimals?: number;
-}) {
-  const ref = useRef<HTMLSpanElement>(null);
-  useEffect(() => {
-    const node = ref.current;
-    if (!node) return;
-    const controls = animate(0, value, {
-      duration: 1.2,
-      ease: "easeOut",
-      onUpdate(v) {
-        node.textContent = prefix + v.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ",") + suffix;
-      },
-    });
-    return controls.stop;
-  }, [value]);
-  return <span ref={ref}>{prefix}0{suffix}</span>;
+/* ══════════════════════════════════════════════════════════════
+   TYPES
+══════════════════════════════════════════════════════════════ */
+interface StatItem {
+  id: string;
+  title: string;
+  value: string;
+  change: string;
+  icon: string;
+  trend: "up" | "down";
+  series: { v: number }[];
 }
 
-// ─── Performance Score Ring (signature element) ───────────────────────────────
-function PerformanceRing({ score, revenue, seller }: {
-  score: number; revenue: number; seller: any;
-}) {
-  const size = 180;
-  const radius = 76;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (score / 100) * circumference;
-  const tier = score >= 90 ? "Elite" : score >= 70 ? "Gold" : score >= 50 ? "Silver" : "Rising";
-  const tierColor = score >= 90 ? "#f59e0b" : score >= 70 ? "#f97316" : score >= 50 ? "#8b5cf6" : C.emerald;
+interface SalesDataItem { sales: number; views: number; }
+interface OrderStatusItem { name: string; value: number; }
+interface SummaryItem { label: string; value: number; color: string; percent: number; usd?: string; }
+interface FollowerItem { value: number; }
 
+interface SellerPerformance {
+  isTopSeller: boolean;
+  rank: string;
+  revenue: number;
+  progressPercent: number;
+  nextTier: string;
+  nextThreshold: number;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CONSTANTS
+══════════════════════════════════════════════════════════════ */
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const DONUT_COLORS = ["#f97316","#3b82f6","#10b981","#ef4444","#8b5cf6","#14b8a6"];
+
+const iconMap: Record<string, React.ElementType> = {
+  ShoppingCart, DollarSign, Eye, BarChart3, Box,
+};
+
+/* ══════════════════════════════════════════════════════════════
+   CUSTOM TOOLTIP
+══════════════════════════════════════════════════════════════ */
+function ChartTooltip({ active, payload, label }: TooltipProps<number, string>) {
+  if (!active || !payload?.length) return null;
   return (
-    <div className="relative flex flex-col items-center justify-center"
-      style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="absolute inset-0 -rotate-90">
-        {/* Track */}
-        <circle cx={size/2} cy={size/2} r={radius}
-          fill="none" stroke={C.dim} strokeWidth={10} />
-        {/* Progress */}
-        <motion.circle
-          cx={size/2} cy={size/2} r={radius}
-          fill="none" stroke="url(#ring-grad)" strokeWidth={10}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          initial={{ strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 1.4, ease: "easeOut" }}
-        />
-        <defs>
-          <linearGradient id="ring-grad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor={C.orange} />
-            <stop offset="100%" stopColor="#fbbf24" />
-          </linearGradient>
-        </defs>
-      </svg>
-      {/* Centre text */}
-      <div className="flex flex-col items-center z-10">
-        <span className="font-mono text-3xl font-black text-white leading-none">
-          <AnimatedNumber value={score} />
-        </span>
-        <span className="text-[10px] font-bold uppercase tracking-[0.18em] mt-0.5" style={{ color: tierColor }}>{tier}</span>
-      </div>
+    <div className="bg-gray-900 text-white text-xs px-3 py-2 rounded-xl shadow-xl">
+      <p className="font-semibold mb-1 text-gray-300">{label}</p>
+      {payload.map((p, i) => (
+        <p key={i} style={{ color: p.color }} className="font-bold">
+          {p.name}: {typeof p.value === "number" ? p.value.toLocaleString() : p.value}
+        </p>
+      ))}
     </div>
   );
 }
 
-// ─── Stats card ───────────────────────────────────────────────────────────────
-function StatsCard({ id, title, value, change, icon, trend, series }: any) {
+/* ══════════════════════════════════════════════════════════════
+   STATS CARD
+══════════════════════════════════════════════════════════════ */
+function StatsCard({ id, title, value, change, icon, trend, series }: StatItem) {
   const isUp = trend === "up";
-  const Icon = ICON_MAP[icon] || ShoppingCart;
-  const gradId = `sg-${id}`;
-  const strokeColor = isUp ? C.emerald : C.red;
+  const strokeColor = isUp ? "#10b981" : "#ef4444";
+  const gradientId = `grad-${id}`;
+  const Icon = iconMap[icon] ?? ShoppingCart;
+  const TrendIcon = isUp ? TrendingUp : TrendingDown;
 
-  const months = ["J","F","M","A","M","J","J","A","S","O","N","D"];
-  const chartData = months.map((m, i) => ({ m, v: series?.[i]?.v || 0 }));
+  const chartData = MONTHS.map((m, i) => ({ month: m, v: series[i]?.v ?? 0 }));
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: id * 0.08 }}
-      className="relative overflow-hidden rounded-2xl p-5 flex flex-col justify-between"
-      style={{
-        background: C.card,
-        border: `1px solid ${C.border}`,
-        height: 155,
-      }}
+      transition={{ duration: 0.4, delay: 0.05 }}
+      className="relative bg-white rounded-2xl border border-gray-100 shadow-sm
+        hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 p-5 flex flex-col justify-between"
+      style={{ minHeight: 160 }}
     >
-      {/* Subtle corner glow */}
-      <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full pointer-events-none"
-        style={{ background: `radial-gradient(circle, ${C.orange}18 0%, transparent 70%)` }} />
-
+      {/* top */}
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: C.muted }}>{title}</p>
-          <h3 className="font-mono text-2xl font-black text-white mt-1 leading-none">{value}</h3>
-          <p className={`text-[11px] font-bold mt-1.5 flex items-center gap-1 ${isUp ? "text-emerald-400" : "text-red-400"}`}>
-            {isUp ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+          <p className="text-xs font-medium text-gray-400 tracking-wide uppercase">{title}</p>
+          <h3 className="text-2xl font-black text-gray-900 mt-1 leading-none">{value}</h3>
+          <p className={`text-xs mt-1.5 font-semibold flex items-center gap-1
+            ${isUp ? "text-emerald-600" : "text-red-500"}`}>
+            <TrendIcon className="w-3 h-3" />
             {change}
           </p>
         </div>
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: `${C.orange}15`, border: `1px solid ${C.orange}30` }}>
-          <Icon size={16} className="text-orange-400" />
+        <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center shrink-0">
+          <Icon size={18} className="text-orange-500" />
         </div>
       </div>
 
-      <div className="w-full h-10">
-        <ResponsiveContainer>
+      {/* sparkline */}
+      <div className="w-full h-12 mt-3">
+        <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData}>
             <defs>
-              <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={strokeColor} stopOpacity={0.3} />
                 <stop offset="100%" stopColor={strokeColor} stopOpacity={0} />
               </linearGradient>
             </defs>
-            <Area type="monotone" dataKey="v" stroke={strokeColor} strokeWidth={1.5}
-              fill={`url(#${gradId})`} dot={false} />
+            <Area type="monotone" dataKey="v" stroke={strokeColor} strokeWidth={2}
+              fill={`url(#${gradientId})`} dot={false} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -159,82 +123,132 @@ function StatsCard({ id, title, value, change, icon, trend, series }: any) {
   );
 }
 
-// ─── Sales/Views chart ────────────────────────────────────────────────────────
-function AreaMetricChart({ title, dataKey, color, data }: {
-  title: string; dataKey: string; color: string; data: any[];
-}) {
-  const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const chartData = MONTHS.map((m, i) => ({ m, [dataKey]: Number(data[i]?.[dataKey]) || 0 }));
-  const gradId = `area-${dataKey}`;
+/* ══════════════════════════════════════════════════════════════
+   TABBED CHART (Sales + Views merged)
+══════════════════════════════════════════════════════════════ */
+function TabbedChart({ data }: { data: SalesDataItem[] }) {
+  const [tab, setTab] = useState<"sales" | "views">("sales");
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (!active || !payload?.length) return null;
-    return (
-      <div className="rounded-xl px-3 py-2 text-xs font-semibold"
-        style={{ background: C.card, border: `1px solid ${C.border}`, color: "#e5e7eb" }}>
-        <p className="text-gray-400 mb-0.5">{label}</p>
-        <p style={{ color }}>{payload[0].value.toLocaleString()}</p>
-      </div>
-    );
-  };
+  const chartData = MONTHS.map((m, i) => ({
+    name: m,
+    sales: Number(data[i]?.sales) || 0,
+    views: Number(data[i]?.views) || 0,
+  }));
+
+  const isSales = tab === "sales";
+  const color   = isSales ? "#f97316" : "#3b82f6";
+  const gradId  = `tab-grad-${tab}`;
+
+  const peak    = Math.max(...chartData.map(d => isSales ? d.sales : d.views));
+  const total   = chartData.reduce((s, d) => s + (isSales ? d.sales : d.views), 0);
 
   return (
-    <div className="rounded-2xl p-5" style={{ background: C.card, border: `1px solid ${C.border}` }}>
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: C.muted }}>{title}</p>
-        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-          style={{ background: `${color}15`, color }}>Yearly</span>
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+      {/* header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+        <div>
+          <h2 className="text-sm font-bold text-gray-800">Performance Overview</h2>
+          <p className="text-xs text-gray-400 mt-0.5">Yearly breakdown</p>
+        </div>
+        <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
+          {(["sales", "views"] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200
+                ${tab === t ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              {t === "sales" ? "💰 Sales" : "👁 Views"}
+            </button>
+          ))}
+        </div>
       </div>
-      <div style={{ height: 200 }}>
-        <ResponsiveContainer>
-          <AreaChart data={chartData}>
-            <defs>
-              <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={color} stopOpacity={0.25} />
-                <stop offset="100%" stopColor={color} stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
-            <XAxis dataKey="m" tick={{ fontSize: 10, fill: C.muted }} axisLine={false} tickLine={false} />
-            <YAxis hide />
-            <Tooltip content={<CustomTooltip />} cursor={{ stroke: C.border, strokeWidth: 1 }} />
-            <Area type="monotone" dataKey={dataKey} stroke={color} strokeWidth={2}
-              fill={`url(#${gradId})`} dot={false} activeDot={{ r: 4, fill: color, strokeWidth: 0 }} />
-          </AreaChart>
-        </ResponsiveContainer>
+
+      {/* stat pills */}
+      <div className="flex gap-3 mb-4">
+        {[
+          { label: "Total", value: total.toLocaleString() },
+          { label: "Peak",  value: peak.toLocaleString()  },
+        ].map((pill) => (
+          <div key={pill.label} className="bg-gray-50 rounded-xl px-3 py-2">
+            <p className="text-[10px] text-gray-400">{pill.label}</p>
+            <p className="text-sm font-black text-gray-900">{pill.value}</p>
+          </div>
+        ))}
       </div>
+
+      {/* chart */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={tab}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.25 }}
+          style={{ width: "100%", height: 220 }}
+        >
+          <ResponsiveContainer>
+            <AreaChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={color} stopOpacity={0.25} />
+                  <stop offset="100%" stopColor={color} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+              <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
+              <Tooltip content={<ChartTooltip />} />
+              <Area
+                type="monotone"
+                dataKey={tab}
+                stroke={color}
+                strokeWidth={2.5}
+                fill={`url(#${gradId})`}
+                dot={false}
+                activeDot={{ r: 5, fill: color, stroke: "#fff", strokeWidth: 2 }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
 
-// ─── Order status donut ───────────────────────────────────────────────────────
-function OrderStatusDonut({ data }: { data: { name: string; value: number }[] }) {
-  const COLORS = [C.blue, C.orange, C.emerald, C.red, C.violet, "#14b8a6"];
+/* ══════════════════════════════════════════════════════════════
+   ORDER STATUS DONUT
+══════════════════════════════════════════════════════════════ */
+function OrderStatusDonut({ data }: { data: OrderStatusItem[] }) {
   const total = data.reduce((s, d) => s + d.value, 0);
 
   return (
-    <div className="rounded-2xl p-5" style={{ background: C.card, border: `1px solid ${C.border}` }}>
-      <p className="text-[10px] font-bold uppercase tracking-[0.14em] mb-4" style={{ color: C.muted }}>Order Breakdown</p>
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+      <h3 className="text-sm font-bold text-gray-800 mb-4">Order Status</h3>
       <div className="flex items-center gap-5">
         <div style={{ width: 130, height: 130, flexShrink: 0 }}>
           <ResponsiveContainer>
             <PieChart>
-              <Pie data={data} dataKey="value" innerRadius={42} outerRadius={58}
+              <Pie data={data} dataKey="value" innerRadius={40} outerRadius={58}
                 paddingAngle={3} startAngle={90} endAngle={-270}>
-                {data.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                <Label value={total} position="center" fontSize={18} fontWeight={800} fill="#f9fafb" />
+                {data.map((_, i) => (
+                  <Cell key={i} fill={DONUT_COLORS[i % DONUT_COLORS.length]} />
+                ))}
+                <Label value={total.toLocaleString()} position="center"
+                  fontSize={15} fontWeight={700} fill="#111827" />
               </Pie>
             </PieChart>
           </ResponsiveContainer>
         </div>
-        <ul className="flex-1 space-y-2 min-w-0">
+        <ul className="space-y-2 flex-1 min-w-0">
           {data.map((d, i) => (
-            <li key={i} className="flex items-center justify-between gap-2">
+            <li key={i} className="flex items-center justify-between gap-2 text-xs">
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
-                <span className="text-[11px] text-gray-400 truncate">{d.name}</span>
+                <span className="w-2.5 h-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: DONUT_COLORS[i % DONUT_COLORS.length] }} />
+                <span className="text-gray-600 truncate">{d.name}</span>
               </div>
-              <span className="font-mono text-xs font-bold text-gray-200 flex-shrink-0">{d.value}</span>
+              <span className="font-bold text-gray-900 shrink-0">{d.value}</span>
             </li>
           ))}
         </ul>
@@ -243,116 +257,155 @@ function OrderStatusDonut({ data }: { data: { name: string; value: number }[] })
   );
 }
 
-// ─── Conversion CTA banner ────────────────────────────────────────────────────
-function ConversionBanner({ type }: { type: "product" | "ad" }) {
-  const isProduct = type === "product";
+/* ══════════════════════════════════════════════════════════════
+   SUMMARY ROWS  (replaces 4 MiniDonuts + FollowersDonut)
+══════════════════════════════════════════════════════════════ */
+function GrowthCard({
+  summary, followersValue,
+}: {
+  summary: SummaryItem[];
+  followersValue: number;
+}) {
+  const allItems = [
+    ...summary,
+    { label: "Followers", value: followersValue, color: "#8b5cf6", percent: Math.min(100, followersValue) },
+  ];
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+      <h3 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
+        <Users className="w-4 h-4 text-orange-500" /> Growth Metrics
+      </h3>
+      <div className="space-y-4">
+        {allItems.map((item) => (
+          <div key={item.label}>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs text-gray-500 font-medium">{item.label}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black text-gray-900">
+                  {Number(item.value).toLocaleString()}
+                </span>
+                <span className="text-[10px] font-semibold text-emerald-600 flex items-center gap-0.5">
+                  <ArrowUpRight className="w-3 h-3" />{item.percent}%
+                </span>
+              </div>
+            </div>
+            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min(100, item.percent)}%` }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="h-full rounded-full"
+                style={{ backgroundColor: item.color }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PERFORMANCE BANNER
+══════════════════════════════════════════════════════════════ */
+function PerformanceBanner({ data }: { data: SellerPerformance }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.5 }}
-      className="rounded-2xl p-4 flex items-center gap-4 cursor-pointer group"
-      style={{
-        background: isProduct ? `${C.orange}0f` : `${C.violet}0f`,
-        border: `1px solid ${isProduct ? C.orange : C.violet}30`,
-      }}
+      transition={{ duration: 0.4 }}
+      className="relative rounded-2xl overflow-hidden text-white shadow-lg"
+      style={{ background: "linear-gradient(135deg, #c2410c 0%, #ea580c 50%, #f97316 100%)" }}
     >
-      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-        style={{ background: isProduct ? `${C.orange}20` : `${C.violet}20` }}>
-        {isProduct ? <Package size={17} className="text-orange-400" /> : <Megaphone size={17} className="text-violet-400" />}
+      {/* decorative blobs */}
+      <div className="absolute -top-12 -right-12 w-56 h-56 rounded-full bg-white/10 blur-2xl pointer-events-none" />
+      <div className="absolute -bottom-8 -left-8 w-40 h-40 rounded-full bg-black/10 blur-2xl pointer-events-none" />
+
+      <div className="relative px-6 py-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          {/* left */}
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Award className="w-5 h-5 text-yellow-300" />
+              <span className="text-xs font-bold text-orange-100 uppercase tracking-wider">
+                {data.isTopSeller ? "Top Seller of the Month" : `${data.rank} Seller`}
+              </span>
+            </div>
+            <h2 className="text-3xl font-black tracking-tight">
+              Ksh {data.revenue.toLocaleString()}
+            </h2>
+            <p className="text-orange-100 text-sm mt-1">
+              {data.isTopSeller
+                ? "Congratulations — highest sales this month! 🎉"
+                : `Keep going! You're ${data.progressPercent}% toward ${data.nextTier}`}
+            </p>
+
+            {!data.isTopSeller && (
+              <div className="mt-3 max-w-xs">
+                <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${data.progressPercent}%` }}
+                    transition={{ duration: 0.9, ease: "easeOut" }}
+                    className="h-full bg-white rounded-full"
+                  />
+                </div>
+                <div className="flex justify-between text-[10px] text-orange-100 mt-1">
+                  <span>{data.progressPercent}% complete</span>
+                  <span>Target: Ksh {data.nextThreshold.toLocaleString()}</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* right CTA */}
+          <button
+            onClick={() => (window.location.href = "/seller/awards")}
+            className="flex items-center gap-2 bg-white text-orange-600 font-bold text-sm
+              px-5 py-2.5 rounded-xl hover:bg-orange-50 active:scale-95 transition
+              shadow-md whitespace-nowrap self-start sm:self-auto"
+          >
+            View Awards <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-bold text-white leading-tight">
-          {isProduct ? "List a new product" : "Run an ad campaign"}
-        </p>
-        <p className="text-[11px] mt-0.5" style={{ color: C.muted }}>
-          {isProduct ? "More listings = more sales" : "Reach 50K+ active buyers"}
-        </p>
-      </div>
-      <Link
-        href={isProduct ? "/seller/products/add" : "/seller/ads"}
-        className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-full flex-shrink-0 transition-all group-hover:scale-105"
-        style={{
-          background: isProduct ? C.orange : C.violet,
-          color: "#fff",
-          boxShadow: `0 4px 16px ${isProduct ? C.orange : C.violet}40`,
-        }}
-      >
-        <Plus size={12} /> {isProduct ? "Add" : "Boost"}
-      </Link>
     </motion.div>
   );
 }
 
-// ─── Followers ring ───────────────────────────────────────────────────────────
-function FollowersCard({ value }: { value: number }) {
-  const capped = Math.min(value, 100);
-  const data = [{ v: capped }, { v: Math.max(0, 100 - capped) }];
+/* ══════════════════════════════════════════════════════════════
+   PAGE HEADER
+══════════════════════════════════════════════════════════════ */
+function PageHeader() {
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+
   return (
-    <div className="rounded-2xl p-5" style={{ background: C.card, border: `1px solid ${C.border}` }}>
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: C.muted }}>Store Followers</p>
-        <Users size={14} className="text-violet-400" />
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div>
+        <h1 className="text-2xl font-black text-gray-900">{greeting} 👋</h1>
+        <p className="text-sm text-gray-500 mt-0.5">Here's what's happening with your store today.</p>
       </div>
-      <div className="flex items-center gap-4">
-        <div style={{ width: 80, height: 80, flexShrink: 0 }}>
-          <ResponsiveContainer>
-            <PieChart>
-              <Pie data={data} dataKey="v" innerRadius={28} outerRadius={36} startAngle={90} endAngle={-270}>
-                <Cell fill={C.violet} />
-                <Cell fill={C.dim} />
-                <Label value={value.toLocaleString()} position="center"
-                  fontSize={13} fontWeight={800} fill="#f9fafb" />
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-        <div>
-          <p className="font-mono text-2xl font-black text-white">
-            <AnimatedNumber value={value} />
-          </p>
-          <p className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1 mt-0.5">
-            <TrendingUp size={10} /> Growing
-          </p>
-        </div>
+      <div className="flex items-center gap-2 bg-white border border-gray-100 rounded-xl px-3 py-2 shadow-sm text-xs text-gray-500">
+        <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+        Live data
       </div>
     </div>
   );
 }
 
-// ─── Mini stat pair ───────────────────────────────────────────────────────────
-function MiniStat({ label, value, color, percent }: any) {
-  return (
-    <div className="rounded-xl p-3" style={{ background: C.card, border: `1px solid ${C.border}` }}>
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: C.muted }}>{label}</p>
-        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-          style={{ background: `${color}15`, color }}>{percent}%</span>
-      </div>
-      <p className="font-mono text-lg font-black text-white">{Number(value).toLocaleString()}</p>
-      {/* micro bar */}
-      <div className="mt-2 h-1 rounded-full" style={{ background: C.dim }}>
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${Math.min(percent, 100)}%` }}
-          transition={{ duration: 0.9, ease: "easeOut" }}
-          className="h-full rounded-full"
-          style={{ background: color }}
-        />
-      </div>
-    </div>
-  );
-}
-
-// ─── Main dashboard ───────────────────────────────────────────────────────────
+/* ══════════════════════════════════════════════════════════════
+   MAIN DASHBOARD
+══════════════════════════════════════════════════════════════ */
 export default function DashboardPage() {
-  const [stats, setStats]           = useState<any[]>([]);
-  const [salesData, setSalesData]   = useState<any[]>([]);
-  const [orderStatus, setOrderStatus] = useState<any[]>([]);
-  const [summary, setSummary]       = useState<any[]>([]);
-  const [sellerPerf, setSellerPerf] = useState<any>(null);
-  const [followers, setFollowers]   = useState(0);
-  const [score, setScore]           = useState(0);
+  const [stats,             setStats]             = useState<StatItem[]>([]);
+  const [salesData,         setSalesData]         = useState<SalesDataItem[]>([]);
+  const [orderStatus,       setOrderStatus]       = useState<OrderStatusItem[]>([]);
+  const [summary,           setSummary]           = useState<SummaryItem[]>([]);
+  const [sellerPerformance, setSellerPerformance] = useState<SellerPerformance | null>(null);
+  const [followersDonut,    setFollowersDonut]    = useState<FollowerItem[]>([]);
+  const [loading,           setLoading]           = useState(true);
 
   useEffect(() => {
     const fetchMetrics = async () => {
@@ -364,250 +417,73 @@ export default function DashboardPage() {
 
         const res  = await fetch(`/api/seller/metrics/dashboard?sellerId=${sellerId}`);
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed");
+        if (!res.ok) throw new Error(data.error);
 
         setStats(data.stats || []);
         setSalesData(data.salesData || []);
         setOrderStatus(data.donutData || []);
         setSummary([...(data.summary || []), ...(data.activeProductsSummary || [])]);
-        setSellerPerf(data.sellerPerformance || null);
-        setFollowers(data.followersDonut?.[0]?.value || 0);
-
-        // Derive a seller score from available data
-        const rev = data.sellerPerformance?.revenue || 0;
-        const perf = data.sellerPerformance?.progressPercent || 0;
-        setScore(Math.min(100, Math.round(perf)));
+        setSellerPerformance(data.sellerPerformance || null);
+        setFollowersDonut(data.followersDonut || []);
       } catch (err) {
         console.error("Dashboard error:", err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchMetrics();
   }, []);
 
-  const totalSales  = salesData.reduce((s, d) => s + (Number(d?.sales) || 0), 0);
-  const totalViews  = salesData.reduce((s, d) => s + (Number(d?.views) || 0), 0);
+  /* ── skeleton ── */
+  if (loading) return (
+    <div className="min-h-screen bg-gray-50 pt-28 p-6 space-y-6">
+      <div className="h-8 w-64 bg-gray-200 rounded-xl animate-pulse" />
+      <div className="h-32 bg-gray-200 rounded-2xl animate-pulse" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => <div key={i} className="h-40 bg-gray-200 rounded-2xl animate-pulse" />)}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 h-80 bg-gray-200 rounded-2xl animate-pulse" />
+        <div className="space-y-4">
+          <div className="h-52 bg-gray-200 rounded-2xl animate-pulse" />
+          <div className="h-52 bg-gray-200 rounded-2xl animate-pulse" />
+        </div>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen text-gray-100" style={{ background: C.bg }}>
-      <main className="max-w-7xl mx-auto px-4 pt-28 pb-16 space-y-6">
+    <div className="min-h-screen bg-gray-50 text-gray-800">
+      <main className="max-w-7xl mx-auto pt-28 px-4 md:px-6 pb-12 space-y-6">
 
-        {/* ── Hero row ──────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-5">
+        {/* ── page header ── */}
+        <PageHeader />
 
-          {/* Performance + Revenue hero card */}
-          <motion.div
-            initial={{ opacity: 0, y: -12 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="relative rounded-2xl p-6 overflow-hidden flex flex-col sm:flex-row items-start sm:items-center gap-6"
-            style={{
-              background: `linear-gradient(135deg, #0f1e35 0%, #0a1625 100%)`,
-              border: `1px solid ${C.border}`,
-            }}
-          >
-            {/* Radial glow */}
-            <div className="absolute top-0 left-0 w-64 h-64 rounded-full pointer-events-none"
-              style={{ background: `radial-gradient(circle, ${C.orange}14 0%, transparent 65%)`, filter: "blur(30px)" }} />
+        {/* ── performance banner ── */}
+        {sellerPerformance && <PerformanceBanner data={sellerPerformance} />}
 
-            {/* Score ring */}
-            <PerformanceRing score={score} revenue={sellerPerf?.revenue || 0} seller={sellerPerf} />
-
-            {/* Text */}
-            <div className="relative z-10 flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                {sellerPerf?.isTopSeller && (
-                  <span className="flex items-center gap-1 text-[10px] font-bold text-amber-400 bg-amber-400/10 border border-amber-400/25 rounded-full px-2 py-0.5">
-                    <Medal size={10} /> Top Seller
-                  </span>
-                )}
-                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: C.muted }}>
-                  Performance Score
-                </span>
-              </div>
-
-              <h1 className="text-3xl font-black text-white leading-tight tracking-tight">
-                {sellerPerf?.isTopSeller ? "You're #1 this month" : `${sellerPerf?.rank || "Rising"} Seller`}
-                <span style={{ color: C.orange }}>.</span>
-              </h1>
-
-              {sellerPerf?.revenue != null && (
-                <div className="mt-3">
-                  <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: C.muted }}>Total Revenue</p>
-                  <p className="font-mono text-4xl font-black text-white">
-                    Ksh <AnimatedNumber value={sellerPerf.revenue} />
-                  </p>
-                </div>
-              )}
-
-              {!sellerPerf?.isTopSeller && sellerPerf?.progressPercent != null && (
-                <div className="mt-4 max-w-xs">
-                  <div className="flex justify-between text-[11px] mb-1.5" style={{ color: C.muted }}>
-                    <span>{sellerPerf.progressPercent}% to {sellerPerf.nextTier}</span>
-                    <span>Target: Ksh {sellerPerf.nextThreshold?.toLocaleString()}</span>
-                  </div>
-                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: C.dim }}>
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${sellerPerf.progressPercent}%` }}
-                      transition={{ duration: 1, ease: "easeOut" }}
-                      className="h-full rounded-full"
-                      style={{ background: `linear-gradient(90deg, ${C.orange}, #fbbf24)` }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="flex items-center gap-3 mt-5">
-                <Link href="/seller/products/add"
-                  className="flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-full transition-all hover:scale-105"
-                  style={{ background: C.orange, color: "#fff", boxShadow: `0 4px 20px ${C.orange}50` }}>
-                  <Plus size={13} /> Add Product
-                </Link>
-                <Link href="/seller/ads"
-                  className="flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-full transition-all hover:scale-105"
-                  style={{ background: `${C.violet}20`, color: "#c4b5fd", border: `1px solid ${C.violet}40` }}>
-                  <Megaphone size={13} /> Run Ad
-                </Link>
-                <Link href="/seller/awards"
-                  className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-white transition-colors">
-                  Awards <ChevronRight size={13} />
-                </Link>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Right quick-actions column */}
-          <div className="flex flex-col gap-3 lg:w-[220px]">
-            <ConversionBanner type="product" />
-            <ConversionBanner type="ad" />
-
-            {/* Quick stat: Total views */}
-            <div className="rounded-2xl p-4 flex items-center gap-3"
-              style={{ background: C.card, border: `1px solid ${C.border}` }}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: `${C.blue}15`, border: `1px solid ${C.blue}30` }}>
-                <Eye size={15} className="text-blue-400" />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: C.muted }}>Total Views</p>
-                <p className="font-mono text-lg font-black text-white">
-                  <AnimatedNumber value={totalViews} />
-                </p>
-              </div>
-            </div>
-
-            {/* Quick stat: Total sales */}
-            <div className="rounded-2xl p-4 flex items-center gap-3"
-              style={{ background: C.card, border: `1px solid ${C.border}` }}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: `${C.emerald}15`, border: `1px solid ${C.emerald}30` }}>
-                <TrendingUp size={15} className="text-emerald-400" />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: C.muted }}>Yearly Sales</p>
-                <p className="font-mono text-lg font-black text-white">
-                  Ksh <AnimatedNumber value={totalSales} />
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Stats cards ─────────────────────────────────────────────────── */}
+        {/* ── stats row ── */}
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {stats.map((s, i) => <StatsCard key={s.id} {...s} id={i} />)}
+          {stats.map((s, i) => <StatsCard key={s.id} {...s} />)}
         </section>
 
-        {/* ── Charts + right panel ─────────────────────────────────────────── */}
-        <section className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5">
+        {/* ── main charts + side panels ── */}
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-          {/* Charts */}
-          <div className="space-y-5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <AreaMetricChart title="Revenue (Yearly)" dataKey="sales" color={C.orange} data={salesData} />
-              <AreaMetricChart title="Product Views (Yearly)" dataKey="views" color={C.blue} data={salesData} />
-            </div>
-
-            {/* Insight prompt */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.7 }}
-              className="rounded-2xl p-4 flex items-center gap-4"
-              style={{ background: `${C.emerald}09`, border: `1px solid ${C.emerald}25` }}
-            >
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: `${C.emerald}18` }}>
-                <Zap size={15} className="text-emerald-400" />
-              </div>
-              <div className="flex-1">
-                <p className="text-xs font-bold text-white">Boost your reach</p>
-                <p className="text-[11px] mt-0.5" style={{ color: C.muted }}>
-                  Sellers with 10+ products get 3× more views. You're{" "}
-                  <span className="text-emerald-400 font-semibold">almost there.</span>
-                </p>
-              </div>
-              <Link href="/seller/products/add"
-                className="flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full flex-shrink-0"
-                style={{ background: `${C.emerald}20`, color: "#34d399" }}>
-                Add now <ArrowUpRight size={11} />
-              </Link>
-            </motion.div>
+          {/* chart — takes 2 cols */}
+          <div className="lg:col-span-2">
+            <TabbedChart data={salesData} />
           </div>
 
-          {/* Right panel */}
+          {/* right side */}
           <div className="space-y-4">
             <OrderStatusDonut data={orderStatus} />
-
-            {/* Mini stats grid */}
-            {summary.length > 0 && (
-              <div className="grid grid-cols-2 gap-3">
-                {summary.slice(0, 4).map((s: any) => (
-                  <MiniStat key={s.label} {...s} />
-                ))}
-              </div>
-            )}
-
-            <FollowersCard value={followers} />
+            <GrowthCard
+              summary={summary}
+              followersValue={followersDonut[0]?.value ?? 0}
+            />
           </div>
         </section>
-
-        {/* ── Bottom conversion strip ──────────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          className="rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-          style={{
-            background: `linear-gradient(135deg, ${C.orange}10 0%, ${C.violet}10 100%)`,
-            border: `1px solid ${C.border}`,
-          }}
-        >
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-orange-400 mb-1">💡 Seller Tip</p>
-            <p className="text-sm font-semibold text-white">
-              Promoted listings get <span className="text-orange-400">5× more clicks</span> than organic listings.
-            </p>
-            <p className="text-[11px] mt-1" style={{ color: C.muted }}>
-              Start an ad for as little as Ksh 200 and reach targeted buyers today.
-            </p>
-          </div>
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <Link href="/seller/ads"
-              className="flex items-center gap-1.5 text-xs font-bold px-5 py-2.5 rounded-full transition-all hover:scale-105"
-              style={{
-                background: `linear-gradient(135deg, ${C.orange}, #fbbf24)`,
-                color: "#fff",
-                boxShadow: `0 4px 20px ${C.orange}45`,
-              }}>
-              <Megaphone size={13} /> Start Ad Campaign
-            </Link>
-            <Link href="/seller/inventory"
-              className="text-xs font-semibold hover:text-white transition-colors flex items-center gap-1"
-              style={{ color: C.muted }}>
-              View Inventory <ChevronRight size={12} />
-            </Link>
-          </div>
-        </motion.div>
 
       </main>
     </div>
