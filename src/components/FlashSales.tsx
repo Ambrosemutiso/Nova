@@ -5,6 +5,7 @@ import type { ProductType } from '@/app/types/product';
 import { toast } from 'react-toastify';
 import FlashProductCard from './FlashSaleProductCard';
 import { Zap, ChevronRight, RefreshCw } from 'lucide-react';
+import ProductCard from './ProductCard';
 
 const FLASH_SALE_DURATION_MS = 3 * 60 * 60 * 1000; // 3 hours
 
@@ -232,7 +233,7 @@ export default function FlashSales() {
         <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar snap-x snap-mandatory scroll-smooth">
           {filtered.map((product, i) => (
             <div key={product._id} className="snap-start flex-shrink-0">
-              <FlashProductCard
+              <ProductCard
                 product={product}
                 index={i}
               />

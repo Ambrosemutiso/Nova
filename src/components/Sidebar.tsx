@@ -13,7 +13,7 @@ import {
   FiZap, FiAward, FiCheck
 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
-import { categoryTree } from '@/lib/productCategories';
+import { categoryTree } from '@/lib/sidebarProductCategories';
 import { slugify } from '@/lib/slugify';
 import TranslateWidget from './TranslateWidget';
 import { useCart } from '@/app/context/CartContext';

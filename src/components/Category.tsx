@@ -1,95 +1,340 @@
-//components/Category.tsx
 'use client';
 
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { CldImage } from 'next-cloudinary';
-import Image from 'next/image';
 import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
+import {
+  ChevronRight, SlidersHorizontal, X, Star, ShoppingCart,
+  Heart, ChevronDown, ArrowUpDown, Package, Check,
+} from 'lucide-react';
 
 import { useCart } from '@/app/context/CartContext';
 import { addToWishlist, isInWishlist } from '@/lib/wishlist';
-import type { ProductType } from "@/app/types/product";
+import type { ProductType } from '@/app/types/product';
 
+/* ══════════════════════════════════════════════════════════════
+   CONSTANTS
+══════════════════════════════════════════════════════════════ */
 const LIMIT = 12;
 
-const categoryBannerMap: Record<string, string> = {
-  "Mobile Phones & Accessories": '/phones.jpg',
-  "Computers & Laptops": '/Laptops.jpg',
-};
+const SORT_OPTIONS = [
+  { value: 'name-asc',   label: 'Name (A–Z)'        },
+  { value: 'name-desc',  label: 'Name (Z–A)'        },
+  { value: 'price-asc',  label: 'Price: Low to High' },
+  { value: 'price-desc', label: 'Price: High to Low' },
+];
 
-type FetchResponse = {
-  total: number;
-  products: ProductType[];
-  brands: string[];
-};
+/* ══════════════════════════════════════════════════════════════
+   TYPES / FETCH
+══════════════════════════════════════════════════════════════ */
+type FetchResponse = { total: number; products: ProductType[]; brands: string[] };
 
 const fetchProducts = async (
-  categorySlug: string,
-  page: number,
-  sort: string,
-  brand: string,
-  minPrice: string,
-  maxPrice: string
+  slug: string, page: number, sort: string,
+  brand: string, minPrice: string, maxPrice: string,
 ): Promise<FetchResponse> => {
-  const query = new URLSearchParams({
-    page: String(page),
-    limit: String(LIMIT),
-    sort,
-  });
-
-  if (brand) query.set('brand', brand);
-  if (minPrice) query.set('minPrice', minPrice);
-  if (maxPrice) query.set('maxPrice', maxPrice);
-
-  const res = await fetch(`/api/products/category/${categorySlug}?${query}`);
-  if (!res.ok) throw new Error('Failed to fetch products');
-
+  const q = new URLSearchParams({ page: String(page), limit: String(LIMIT), sort });
+  if (brand)    q.set('brand',    brand);
+  if (minPrice) q.set('minPrice', minPrice);
+  if (maxPrice) q.set('maxPrice', maxPrice);
+  const res = await fetch(`/api/products/category/${slug}?${q}`);
+  if (!res.ok) throw new Error('Failed to fetch');
   return res.json();
 };
 
-const getPublicId = (url?: string): string => {
+const getPublicId = (url?: string) => {
   if (!url) return '';
-  const match = url.match(/\/upload\/(?:v\d+\/)?([^\.]+)/);
-  return match?.[1] ?? '';
+  const m = url.match(/\/upload\/(?:v\d+\/)?([^.]+)/);
+  return m?.[1] ?? '';
 };
 
-export default function CategoryPage() {
-  const params = useParams<{ categorySlug?: string }>();
-  const searchParams = useSearchParams();
-  const router = useRouter();
+/* ══════════════════════════════════════════════════════════════
+   SMALL HELPERS
+══════════════════════════════════════════════════════════════ */
+function StarRow({ rating = 0 }: { rating?: number }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <Star
+          key={s}
+          className={`w-3 h-3 ${s <= Math.round(rating)
+            ? 'text-amber-400 fill-amber-400'
+            : 'text-gray-200 fill-gray-200'}`}
+        />
+      ))}
+    </div>
+  );
+}
 
+function StockBar({ quantity = 0 }: { quantity?: number }) {
+  const pct   = Math.min((quantity / 50) * 100, 100);
+  const color  = pct <= 20 ? '#ef4444' : pct <= 50 ? '#f97316' : '#22c55e';
+  const isLow  = quantity > 0 && quantity <= 5;
+
+  return (
+    <div>
+      {isLow && (
+        <p className="text-[10px] font-bold text-red-500 flex items-center gap-0.5 mb-0.5">
+          <Package className="w-3 h-3" /> Only {quantity} left!
+        </p>
+      )}
+      <div className="h-1 w-full bg-gray-100 rounded-full overflow-hidden">
+        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
+      </div>
+    </div>
+  );
+}
+
+/* ── styled dropdown ── */
+function Dropdown({
+  value, onChange, placeholder, children,
+}: {
+  value: string; onChange: (v: string) => void;
+  placeholder: string; children: React.ReactNode;
+}) {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="appearance-none w-full bg-white border border-gray-200 rounded-xl
+          px-3 py-2.5 pr-8 text-sm text-gray-800 font-medium
+          focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent
+          transition cursor-pointer"
+      >
+        <option value="">{placeholder}</option>
+        {children}
+      </select>
+      <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+    </div>
+  );
+}
+
+/* ── active filter pill ── */
+function FilterPill({ label, onRemove }: { label: string; onRemove: () => void }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 bg-orange-50 border border-orange-200
+      text-orange-700 text-xs font-semibold px-3 py-1.5 rounded-full">
+      {label}
+      <button onClick={onRemove} className="hover:text-orange-900 transition">
+        <X className="w-3 h-3" />
+      </button>
+    </span>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PRODUCT CARD
+══════════════════════════════════════════════════════════════ */
+interface ProductCardProps {
+  product: ProductType;
+  inCart: boolean;
+  cartQty: number;
+  onAdd: () => void;
+  onIncrease: () => void;
+  onDecrease: () => void;
+  index: number;
+}
+
+function ProductCard({ product, inCart, cartQty, onAdd, onIncrease, onDecrease, index }: ProductCardProps) {
+  const [visible, setVisible]   = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [wished, setWished]     = useState(() => isInWishlist(product._id));
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold: 0.08 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  const discount = product.oldPrice && product.oldPrice > product.calculatedPrice
+    ? Math.round(((product.oldPrice - product.calculatedPrice) / product.oldPrice) * 100)
+    : null;
+
+  return (
+    <div
+      ref={ref}
+      className="group relative flex flex-col bg-white rounded-2xl border border-gray-100
+        shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
+      style={{
+        opacity:    visible ? 1 : 0,
+        transform:  visible ? 'translateY(0)' : 'translateY(16px)',
+        transition: `opacity 0.4s ease ${Math.min(index * 50, 300)}ms,
+                     transform 0.4s ease ${Math.min(index * 50, 300)}ms,
+                     box-shadow 0.3s ease, translate 0.3s ease`,
+      }}
+    >
+      {/* ── image ── */}
+      <Link href={`/product/${product.slug}`} className="relative block aspect-square bg-gray-50 overflow-hidden">
+        {!imgLoaded && (
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100
+            animate-pulse" />
+        )}
+        <div className="w-full h-full transition-transform duration-500 group-hover:scale-105">
+          <CldImage
+            src={getPublicId(product.images?.[0]) || 'sample'}
+            alt={product.name}
+            width={300} height={300} crop="fill"
+            className={`object-cover w-full h-full transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+            onLoad={() => setImgLoaded(true)}
+          />
+        </div>
+
+        {/* discount badge */}
+        {discount && (
+          <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-black
+            px-1.5 py-0.5 rounded-lg shadow">
+            -{discount}%
+          </span>
+        )}
+
+        {/* out of stock */}
+        {product.quantity === 0 && (
+          <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+            <span className="text-xs font-bold text-gray-500 bg-white border border-gray-200
+              px-3 py-1 rounded-full">Out of Stock</span>
+          </div>
+        )}
+      </Link>
+
+      {/* ── wishlist ── */}
+      <button
+        onClick={() => { addToWishlist(product); setWished(!wished); }}
+        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm shadow
+          flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+      >
+        <Heart className={`w-4 h-4 transition-colors ${wished ? 'text-red-500 fill-red-500' : 'text-gray-400'}`} />
+      </button>
+
+      {/* ── content ── */}
+      <div className="flex flex-col flex-1 px-3 pt-2.5 pb-3 gap-1.5">
+        <Link href={`/product/${product.slug}`}>
+          <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 leading-snug
+            hover:text-orange-600 transition-colors">
+            {product.name}
+          </h3>
+        </Link>
+
+        <StarRow rating={product.averageRating ?? product.rating ?? 0} />
+
+        <StockBar quantity={product.quantity} />
+
+        {/* price */}
+        <div className="flex items-baseline gap-2 mt-1">
+          <span className="text-base font-black text-orange-600 leading-none">
+            Ksh {product.calculatedPrice.toLocaleString()}
+          </span>
+          {product.oldPrice > product.calculatedPrice && (
+            <span className="text-[10px] line-through text-gray-400">
+              Ksh {product.oldPrice.toLocaleString()}
+            </span>
+          )}
+        </div>
+
+        {/* cart controls */}
+        {product.quantity > 0 && (
+          inCart ? (
+            <div className="flex items-center gap-2 mt-1">
+              <button onClick={onDecrease}
+                className="w-7 h-7 rounded-lg bg-orange-100 text-orange-700 font-bold
+                  hover:bg-orange-200 active:scale-95 transition flex items-center justify-center">
+                −
+              </button>
+              <span className="text-sm font-bold text-gray-900 w-5 text-center tabular-nums">
+                {cartQty}
+              </span>
+              <button onClick={onIncrease}
+                className="w-7 h-7 rounded-lg bg-orange-500 text-white font-bold
+                  hover:bg-orange-600 active:scale-95 transition flex items-center justify-center shadow-sm">
+                +
+              </button>
+              <span className="text-[10px] text-gray-400 ml-auto flex items-center gap-0.5">
+                <Check className="w-3 h-3 text-green-500" /> In Cart
+              </span>
+            </div>
+          ) : (
+            <button
+              onClick={onAdd}
+              className="mt-1 w-full flex items-center justify-center gap-1.5
+                bg-orange-500 hover:bg-orange-600 active:scale-[0.98]
+                text-white text-xs font-bold py-2.5 rounded-xl transition shadow-sm shadow-orange-200"
+            >
+              <ShoppingCart className="w-3.5 h-3.5" /> Add to Cart
+            </button>
+          )
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SKELETON GRID
+══════════════════════════════════════════════════════════════ */
+function SkeletonGrid() {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+          <div className="aspect-square bg-gray-100 animate-pulse" />
+          <div className="p-3 space-y-2">
+            <div className="h-3 bg-gray-100 rounded animate-pulse w-4/5" />
+            <div className="h-3 bg-gray-100 rounded animate-pulse w-3/5" />
+            <div className="h-2 bg-gray-100 rounded animate-pulse w-full" />
+            <div className="h-7 bg-gray-100 rounded-xl animate-pulse mt-2" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MAIN PAGE
+══════════════════════════════════════════════════════════════ */
+export default function CategoryPage() {
+  const params       = useParams<{ categorySlug?: string }>();
+  const searchParams = useSearchParams();
+  const router       = useRouter();
   const { addToCart, cartItems, increaseQuantity, decreaseQuantity } = useCart();
 
   const categorySlug = params.categorySlug ?? 'default';
-  const bannerSrc = categoryBannerMap[categorySlug] ?? '/Electronics.jpg';
+  const categoryName = categorySlug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
-  const page = Number(searchParams.get('page') ?? 1);
-  const sort = searchParams.get('sort') ?? 'name-asc';
-  const brand = searchParams.get('brand') ?? '';
+  const page     = Number(searchParams.get('page') ?? 1);
+  const sort     = searchParams.get('sort')     ?? 'name-asc';
+  const brand    = searchParams.get('brand')    ?? '';
   const minPrice = searchParams.get('minPrice') ?? '';
   const maxPrice = searchParams.get('maxPrice') ?? '';
 
-  const [products, setProducts] = useState<ProductType[]>([]);
-  const [brands, setBrands] = useState<string[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [products,   setProducts]   = useState<ProductType[]>([]);
+  const [brands,     setBrands]     = useState<string[]>([]);
+  const [total,      setTotal]      = useState(0);
+  const [loading,    setLoading]    = useState(true);
+  const [showFilter, setShowFilter] = useState(false);
+
+  /* local price inputs (only applied on blur / Enter) */
+  const [minInput, setMinInput] = useState(minPrice);
+  const [maxInput, setMaxInput] = useState(maxPrice);
 
   const totalPages = Math.ceil(total / LIMIT);
 
   useEffect(() => {
     setLoading(true);
-
     fetchProducts(categorySlug, page, sort, brand, minPrice, maxPrice)
       .then(({ products, total, brands }) => {
         const lastPage = Math.max(1, Math.ceil(total / LIMIT));
-
         if (page > lastPage) {
           router.push(`/category/${categorySlug}?page=${lastPage}&sort=${sort}`);
           return;
         }
-
         setProducts(products);
         setTotal(total);
         setBrands(brands ?? []);
@@ -99,213 +344,318 @@ export default function CategoryPage() {
   }, [categorySlug, page, sort, brand, minPrice, maxPrice, router]);
 
   const updateQuery = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    value ? params.set(key, value) : params.delete(key);
-    params.set('page', '1');
-
-    router.push(`/category/${categorySlug}?${params}`);
+    const p = new URLSearchParams(searchParams.toString());
+    value ? p.set(key, value) : p.delete(key);
+    p.set('page', '1');
+    router.push(`/category/${categorySlug}?${p}`);
   };
 
-  const handleAddToCart = (product: ProductType) => {
-    addToCart({
-      id: product._id,
-      productId: product._id,
-      name: product.name,
-      images: product.images ?? [],
-      brand: product.brand,
-      model: product.model,
-      quantity: 1,
-      calculatedPrice: product.calculatedPrice,
-      fulfillmentMode: product.fulfillmentMode,
-      sellerId: product.sellerId,
-      county: product.county,
-      town: product.town,
-      weight: product.weight,
-    });
+  const applyPriceRange = () => {
+    const p = new URLSearchParams(searchParams.toString());
+    minInput ? p.set('minPrice', minInput) : p.delete('minPrice');
+    maxInput ? p.set('maxPrice', maxInput) : p.delete('maxPrice');
+    p.set('page', '1');
+    router.push(`/category/${categorySlug}?${p}`);
   };
 
-  const renderStars = (rating: number = 0) => {
-    const fullStars = Math.floor(rating);
-    const halfStar = rating - fullStars >= 0.5;
-    const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
-
-    return (
-      <div className="flex space-x-1 mb-1">
-        {[...Array(fullStars)].map((_, i) => (
-          <svg key={`full-${i}`} className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M10 15l-5.878 3.09 1.122-6.545L.488 6.91l6.561-.955L10 0l2.951 5.955 6.561.955-4.756 4.635 1.122 6.545z" />
-          </svg>
-        ))}
-        {halfStar && (
-          <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M10 15l-5.878 3.09 1.122-6.545L.488 6.91l6.561-.955L10 0z" />
-          </svg>
-        )}
-        {[...Array(emptyStars)].map((_, i) => (
-          <svg key={`empty-${i}`} className="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M10 15l-5.878 3.09 1.122-6.545L.488 6.91l6.561-.955L10 0l2.951 5.955 6.561.955-4.756 4.635 1.122 6.545z" />
-          </svg>
-        ))}
-      </div>
-    );
+  const clearAll = () => {
+    setMinInput(''); setMaxInput('');
+    router.push(`/category/${categorySlug}?sort=${sort}`);
   };
 
-  const renderStockProgress = (quantity: number = 0) => {
-    const max = 50;
-    const percent = Math.min((quantity / max) * 100, 100);
+  const activeFilters = [
+    brand    && { key: 'brand',    label: `Brand: ${brand}`,       onRemove: () => updateQuery('brand', '') },
+    minPrice && { key: 'minPrice', label: `Min: Ksh ${minPrice}`,  onRemove: () => { setMinInput(''); updateQuery('minPrice', ''); } },
+    maxPrice && { key: 'maxPrice', label: `Max: Ksh ${maxPrice}`,  onRemove: () => { setMaxInput(''); updateQuery('maxPrice', ''); } },
+  ].filter(Boolean) as { key: string; label: string; onRemove: () => void }[];
 
-    return (
-      <div className="mt-1">
-        <div className="text-xs text-gray-500 mb-1">Stock left: {quantity}</div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div className="bg-orange-500 h-2 rounded-full" style={{ width: `${percent}%` }}></div>
-        </div>
-      </div>
-    );
-  };
+  const sortLabel = SORT_OPTIONS.find(o => o.value === sort)?.label ?? 'Sort';
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
-      <div className="max-w-6xl mx-auto px-4 pt-28 pb-10">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 pt-28 pb-12">
 
-        {/* Breadcrumb */}
-        <nav className="flex items-center text-sm text-gray-500 mb-6">
-          <Link href="/">Home</Link>
-          <ChevronRight className="mx-2 w-4 h-4" />
-          <Link href="/shop">Shop</Link>
-          <ChevronRight className="mx-2 w-4 h-4" />
-          <span className="capitalize font-semibold text-gray-700">
-            {categorySlug}
-          </span>
+        {/* ── breadcrumb ── */}
+        <nav className="flex items-center text-xs text-gray-400 mb-5 gap-1 overflow-x-auto whitespace-nowrap">
+          <Link href="/" className="hover:text-gray-600 transition">Home</Link>
+          <ChevronRight className="w-3 h-3 shrink-0" />
+          <Link href="/shop" className="hover:text-gray-600 transition">Shop</Link>
+          <ChevronRight className="w-3 h-3 shrink-0" />
+          <span className="text-gray-700 font-semibold capitalize">{categoryName}</span>
         </nav>
 
-        {/* Banner */}
-        <div className="relative w-full h-44 mb-6 rounded-lg overflow-hidden">
-          <Image src={bannerSrc} alt="Category banner" fill className="object-cover" />
+        {/* ── page title + result count ── */}
+        <div className="flex items-baseline justify-between mb-5">
+          <div>
+            <h1 className="text-xl font-black text-gray-900 capitalize">{categoryName}</h1>
+            {!loading && (
+              <p className="text-xs text-gray-400 mt-0.5">
+                {total.toLocaleString()} product{total !== 1 ? 's' : ''} found
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap gap-3 mb-6 bg-white p-4 rounded-lg shadow-sm">
-          <select
-            value={brand}
-            onChange={(e) => updateQuery('brand', e.target.value)}
-            className="border px-3 py-2 rounded text-sm"
-          >
-            <option value="">All Brands</option>
-            {brands.map((b) => (
-              <option key={b} value={b}>{b}</option>
-            ))}
-          </select>
+        {/* ══════════════════════════════════════════════
+            FILTER BAR
+        ══════════════════════════════════════════════ */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-6">
 
-          <input
-            type="number"
-            placeholder="Min Price"
-            value={minPrice}
-            onChange={(e) => updateQuery('minPrice', e.target.value)}
-            className="border px-3 py-2 rounded text-sm w-28"
-          />
+          {/* top row */}
+          <div className="flex flex-wrap items-center gap-3 px-4 py-3">
 
-          <input
-            type="number"
-            placeholder="Max Price"
-            value={maxPrice}
-            onChange={(e) => updateQuery('maxPrice', e.target.value)}
-            className="border px-3 py-2 rounded text-sm w-28"
-          />
+            {/* filter toggle (mobile) */}
+            <button
+              onClick={() => setShowFilter(!showFilter)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold
+                transition-all duration-200
+                ${showFilter || activeFilters.length > 0
+                  ? 'bg-orange-500 border-orange-500 text-white shadow-md shadow-orange-200'
+                  : 'bg-white border-gray-200 text-gray-700 hover:border-orange-300'
+                }`}
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+              Filters
+              {activeFilters.length > 0 && (
+                <span className="bg-white text-orange-600 text-[10px] font-black w-5 h-5 rounded-full
+                  flex items-center justify-center">
+                  {activeFilters.length}
+                </span>
+              )}
+            </button>
 
-          <select
-            value={sort}
-            onChange={(e) => updateQuery('sort', e.target.value)}
-            className="border px-3 py-2 rounded text-sm ml-auto"
-          >
-            <option value="name-asc">Name (A–Z)</option>
-            <option value="name-desc">Name (Z–A)</option>
-            <option value="price-asc">Price (Low–High)</option>
-            <option value="price-desc">Price (High–Low)</option>
-          </select>
-        </div>
+            {/* brand selector — always visible on md+ */}
+            {brands.length > 0 && (
+              <div className="hidden md:block w-44">
+                <Dropdown value={brand} onChange={(v) => updateQuery('brand', v)} placeholder="All Brands">
+                  {brands.map((b) => <option key={b} value={b}>{b}</option>)}
+                </Dropdown>
+              </div>
+            )}
 
-        {/* Products */}
-        {loading ? (
-          <p className="text-center py-12">Loading products…</p>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {products.map((product) => {
-              const cartItem = cartItems.find(i => i.id === product._id);
-              const inWishlist = isInWishlist(product._id);
+            {/* price inputs — always visible on md+ */}
+            <div className="hidden md:flex items-center gap-2">
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium">Ksh</span>
+                <input
+                  type="number"
+                  placeholder="Min"
+                  value={minInput}
+                  onChange={(e) => setMinInput(e.target.value)}
+                  onBlur={applyPriceRange}
+                  onKeyDown={(e) => e.key === 'Enter' && applyPriceRange()}
+                  className="pl-10 pr-3 py-2.5 w-28 bg-white border border-gray-200 rounded-xl text-sm
+                    focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition"
+                />
+              </div>
+              <span className="text-gray-300 text-sm">—</span>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium">Ksh</span>
+                <input
+                  type="number"
+                  placeholder="Max"
+                  value={maxInput}
+                  onChange={(e) => setMaxInput(e.target.value)}
+                  onBlur={applyPriceRange}
+                  onKeyDown={(e) => e.key === 'Enter' && applyPriceRange()}
+                  className="pl-10 pr-3 py-2.5 w-28 bg-white border border-gray-200 rounded-xl text-sm
+                    focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition"
+                />
+              </div>
+            </div>
 
-              return (
-<div
-  key={product._id}
-  className="border p-4 rounded bg-white flex flex-col"
->
-  <Link
-    href={`/product/${product.slug}`}
-    className="block relative aspect-square w-full mb-2 overflow-hidden"
-  >
-    <CldImage
-      src={getPublicId(product.images?.[0]) || 'sample'}
-      alt={product.name}
-      width={300}
-      height={300}
-      crop="fill"
-      className="object-cover rounded w-full h-full"
-    />
-  </Link>
+            {/* sort — right-aligned */}
+            <div className="ml-auto flex items-center gap-2">
+              <ArrowUpDown className="w-4 h-4 text-gray-400 shrink-0" />
+              <div className="w-44">
+                <Dropdown value={sort} onChange={(v) => updateQuery('sort', v)} placeholder="Sort">
+                  {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </Dropdown>
+              </div>
+            </div>
+          </div>
 
-  <div className="flex flex-col flex-grow">
-    <h3 className="text-sm font-semibold line-clamp-2">
-      {product.name}
-    </h3>
+          {/* expandable panel (mobile + overflow) */}
+          {showFilter && (
+            <div className="border-t border-gray-100 px-4 py-4 space-y-4">
+              {/* brand — mobile */}
+              {brands.length > 0 && (
+                <div className="md:hidden">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">Brand</label>
+                  <Dropdown value={brand} onChange={(v) => updateQuery('brand', v)} placeholder="All Brands">
+                    {brands.map((b) => <option key={b} value={b}>{b}</option>)}
+                  </Dropdown>
+                </div>
+              )}
 
-    {renderStars(product.rating || 4)}
-    {renderStockProgress(product.quantity)}
-
-    <p className="text-red-600 font-bold mt-auto">
-      Ksh. {product.calculatedPrice.toLocaleString()}
-    </p>
-</div>
-                  <div className="flex gap-2 mt-2">
-                    {cartItem ? (
-                      <>
-                        <button onClick={() => decreaseQuantity(product._id)}>-</button>
-                        <span>{cartItem.quantity}</span>
-                        <button onClick={() => increaseQuantity(product._id)}>+</button>
-                      </>
-                    ) : (
-                      <button
-                        onClick={() => handleAddToCart(product)}
-                        className="bg-orange-500 text-white px-3 py-1 rounded text-sm"
-                      >
-                        Add to Cart
-                      </button>
-                    )}
-
-                    <button onClick={() => addToWishlist(product)}>
-                      {inWishlist ? '❤️' : '🤍'}
+              {/* brand pills (desktop) */}
+              {brands.length > 0 && (
+                <div className="hidden md:block">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">Brand</label>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => updateQuery('brand', '')}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition
+                        ${!brand ? 'bg-orange-500 border-orange-500 text-white' : 'bg-white border-gray-200 text-gray-600 hover:border-orange-300'}`}
+                    >
+                      All
                     </button>
+                    {brands.map((b) => (
+                      <button
+                        key={b}
+                        onClick={() => updateQuery('brand', b)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition
+                          ${brand === b ? 'bg-orange-500 border-orange-500 text-white' : 'bg-white border-gray-200 text-gray-600 hover:border-orange-300'}`}
+                      >
+                        {b}
+                      </button>
+                    ))}
                   </div>
                 </div>
+              )}
+
+              {/* price — mobile */}
+              <div className="md:hidden">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">Price Range</label>
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">Ksh</span>
+                    <input type="number" placeholder="Min" value={minInput}
+                      onChange={(e) => setMinInput(e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm
+                        focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent" />
+                  </div>
+                  <span className="text-gray-300">—</span>
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">Ksh</span>
+                    <input type="number" placeholder="Max" value={maxInput}
+                      onChange={(e) => setMaxInput(e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm
+                        focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent" />
+                  </div>
+                </div>
+                <button onClick={applyPriceRange}
+                  className="mt-2 w-full bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold
+                    py-2.5 rounded-xl transition active:scale-[0.98]">
+                  Apply Price
+                </button>
+              </div>
+
+              {/* clear all */}
+              {activeFilters.length > 0 && (
+                <button onClick={clearAll}
+                  className="text-xs text-red-400 hover:text-red-600 font-semibold flex items-center gap-1 transition">
+                  <X className="w-3.5 h-3.5" /> Clear all filters
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* active filter pills */}
+          {activeFilters.length > 0 && (
+            <div className="border-t border-gray-50 px-4 py-2.5 flex flex-wrap gap-2 items-center">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Active:</span>
+              {activeFilters.map((f) => (
+                <FilterPill key={f.key} label={f.label} onRemove={f.onRemove} />
+              ))}
+              <button onClick={clearAll}
+                className="text-[10px] text-red-400 hover:text-red-600 font-semibold ml-auto transition">
+                Clear all
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* ── products ── */}
+        {loading ? (
+          <SkeletonGrid />
+        ) : products.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
+              <Package className="w-8 h-8 text-gray-400" />
+            </div>
+            <h2 className="text-base font-bold text-gray-700">No products found</h2>
+            <p className="text-sm text-gray-400 mt-1 mb-4">Try adjusting your filters or search terms.</p>
+            <button onClick={clearAll}
+              className="bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold
+                px-5 py-2.5 rounded-xl transition">
+              Clear Filters
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {products.map((product, i) => {
+              const cartItem = cartItems.find((c) => c.id === product._id);
+              return (
+                <ProductCard
+                  key={product._id}
+                  product={product}
+                  index={i}
+                  inCart={!!cartItem}
+                  cartQty={cartItem?.quantity ?? 0}
+                  onAdd={() => {
+                    addToCart({
+                      id: product._id, productId: product._id,
+                      name: product.name, images: product.images ?? [],
+                      brand: product.brand, model: product.model, quantity: 1,
+                      calculatedPrice: product.calculatedPrice,
+                      fulfillmentMode: product.fulfillmentMode,
+                      sellerId: product.sellerId, county: product.county,
+                      town: product.town, weight: product.weight,
+                    });
+                  }}
+                  onIncrease={() => increaseQuantity(product._id)}
+                  onDecrease={() => decreaseQuantity(product._id)}
+                />
               );
             })}
           </div>
         )}
 
-        {/* Pagination */}
+        {/* ── pagination ── */}
         {totalPages > 1 && (
-          <div className="flex justify-center gap-2 mt-8">
-            {Array.from({ length: totalPages }).map((_, i) => (
+          <div className="flex justify-center items-center gap-1.5 mt-10 flex-wrap">
+            {page > 1 && (
               <Link
-                key={i}
-                href={`/category/${categorySlug}?page=${i + 1}&sort=${sort}&brand=${brand}&minPrice=${minPrice}&maxPrice=${maxPrice}`}
-                className={`px-3 py-1 border rounded ${
-                  page === i + 1 ? 'bg-orange-500 text-white' : 'bg-white'
-                }`}
+                href={`/category/${categorySlug}?page=${page - 1}&sort=${sort}&brand=${brand}&minPrice=${minPrice}&maxPrice=${maxPrice}`}
+                className="w-9 h-9 rounded-xl border border-gray-200 bg-white flex items-center justify-center
+                  text-gray-600 hover:border-orange-400 hover:text-orange-600 transition shadow-sm"
               >
-                {i + 1}
+                <ChevronRight className="w-4 h-4 rotate-180" />
               </Link>
-            ))}
+            )}
+
+            {Array.from({ length: totalPages }).map((_, i) => {
+              const p = i + 1;
+              const isActive = p === page;
+              const isNear = Math.abs(p - page) <= 2 || p === 1 || p === totalPages;
+              if (!isNear) return p === 2 || p === totalPages - 1
+                ? <span key={p} className="text-gray-400 text-sm px-1">…</span>
+                : null;
+              return (
+                <Link
+                  key={p}
+                  href={`/category/${categorySlug}?page=${p}&sort=${sort}&brand=${brand}&minPrice=${minPrice}&maxPrice=${maxPrice}`}
+                  className={`w-9 h-9 rounded-xl text-sm font-bold flex items-center justify-center transition
+                    ${isActive
+                      ? 'bg-orange-500 text-white shadow-md shadow-orange-200'
+                      : 'bg-white border border-gray-200 text-gray-600 hover:border-orange-400 hover:text-orange-600'
+                    }`}
+                >
+                  {p}
+                </Link>
+              );
+            })}
+
+            {page < totalPages && (
+              <Link
+                href={`/category/${categorySlug}?page=${page + 1}&sort=${sort}&brand=${brand}&minPrice=${minPrice}&maxPrice=${maxPrice}`}
+                className="w-9 h-9 rounded-xl border border-gray-200 bg-white flex items-center justify-center
+                  text-gray-600 hover:border-orange-400 hover:text-orange-600 transition shadow-sm"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            )}
           </div>
         )}
       </div>
