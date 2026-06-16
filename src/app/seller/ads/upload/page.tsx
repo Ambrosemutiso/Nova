@@ -289,7 +289,7 @@ function UploadModal({ products, sellerId, userCountry, onClose, onSuccess, tota
   const canProceedStep3 = !!mediaFile;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999999999] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[95vh] flex flex-col">
 
         {/* header */}
@@ -552,7 +552,7 @@ function UploadModal({ products, sellerId, userCountry, onClose, onSuccess, tota
         </div>
 
         {/* footer CTA */}
-        <div className="px-5 pb-6 pt-3 border-t border-gray-100 shrink-0 z-[99999999999]">
+        <div className="px-5 pb-6 pt-3 border-t border-gray-100 shrink-0">
           {step < 3 ? (
             <button
               onClick={() => setStep((s) => (s + 1) as 1 | 2 | 3)}
