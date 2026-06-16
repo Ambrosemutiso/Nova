@@ -261,14 +261,7 @@ export default function Main() {
 
                 {/* 4 · Category menu — real data, real images; no duplicate icon grid */}
         <Section>
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm px-4 py-5">
-            <SectionHeading
-              title="Shop by Category"
-              sub="Browse our full range of products"
-              cta="All categories"
-            />
             <Menu onSelectCategory={setCategory} />
-          </div>
         </Section>
 
         {/* 3 · Flash Sales — live timer already built-in to the component */}

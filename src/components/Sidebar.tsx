@@ -1,4 +1,6 @@
-//kindly check on the height of the sidebar because it is leaving a white space at the bottom
+//this sidebar looks like it is fighting to look have a good look
+//can we fix it to remove the fighting then also arange the conversion and trust signals well
+//give a fully updated code of this sidebar
 'use client';
 
 import { useEffect, useState } from 'react';

@@ -5,196 +5,353 @@ import { categoryTree } from '@/lib/productCategories';
 import { slugify } from '@/lib/slugify';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { categoryImages } from "@/lib/categoryImages";
+import { categoryImages } from '@/lib/categoryImages';
 import { Section } from './SectionWrapper';
+import { FiGrid, FiX } from 'react-icons/fi';
 
 type MenuProps = {
   onSelectCategory?: (category: string) => void;
 };
 
-export default function CategoryMenu({ onSelectCategory }: MenuProps) {
-
+export default function CategoryMenu({
+  onSelectCategory,
+}: MenuProps) {
   const router = useRouter();
   const [openModal, setOpenModal] = useState(false);
 
   const categories = Object.keys(categoryTree);
-  const mobileCategories = categories.slice(0, 15);
+  const mobileCategories = categories.slice(0, 12);
 
   const goToCategory = (category: string) => {
     const slug = slugify(category);
+
     onSelectCategory?.(category);
+
     router.push(`/category/${slug}`);
     setOpenModal(false);
   };
 
   return (
     <Section>
-    <div className="py-1 px-1">
+      <div className="py-3">
 
-      {/* MOBILE MENU */}
-      <div className="flex gap-4 overflow-x-auto md:hidden">
+        {/* HEADER */}
+        <div className="flex items-center justify-between mb-4 px-1">
+          <div>
+            <h2 className="text-lg font-bold">
+              Browse Categories
+            </h2>
 
-        {mobileCategories.map((category) => {
-
-          const slug = slugify(category);
-
-          return (
-            <button
-              key={category}
-              onClick={() => goToCategory(category)}
-              className="flex-shrink-0 flex flex-col items-center group"
-            >
-
-              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-300 group-hover:border-orange-500">
-                <Image
-                src={categoryImages[category] || "/menu/default.jpg"}
-                alt={category}
-                width={64}
-                height={64}
-                unoptimized
-                priority
-                className="object-cover w-full h-full"
-               />
-              </div>
-
-              <span className="text-xs mt-2 group-hover:text-orange-600">
-                {category}
-              </span>
-
-            </button>
-          );
-
-        })}
-
-        {/* VIEW ALL BUTTON */}
-        <button
-          onClick={() => setOpenModal(true)}
-          className="flex-shrink-0 flex flex-col items-center"
-        >
-
-          <div className="w-16 h-16 rounded-full border-2 border-gray-300 flex items-center justify-center bg-gray-100 hover:border-orange-500">
-
-            <span className="text-xs font-semibold">
-              View All
-            </span>
-
+            <p className="text-xs text-gray-500">
+              Discover products across all departments
+            </p>
           </div>
+        </div>
 
-          <span className="text-xs mt-2 text-gray-600">
-            Categories
-          </span>
+        {/* CATEGORY STRIP */}
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
 
-        </button>
-
-      </div>
-
-      {/* DESKTOP MENU */}
-      <div className="hidden md:flex gap-4 overflow-x-auto">
-
-        {categories.map((category) => {
-
-          const slug = slugify(category);
-
-          return (
+          {mobileCategories.map((category) => (
             <button
               key={category}
               onClick={() => goToCategory(category)}
-              className="flex-shrink-0 flex flex-col items-center group"
+              className="group flex-shrink-0"
             >
+              <div
+                className="
+                  relative
+                  w-[88px]
+                  h-[110px]
+                  rounded-3xl
+                  overflow-hidden
 
-              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-300 group-hover:border-orange-500">
+                  border
+                  border-white/10
 
+                  bg-white/5
+                  backdrop-blur-md
+
+                  shadow-lg
+                  shadow-black/10
+
+                  transition-all
+                  duration-300
+
+                  hover:scale-105
+                  hover:border-orange-500/50
+                  hover:shadow-orange-500/20
+                "
+              >
                 <Image
-                src={categoryImages[category] || "/menu/default.jpg"}
-                alt={category}
-                width={64}
-                height={64}
-                unoptimized
-                priority
-                className="object-cover w-full h-full"
-               />
+                  src={
+                    categoryImages[category] ||
+                    '/menu/default.jpg'
+                  }
+                  alt={category}
+                  fill
+                  priority
+                  unoptimized
+                  className="
+                    object-cover
+                    transition-transform
+                    duration-500
+                    group-hover:scale-110
+                  "
+                />
 
+                {/* Dark Glass Overlay */}
+                <div
+                  className="
+                    absolute
+                    inset-0
+                    bg-gradient-to-t
+                    from-black/80
+                    via-black/30
+                    to-transparent
+                  "
+                />
+
+                {/* Glow */}
+                <div
+                  className="
+                    absolute
+                    inset-0
+                    bg-gradient-to-b
+                    from-orange-500/10
+                    to-transparent
+                  "
+                />
+
+                {/* Category Name */}
+                <div className="absolute bottom-2 left-2 right-2">
+                  <span
+                    className="
+                      text-white
+                      text-[11px]
+                      font-semibold
+                      leading-tight
+                      line-clamp-2
+                    "
+                  >
+                    {category}
+                  </span>
+                </div>
+              </div>
+            </button>
+          ))}
+
+          {/* EXPLORE ALL */}
+          <button
+            onClick={() => setOpenModal(true)}
+            className="flex-shrink-0"
+          >
+            <div
+              className="
+                w-[88px]
+                h-[110px]
+
+                rounded-3xl
+
+                bg-gradient-to-br
+                from-orange-500
+                via-orange-500
+                to-orange-600
+
+                shadow-lg
+                shadow-orange-500/30
+
+                flex
+                flex-col
+                items-center
+                justify-center
+
+                transition-all
+                duration-300
+
+                hover:scale-105
+              "
+            >
+              <FiGrid
+                size={26}
+                className="text-white mb-2"
+              />
+
+              <span className="text-white text-xs font-semibold">
+                Explore All
+              </span>
+            </div>
+          </button>
+        </div>
+
+        {/* MODAL */}
+        {openModal && (
+          <div
+            className="
+              fixed
+              inset-0
+              z-50
+
+              bg-black/70
+              backdrop-blur-md
+
+              flex
+              items-center
+              justify-center
+              p-4
+            "
+          >
+            <div
+              className="
+                w-full
+                max-w-5xl
+
+                max-h-[90vh]
+
+                overflow-y-auto
+
+                rounded-3xl
+
+                bg-zinc-900/95
+
+                border
+                border-white/10
+
+                shadow-2xl
+              "
+            >
+              {/* Header */}
+              <div
+                className="
+                  sticky
+                  top-0
+
+                  bg-zinc-900/95
+
+                  backdrop-blur-md
+
+                  p-5
+
+                  border-b
+                  border-white/10
+
+                  flex
+                  items-center
+                  justify-between
+                "
+              >
+                <div>
+                  <h2 className="text-white text-xl font-bold">
+                    All Categories
+                  </h2>
+
+                  <p className="text-sm text-gray-400">
+                    Browse all marketplace departments
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setOpenModal(false)}
+                  className="
+                    w-10
+                    h-10
+
+                    rounded-xl
+
+                    bg-white/5
+
+                    flex
+                    items-center
+                    justify-center
+
+                    text-white
+
+                    hover:bg-white/10
+                  "
+                >
+                  <FiX size={20} />
+                </button>
               </div>
 
-              <span className="text-xs mt-2 group-hover:text-orange-600">
-                {category}
-              </span>
+              {/* Categories Grid */}
+              <div className="grid grid-cols-3 md:grid-cols-5 gap-4 p-5">
 
-            </button>
-          );
-
-        })}
-
-      </div>
-
-      {/* MODAL */}
-      {openModal && (
-
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-
-          <div className="bg-orange-50 w-[95%] max-h-[85vh] rounded-lg p-4 overflow-y-auto">
-
-            {/* Header */}
-            <div className="flex justify-between items-center mb-4">
-
-              <h2 className="text-lg font-semibold">
-                All Categories
-              </h2>
-
-              <button
-                onClick={() => setOpenModal(false)}
-                className="text-sm text-gray-500"
-              >
-                Close
-              </button>
-
-            </div>
-
-            {/* Grid */}
-            <div className="grid grid-cols-3 gap-4">
-
-              {categories.map((category) => {
-
-                const slug = slugify(category);
-
-                return (
+                {categories.map((category) => (
                   <button
                     key={category}
                     onClick={() => goToCategory(category)}
-                    className="flex flex-col items-center"
+                    className="group"
                   >
+                    <div
+                      className="
+                        relative
+                        aspect-square
 
-                    <div className="w-16 h-16 rounded-full overflow-hidden border border-gray-300">
+                        rounded-2xl
+                        overflow-hidden
+
+                        border
+                        border-white/10
+
+                        hover:border-orange-500/50
+
+                        transition-all
+                        duration-300
+                      "
+                    >
                       <Image
-                      src={categoryImages[category] || "/menu/default.jpg"}
-                      alt={category}
-                      width={64}
-                      height={64}
-                      unoptimized
-                      priority
-                      className="object-cover w-full h-full"
+                        src={
+                          categoryImages[category] ||
+                          '/menu/default.jpg'
+                        }
+                        alt={category}
+                        fill
+                        unoptimized
+                        className="
+                          object-cover
+                          transition-transform
+                          duration-500
+                          group-hover:scale-110
+                        "
                       />
 
+                      <div
+                        className="
+                          absolute
+                          inset-0
+                          bg-gradient-to-t
+                          from-black/80
+                          via-black/20
+                          to-transparent
+                        "
+                      />
+
+                      <div
+                        className="
+                          absolute
+                          bottom-2
+                          left-2
+                          right-2
+                        "
+                      >
+                        <span
+                          className="
+                            text-white
+                            text-xs
+                            font-medium
+                            line-clamp-2
+                          "
+                        >
+                          {category}
+                        </span>
+                      </div>
                     </div>
-
-                    <span className="text-xs mt-2 text-center">
-                      {category}
-                    </span>
-
                   </button>
-                );
-
-              })}
-
+                ))}
+              </div>
             </div>
-
           </div>
-
-        </div>
-
-      )}
-
-    </div>
+        )}
+      </div>
     </Section>
   );
 }

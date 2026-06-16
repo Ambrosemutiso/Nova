@@ -521,24 +521,15 @@ export default function CartPage({ onOpenBuyerLogin }: CartProps) {
           </Section>
 
           <Section>
-            <div className="bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100 rounded-2xl shadow-sm px-4 py-5">
-              <SectionHeading title="✨ Suggested For You" sub="Based on what's trending right now" cta="See more" />
               <SuggestedForYou />
-            </div>
           </Section>
 
           <Section>
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm px-4 py-5">
-              <SectionHeading title="🏆 Top Picks" sub="Our most loved products this week" cta="See all" />
               <TopPicksForYou />
-            </div>
           </Section>
 
           <Section>
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm px-4 py-5">
-              <SectionHeading title="♻️ Used & Refurbished" sub="Quality products at unbeatable prices" cta="Browse" />
               <UsedRefurbishedProducts />
-            </div>
           </Section>
 
           <Section>
