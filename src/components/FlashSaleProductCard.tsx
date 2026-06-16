@@ -1,11 +1,12 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { CldImage } from 'next-cloudinary';
 import type { ProductType } from '@/app/types/product';
 import { useCart } from '@/app/context/CartContext';
 import { ShoppingCart, Zap } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface FlashProductCardProps {
   product: ProductType;
@@ -30,8 +31,11 @@ export default function FlashProductCard({
   const [visible,     setVisible]     = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [addedFlash,  setAddedFlash]  = useState(false);
-  const [stockAnim,   setStockAnim]   = useState(false); // triggers bar animation
+  const [stockAnim,   setStockAnim]   = useState(false);
+  const [navigating,  setNavigating]  = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+
+  const targetHref = redirectAllTo ?? `/product/${product.slug}`;
 
   /* ── entrance observer ── */
   useEffect(() => {
@@ -41,7 +45,6 @@ export default function FlashProductCard({
       ([e]) => {
         if (e.isIntersecting) {
           setVisible(true);
-          // slight delay so bar animates after card fades in
           setTimeout(() => setStockAnim(true), 400);
           obs.disconnect();
         }
@@ -58,11 +61,16 @@ export default function FlashProductCard({
     return m ? m[1] : url;
   };
 
-  const handleNavigate = () =>
-    router.push(redirectAllTo ?? `/product/${product.slug}`);
+  /* ── fast navigation: instant visual feedback, Link prefetches in background ── */
+  const handleNavigate = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setNavigating(true);
+    router.push(targetHref);
+  }, [router, targetHref]);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     addToCart({
       id: product._id, name: product.name, images: product.images,
       brand: product.brand, model: product.model, county: product.county,
@@ -77,6 +85,7 @@ export default function FlashProductCard({
 
   const handleBuyNow = (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     handleAddToCart(e);
     router.push('/cart');
   };
@@ -89,28 +98,26 @@ export default function FlashProductCard({
     ? Math.round(((product.oldPrice - product.calculatedPrice) / product.oldPrice) * 100)
     : null;
 
-  // stock progress: how much is LEFT (depleted bar looks more urgent)
-  const stockMax     = maxQuantity ?? Math.max(product.quantity, 20); // fallback cap
+  const stockMax     = maxQuantity ?? Math.max(product.quantity, 20);
   const stockPct     = Math.min(100, Math.round((product.quantity / stockMax) * 100));
-  // colour shifts red as stock runs low
   const barColor     = stockPct <= 20 ? '#ef4444' : stockPct <= 50 ? '#f97316' : '#22c55e';
 
   const staggerDelay = Math.min(index * 70, 500);
 
   return (
-    <div
-      ref={cardRef}
+    <Link
+      href={targetHref}
+      prefetch
+      ref={cardRef as any}
+      onClick={handleNavigate}
       className="group relative flex flex-col bg-white rounded-2xl overflow-hidden
         border border-gray-100 shadow-sm hover:shadow-2xl
-        transition-shadow duration-300 cursor-pointer"
+        transition-[box-shadow,opacity,transform] duration-300 cursor-pointer w-44"
       style={{
-        opacity:    visible ? 1 : 0,
+        opacity:    visible ? (navigating ? 0.6 : 1) : 0,
         transform:  visible ? 'translateY(0)' : 'translateY(24px)',
-        transition: `opacity 0.45s ease ${staggerDelay}ms,
-                     transform 0.45s ease ${staggerDelay}ms,
-                     box-shadow 0.3s ease`,
+        transition: `opacity 0.3s ease, transform 0.45s ease ${staggerDelay}ms, box-shadow 0.3s ease`,
       }}
-      onClick={handleNavigate}
     >
 
       {/* ══ IMAGE ══ */}
@@ -129,6 +136,7 @@ export default function FlashProductCard({
             placeholder="blur"
             blurDataURL={`${getPublicId(product.images[0])}?blur=200`}
             onLoad={() => setImageLoaded(true)}
+            loading={index < 4 ? 'eager' : 'lazy'}
           />
         </div>
 
@@ -179,14 +187,13 @@ export default function FlashProductCard({
           <div
             className="absolute bottom-0 inset-x-0 flex gap-0 translate-y-full
               group-hover:translate-y-0 transition-transform duration-300 ease-out"
-            onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={handleAddToCart}
               className={`flex-1 flex items-center justify-center gap-1 py-2.5 text-[11px] font-bold
                 transition-colors duration-150
                 ${addedFlash
-                  ? 'bg-green-500 text-white'
+                  ? 'bg-emerald-500 text-white'
                   : inCart
                   ? 'bg-orange-100 text-orange-700'
                   : 'bg-orange-500 text-white hover:bg-orange-600'
@@ -259,6 +266,6 @@ export default function FlashProductCard({
         </div>
 
       </div>
-    </div>
+    </Link>
   );
 }

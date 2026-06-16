@@ -247,14 +247,11 @@ export default function Main() {
   return (
     <div className="bg-gray-50 min-h-screen">
 
-      {/* Full-bleed announcement bar */}
-      <AnnouncementBar />
-
       <div className="max-w-[1600px] mx-auto px-4 md:px-6 pt-20 pb-12 space-y-5">
-
-        {/* 1 · Hero slider */}
+              {/* Full-bleed announcement bar */}
+        
         <Section>
-          <TrendingProducts />
+          <Hero/>
         </Section>
 
         {/* 2 · Trust badges — appear immediately below hero */}
@@ -262,14 +259,7 @@ export default function Main() {
           <TrustBadges />
         </Section>
 
-        {/* 3 · Flash Sales — live timer already built-in to the component */}
-        <Section>
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm px-4 py-5">
-            <FlashSales />
-          </div>
-        </Section>
-
-        {/* 4 · Category menu — real data, real images; no duplicate icon grid */}
+                {/* 4 · Category menu — real data, real images; no duplicate icon grid */}
         <Section>
           <div className="bg-white border border-gray-100 rounded-2xl shadow-sm px-4 py-5">
             <SectionHeading
@@ -281,68 +271,36 @@ export default function Main() {
           </div>
         </Section>
 
-        {/* 5 · Featured brands */}
+        {/* 3 · Flash Sales — live timer already built-in to the component */}
         <Section>
-          <FeaturedBrands />
+          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm px-4 py-5">
+            <FlashSales />
+          </div>
         </Section>
 
         {/* 6 · Suggested for you — personalised feed first, ads below */}
         <Section>
-          <div className="bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100 rounded-2xl shadow-sm px-4 py-5">
-            <SectionHeading
-              title="✨ Suggested For You"
-              sub="Based on what's trending right now"
-              cta="See more"
-            />
             <SuggestedForYou />
-          </div>
         </Section>
 
         {/* 8 · Buy on installments */}
         <Section>
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm px-4 py-5">
-            <SectionHeading
-              title="💳 Buy on Installments"
-              sub="Own it now, pay over time — flexible plans available"
-              cta="Explore"
-            />
             <InstallmentProducts />
-          </div>
         </Section>
 
         {/* 9 · Top picks */}
         <Section>
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm px-4 py-5">
-            <SectionHeading
-              title="🏆 Top Picks"
-              sub="Our most loved products this week"
-              cta="See all"
-            />
             <TopPicksForYou />
-          </div>
         </Section>
 
         {/* 10 · Sponsored / promoted — after organic content */}
         <Section>
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm px-4 py-5">
-            <SectionHeading
-              title="Sponsored Products"
-              sub="Hand-picked deals from top sellers"
-            />
             <SponsoredProducts />
-          </div>
         </Section>
 
         {/* 11 · Used & refurbished */}
         <Section>
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm px-4 py-5">
-            <SectionHeading
-              title="♻️ Used & Refurbished"
-              sub="Quality products at unbeatable prices"
-              cta="Browse"
-            />
             <UsedRefurbishedProducts />
-          </div>
         </Section>
 
         {/* 12 · Bottom trust strip — closes the page with confidence */}

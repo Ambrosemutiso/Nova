@@ -25,6 +25,7 @@ export default function SuggestedForYou() {
   return (
     <Section>
     <div className="px-1 py-1">
+      <h2 className="text-xl font-semibold mb-4">Suggested For You</h2>
       <div className="flex gap-4 overflow-x-auto pb-2">
         {products.map(product => (
           <ProductCard key={product._id} product={product} />

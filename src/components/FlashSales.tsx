@@ -205,12 +205,12 @@ export default function FlashSales() {
         </div>
       </div>
 
-      {/* ══ PRODUCT GRID ══ */}
+      {/* ══ PRODUCT ROW — horizontal scroll ══ */}
       {loading ? (
-        /* skeleton grid */
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm">
+        /* skeleton row */
+        <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="flex-shrink-0 w-44 rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm">
               <div className="aspect-square bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100
                 animate-[shimmer_1.4s_infinite_linear]"
                 style={{ backgroundSize: '800px 100%' }}
@@ -229,27 +229,24 @@ export default function FlashSales() {
           <p className="text-sm">No products in this category</p>
         </div>
       ) : (
-        <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {filtered.map((product, i) => (
+        <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar snap-x snap-mandatory scroll-smooth">
+          {filtered.map((product, i) => (
+            <div key={product._id} className="snap-start flex-shrink-0">
               <FlashProductCard
-                key={product._id}
                 product={product}
                 index={i}
               />
-            ))}
-          </div>
+            </div>
+          ))}
 
-          {/* see all CTA */}
-          <div className="flex justify-center mt-6">
-            <button className="flex items-center gap-2 bg-red-500 hover:bg-red-600 active:scale-95
-              text-white text-sm font-bold px-6 py-3 rounded-full shadow-lg shadow-red-200
-              transition-all duration-200">
-              See All Flash Deals
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </>
+          {/* see all card — last item in the scroll row */}
+          <button className="flex-shrink-0 w-44 flex flex-col items-center justify-center gap-2
+            rounded-2xl border-2 border-dashed border-red-200 bg-red-50/40 hover:bg-red-50
+            text-red-500 font-bold text-sm transition-all duration-200 snap-start">
+            See All Deals
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
       )}
     </div>
   );
