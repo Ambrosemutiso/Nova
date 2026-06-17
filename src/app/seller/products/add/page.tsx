@@ -9,8 +9,127 @@ import { categoryTree } from '@/lib/productCategories';
 import {
   Camera, X, Plus,
   Package, Tag, MapPin, Truck, FileText, CheckCircle2,
-  AlertCircle, Info, Eye, Loader2, ImageOff, Star
+  AlertCircle, Info, Eye, Loader2, ImageOff, Star,
+  Sparkles, TrendingUp, ShoppingBag, ChevronRight
 } from 'lucide-react';
+
+/* ══════════════════════════════════════════════════════════════
+   CONFETTI (CSS-only, no deps)
+══════════════════════════════════════════════════════════════ */
+const CONFETTI_COLORS = ['#f97316', '#facc15', '#34d399', '#60a5fa', '#f472b6', '#a78bfa'];
+function Confetti() {
+  const pieces = Array.from({ length: 36 }, (_, i) => i);
+  return (
+    <div className="pointer-events-none fixed inset-0 z-[200] overflow-hidden">
+      {pieces.map((i) => (
+        <div
+          key={i}
+          className="absolute top-0 w-2 h-3 rounded-sm opacity-90"
+          style={{
+            left: `${Math.random() * 100}%`,
+            backgroundColor: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+            animation: `confettiFall ${1.5 + Math.random() * 2}s ease-in ${Math.random() * 0.8}s forwards`,
+            transform: `rotate(${Math.random() * 360}deg)`,
+          }}
+        />
+      ))}
+      <style>{`
+        @keyframes confettiFall {
+          0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function BenefitRow({ icon, text }: { icon: React.ReactNode; text: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
+        {icon}
+      </div>
+      <p className="text-sm text-gray-700">{text}</p>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PRODUCT-PUBLISHED CELEBRATION MODAL
+══════════════════════════════════════════════════════════════ */
+function ProductCelebrationModal({
+  isFirstProduct, productName, totalProducts, onGoToInventory, onAddAnother, onClose,
+}: {
+  isFirstProduct: boolean;
+  productName: string;
+  totalProducts: number;
+  onGoToInventory: () => void;
+  onAddAnother: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <>
+      <Confetti />
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden text-center">
+          {/* top gradient */}
+          <div className="bg-gradient-to-br from-orange-400 to-pink-500 px-6 pt-8 pb-6">
+            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
+              <Sparkles className="w-8 h-8 text-orange-500" />
+            </div>
+            <h2 className="text-white font-black text-2xl">
+              {isFirstProduct ? "You're Live! 🎉" : 'Product Published! 🎉'}
+            </h2>
+            <p className="text-orange-100 text-sm mt-1 line-clamp-1 px-2">
+              {isFirstProduct
+                ? 'Your first product is now on NovaXmax'
+                : `"${productName}" is now live for buyers`}
+            </p>
+          </div>
+
+          <div className="px-6 py-5 space-y-3">
+            {isFirstProduct ? (
+              <>
+                <BenefitRow icon={<Eye className="w-4 h-4 text-orange-500" />} text="Buyers can now discover your product" />
+                <BenefitRow icon={<TrendingUp className="w-4 h-4 text-orange-500" />} text="Sellers with 10+ listings get 3× more views" />
+                <BenefitRow icon={<ShoppingBag className="w-4 h-4 text-orange-500" />} text="More listings = more chances to sell" />
+              </>
+            ) : (
+              <>
+                <BenefitRow icon={<Package className="w-4 h-4 text-orange-500" />} text={`You now have ${totalProducts} products live`} />
+                <BenefitRow icon={<TrendingUp className="w-4 h-4 text-orange-500" />} text="Sellers with 10+ listings get 3× more views" />
+                <BenefitRow icon={<ShoppingBag className="w-4 h-4 text-orange-500" />} text="Keep going — every new listing is a new chance to sell" />
+              </>
+            )}
+          </div>
+
+          <div className="px-6 pb-6 flex flex-col gap-3">
+            <button
+              onClick={onAddAnother}
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold
+                py-3.5 rounded-2xl transition active:scale-[0.98] shadow-md shadow-orange-200
+                flex items-center justify-center gap-2"
+            >
+              <Plus className="w-4 h-4" /> Add Another Product
+            </button>
+            <button
+              onClick={onGoToInventory}
+              className="w-full flex items-center justify-center gap-1.5 text-sm font-semibold text-gray-600 hover:text-gray-800 transition"
+            >
+              View My Inventory <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={onClose}
+              className="w-full text-sm text-gray-400 hover:text-gray-600 font-medium transition"
+            >
+              Maybe later
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
 
 type ProductCondition = 'brand_new' | 'used' | 'refurbished';
 type Category = keyof typeof categoryTree;
@@ -158,6 +277,9 @@ export default function AddProduct() {
   const [showDraftPrompt, setShowDraftPrompt] = useState(false);
   const [saving, setSaving]           = useState(false);
   const [priceError, setPriceError]   = useState('');
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [existingProductCount, setExistingProductCount] = useState<number | null>(null);
+  const [publishedName, setPublishedName] = useState('');
 
   // ── Derived ────────────────────────────────────────────────────────────────
   const priceNum    = parseFloat(price) || 0;
@@ -214,6 +336,19 @@ export default function AddProduct() {
   useEffect(() => {
     if (localStorage.getItem(DRAFT_KEY)) setShowDraftPrompt(true);
   }, []);
+
+  // ── Fetch existing product count so we know if the next listing is the seller's first ──
+  useEffect(() => {
+    if (!user?._id) return;
+    fetch(`/api/seller/products?sellerId=${user._id}`)
+      .then(res => res.json())
+      .then(json => {
+        if (json.success && Array.isArray(json.data)) {
+          setExistingProductCount(json.data.length);
+        }
+      })
+      .catch(() => {});
+  }, [user?._id]);
 
   const draftValues = {
     name, brand, model, material, color, description, keyFeatures, boxContents,
@@ -302,8 +437,10 @@ export default function AddProduct() {
       const data = await res.json();
       if (res.ok) {
         localStorage.removeItem(DRAFT_KEY);
-        toast.success('Product listed successfully!');
-        router.push('/seller/products/add');
+        setPublishedName(name);
+        setShowCelebration(true);
+        // Reset form so "Add Another Product" starts clean
+        resetForm();
       } else {
         toast.error(data.error || 'Failed to list product.');
       }
@@ -312,6 +449,17 @@ export default function AddProduct() {
     } finally {
       setUploading(false);
     }
+  };
+
+  // ── Reset form fields after a successful publish ────────────────────────────
+  const resetForm = () => {
+    setName(''); setBrand(''); setModel(''); setMaterial(''); setColor('');
+    setDescription(''); setKeyFeatures([]); setBoxContents([]);
+    setWarranty(''); setDimensions(''); setWeight('');
+    setCategory(''); setSubcategory(''); setProductType('');
+    setPrice(''); setOldPrice(''); setCalculatedPrice(0); setQuantity('');
+    setImageFiles([]); setPreviews([]);
+    setCounty(''); setTown(''); setFulfillmentMode(''); setCondition('');
   };
 
   const primaryImage = previews.find(p => p !== null) ?? null;
@@ -738,6 +886,25 @@ export default function AddProduct() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Celebration modal — fires after every successful publish */}
+      {showCelebration && (
+        <ProductCelebrationModal
+          isFirstProduct={existingProductCount === 0}
+          productName={publishedName}
+          totalProducts={(existingProductCount ?? 0) + 1}
+          onGoToInventory={() => router.push('/seller/inventory')}
+          onAddAnother={() => {
+            setShowCelebration(false);
+            setExistingProductCount(prev => (prev ?? 0) + 1);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onClose={() => {
+            setShowCelebration(false);
+            setExistingProductCount(prev => (prev ?? 0) + 1);
+          }}
+        />
       )}
     </div>
   );

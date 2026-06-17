@@ -1,6 +1,3 @@
-//this sidebar looks like it is fighting to look have a good look
-//can we fix it to remove the fighting then also arange the conversion and trust signals well
-//give a fully updated code of this sidebar
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -11,8 +8,8 @@ import {
   FiTv, FiWatch, FiGift, FiTruck, FiBook, FiTool,
   FiGrid, FiZoomIn, FiZoomOut, FiPackage, FiLayout,
   FiSun, FiFilm, FiPhone, FiCreditCard, FiShield,
-  FiX, FiChevronRight, FiStar, FiTag, FiRefreshCw,
-  FiZap, FiAward, FiCheck
+  FiX, FiChevronRight, FiStar, FiRefreshCw,
+  FiZap, FiCheck
 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { categoryTree } from '@/lib/sidebarProductCategories';
@@ -21,7 +18,9 @@ import TranslateWidget from './TranslateWidget';
 import { useCart } from '@/app/context/CartContext';
 import { useAuth } from '@/app/context/AuthContext';
 
-// ─── Category icon map ────────────────────────────────────────────────────────
+/* ══════════════════════════════════════════════════════════════
+   CATEGORY ICONS
+══════════════════════════════════════════════════════════════ */
 const categoryIcons: Record<string, JSX.Element> = {
   'Electronics':                  <FiTv />,
   'Computers & Laptops':          <FiMonitor />,
@@ -55,15 +54,16 @@ const categoryIcons: Record<string, JSX.Element> = {
   'Construction Materials':       <FiTool />,
 };
 
-// ─── Trust badges ─────────────────────────────────────────────────────────────
+/* ══════════════════════════════════════════════════════════════
+   TRUST BADGES — single color family now (orange + neutral)
+══════════════════════════════════════════════════════════════ */
 const trustBadges = [
-  { icon: <FiShield size={14} />,    label: 'Buyer Protected',   color: 'text-emerald-600 bg-emerald-50' },
-  { icon: <FiRefreshCw size={14} />, label: '7-Day Returns',     color: 'text-blue-600 bg-blue-50' },
-  { icon: <FiTruck size={14} />,     label: 'Fast Delivery',     color: 'text-orange-600 bg-orange-50' },
-  { icon: <FiZap size={14} />,       label: 'Flash Deals Daily', color: 'text-amber-600 bg-amber-50' },
+  { icon: <FiShield size={13} />,    label: 'Buyer Protected' },
+  { icon: <FiRefreshCw size={13} />, label: '7-Day Returns'   },
+  { icon: <FiTruck size={13} />,     label: 'Fast Delivery'   },
+  { icon: <FiZap size={13} />,       label: 'Flash Deals'     },
 ];
 
-// ─── Free shipping threshold (replace with real cart value) ──────────────────
 const FREE_SHIPPING_THRESHOLD = 2000;
 
 interface Props {
@@ -72,7 +72,7 @@ interface Props {
   onOpen?: () => void;
 }
 
-export default function Sidebar({ isOpen = false, onClose, onOpen }: Props) {
+export default function Sidebar({ onClose }: Props) {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const { cartItems } = useCart();
@@ -81,14 +81,14 @@ export default function Sidebar({ isOpen = false, onClose, onOpen }: Props) {
   const [isMobile,     setIsMobile]     = useState(false);
   const [fontSize,     setFontSize]     = useState(1);
   const [language,     setLanguage]     = useState('en');
-  const [expandedCat,  setExpandedCat]  = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
 
   const cartTotal = cartItems.reduce((sum, item) => sum + item.quantity * (item.calculatedPrice ?? 0), 0);
-  const shippingProgress = Math.min((cartTotal / FREE_SHIPPING_THRESHOLD) * 100, 100);
+  const shippingProgress  = Math.min((cartTotal / FREE_SHIPPING_THRESHOLD) * 100, 100);
   const shippingRemaining = Math.max(FREE_SHIPPING_THRESHOLD - cartTotal, 0);
+  const isBuyer = !user?.role || user.role === 'buyer';
 
-  // ── Detect mobile ──────────────────────────────────────────────────────────
+  /* ── mobile detect ── */
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     check();
@@ -96,7 +96,7 @@ export default function Sidebar({ isOpen = false, onClose, onOpen }: Props) {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // ── Font size ──────────────────────────────────────────────────────────────
+  /* ── font size ── */
   useEffect(() => {
     const saved = localStorage.getItem('fontSize');
     setFontSize(saved ? parseFloat(saved) : (window.innerWidth < 768 ? 0.85 : 1));
@@ -107,7 +107,7 @@ export default function Sidebar({ isOpen = false, onClose, onOpen }: Props) {
     localStorage.setItem('fontSize', fontSize.toString());
   }, [fontSize]);
 
-  // ── Language ──────────────────────────────────────────────────────────────
+  /* ── language ── */
   useEffect(() => {
     const saved = localStorage.getItem('language');
     if (saved) { setLanguage(saved); document.documentElement.lang = saved; }
@@ -120,7 +120,7 @@ export default function Sidebar({ isOpen = false, onClose, onOpen }: Props) {
     if (sel) { sel.value = language; sel.dispatchEvent(new Event('change')); }
   }, [language]);
 
-  // ── Nav items ─────────────────────────────────────────────────────────────
+  /* ── nav items ── */
   const quickLinks = [
     { label: 'Home',            icon: <FiHome />,       route: '/' },
     { label: 'Wishlist',        icon: <FiHeart />,      route: '/wishlist' },
@@ -145,159 +145,192 @@ export default function Sidebar({ isOpen = false, onClose, onOpen }: Props) {
   return (
     <aside className="h-full w-72 flex flex-col bg-white dark:bg-gray-950 overflow-hidden">
 
-      {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
+      {/* ══ HEADER ══ */}
+      <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100 dark:border-gray-800 shrink-0">
         <motion.img
           whileHover={{ scale: 1.05 }}
           src="/Logo.png"
-          className="h-10 object-contain cursor-pointer"
+          className="h-9 object-contain cursor-pointer"
           onClick={() => navigate('/')}
           alt="Logo"
         />
         <motion.button
           whileTap={{ scale: 0.88 }}
           onClick={onClose}
-          className="md:hidden w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:bg-orange-100 hover:text-orange-600 transition"
+          className="md:hidden w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center
+            text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-colors"
         >
           <FiX size={15} />
         </motion.button>
       </div>
 
-      {/* ── User greeting (if logged in) ────────────────────────────────────── */}
-      {user && (
-        <div className="px-5 py-3 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-gray-900 dark:to-gray-900 border-b border-orange-100 dark:border-gray-800 flex-shrink-0">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Welcome back,</p>
-          <p className="text-sm font-bold text-gray-800 dark:text-gray-100 truncate">{user.name?.split(' ')[0]} 👋</p>
-        </div>
-      )}
+      {/* ══ IDENTITY STRIP — one combined block instead of two competing ones ══ */}
+      <div className="shrink-0 border-b border-gray-100 dark:border-gray-800">
 
-      {/* ── Free shipping progress ───────────────────────────────────────────── */}
-      {!user?.role || user.role === 'buyer' ? (
-        <div className="px-5 py-3 bg-orange-50 dark:bg-gray-900 border-b border-orange-100 dark:border-gray-800 flex-shrink-0">
-          <div className="flex items-center justify-between mb-1.5">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-orange-700 dark:text-orange-400">
-              <FiTruck size={12} />
-              {shippingProgress >= 100
-                ? <span className="text-emerald-600 flex items-center gap-1"><FiCheck size={11} /> Free shipping unlocked!</span>
-                : <span>Add <strong>Ksh {shippingRemaining.toLocaleString()}</strong> for free delivery</span>
-              }
+        {/* greeting row — plain, no background color */}
+        {user && (
+          <div className="px-5 pt-3.5 pb-2.5 flex items-center justify-between">
+            <div>
+              <p className="text-[11px] text-gray-400 dark:text-gray-500">Welcome back</p>
+              <p className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate">
+                {user.name?.split(' ')[0]}
+              </p>
             </div>
-            <span className="text-[10px] font-bold text-orange-500">{Math.round(shippingProgress)}%</span>
+            <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-orange-50 dark:bg-gray-900">
+              <FiStar size={10} className="text-orange-500 fill-orange-500" />
+              <span className="text-[10px] font-bold text-orange-600">4.8</span>
+            </div>
           </div>
-          <div className="h-1.5 rounded-full bg-orange-200 dark:bg-gray-700 overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${shippingProgress}%` }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
-              className="h-full rounded-full bg-gradient-to-r from-orange-400 to-amber-400"
-            />
+        )}
+
+        {/* free shipping progress — single accent, lives under greeting, same block */}
+        {isBuyer && (
+          <div className={`px-5 ${user ? 'pb-3.5' : 'pt-4 pb-4'}`}>
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold text-gray-600 dark:text-gray-400">
+                <FiTruck size={11} className="text-orange-500" />
+                {shippingProgress >= 100
+                  ? <span className="text-gray-900 dark:text-gray-100 flex items-center gap-1">
+                      <FiCheck size={11} className="text-orange-500" /> Free shipping unlocked
+                    </span>
+                  : <span>Add <strong className="text-gray-900 dark:text-gray-100">Ksh {shippingRemaining.toLocaleString()}</strong> for free delivery</span>
+                }
+              </div>
+              <span className="text-[10px] font-bold text-orange-500">{Math.round(shippingProgress)}%</span>
+            </div>
+            <div className="h-1 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${shippingProgress}%` }}
+                transition={{ duration: 0.8, ease: 'easeOut' }}
+                className="h-full rounded-full bg-orange-500"
+              />
+            </div>
           </div>
-        </div>
-      ) : null}
+        )}
+      </div>
 
-      {/* ── Scrollable content ───────────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-orange-200">
+      {/* ══ SCROLLABLE CONTENT ══ */}
+      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200">
 
-        {/* Quick links */}
-        <div className="px-4 pt-4 pb-2">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-2 mb-2">Quick Access</p>
+        {/* ── Quick links ── */}
+        <div className="px-4 pt-4 pb-1">
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-2 mb-1.5">
+            Quick Access
+          </p>
           <ul className="space-y-0.5">
             {quickLinks.map(({ label, icon, route }, i) => (
               <motion.li
                 key={i}
-                whileHover={{ x: 4 }}
-                whileTap={{ scale: 0.97 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => navigate(route)}
-                className="flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer hover:bg-orange-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition group"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer
+                  text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors group"
               >
-                <span className="text-orange-400 group-hover:text-orange-600 transition">{icon}</span>
+                <span className="text-gray-400 group-hover:text-orange-500 transition-colors text-base">{icon}</span>
                 <span className="text-sm font-medium">{label}</span>
               </motion.li>
             ))}
           </ul>
         </div>
 
-        {/* Divider */}
-        <div className="mx-5 my-2 border-t border-dashed border-gray-200 dark:border-gray-800" />
+        {/* ── divider ── */}
+        <div className="mx-5 my-3 border-t border-gray-100 dark:border-gray-800" />
 
-        {/* Categories */}
-        <div className="px-4 pb-2">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-2 mb-2">Shop by Category</p>
+        {/* ── Categories ── */}
+        <div className="px-4 pb-1">
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-2 mb-1.5">
+            Shop by Category
+          </p>
           <ul className="space-y-0.5">
             {categories.map(({ label, icon, route }, i) => (
               <motion.li
                 key={i}
-                initial={{ opacity: 0, x: -12 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.018, duration: 0.25 }}
-                whileHover={{ x: 4 }}
-                whileTap={{ scale: 0.97 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: Math.min(i * 0.015, 0.3), duration: 0.2 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => navigate(route)}
-                className="flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer hover:bg-orange-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition group"
+                className="flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer
+                  text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors group"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-orange-400 group-hover:text-orange-600 transition">{icon}</span>
+                  <span className="text-gray-400 group-hover:text-orange-500 transition-colors text-base">{icon}</span>
                   <span className="text-sm">{label}</span>
                 </div>
-                <FiChevronRight size={13} className="text-gray-300 group-hover:text-orange-400 transition" />
+                <FiChevronRight size={13} className="text-gray-300 group-hover:text-orange-400 transition-colors" />
               </motion.li>
             ))}
           </ul>
         </div>
 
-        {/* Trust badges */}
-        <div className="mx-4 my-3 p-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1">
-            <FiAward size={10} /> Why shop with us
-          </p>
-          <div className="grid grid-cols-2 gap-1.5">
-            {trustBadges.map((b, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.07 }}
-                className={`flex items-center gap-1.5 rounded-lg px-2 py-1.5 ${b.color}`}
-              >
-                {b.icon}
-                <span className="text-[11px] font-semibold leading-tight">{b.label}</span>
-              </motion.div>
-            ))}
+        {/* ── divider ── */}
+        <div className="mx-5 my-3 border-t border-gray-100 dark:border-gray-800" />
+
+        {/* ══ TRUST & CONVERSION BLOCK — single consolidated card ══ */}
+        <div className="mx-4 mb-4 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+
+          {/* flash sale — the ONE bold colored moment in the whole sidebar */}
+          <motion.div
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate('/deals')}
+            className="bg-orange-500 px-4 py-3.5 cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <FiZap size={12} className="text-white" />
+                  <span className="text-[10px] font-bold text-orange-100 uppercase tracking-wider">Flash Sale</span>
+                </div>
+                <p className="text-white font-black text-base leading-tight">Up to 60% OFF</p>
+                <p className="text-orange-100 text-[11px] mt-0.5">Ends tonight</p>
+              </div>
+              <div className="flex items-center gap-1 bg-white/15 rounded-lg px-2 py-1.5">
+                <span className="text-white text-xs font-bold">Shop</span>
+                <FiChevronRight size={12} className="text-white" />
+              </div>
+            </div>
+          </motion.div>
+
+          {/* trust badges — neutral grid, no per-item colors */}
+          <div className="bg-gray-50 dark:bg-gray-900 px-4 py-3">
+            <div className="grid grid-cols-2 gap-1.5">
+              {trustBadges.map((b, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-white dark:bg-gray-800
+                    border border-gray-100 dark:border-gray-700"
+                >
+                  <span className="text-orange-500">{b.icon}</span>
+                  <span className="text-[10.5px] font-semibold text-gray-600 dark:text-gray-300 leading-tight">
+                    {b.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* rating line — folded into the same card, no separate yellow box */}
+          <div className="flex items-center gap-2 px-4 py-2.5 border-t border-gray-100 dark:border-gray-800">
+            <div className="flex">
+              {[1,2,3,4,5].map(s => (
+                <FiStar key={s} size={11} className="text-orange-400 fill-orange-400" />
+              ))}
+            </div>
+            <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
+              4.8/5 · 12,000+ shoppers
+            </span>
           </div>
         </div>
 
-        {/* Featured deal banner */}
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          onClick={() => navigate('/deals')}
-          className="mx-4 mb-3 p-3 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 cursor-pointer shadow-lg shadow-orange-200 dark:shadow-orange-900"
-        >
-          <div className="flex items-center gap-2 mb-1">
-            <FiZap size={14} className="text-white" />
-            <span className="text-[11px] font-bold text-orange-100 uppercase tracking-wider">Flash Sale</span>
-          </div>
-          <p className="text-white font-black text-lg leading-tight">Up to 60% OFF</p>
-          <p className="text-orange-100 text-xs mt-0.5">Ends tonight at midnight</p>
-          <div className="mt-2 flex items-center gap-1 text-white text-xs font-semibold">
-            Shop Now <FiChevronRight size={12} />
-          </div>
-        </motion.div>
-
-        {/* Ratings trust line */}
-        <div className="mx-4 mb-4 flex items-center gap-2 px-3 py-2 rounded-xl bg-yellow-50 dark:bg-gray-900 border border-yellow-200 dark:border-gray-800">
-          <div className="flex">
-            {[1,2,3,4,5].map(s => <FiStar key={s} size={12} className="text-amber-400 fill-amber-400" />)}
-          </div>
-          <span className="text-[11px] text-gray-600 dark:text-gray-400 font-medium">4.8/5 from 12,000+ shoppers</span>
-        </div>
-
-        {/* Settings accordion */}
+        {/* ── Settings accordion ── */}
         <div className="mx-4 mb-6">
           <button
             onClick={() => setShowSettings(p => !p)}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900 text-gray-500 text-sm transition"
+            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl
+              hover:bg-gray-50 dark:hover:bg-gray-900 text-gray-500 text-sm transition-colors"
           >
-            <span className="font-semibold text-xs uppercase tracking-wider">Preferences</span>
+            <span className="font-semibold text-[10px] uppercase tracking-widest">Preferences</span>
             <motion.span animate={{ rotate: showSettings ? 90 : 0 }} transition={{ duration: 0.2 }}>
               <FiChevronRight size={14} />
             </motion.span>
@@ -313,37 +346,46 @@ export default function Sidebar({ isOpen = false, onClose, onOpen }: Props) {
                 className="overflow-hidden"
               >
                 <div className="pt-2 space-y-2 px-1">
-                  {/* Font size */}
+
+                  {/* font size */}
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setFontSize(f => Math.max(f - 0.1, 0.6))}
-                      className="flex-1 flex items-center justify-center gap-2 bg-orange-50 dark:bg-gray-800 border border-orange-200 dark:border-gray-700 text-orange-600 py-2 rounded-xl text-xs font-semibold hover:bg-orange-100 transition"
+                      className="flex-1 flex items-center justify-center gap-2 bg-white dark:bg-gray-800
+                        border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300
+                        py-2 rounded-xl text-xs font-semibold hover:border-orange-300 hover:text-orange-600 transition-colors"
                     >
                       <FiZoomOut size={13} /> Smaller
                     </button>
                     <button
                       onClick={() => setFontSize(f => Math.min(f + 0.1, 2))}
-                      className="flex-1 flex items-center justify-center gap-2 bg-orange-50 dark:bg-gray-800 border border-orange-200 dark:border-gray-700 text-orange-600 py-2 rounded-xl text-xs font-semibold hover:bg-orange-100 transition"
+                      className="flex-1 flex items-center justify-center gap-2 bg-white dark:bg-gray-800
+                        border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300
+                        py-2 rounded-xl text-xs font-semibold hover:border-orange-300 hover:text-orange-600 transition-colors"
                     >
                       <FiZoomIn size={13} /> Larger
                     </button>
                   </div>
 
-                  {/* Dark mode */}
+                  {/* dark mode */}
                   <button
                     onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                    className="w-full flex items-center justify-center gap-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 py-2 rounded-xl text-xs font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                    className="w-full flex items-center justify-center gap-2 bg-white dark:bg-gray-800
+                      border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300
+                      py-2 rounded-xl text-xs font-semibold hover:border-orange-300 hover:text-orange-600 transition-colors"
                   >
                     {theme === 'dark' ? <FiSun size={13} /> : <span className="text-xs">🌙</span>}
                     {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
                   </button>
 
-                  {/* Language */}
+                  {/* language */}
                   <TranslateWidget />
                   <select
                     value={language}
                     onChange={e => setLanguage(e.target.value)}
-                    className="w-full border border-gray-200 dark:border-gray-700 rounded-xl p-2 text-xs dark:bg-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-orange-400 outline-none"
+                    className="w-full border border-gray-200 dark:border-gray-700 rounded-xl p-2 text-xs
+                      bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200
+                      focus:ring-2 focus:ring-orange-300 outline-none"
                   >
                     <option value="en">🇬🇧 English</option>
                     <option value="sw">🇰🇪 Kiswahili</option>

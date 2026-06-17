@@ -189,7 +189,7 @@ export default function CategoryMenu({
             className="
               fixed
               inset-0
-              z-50
+              z-[999999999999999]
 
               bg-black/70
               backdrop-blur-md
