@@ -520,6 +520,10 @@ export default function CartPage({ onOpenBuyerLogin }: CartProps) {
           <Section>
               <SuggestedForYou />
           </Section>
+                  {/* 2 · Trust badges — appear immediately below hero */}
+                  <Section>
+                    <TrustBadges />
+                  </Section>
 
           <Section>
               <TopPicksForYou />
@@ -582,6 +586,36 @@ export default function CartPage({ onOpenBuyerLogin }: CartProps) {
           onSuccess={() => { clearCart(); router.push('/orders'); }}
         />
       )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TRUST BADGES
+═══════════════════════════════════════════════════════════════ */
+const trustItems = [
+  { icon: <ShieldCheck className="w-5 h-5 text-orange-500" />, title: 'Secure Payment',    sub: 'M-Pesa · Visa · Mastercard' },
+  { icon: <Truck       className="w-5 h-5 text-orange-500" />, title: 'Fast Delivery',     sub: 'Same-day in Nairobi'        },
+  { icon: <RotateCcw   className="w-5 h-5 text-orange-500" />, title: '7-Day Returns',     sub: 'Hassle-free policy'         },
+  { icon: <Headphones  className="w-5 h-5 text-orange-500" />, title: '24/7 Support',      sub: 'Always here for you'        },
+];
+
+function TrustBadges() {
+  return (
+    <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+      <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-gray-100">
+        {trustItems.map((item, i) => (
+          <div key={i} className="flex items-center gap-3 px-4 py-4 hover:bg-orange-50/40 transition-colors">
+            <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center shrink-0">
+              {item.icon}
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-900 leading-tight">{item.title}</p>
+              <p className="text-xs text-gray-500 mt-0.5">{item.sub}</p>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

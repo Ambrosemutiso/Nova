@@ -412,7 +412,7 @@ function UploadModal({ products, sellerId, userCountry, onClose, onSuccess, tota
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-600 block mb-1.5">Description <span className="text-gray-400 font-normal">(optional)</span></label>
+                  <label className="text-xs font-semibold text-gray-600 block mb-1.5">Description <span className="text-red-400">*</span></label>
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}

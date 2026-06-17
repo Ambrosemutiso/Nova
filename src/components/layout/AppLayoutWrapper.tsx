@@ -105,7 +105,7 @@ function LayoutUI({ children }: { children: React.ReactNode }) {
         {isSeller ? <SellerSidebar /> : <Sidebar isOpen />}
       </aside>
 
-      <main className="pt-[20px] md:ml-72 min-h-screen">
+      <main className="pt-[40px] md:ml-72 min-h-screen">
         {children}
       </main>
 

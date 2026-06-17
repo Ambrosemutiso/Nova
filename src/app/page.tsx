@@ -247,22 +247,15 @@ export default function Main() {
   return (
     <div className="bg-gray-50 min-h-screen">
 
-      <div className="max-w-[1600px] mx-auto px-4 md:px-6 pt-20 pb-12 space-y-5">
+      <div className="max-w-[1600px] mx-auto px-4 md:px-6 pt-[60px] pb-12 space-y-5">
               {/* Full-bleed announcement bar */}
         
         <Section>
           <Hero/>
         </Section>
 
-        {/* 2 · Trust badges — appear immediately below hero */}
-        <Section>
-          <TrustBadges />
-        </Section>
-
                 {/* 4 · Category menu — real data, real images; no duplicate icon grid */}
-        <Section>
-            <Menu onSelectCategory={setCategory} />
-        </Section>
+        <Menu onSelectCategory={setCategory} />
 
         {/* 3 · Flash Sales — live timer already built-in to the component */}
         <Section>
@@ -279,6 +272,11 @@ export default function Main() {
         {/* 8 · Buy on installments */}
         <Section>
             <InstallmentProducts />
+        </Section>
+
+        {/* 2 · Trust badges — appear immediately below hero */}
+        <Section>
+          <TrustBadges />
         </Section>
 
         {/* 9 · Top picks */}
