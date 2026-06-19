@@ -7,6 +7,7 @@ import {
   Eye, Plus, X, ChevronRight, ChevronLeft, Upload, Camera,
   Video, Image as ImageIcon, TrendingUp, Users, Zap, Star,
   CheckCircle, Sparkles, BarChart2, ShoppingBag, Play, Pause,
+  SwitchCamera,
 } from 'lucide-react';
 
 /* ══════════════════════════════════════════════════════════════
@@ -52,6 +53,12 @@ function BenefitRow({ icon, text }: { icon: React.ReactNode; text: string }) {
     </div>
   );
 }
+
+const formatTime = (totalSeconds: number) => {
+  const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+  const s = (totalSeconds % 60).toString().padStart(2, '0');
+  return `${m}:${s}`;
+};
 
 /* ══════════════════════════════════════════════════════════════
    CONFETTI (CSS-only, no deps)
@@ -135,6 +142,176 @@ function CelebrationModal({ onClose, onCreateAnother }: {
 }
 
 /* ══════════════════════════════════════════════════════════════
+   FULLSCREEN CAMERA CAPTURE
+   TikTok/Instagram-style: full-bleed live preview, front/back flip,
+   photo/video mode switch, recording timer + progress ring.
+══════════════════════════════════════════════════════════════ */
+const MAX_RECORD_SECONDS = 60;
+
+interface FullscreenCameraProps {
+  cameraStream: MediaStream | null;
+  cameraError: string;
+  cameraFacing: 'user' | 'environment';
+  isRecording: boolean;
+  recordSeconds: number;
+  captureMode: 'photo' | 'video';
+  videoRef: React.RefObject<HTMLVideoElement>;
+  onFlip: () => void;
+  onToggleMode: (mode: 'photo' | 'video') => void;
+  onCapture: () => void;
+  onClose: () => void;
+  onRetryPermission: () => void;
+}
+
+function FullscreenCamera({
+  cameraStream, cameraError, cameraFacing, isRecording, recordSeconds,
+  captureMode, videoRef, onFlip, onToggleMode, onCapture, onClose, onRetryPermission,
+}: FullscreenCameraProps) {
+  const ringProgress = Math.min(recordSeconds / MAX_RECORD_SECONDS, 1);
+  const RING_R = 34;
+  const RING_C = 2 * Math.PI * RING_R;
+
+  return (
+    <div
+      className="fixed inset-0 bg-black flex flex-col"
+      style={{ zIndex: 2147483000 }}
+    >
+      {/* live preview */}
+      <div className="absolute inset-0">
+        <video
+          ref={videoRef}
+          muted
+          playsInline
+          className="w-full h-full object-cover"
+          style={{ transform: cameraFacing === 'user' ? 'scaleX(-1)' : 'none' }}
+        />
+        {!cameraStream && !cameraError && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+            <div className="w-10 h-10 border-[3px] border-white/20 border-t-orange-500 rounded-full animate-spin" />
+            <p className="text-white/60 text-sm">Starting camera…</p>
+          </div>
+        )}
+        {cameraError && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-8 text-center">
+            <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center">
+              <Camera className="w-7 h-7 text-white/60" />
+            </div>
+            <p className="text-white text-sm font-semibold">{cameraError}</p>
+            <button
+              onClick={onRetryPermission}
+              className="bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* subtle top/bottom gradients so controls stay legible over bright footage */}
+      <div className="absolute top-0 inset-x-0 h-28 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
+      <div className="absolute bottom-0 inset-x-0 h-44 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
+
+      {/* ── top bar ── */}
+      <div
+        className="relative z-10 flex items-center justify-between px-4"
+        style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
+      >
+        <button
+          onClick={onClose}
+          className="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-sm"
+        >
+          <X className="w-5 h-5 text-white" />
+        </button>
+
+        {isRecording && (
+          <div className="flex items-center gap-1.5 bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-sm">
+            <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+            <span className="text-white text-xs font-bold tabular-nums">{formatTime(recordSeconds)}</span>
+          </div>
+        )}
+
+        <button
+          onClick={onFlip}
+          disabled={isRecording}
+          className="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-sm disabled:opacity-30"
+        >
+          <SwitchCamera className="w-5 h-5 text-white" />
+        </button>
+      </div>
+
+      {/* ── bottom controls ── */}
+      <div
+        className="relative z-10 mt-auto px-6 flex flex-col items-center gap-5"
+        style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
+      >
+        {/* mode switch */}
+        {!isRecording && (
+          <div className="flex items-center gap-1 bg-black/40 rounded-full p-1 backdrop-blur-sm">
+            {(['photo', 'video'] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => onToggleMode(m)}
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold transition
+                  ${captureMode === m ? 'bg-white text-gray-900' : 'text-white/70'}`}
+              >
+                {m === 'photo' ? <ImageIcon className="w-3.5 h-3.5" /> : <Video className="w-3.5 h-3.5" />}
+                {m === 'photo' ? 'Photo' : 'Video'}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* capture row */}
+        <div className="flex items-center justify-between w-full max-w-xs">
+          <div className="w-12" /> {/* spacer for symmetry */}
+
+          <button
+            onClick={onCapture}
+            disabled={!cameraStream}
+            className="relative w-[76px] h-[76px] flex items-center justify-center disabled:opacity-40"
+          >
+            {captureMode === 'video' && (
+              <svg className="absolute inset-0 -rotate-90" width="76" height="76">
+                <circle cx="38" cy="38" r={RING_R} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="3" />
+                <circle
+                  cx="38" cy="38" r={RING_R} fill="none" stroke="#F97316" strokeWidth="3"
+                  strokeDasharray={RING_C}
+                  strokeDashoffset={RING_C * (1 - ringProgress)}
+                  strokeLinecap="round"
+                  style={{ transition: 'stroke-dashoffset 0.3s linear' }}
+                />
+              </svg>
+            )}
+            <span
+              className="rounded-full bg-white transition-all duration-200"
+              style={
+                isRecording
+                  ? { width: 28, height: 28, borderRadius: 8, background: '#ef4444' }
+                  : { width: 60, height: 60, border: captureMode === 'video' ? '4px solid #ef4444' : '4px solid #111110' }
+              }
+            />
+          </button>
+
+          <button
+            onClick={onFlip}
+            disabled={isRecording}
+            className="w-12 h-12 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-sm disabled:opacity-30"
+          >
+            <SwitchCamera className="w-5 h-5 text-white" />
+          </button>
+        </div>
+
+        {!isRecording && (
+          <p className="text-white/50 text-[11px]">
+            {captureMode === 'video' ? `Tap to record · up to ${MAX_RECORD_SECONDS}s` : 'Tap to capture'}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════
    UPLOAD MODAL (multi-step)
 ══════════════════════════════════════════════════════════════ */
 interface UploadModalProps {
@@ -165,6 +342,9 @@ function UploadModal({ products, sellerId, userCountry, onClose, onSuccess, tota
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
+  const [recordSeconds, setRecordSeconds] = useState(0);
+  const [captureMode, setCaptureMode] = useState<'photo' | 'video'>('video');
+  const [cameraError, setCameraError] = useState('');
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const cameraVideoRef = useRef<HTMLVideoElement>(null);
   const [cameraFacing, setCameraFacing] = useState<'user' | 'environment'>('environment');
@@ -177,6 +357,7 @@ function UploadModal({ products, sellerId, userCountry, onClose, onSuccess, tota
   /* ── camera ── */
   const startCamera = useCallback(async (facing: 'user' | 'environment' = cameraFacing) => {
     try {
+      setCameraError('');
       if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: facing },
@@ -188,18 +369,35 @@ function UploadModal({ products, sellerId, userCountry, onClose, onSuccess, tota
         cameraVideoRef.current.play();
       }
     } catch {
-      setError('Camera access denied. Please allow camera permissions.');
+      setCameraError('Camera access denied. Please allow camera permissions.');
     }
-  }, [cameraFacing, cameraStream]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cameraFacing]);
 
   useEffect(() => {
-    if (mediaTab === 'camera') startCamera();
+    if (mediaTab === 'camera' && !previewUrl) startCamera();
     else if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); setCameraStream(null); }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mediaTab]);
 
   // cleanup on unmount
   useEffect(() => () => { cameraStream?.getTracks().forEach(t => t.stop()); }, [cameraStream]);
+
+  // recording timer — auto-stops at MAX_RECORD_SECONDS
+  useEffect(() => {
+    if (!isRecording) { setRecordSeconds(0); return; }
+    const interval = setInterval(() => {
+      setRecordSeconds((s) => {
+        if (s + 1 >= MAX_RECORD_SECONDS) {
+          mediaRecorderRef.current?.stop();
+          setIsRecording(false);
+          return MAX_RECORD_SECONDS;
+        }
+        return s + 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isRecording]);
 
   const flipCamera = async () => {
     const next = cameraFacing === 'user' ? 'environment' : 'user';
@@ -211,14 +409,14 @@ function UploadModal({ products, sellerId, userCountry, onClose, onSuccess, tota
     if (!cameraStream) return;
     const recorder = new MediaRecorder(cameraStream, { mimeType: 'video/webm' });
     setRecordedChunks([]);
-    recorder.ondataavailable = (e) => { if (e.data.size > 0) setRecordedChunks(p => [...p, e.data]); };
+    const chunks: Blob[] = [];
+    recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
     recorder.onstop = () => {
-      const blob = new Blob(recordedChunks, { type: 'video/webm' });
+      const blob = new Blob(chunks, { type: 'video/webm' });
       const file = new File([blob], `ad-recording-${Date.now()}.webm`, { type: 'video/webm' });
       setMediaFile(file);
       setMediaType('video');
       setPreviewUrl(URL.createObjectURL(blob));
-      // stop camera after recording
       cameraStream.getTracks().forEach(t => t.stop());
       setCameraStream(null);
     };
@@ -230,6 +428,42 @@ function UploadModal({ products, sellerId, userCountry, onClose, onSuccess, tota
   const stopRecording = () => {
     mediaRecorderRef.current?.stop();
     setIsRecording(false);
+  };
+
+  const capturePhoto = () => {
+    const video = cameraVideoRef.current;
+    if (!video) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    if (cameraFacing === 'user') {
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+    }
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const file = new File([blob], `ad-photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
+      setMediaFile(file);
+      setMediaType('image');
+      setPreviewUrl(URL.createObjectURL(blob));
+      cameraStream?.getTracks().forEach(t => t.stop());
+      setCameraStream(null);
+    }, 'image/jpeg', 0.92);
+  };
+
+  const handleCameraCapture = () => {
+    if (captureMode === 'photo') { capturePhoto(); return; }
+    isRecording ? stopRecording() : startRecording();
+  };
+
+  const exitCamera = () => {
+    if (isRecording) stopRecording();
+    cameraStream?.getTracks().forEach(t => t.stop());
+    setCameraStream(null);
+    setMediaTab('file');
   };
 
   /* ── file picker ── */
@@ -287,6 +521,26 @@ function UploadModal({ products, sellerId, userCountry, onClose, onSuccess, tota
   const canProceedStep1 = !!selectedProduct;
   const canProceedStep2 = !!title && !!category;
   const canProceedStep3 = !!mediaFile;
+
+  // fullscreen camera takes over the whole viewport — render it instead of the modal body
+  if (step === 3 && mediaTab === 'camera' && !previewUrl) {
+    return (
+      <FullscreenCamera
+        cameraStream={cameraStream}
+        cameraError={cameraError}
+        cameraFacing={cameraFacing}
+        isRecording={isRecording}
+        recordSeconds={recordSeconds}
+        captureMode={captureMode}
+        videoRef={cameraVideoRef}
+        onFlip={flipCamera}
+        onToggleMode={setCaptureMode}
+        onCapture={handleCameraCapture}
+        onClose={exitCamera}
+        onRetryPermission={() => startCamera()}
+      />
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999999999] flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -435,19 +689,21 @@ function UploadModal({ products, sellerId, userCountry, onClose, onSuccess, tota
               </div>
 
               {/* tab switcher */}
-              <div className="flex gap-2 bg-gray-100 p-1 rounded-xl">
-                {(['file', 'camera'] as MediaTab[]).map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setMediaTab(tab)}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all duration-200
-                      ${mediaTab === tab ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
-                  >
-                    {tab === 'file' ? <Upload className="w-3.5 h-3.5" /> : <Camera className="w-3.5 h-3.5" />}
-                    {tab === 'file' ? 'Upload File' : 'Use Camera'}
-                  </button>
-                ))}
-              </div>
+              {!previewUrl && (
+                <div className="flex gap-2 bg-gray-100 p-1 rounded-xl">
+                  {(['file', 'camera'] as MediaTab[]).map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setMediaTab(tab)}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all duration-200
+                        ${mediaTab === tab ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                      {tab === 'file' ? <Upload className="w-3.5 h-3.5" /> : <Camera className="w-3.5 h-3.5" />}
+                      {tab === 'file' ? 'Upload File' : 'Use Camera'}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {/* file upload tab */}
               {mediaTab === 'file' && !previewUrl && (
@@ -462,52 +718,7 @@ function UploadModal({ products, sellerId, userCountry, onClose, onSuccess, tota
                 </label>
               )}
 
-              {/* camera tab */}
-              {mediaTab === 'camera' && !previewUrl && (
-                <div className="space-y-3">
-                  <div className="relative rounded-2xl overflow-hidden bg-black aspect-[9/16] max-h-64">
-                    <video ref={cameraVideoRef} muted playsInline className="w-full h-full object-cover" />
-                    {!cameraStream && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <button onClick={() => startCamera()}
-                          className="bg-orange-500 text-white text-sm font-bold px-5 py-2.5 rounded-xl">
-                          Start Camera
-                        </button>
-                      </div>
-                    )}
-                    {/* flip camera btn */}
-                    {cameraStream && (
-                      <button onClick={flipCamera}
-                        className="absolute top-3 right-3 w-9 h-9 bg-black/50 rounded-full flex items-center justify-center">
-                        <Camera className="w-4 h-4 text-white" />
-                      </button>
-                    )}
-                    {/* recording indicator */}
-                    {isRecording && (
-                      <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-red-500 px-2.5 py-1 rounded-full">
-                        <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                        <span className="text-white text-[10px] font-bold">REC</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {cameraStream && (
-                    <button
-                      onClick={isRecording ? stopRecording : startRecording}
-                      className={`w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-bold text-sm transition
-                        ${isRecording
-                          ? 'bg-red-500 hover:bg-red-600 text-white'
-                          : 'bg-gray-900 hover:bg-gray-800 text-white'
-                        }`}
-                    >
-                      {isRecording
-                        ? <><Pause className="w-4 h-4" /> Stop Recording</>
-                        : <><Play className="w-4 h-4" /> Start Recording</>
-                      }
-                    </button>
-                  )}
-                </div>
-              )}
+              {/* camera tab renders as a fullscreen takeover (see early return above) */}
 
               {/* preview */}
               {previewUrl && (
