@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { useCart } from '@/app/context/CartContext';
 import {
   Tag, Package, MapPin, CheckCircle, XCircle, ShoppingCart,
   ChevronRight, ShieldCheck, Truck, RotateCcw, BadgeCheck,
   Star, Eye, Zap, Lock, Clock, AlertTriangle,
-  MoreVertical, Flag, CreditCard, Smartphone, Headphones
+  MoreVertical, Flag, CreditCard, Smartphone, Headphones,
+  Share2, Copy, Check, MessageCircle, Mail,
 } from "lucide-react";
 import type { ProductType } from "@/app/types/product";
 import RelatedProducts from '@/components/RelatedProducts';
@@ -53,6 +55,9 @@ export default function ProductDetails() {
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [reportSuccess, setReportSuccess] = useState(false);
   const [showOverflowMenu, setShowOverflowMenu] = useState(false);
+
+  // share modal
+  const [showShareModal, setShowShareModal] = useState(false);
 
   // login modal
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -251,27 +256,38 @@ export default function ProductDetails() {
         {/* ── Product Info Card ── */}
         <Card className="mb-4 px-4 py-5 space-y-4" ref={titleRef}>
 
-          {/* Title + overflow menu */}
+          {/* Title + share + overflow menu */}
           <div className="flex items-start justify-between gap-3">
             <h1 className="text-xl font-bold text-gray-900 leading-snug flex-1">{product.name}</h1>
-            <div className="relative">
+            <div className="flex items-center gap-1 shrink-0">
+              {/* share */}
               <button
-                onClick={() => setShowOverflowMenu(!showOverflowMenu)}
-                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 transition"
+                onClick={() => setShowShareModal(true)}
+                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-orange-500 transition"
+                aria-label="Share this product"
               >
-                <MoreVertical className="w-4 h-4" />
+                <Share2 className="w-4 h-4" />
               </button>
-              {showOverflowMenu && (
-                <div className="absolute right-0 mt-1 w-44 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-30">
-                  <button
-                    onClick={() => { setShowOverflowMenu(false); setShowReportModal(true); }}
-                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition"
-                  >
-                    <Flag className="w-4 h-4" />
-                    Report this product
-                  </button>
-                </div>
-              )}
+              {/* overflow / report */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowOverflowMenu(!showOverflowMenu)}
+                  className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 transition"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </button>
+                {showOverflowMenu && (
+                  <div className="absolute right-0 mt-1 w-44 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-30">
+                    <button
+                      onClick={() => { setShowOverflowMenu(false); setShowReportModal(true); }}
+                      className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition"
+                    >
+                      <Flag className="w-4 h-4" />
+                      Report this product
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -417,22 +433,19 @@ export default function ProductDetails() {
               <Lock className="w-4 h-4 text-green-500" />
               Secure Payment
             </h3>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {/* M-Pesa */}
-              <div className="flex items-center gap-1.5 bg-green-50 border border-green-200 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-lg">
-                <Smartphone className="w-3.5 h-3.5" />
-                M-Pesa
-              </div>
-              {/* Visa */}
-              <div className="flex items-center gap-1.5 bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold px-3 py-1.5 rounded-lg">
-                <CreditCard className="w-3.5 h-3.5" />
-                Visa
-              </div>
-              {/* Mastercard */}
-              <div className="flex items-center gap-1.5 bg-orange-50 border border-orange-200 text-orange-700 text-xs font-semibold px-3 py-1.5 rounded-lg">
-                <CreditCard className="w-3.5 h-3.5" />
-                Mastercard
-              </div>
+            <div className="flex flex-wrap items-center gap-3 mb-3">
+              {[
+                { src: '/M-PESA.svg',     alt: 'M-Pesa' },
+                { src: '/visa.png',       alt: 'Visa' },
+                { src: '/mastercard.png', alt: 'Mastercard' },
+              ].map((m, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-center bg-gray-50 border border-gray-100 rounded-lg h-10 px-3"
+                >
+                  <Image src={m.src} alt={m.alt} width={48} height={20} className="object-contain h-5 w-auto" />
+                </div>
+              ))}
             </div>
             <div className="flex items-center gap-2 text-xs text-gray-500">
               <ShieldCheck className="w-3.5 h-3.5 text-green-500 shrink-0" />
@@ -704,6 +717,11 @@ export default function ProductDetails() {
         </div>
       )}
 
+      {/* ════ Share Modal ════ */}
+      {showShareModal && (
+        <ShareModal product={product} onClose={() => setShowShareModal(false)} />
+      )}
+
       {/* ════ Login Modal ════ */}
       {showLoginModal && <BuyerLoginModal onClose={() => setShowLoginModal(false)} />}
 
@@ -733,6 +751,139 @@ export default function ProductDetails() {
         <Section>
           <BottomTrustStrip />
         </Section>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SHARE MODAL
+   Opened from the Share2 icon next to the report (···) menu.
+═══════════════════════════════════════════════════════════════ */
+function ShareModal({ product, onClose }: { product: ProductType; onClose: () => void }) {
+  const [copied, setCopied] = useState(false);
+  const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard unavailable — silently ignore, link is still selectable */
+    }
+  };
+
+  const nativeShare = () => {
+    if (typeof navigator !== 'undefined' && (navigator as any).share) {
+      (navigator as any).share({ title: product.name, url: shareUrl }).catch(() => {});
+    }
+  };
+
+  const shareLinks = [
+    {
+      label: 'WhatsApp',
+      icon: <MessageCircle className="w-5 h-5" />,
+      bg: 'bg-green-50 text-green-600 border-green-100',
+      href: `https://wa.me/?text=${encodeURIComponent(`${product.name} — ${shareUrl}`)}`,
+    },
+    {
+      label: 'Email',
+      icon: <Mail className="w-5 h-5" />,
+      bg: 'bg-blue-50 text-blue-600 border-blue-100',
+      href: `mailto:?subject=${encodeURIComponent(product.name)}&body=${encodeURIComponent(shareUrl)}`,
+    },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
+
+        {/* header */}
+        <div className="px-5 pt-5 pb-4 border-b border-gray-100 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center">
+              <Share2 className="w-4 h-4 text-orange-500" />
+            </div>
+            <h2 className="text-base font-bold text-gray-900">Share this Product</h2>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 transition">
+            <XCircle className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="px-5 py-4 space-y-4">
+          {/* product preview */}
+          <div className="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-2xl p-3">
+            {product.images?.[0] && (
+              <Image
+                src={product.images[0]}
+                alt={product.name}
+                width={48}
+                height={48}
+                className="w-12 h-12 rounded-xl object-cover shrink-0"
+              />
+            )}
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-gray-900 truncate">{product.name}</p>
+              <p className="text-xs font-bold text-orange-600">Ksh {product.calculatedPrice.toLocaleString()}</p>
+            </div>
+          </div>
+
+          {/* copy link */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">
+              Product link
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                readOnly
+                value={shareUrl}
+                onFocus={(e) => e.currentTarget.select()}
+                className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-xs text-gray-600 bg-gray-50 truncate focus:outline-none"
+              />
+              <button
+                onClick={copyLink}
+                className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition shrink-0 ${
+                  copied ? 'bg-green-500 text-white' : 'bg-orange-500 text-white hover:bg-orange-600'
+                }`}
+              >
+                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? 'Copied' : 'Copy'}
+              </button>
+            </div>
+          </div>
+
+          {/* quick share options */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">
+              Share via
+            </label>
+            <div className="grid grid-cols-2 gap-2.5">
+              {shareLinks.map((s) => (
+                <a
+                  key={s.label}
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`flex items-center gap-2 border rounded-xl px-3 py-2.5 text-sm font-semibold transition hover:opacity-80 ${s.bg}`}
+                >
+                  {s.icon}
+                  {s.label}
+                </a>
+              ))}
+            </div>
+
+            {/* native share — only renders meaningfully on devices that support it */}
+            <button
+              onClick={nativeShare}
+              className="w-full flex items-center justify-center gap-2 mt-2.5 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+            >
+              <Share2 className="w-4 h-4" />
+              More options
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

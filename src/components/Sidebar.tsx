@@ -97,10 +97,10 @@ export default function Sidebar({ onClose }: Props) {
   }, []);
 
   /* ── font size ── */
-  useEffect(() => {
-    const saved = localStorage.getItem('fontSize');
-    setFontSize(saved ? parseFloat(saved) : (window.innerWidth < 768 ? 0.85 : 1));
-  }, []);
+useEffect(() => {
+  const saved = localStorage.getItem('fontSize');
+  setFontSize(saved ? parseFloat(saved) : (window.innerWidth < 768 ? 0.5 : 1));
+}, []);
 
   useEffect(() => {
     document.documentElement.style.fontSize = `${fontSize * 100}%`;
