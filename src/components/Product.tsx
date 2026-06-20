@@ -815,13 +815,7 @@ function ShareModal({ product, onClose }: { product: ProductType; onClose: () =>
           {/* product preview */}
           <div className="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-2xl p-3">
             {product.images?.[0] && (
-              <Image
-                src={product.images[0]}
-                alt={product.name}
-                width={48}
-                height={48}
-                className="w-12 h-12 rounded-xl object-cover shrink-0"
-              />
+              <img src={product.images[0]} alt="" className="w-12 h-12 rounded-xl object-cover shrink-0" />
             )}
             <div className="min-w-0">
               <p className="text-sm font-semibold text-gray-900 truncate">{product.name}</p>

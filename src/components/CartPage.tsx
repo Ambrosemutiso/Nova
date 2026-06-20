@@ -17,6 +17,7 @@ import {
   Trash2, MapPin, Package, CreditCard, Smartphone, Lock,
   Info, ChevronDown, X,
 } from 'lucide-react';
+import Image from 'next/image';
 
 type CartProps = {
   onOpenBuyerLogin?: () => void;
@@ -449,17 +450,17 @@ export default function CartPage({ onOpenBuyerLogin }: CartProps) {
 
               {/* payment methods */}
               <div className="mt-4 flex flex-wrap gap-2">
-                <div className="flex items-center gap-1 bg-green-50 border border-green-100 text-green-700
-                  text-[10px] font-bold px-2.5 py-1.5 rounded-lg">
-                  <Smartphone className="w-3 h-3" /> M-Pesa
+                <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg">
+                  <Image src="/visa.png" alt="Visa" width={40} height={24} />
                 </div>
-                <div className="flex items-center gap-1 bg-blue-50 border border-blue-100 text-blue-700
-                  text-[10px] font-bold px-2.5 py-1.5 rounded-lg">
-                  <CreditCard className="w-3 h-3" /> Visa
+                <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg">
+                  <Image src="/M-PESA.svg" alt="MPesa" width={40} height={24} />
                 </div>
-                <div className="flex items-center gap-1 bg-orange-50 border border-orange-100 text-orange-700
-                  text-[10px] font-bold px-2.5 py-1.5 rounded-lg">
-                  <CreditCard className="w-3 h-3" /> Mastercard
+                <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg">
+                  <Image src="/mastercard.png" alt="MasterCard" width={40} height={24} />
+                </div>
+                <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg">
+                  <Image src="/Airtel.svg" alt="Airtel" width={20} height={12} />
                 </div>
               </div>
 

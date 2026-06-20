@@ -120,7 +120,7 @@ export default function Footer({
 
         <div className="flex flex-wrap items-center gap-4">
           <span className="text-sm font-semibold">
-            Payment Methods:
+            Our Partners:
           </span>
 
           <Image src="/visa.png" alt="Visa" width={40} height={24} />
