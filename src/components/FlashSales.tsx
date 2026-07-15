@@ -1,12 +1,20 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import type { ProductType } from '@/app/types/product';
 import { toast } from 'react-toastify';
-import FlashProductCard from './FlashSaleProductCard';
-import { Zap, ChevronRight, RefreshCw } from 'lucide-react';
-import ProductCard from './ProductCard';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
+import { CldImage } from 'next-cloudinary';
+import Link from 'next/link';
+import {
+  ChevronRight, SlidersHorizontal, X, Star, ShoppingCart,
+  Heart, ChevronDown, ArrowUpDown, Package, Check, Zap, RefreshCw
+} from 'lucide-react';
 
+import { useCart } from '@/app/context/CartContext';
+import { addToWishlist, isInWishlist } from '@/lib/wishlist';
+import type { ProductType } from '@/app/types/product';
+
+const LIMIT = 200;
 const FLASH_SALE_DURATION_MS = 3 * 60 * 60 * 1000; // 3 hours
 
 /* ── flip-digit display ── */
@@ -40,6 +48,238 @@ function Digit({ value }: { value: string }) {
 function pad(n: number) { return String(n).padStart(2, '0'); }
 
 /* ══════════════════════════════════════════════════════════════
+   TYPES / FETCH
+══════════════════════════════════════════════════════════════ */
+type FetchResponse = { total: number; products: ProductType[]; brands: string[] };
+
+const fetchProducts = async (
+  slug: string, page: number, sort: string,
+  brand: string, minPrice: string, maxPrice: string,
+): Promise<FetchResponse> => {
+  const q = new URLSearchParams({ page: String(page), limit: String(LIMIT), sort });
+  if (brand)    q.set('brand',    brand);
+  if (minPrice) q.set('minPrice', minPrice);
+  if (maxPrice) q.set('maxPrice', maxPrice);
+  const res = await fetch(`/api/products/category/${slug}?${q}`);
+  if (!res.ok) throw new Error('Failed to fetch');
+  return res.json();
+};
+
+const getPublicId = (url?: string) => {
+  if (!url) return '';
+  const m = url.match(/\/upload\/(?:v\d+\/)?([^.]+)/);
+  return m?.[1] ?? '';
+};
+
+/* ══════════════════════════════════════════════════════════════
+   SMALL HELPERS
+══════════════════════════════════════════════════════════════ */
+function StarRow({ rating = 0 }: { rating?: number }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <Star
+          key={s}
+          className={`w-3 h-3 ${s <= Math.round(rating)
+            ? 'text-amber-400 fill-amber-400'
+            : 'text-gray-200 fill-gray-200'}`}
+        />
+      ))}
+    </div>
+  );
+}
+
+function StockBar({ quantity = 0 }: { quantity?: number }) {
+  const pct   = Math.min((quantity / 50) * 100, 100);
+  const color  = pct <= 20 ? '#ef4444' : pct <= 50 ? '#f97316' : '#22c55e';
+  const isLow  = quantity > 0 && quantity <= 5;
+
+  return (
+    <div>
+      {isLow && (
+        <p className="text-[10px] font-bold text-red-500 flex items-center gap-0.5 mb-0.5">
+          <Package className="w-3 h-3" /> Only {quantity} left!
+        </p>
+      )}
+      <div className="h-1 w-full bg-gray-100 rounded-full overflow-hidden">
+        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
+      </div>
+    </div>
+  );
+}
+
+//productcard interface
+interface ProductCardProps {
+  product: ProductType;
+  inCart: boolean;
+  cartQty: number;
+  onAdd: () => void;
+  onIncrease: () => void;
+  onDecrease: () => void;
+  index: number;
+}
+
+//Flashsale ProductCard Set up
+function ProductCard({ product, inCart, cartQty, onAdd, onIncrease, onDecrease, index }: ProductCardProps) {
+  const [visible, setVisible]   = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [wished, setWished]     = useState(() => isInWishlist(product._id));
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold: 0.08 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  const discount = product.oldPrice && product.oldPrice > product.calculatedPrice
+    ? Math.round(((product.oldPrice - product.calculatedPrice) / product.oldPrice) * 100)
+    : null;
+
+  return (
+    <div
+      ref={ref}
+      className="group relative flex flex-col bg-white rounded-2xl border border-gray-100
+        shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
+      style={{
+        opacity:    visible ? 1 : 0,
+        transform:  visible ? 'translateY(0)' : 'translateY(16px)',
+        transition: `opacity 0.4s ease ${Math.min(index * 50, 300)}ms,
+                     transform 0.4s ease ${Math.min(index * 50, 300)}ms,
+                     box-shadow 0.3s ease, translate 0.3s ease`,
+      }}
+    >
+      {/* ── image ── */}
+      <Link href={`/product/${product.slug}`} className="relative block aspect-square bg-gray-50 overflow-hidden">
+        {!imgLoaded && (
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100
+            animate-pulse" />
+        )}
+        <div className="w-full h-full transition-transform duration-500 group-hover:scale-105">
+          <CldImage
+            src={getPublicId(product.images?.[0]) || 'sample'}
+            alt={product.name}
+            width={300} height={300} crop="fill"
+            className={`object-cover w-full h-full transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+            onLoad={() => setImgLoaded(true)}
+          />
+        </div>
+
+        {/* discount badge */}
+        {discount && (
+          <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-black
+            px-1.5 py-0.5 rounded-lg shadow">
+            -{discount}%
+          </span>
+        )}
+
+        {/* out of stock */}
+        {product.quantity === 0 && (
+          <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+            <span className="text-xs font-bold text-gray-500 bg-white border border-gray-200
+              px-3 py-1 rounded-full">Out of Stock</span>
+          </div>
+        )}
+      </Link>
+
+      {/* ── wishlist ── */}
+      <button
+        onClick={() => { addToWishlist(product); setWished(!wished); }}
+        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm shadow
+          flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+      >
+        <Heart className={`w-4 h-4 transition-colors ${wished ? 'text-red-500 fill-red-500' : 'text-gray-400'}`} />
+      </button>
+
+      {/* ── content ── */}
+      <div className="flex flex-col flex-1 px-3 pt-2.5 pb-3 gap-1.5">
+        <Link href={`/product/${product.slug}`}>
+          <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 leading-snug
+            hover:text-orange-600 transition-colors">
+            {product.name}
+          </h3>
+        </Link>
+
+        <StarRow rating={product.averageRating ?? product.rating ?? 0} />
+
+        <StockBar quantity={product.quantity} />
+
+        {/* price */}
+        <div className="flex items-baseline gap-2 mt-1">
+          <span className="text-base font-black text-orange-600 leading-none">
+            Ksh {product.calculatedPrice.toLocaleString()}
+          </span>
+          {product.oldPrice > product.calculatedPrice && (
+            <span className="text-[10px] line-through text-gray-400">
+              Ksh {product.oldPrice.toLocaleString()}
+            </span>
+          )}
+        </div>
+
+        {/* cart controls */}
+        {product.quantity > 0 && (
+          inCart ? (
+            <div className="flex items-center gap-2 mt-1">
+              <button onClick={onDecrease}
+                className="w-7 h-7 rounded-lg bg-orange-100 text-orange-700 font-bold
+                  hover:bg-orange-200 active:scale-95 transition flex items-center justify-center">
+                −
+              </button>
+              <span className="text-sm font-bold text-gray-900 w-5 text-center tabular-nums">
+                {cartQty}
+              </span>
+              <button onClick={onIncrease}
+                className="w-7 h-7 rounded-lg bg-orange-500 text-white font-bold
+                  hover:bg-orange-600 active:scale-95 transition flex items-center justify-center shadow-sm">
+                +
+              </button>
+              <span className="text-[10px] text-gray-400 ml-auto flex items-center gap-0.5">
+                <Check className="w-3 h-3 text-green-500" /> In Cart
+              </span>
+            </div>
+          ) : (
+            <button
+              onClick={onAdd}
+              className="mt-1 w-full flex items-center justify-center gap-1.5
+                bg-orange-500 hover:bg-orange-600 active:scale-[0.98]
+                text-white text-xs font-bold py-2.5 rounded-xl transition shadow-sm shadow-orange-200"
+            >
+              <ShoppingCart className="w-3.5 h-3.5" /> Add to Cart
+            </button>
+          )
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SKELETON GRID
+══════════════════════════════════════════════════════════════ */
+function SkeletonGrid() {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+          <div className="aspect-square bg-gray-100 animate-pulse" />
+          <div className="p-3 space-y-2">
+            <div className="h-3 bg-gray-100 rounded animate-pulse w-4/5" />
+            <div className="h-3 bg-gray-100 rounded animate-pulse w-3/5" />
+            <div className="h-2 bg-gray-100 rounded animate-pulse w-full" />
+            <div className="h-7 bg-gray-100 rounded-xl animate-pulse mt-2" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════
    MAIN COMPONENT
 ══════════════════════════════════════════════════════════════ */
 export default function FlashSales() {
@@ -50,6 +290,11 @@ export default function FlashSales() {
   const [progressPct,       setProgressPct]       = useState(0);
   const [loading,           setLoading]           = useState(true);
   const [headerVisible,     setHeaderVisible]     = useState(false);
+
+    const params       = useParams<{ categorySlug?: string }>();
+    const searchParams = useSearchParams();
+    const router       = useRouter();
+    const { addToCart, cartItems, increaseQuantity, decreaseQuantity } = useCart();
 
   const saleEndRef      = useRef<Date | null>(null);
   const headerRef       = useRef<HTMLDivElement>(null);
@@ -205,10 +450,9 @@ export default function FlashSales() {
           )}
         </div>
       </div>
-
-      {/* ══ PRODUCT ROW — horizontal scroll ══ */}
-      {loading ? (
-        /* skeleton row */
+        {/* ── products ── */}
+          {loading ? (
+            /* skeleton row */
         <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="flex-shrink-0 w-44 rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm">
@@ -224,22 +468,41 @@ export default function FlashSales() {
             </div>
           ))}
         </div>
-      ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-          <RefreshCw className="w-8 h-8 mb-2 animate-spin" />
-          <p className="text-sm">No products in this category</p>
-        </div>
-      ) : (
-        <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar snap-x snap-mandatory scroll-smooth">
-          {filtered.map((product, i) => (
-            <div key={product._id} className="snap-start flex-shrink-0">
-              <ProductCard
-                product={product}
-                index={i}
-              />
-            </div>
-          ))}
-
+                  ) : filtered.length === 0 ? (
+                    <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
+                      <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
+                        <Package className="w-8 h-8 text-gray-400" />
+                      </div>
+                      <h2 className="text-base font-bold text-gray-700">No products found in this category</h2>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {filtered.map((product, i) => {
+                        const cartItem = cartItems.find((c) => c.id === product._id);
+                        return (
+                          <ProductCard
+                            key={product._id}
+                            product={product}
+                            index={i}
+                            inCart={!!cartItem}
+                            cartQty={cartItem?.quantity ?? 0}
+                            onAdd={() => {
+                              addToCart({
+                                id: product._id, productId: product._id,
+                                name: product.name, images: product.images ?? [],
+                                brand: product.brand, model: product.model, quantity: 1,
+                                calculatedPrice: product.calculatedPrice,
+                                fulfillmentMode: product.fulfillmentMode,
+                                sellerId: product.sellerId, county: product.county,
+                                town: product.town, weight: product.weight,
+                              });
+                            }}
+                            onIncrease={() => increaseQuantity(product._id)}
+                            onDecrease={() => decreaseQuantity(product._id)}
+                          />
+                        );
+                      })}
+                  
           {/* see all card — last item in the scroll row */}
           <button className="flex-shrink-0 w-44 flex flex-col items-center justify-center gap-2
             rounded-2xl border-2 border-dashed border-red-200 bg-red-50/40 hover:bg-red-50
@@ -247,7 +510,7 @@ export default function FlashSales() {
             See All Deals
             <ChevronRight className="w-5 h-5" />
           </button>
-        </div>
+          </div>
       )}
     </div>
   );

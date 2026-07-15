@@ -304,7 +304,7 @@ export default function CartPage({ onOpenBuyerLogin }: CartProps) {
                           transition-colors shrink-0"
                         aria-label="Remove"
                       >
-                        <X className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
 

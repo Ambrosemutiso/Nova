@@ -108,7 +108,6 @@ function LayoutUI({ children }: { children: React.ReactNode }) {
       <main className="pt-[40px] md:ml-72 min-h-screen">
         {children}
       </main>
-
       <PWARegister/>
       <BackToTopButton />
       <LoginWrapper />
