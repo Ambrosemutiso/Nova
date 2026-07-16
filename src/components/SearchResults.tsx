@@ -3,8 +3,8 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
+import { CldImage } from 'next-cloudinary';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ProductType } from '@/app/types/product';
 import RecentlyViewed from './RecentlyViewed';
@@ -36,6 +36,7 @@ const T = {
 ══════════════════════════════════════════════════════════════ */
 function SearchProductCard({ product }: { product: ProductType }) {
   const [wishlisted, setWishlisted] = useState(false);
+    const [imgLoaded, setImgLoaded] = useState(false);
   const [added, setAdded] = useState(false);
   const discount = product.oldPrice
     ? Math.round(((product.oldPrice - product.calculatedPrice) / product.oldPrice) * 100)
@@ -57,6 +58,11 @@ function SearchProductCard({ product }: { product: ProductType }) {
     setWishlisted(w => !w);
   };
 
+const getPublicId = (url?: string) => {
+  if (!url) return '';
+  const m = url.match(/\/upload\/(?:v\d+\/)?([^.]+)/);
+  return m?.[1] ?? '';
+};
   return (
     <Link
       href={`/product/${product.slug}`}
@@ -66,12 +72,12 @@ function SearchProductCard({ product }: { product: ProductType }) {
       {/* — thumbnail — */}
       <div className="relative aspect-square overflow-hidden bg-gray-50">
         {product.images?.[0] ? (
-          <Image
-            src={product.images[0]}
+          <CldImage
+            src={getPublicId(product.images?.[0]) || 'sample'}
             alt={product.name}
-            fill
-            sizes="(max-width:640px) 45vw, (max-width:1024px) 31vw, 22vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            width={300} height={300} crop="fill"
+            className={`object-cover w-full h-full transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+            onLoad={() => setImgLoaded(true)}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -260,7 +266,7 @@ function FilterDrawer({
           <motion.div
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed bottom-0 inset-x-0 z-50 rounded-t-3xl shadow-2xl overflow-hidden flex flex-col"
+            className="fixed bottom-0 inset-x-0 z-[999999999999999999999] rounded-t-3xl shadow-2xl overflow-hidden flex flex-col"
             style={{ background: T.paper, maxHeight: '85vh' }}
           >
             {/* handle */}
