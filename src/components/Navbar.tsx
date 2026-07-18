@@ -2,19 +2,22 @@
 
 import { useEffect, useState, useRef } from 'react';
 import {
-  FiMenu, FiShoppingCart, FiPackage, FiSearch,
+  FiShoppingCart, FiPackage, FiSearch,
   FiBell, FiUser, FiX, FiChevronRight, FiTrendingUp,
+  FiChevronDown, FiMapPin, FiGrid,
 } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/app/context/CartContext';
-import { LogOut } from 'lucide-react';
+import { LogOut, Package, Heart, Wallet, ShoppingBag } from 'lucide-react';
 import { useAuth } from '@/app/context/AuthContext';
-import Sidebar from '@/components/Sidebar';
 import SellerSidebar from '@/app/seller/sidebar/SellerSidebar';
 import type { Notification } from '@/app/types/notification';
-import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { CldImage } from 'next-cloudinary';
 import { usePathname } from 'next/navigation';
+import { categoryTree } from '@/lib/sidebarProductCategories';
+import { slugify } from '@/lib/slugify';
+import Sidebar from '@/components/Sidebar';
 
 type NavbarProps = {
   onOpenBuyerLogin?: () => void;
@@ -25,13 +28,9 @@ const countryData = [
   { name: 'Uganda',      code: 'UG', flag: 'https://flagcdn.com/w40/ug.png', dialCode: '+256', currency: 'UGX' },
   { name: 'Tanzania',    code: 'TZ', flag: 'https://flagcdn.com/w40/tz.png', dialCode: '+255', currency: 'TZS' },
   { name: 'Rwanda',      code: 'RW', flag: 'https://flagcdn.com/w40/rw.png', dialCode: '+250', currency: 'RWF' },
-  { name: 'Burundi',     code: 'BI', flag: 'https://flagcdn.com/w40/bi.png', dialCode: '+257', currency: 'BIF' },
-  { name: 'South Sudan', code: 'SS', flag: 'https://flagcdn.com/w40/ss.png', dialCode: '+211', currency: 'SSP' },
   { name: 'Ethiopia',    code: 'ET', flag: 'https://flagcdn.com/w40/et.png', dialCode: '+251', currency: 'ETB' },
-  { name: 'Somalia',     code: 'SO', flag: 'https://flagcdn.com/w40/so.png', dialCode: '+252', currency: 'SOS' },
 ];
 
-// ─── Rotating promo messages ─────────────────────────────────────────────────
 const promos = [
   '🎉 Free delivery on orders over Ksh 2,000 in Nairobi',
   '🔒 100% Secure Payments — M-Pesa, Visa & Mastercard',
@@ -39,26 +38,43 @@ const promos = [
   '⚡ Flash Sale live now — up to 60% OFF selected items',
 ];
 
-// ─── Trending search terms ────────────────────────────────────────────────────
 const TRENDING_SEARCHES = [
-  'iphone 16', 'iPhone 15', 'Samsung Galaxy', 'Nike Air Max', 'MacBook', 'Airpods Pro',
+  'iPhone 16', 'Samsung Galaxy', 'Nike Air Max', 'MacBook', 'Airpods Pro', 'Smart TV',
+];
+
+// Top categories shown in mega-nav bar (a curated subset of categoryTree keys)
+const TOP_CATEGORIES = [
+  'Mobile Phones & Accessories',
+  'Computers & Laptops',
+  'Electronics',
+  'Fashion',
+  'Home & Kitchen',
+  'Beauty & Personal Care',
+  'Sports & Outdoors',
+  'Baby & Kids',
+  'Gaming',
+  'Food & Groceries',
 ];
 
 export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
-  const [orderCount, setOrderCount]           = useState(0);
-  const [searchTerm, setSearchTerm]           = useState('');
-  const [suggestions, setSuggestions]         = useState<any[]>([]);
-  const [currentPromo, setCurrentPromo]       = useState(0);
-  const [showNotifModal, setShowNotifModal]   = useState(false);
-  const [notifications, setNotifications]     = useState<Notification[]>([]);
-  const [showDropdown, setShowDropdown]       = useState(false);
-  const [guestCountry, setGuestCountry]       = useState<any>(null);
-  const [sidebarOpen, setSidebarOpen]         = useState(false);
-  const [cartBounce, setCartBounce]           = useState(false);
-  const [prevCartCount, setPrevCartCount]     = useState(0);
-  const [searchFocused, setSearchFocused]     = useState(false);
-  const [scrolled, setScrolled]               = useState(false);
-  const [imgError, setImgError]               = useState(false);
+  const [orderCount, setOrderCount]         = useState(0);
+  const [searchTerm, setSearchTerm]         = useState('');
+  const [suggestions, setSuggestions]       = useState<any[]>([]);
+  const [currentPromo, setCurrentPromo]     = useState(0);
+  const [showNotifModal, setShowNotifModal] = useState(false);
+  const [notifications, setNotifications]   = useState<Notification[]>([]);
+  const [showDropdown, setShowDropdown]     = useState(false);
+  const [guestCountry, setGuestCountry]     = useState<any>(null);
+  const [sidebarOpen, setSidebarOpen]       = useState(false);
+  const [cartBounce, setCartBounce]         = useState(false);
+  const [prevCartCount, setPrevCartCount]   = useState(0);
+  const [searchFocused, setSearchFocused]   = useState(false);
+  const [scrolled, setScrolled]             = useState(false);
+  const [imgError, setImgError]             = useState(false);
+  // active mega-nav category (desktop hover)
+  const [activeCat, setActiveCat]           = useState<string | null>(null);
+  const megaRef                             = useRef<HTMLDivElement>(null);
+  const leaveTimer                          = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const searchRef   = useRef<HTMLDivElement | null>(null);
@@ -68,12 +84,11 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
   const { cartItems } = useCart();
   const { user, logout } = useAuth();
   const pathname      = usePathname();
-  const x             = useMotionValue(-288);
 
   const isSeller  = user?.role === 'seller';
   const cartCount = cartItems.reduce((t, i) => t + i.quantity, 0);
 
-  // ── Bounce cart icon when item added ──────────────────────────────────────
+  // ── Cart bounce ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (cartCount > prevCartCount) {
       setCartBounce(true);
@@ -82,50 +97,40 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
     setPrevCartCount(cartCount);
   }, [cartCount]);
 
-  // ── Scroll shadow ──────────────────────────────────────────────────────────
+  // ── Scroll shadow ───────────────────────────────────────────────────────────
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
-    window.addEventListener('scroll', onScroll);
+    window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // ── Promo rotation ─────────────────────────────────────────────────────────
+  // ── Promo rotation ──────────────────────────────────────────────────────────
   useEffect(() => {
-    const id = setInterval(() => {
-      setCurrentPromo(p => (p + 1) % promos.length);
-    }, 3500);
+    const id = setInterval(() => setCurrentPromo(p => (p + 1) % promos.length), 3500);
     return () => clearInterval(id);
   }, []);
 
-  // ── Country persistence ────────────────────────────────────────────────────
+  // ── Country ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (guestCountry) localStorage.setItem('guestCountry', JSON.stringify(guestCountry));
   }, [guestCountry]);
 
   useEffect(() => {
     const stored = localStorage.getItem('guestCountry');
-    if (stored) setGuestCountry(JSON.parse(stored));
-  }, []);
-
-  // ── IP geolocation for guests ──────────────────────────────────────────────
-  useEffect(() => {
+    if (stored) { setGuestCountry(JSON.parse(stored)); return; }
     if (user) return;
-    const fetchGuestCountry = async () => {
-      try {
-        const res  = await fetch('https://ipapi.co/json/');
-        const data = await res.json();
-        const found = data?.country_code
-          ? countryData.find(c => c.code.toUpperCase() === data.country_code.toUpperCase()) ?? countryData[0]
+    fetch('https://ipapi.co/json/')
+      .then(r => r.json())
+      .then(d => {
+        const found = d?.country_code
+          ? countryData.find(c => c.code.toUpperCase() === d.country_code.toUpperCase()) ?? countryData[0]
           : countryData[0];
         setGuestCountry(found);
-      } catch {
-        setGuestCountry(countryData[0]);
-      }
-    };
-    fetchGuestCountry();
+      })
+      .catch(() => setGuestCountry(countryData[0]));
   }, [user]);
 
-  // ── Outside click ──────────────────────────────────────────────────────────
+  // ── Outside click ───────────────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setShowDropdown(false);
@@ -136,35 +141,30 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  // ── Notifications ──────────────────────────────────────────────────────────
+  // ── Notifications ───────────────────────────────────────────────────────────
   useEffect(() => {
     if (!user) return;
-    const fetchNotifs = async () => {
-      try {
-        const role = isSeller ? 'seller' : 'buyer';
-        const res  = await fetch(`/api/notifications?role=${role}&userId=${user._id}`);
-        const json = await res.json();
-        if (json.success) setNotifications(json.data);
-      } catch {}
-    };
-    fetchNotifs();
+    const role = isSeller ? 'seller' : 'buyer';
+    fetch(`/api/notifications?role=${role}&userId=${user._id}`)
+      .then(r => r.json())
+      .then(j => { if (j.success) setNotifications(j.data); })
+      .catch(() => {});
   }, [user, isSeller]);
 
-  // ── Seller order count ─────────────────────────────────────────────────────
+  // ── Seller order count ──────────────────────────────────────────────────────
   useEffect(() => {
-    if (user?.role === 'seller' && user._id) {
-      fetch('/api/orders/count', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sellerId: user._id }),
-      })
-        .then(r => r.json())
-        .then(d => { if (d.count) setOrderCount(d.count); })
-        .catch(() => {});
-    }
+    if (user?.role !== 'seller' || !user._id) return;
+    fetch('/api/orders/count', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sellerId: user._id }),
+    })
+      .then(r => r.json())
+      .then(d => { if (d.count) setOrderCount(d.count); })
+      .catch(() => {});
   }, [user]);
 
-  // ── Search suggestions ─────────────────────────────────────────────────────
+  // ── Search suggestions ──────────────────────────────────────────────────────
   useEffect(() => {
     if (!searchTerm.trim()) { setSuggestions([]); return; }
     const tid = setTimeout(async () => {
@@ -177,21 +177,17 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
     return () => clearTimeout(tid);
   }, [searchTerm]);
 
-  // ── reset broken-image flag whenever the image URL itself changes ─────────
   useEffect(() => { setImgError(false); }, [user?.image]);
 
-  const getUserCountryData = (user?: any, guestCountry?: any) => {
+  const getUserCountryData = () => {
     if (user?.country) {
-      const isoCode = user.country;
-      const match = countryData.find(
-        (c) => c.code.toUpperCase() === isoCode.toUpperCase()
-      );
+      const match = countryData.find(c => c.code.toUpperCase() === c.name.toUpperCase());
       return match || countryData[0];
     }
     return guestCountry || countryData[0];
   };
 
-  const currentCountry = getUserCountryData(user, guestCountry);
+  const currentCountry = getUserCountryData();
 
   const getPublicId = (url?: string) => {
     if (!url) return '';
@@ -199,12 +195,30 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
     return m ? m[1] : url;
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  // ── Does the user actually have a usable profile image? ───────────────────
+  const unreadCount    = notifications.filter(n => !n.read).length;
   const hasProfileImage = Boolean(user?.image) && !imgError;
 
-  // ─── Search dropdown (shared desktop + mobile) ──────────────────────────
+  // ── Subcategories for hovered category ─────────────────────────────────────
+  const activeSubs: string[] = activeCat
+    ? Object.keys((categoryTree as any)[activeCat] || {})
+    : [];
+
+  const handleCatEnter = (cat: string) => {
+    if (leaveTimer.current) clearTimeout(leaveTimer.current);
+    setActiveCat(cat);
+  };
+
+  const handleCatLeave = () => {
+    leaveTimer.current = setTimeout(() => setActiveCat(null), 180);
+  };
+
+  const handleMegaEnter = () => {
+    if (leaveTimer.current) clearTimeout(leaveTimer.current);
+  };
+
+  /* ════════════════════════════════════════════════════════════════
+     SEARCH DROPDOWN
+  ════════════════════════════════════════════════════════════════ */
   const SearchDropdown = () => (
     <AnimatePresence>
       {searchFocused && (
@@ -212,7 +226,7 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 6 }}
-          transition={{ duration: 0.18 }}
+          transition={{ duration: 0.15 }}
           className="absolute top-full left-0 mt-2 w-full bg-white rounded-2xl shadow-2xl border border-orange-100 z-[80] overflow-hidden"
         >
           {suggestions.length === 0 ? (
@@ -237,11 +251,7 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
               {suggestions.map((product: any, i) => (
                 <li
                   key={i}
-                  onClick={() => {
-                    router.push(`/product/${product.slug}`);
-                    setSearchTerm('');
-                    setSearchFocused(false);
-                  }}
+                  onClick={() => { router.push(`/product/${product.slug}`); setSearchTerm(''); setSearchFocused(false); }}
                   className="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 cursor-pointer group"
                 >
                   <div className="w-10 h-10 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
@@ -251,7 +261,7 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
                     <p className="text-sm text-gray-800 font-medium truncate group-hover:text-orange-600 transition">{product.name}</p>
                     <p className="text-xs text-orange-500 font-bold">Ksh {product.calculatedPrice?.toLocaleString()}</p>
                   </div>
-                  <FiChevronRight size={14} className="text-gray-300 group-hover:text-orange-400 transition flex-shrink-0" />
+                  <FiChevronRight size={14} className="text-gray-300 group-hover:text-orange-400 flex-shrink-0" />
                 </li>
               ))}
             </ul>
@@ -263,7 +273,7 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
 
   return (
     <>
-      {/* ── Promo Bar ─────────────────────────────────────────────────────── */}
+      {/* ══ PROMO BAR ═══════════════════════════════════════════════════════════ */}
       <div className="fixed top-0 left-0 w-full bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 text-white text-xs py-1.5 z-50 flex justify-center items-center overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
@@ -279,165 +289,109 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
         </AnimatePresence>
       </div>
 
-      {/* ── Main Navbar ───────────────────────────────────────────────────── */}
+      {/* ══ MAIN NAV ROW ════════════════════════════════════════════════════════ */}
       <nav
-        className={`
-          fixed top-6 left-0 w-full z-50 bg-white py-2.5 px-4
-          flex items-center justify-between gap-3
-          transition-all duration-300
-          ${scrolled ? 'shadow-[0_4px_32px_rgba(0,0,0,0.10)]' : 'shadow-md'}
-        `}
+        className={`fixed top-6 left-0 w-full z-50 bg-white transition-shadow duration-300
+          ${scrolled ? 'shadow-[0_4px_32px_rgba(0,0,0,0.10)]' : 'shadow-sm border-b border-gray-100'}`}
       >
-        {/* Hamburger + Logo — grouped together */}
-        <div className="flex items-center gap-2.5 flex-shrink-0">
-          <motion.button
-            whileTap={{ scale: 0.88 }}
-            onClick={() => setSidebarOpen(true)}
-            className="text-2xl text-orange-600"
-            aria-label="Open menu"
-          >
-            <FiMenu />
-          </motion.button>
+        {/* ─── Top row ────────────────────────────────────────────────────────── */}
+        <div className="max-w-[1400px] mx-auto px-4 h-14 flex items-center gap-4">
 
+          {/* Logo */}
           <motion.div
-            whileHover={{ scale: 1.04 }}
-            className="flex items-center gap-2 cursor-pointer"
+            whileHover={{ scale: 1.03 }}
+            className="flex-shrink-0 cursor-pointer"
             onClick={() => router.push('/')}
           >
-            <img
-              src="/Logo.png"
-              alt="NovaXmax"
-              className="h-9 w-auto object-contain"
-              style={{ clipPath: 'inset(5% 5% 5% 5%)' }}
-            />
+            <img src="/Logo.png" alt="NovaXmax" className="h-9 w-auto object-contain" style={{ clipPath: 'inset(5% 5% 5% 5%)' }} />
           </motion.div>
-        </div>
 
-        {/* Desktop Search — centered, hidden for sellers ───────────────── */}
-        {!isSeller && (
-          <div className="hidden md:flex flex-1 justify-center px-4 max-w-2xl mx-auto relative" ref={searchRef}>
-            <div className="relative w-full">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                onFocus={() => setSearchFocused(true)}
-                placeholder="Search products, brands, categories..."
-                className="w-full rounded-full border-2 border-orange-200 py-2.5 px-5 pr-12 text-sm focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none transition-all duration-200 bg-orange-50/40"
-              />
-              <button
-                onClick={() => { if (searchTerm) router.push(`/search?q=${encodeURIComponent(searchTerm)}`); }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-orange-500 flex items-center justify-center hover:bg-orange-600 transition"
-              >
-                <FiSearch size={13} className="text-white" />
-              </button>
+          {/* ── DESKTOP ONLY: Location ─────────────────────────────────────── */}
+          <button className="hidden lg:flex items-center gap-1.5 text-left flex-shrink-0 hover:text-orange-600 transition-colors group">
+            <FiMapPin size={13} className="text-orange-500 flex-shrink-0" />
+            <div>
+              <p className="text-[9px] text-gray-400 leading-none">Deliver to</p>
+              <p className="text-xs font-bold text-gray-800 group-hover:text-orange-600 leading-none mt-0.5 flex items-center gap-0.5">
+                {currentCountry?.name || 'Kenya'}
+                <FiChevronDown size={10} />
+              </p>
+            </div>
+          </button>
+
+          {/* ── Search ────────────────────────────────────────────────────────── */}
+          {!isSeller && (
+            <div
+              className="hidden md:flex flex-1 relative max-w-2xl"
+              ref={searchRef}
+            >
+              <div className="relative w-full flex">
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  onFocus={() => setSearchFocused(true)}
+                  onKeyDown={e => { if (e.key === 'Enter' && searchTerm) router.push(`/search?q=${encodeURIComponent(searchTerm)}`); }}
+                  placeholder="Search products, brands, categories..."
+                  className="w-full rounded-l-full border-2 border-orange-400 border-r-0 py-2.5 px-5 text-sm
+                    focus:outline-none focus:border-orange-500 bg-white transition-all"
+                />
+                <button
+                  onClick={() => { if (searchTerm) router.push(`/search?q=${encodeURIComponent(searchTerm)}`); }}
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-5 rounded-r-full transition-colors flex-shrink-0 flex items-center gap-1.5 text-sm font-semibold"
+                >
+                  <FiSearch size={15} />
+                  <span className="hidden lg:inline">Search</span>
+                </button>
+              </div>
               <SearchDropdown />
             </div>
-          </div>
-        )}
-
-        {/* Spacer so right-icons stay right-aligned when search is hidden (seller view) */}
-        {isSeller && <div className="flex-1" />}
-
-        {/* Right icons ────────────────────────────────────────────────────── */}
-        <div className="flex items-center gap-3 flex-shrink-0">
-
-          {/* Country + Currency (logged in only) */}
-          {user && (
-            <motion.div
-              whileHover={{ scale: 1.04 }}
-              className="hidden sm:flex items-center gap-1.5 border border-orange-200 rounded-full px-2.5 py-1 cursor-pointer hover:bg-orange-50 transition"
-            >
-              <img src={currentCountry.flag} alt={currentCountry.name} className="w-5 h-3.5 rounded-sm object-cover" />
-              <span className="text-xs font-semibold text-gray-700">{currentCountry.currency}</span>
-            </motion.div>
           )}
 
-          {/* Cart / Orders ─────────────────────────────────────────────── */}
-          {isSeller ? (
-            <motion.button
-              whileTap={{ scale: 0.88 }}
-              onClick={() => router.push('/seller/orders')}
-              className="relative text-xl text-orange-500"
-              aria-label="Orders"
-            >
-              <FiPackage />
-              {orderCount > 0 && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-2 -right-2 bg-orange-600 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1"
-                >
-                  {orderCount}
-                </motion.span>
-              )}
-            </motion.button>
-          ) : (
-            <motion.button
-              whileTap={{ scale: 0.88 }}
-              animate={cartBounce ? { scale: [1, 1.35, 0.9, 1.1, 1] } : {}}
-              transition={{ duration: 0.5 }}
-              onClick={() => router.push('/cart')}
-              className="relative text-xl text-orange-500"
-              aria-label="Cart"
-            >
-              <FiShoppingCart />
-              <AnimatePresence>
-                {cartCount > 0 && (
-                  <motion.span
-                    key={cartCount}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    exit={{ scale: 0 }}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1"
-                  >
-                    {cartCount}
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </motion.button>
-          )}
+          {isSeller && <div className="flex-1" />}
 
-          {/* Notifications ─────────────────────────────────────────────── */}
-          <motion.button
-            whileTap={{ scale: 0.88 }}
-            onClick={() => { setShowNotifModal(p => !p); setShowDropdown(false); }}
-            className="relative text-xl text-orange-500"
-            aria-label="Notifications"
-          >
-            <FiBell />
-            {unreadCount > 0 && (
-              <motion.span
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ repeat: Infinity, repeatDelay: 2, duration: 0.4 }}
-                className="absolute -top-2 -right-2 bg-orange-600 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1"
-              >
-                {unreadCount}
-              </motion.span>
-            )}
-          </motion.button>
+          {/* ── Desktop right cluster ──────────────────────────────────────── */}
+          <div className="hidden md:flex items-center gap-1 flex-shrink-0">
 
-          {/* User / Sign In ─────────────────────────────────────────────── */}
-          {user ? (
+            {/* Account */}
             <div className="relative" ref={dropdownRef}>
-              <motion.div whileTap={{ scale: 0.9 }} onClick={() => setShowDropdown(p => !p)} className="cursor-pointer">
-                {hasProfileImage ? (
-                  <CldImage
-                    src={getPublicId(user.image)}
-                    alt="Profile"
-                    width={34}
-                    height={34}
-                    crop="fill"
-                    gravity="face"
-                    className="rounded-full border-2 border-orange-300 object-cover w-[34px] h-[34px]"
-                    onError={() => setImgError(true)}
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-orange-100 border-2 border-orange-300 flex items-center justify-center">
-                    <FiUser size={15} className="text-orange-500" />
+              {user ? (
+                <button
+                  onClick={() => setShowDropdown(p => !p)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-orange-50 transition-colors group"
+                >
+                  {hasProfileImage ? (
+                    <CldImage src={getPublicId(user.image)} alt="Profile" width={28} height={28} crop="fill" gravity="face"
+                      className="rounded-full border-2 border-orange-300 object-cover w-7 h-7"
+                      onError={() => setImgError(true)}
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-orange-100 border-2 border-orange-300 flex items-center justify-center">
+                      <FiUser size={13} className="text-orange-500" />
+                    </div>
+                  )}
+                  <div className="text-left">
+                    <p className="text-[9px] text-gray-400 leading-none">Hello, {user.name?.split(' ')[0]}</p>
+                    <p className="text-xs font-bold text-gray-800 group-hover:text-orange-600 leading-none mt-0.5 flex items-center gap-0.5">
+                      Account <FiChevronDown size={10} />
+                    </p>
                   </div>
-                )}
-              </motion.div>
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowDropdown(p => !p)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-orange-50 transition-colors group"
+                >
+                  <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center">
+                    <FiUser size={13} className="text-gray-500" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[9px] text-gray-400 leading-none">Hello, Guest</p>
+                    <p className="text-xs font-bold text-gray-800 group-hover:text-orange-600 leading-none mt-0.5 flex items-center gap-0.5">
+                      Sign In <FiChevronDown size={10} />
+                    </p>
+                  </div>
+                </button>
+              )}
 
               <AnimatePresence>
                 {showDropdown && (
@@ -445,36 +399,268 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
                     initial={{ opacity: 0, y: -8, scale: 0.96 }}
                     animate={{ opacity: 1, y: 4, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                    transition={{ duration: 0.18 }}
-                    className="absolute right-0 mt-2 bg-white shadow-2xl rounded-2xl border border-orange-100 z-50 w-44 overflow-hidden"
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 mt-1 bg-white shadow-2xl rounded-2xl border border-gray-100 z-50 w-52 overflow-hidden"
                   >
-                    <div className="px-4 py-3 bg-orange-50 border-b border-orange-100">
-                      <p className="text-xs font-semibold text-gray-800 truncate">{user.name}</p>
-                      <p className="text-[10px] text-gray-500 truncate">{user.email}</p>
-                    </div>
-                    <button
-                      onClick={logout}
-                      className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition"
-                    >
-                      <LogOut size={15} /> Logout
-                    </button>
+                    {user ? (
+                      <>
+                        <div className="px-4 py-3 bg-orange-50 border-b border-orange-100">
+                          <p className="text-xs font-bold text-gray-800 truncate">{user.name}</p>
+                          <p className="text-[10px] text-gray-500 truncate">{user.email}</p>
+                        </div>
+                        {[
+                          { label: 'My Orders',       icon: ShoppingBag,  href: '/orders' },
+                          { label: 'Wishlist',         icon: Heart,        href: '/wishlist' },
+                          { label: 'My Wallet',        icon: Wallet,       href: '/wallet' },
+                          { label: 'My Installments',  icon: Package,      href: '/installments/progress' },
+                        ].map(({ label, icon: Icon, href }) => (
+                          <button
+                            key={href}
+                            onClick={() => { router.push(href); setShowDropdown(false); }}
+                            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 transition"
+                          >
+                            <Icon size={14} className="text-orange-500" /> {label}
+                          </button>
+                        ))}
+                        <div className="border-t border-gray-100" />
+                        <button
+                          onClick={logout}
+                          className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition"
+                        >
+                          <LogOut size={14} /> Logout
+                        </button>
+                      </>
+                    ) : (
+                      <div className="p-4 space-y-2">
+                        <button
+                          onClick={() => { onOpenBuyerLogin?.(); setShowDropdown(false); }}
+                          className="w-full bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold py-2.5 rounded-xl transition"
+                        >
+                          Sign In
+                        </button>
+                        <p className="text-[11px] text-center text-gray-400">New customer? <span className="text-orange-500 cursor-pointer font-semibold" onClick={() => { onOpenBuyerLogin?.(); setShowDropdown(false); }}>Register</span></p>
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
-          ) : (
-            <motion.button
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.96 }}
-              onClick={() => onOpenBuyerLogin ? onOpenBuyerLogin() : router.push('/auth/google-login')}
-              className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-sm font-semibold py-2 px-5 rounded-full transition shadow-md shadow-orange-200"
+
+            {/* Orders / Seller orders */}
+            {isSeller ? (
+              <button
+                onClick={() => router.push('/seller/orders')}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-orange-50 transition-colors group relative"
+              >
+                <div className="relative">
+                  <FiPackage size={18} className="text-gray-700 group-hover:text-orange-600 transition-colors" />
+                  {orderCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
+                      {orderCount}
+                    </span>
+                  )}
+                </div>
+                <div className="text-left">
+                  <p className="text-[9px] text-gray-400 leading-none">Returns &</p>
+                  <p className="text-xs font-bold text-gray-800 group-hover:text-orange-600 leading-none mt-0.5">Orders</p>
+                </div>
+              </button>
+            ) : (
+              <button
+                onClick={() => router.push('/orders')}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-orange-50 transition-colors group"
+              >
+                <FiPackage size={18} className="text-gray-700 group-hover:text-orange-600 transition-colors" />
+                <div className="text-left">
+                  <p className="text-[9px] text-gray-400 leading-none">Returns &</p>
+                  <p className="text-xs font-bold text-gray-800 group-hover:text-orange-600 leading-none mt-0.5">Orders</p>
+                </div>
+              </button>
+            )}
+
+            {/* Notifications */}
+            <button
+              onClick={() => { setShowNotifModal(p => !p); setShowDropdown(false); }}
+              className="relative flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-orange-50 transition-colors group"
             >
-              Sign In
-            </motion.button>
-          )}
+              <div className="relative">
+                <FiBell size={18} className="text-gray-700 group-hover:text-orange-600 transition-colors" />
+                {unreadCount > 0 && (
+                  <motion.span
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ repeat: Infinity, repeatDelay: 2, duration: 0.4 }}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1"
+                  >
+                    {unreadCount}
+                  </motion.span>
+                )}
+              </div>
+              <div className="text-left">
+                <p className="text-[9px] text-gray-400 leading-none">Your</p>
+                <p className="text-xs font-bold text-gray-800 group-hover:text-orange-600 leading-none mt-0.5">Alerts</p>
+              </div>
+            </button>
+
+            {/* Cart */}
+            {!isSeller && (
+              <motion.button
+                whileTap={{ scale: 0.88 }}
+                animate={cartBounce ? { scale: [1, 1.25, 0.9, 1.1, 1] } : {}}
+                transition={{ duration: 0.5 }}
+                onClick={() => router.push('/cart')}
+                className="relative flex items-center gap-2 pl-3 pr-4 py-1.5 rounded-xl hover:bg-orange-50 transition-colors group"
+              >
+                <div className="relative">
+                  <FiShoppingCart size={20} className="text-gray-700 group-hover:text-orange-600 transition-colors" />
+                  <AnimatePresence>
+                    {cartCount > 0 && (
+                      <motion.span
+                        key={cartCount}
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        exit={{ scale: 0 }}
+                        className="absolute -top-2.5 -right-2.5 bg-orange-500 text-white text-[10px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1"
+                      >
+                        {cartCount}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </div>
+                <div className="text-left">
+                  <p className="text-[9px] text-gray-400 leading-none">My</p>
+                  <p className="text-xs font-bold text-gray-800 group-hover:text-orange-600 leading-none mt-0.5">Cart</p>
+                </div>
+              </motion.button>
+            )}
+          </div>
+
+          {/* ── Mobile right: bell + cart (+ hamburger handled in mobile bar) ── */}
+          <div className="flex md:hidden items-center gap-3 ml-auto">
+            <button
+              onClick={() => { setShowNotifModal(p => !p); }}
+              className="relative text-gray-700"
+            >
+              <FiBell size={22} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-0.5">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+            {!isSeller && (
+              <motion.button
+                whileTap={{ scale: 0.88 }}
+                animate={cartBounce ? { scale: [1, 1.25, 0.9, 1.1, 1] } : {}}
+                transition={{ duration: 0.5 }}
+                onClick={() => router.push('/cart')}
+                className="relative text-gray-700"
+              >
+                <FiShoppingCart size={22} />
+                <AnimatePresence>
+                  {cartCount > 0 && (
+                    <motion.span
+                      key={cartCount}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      exit={{ scale: 0 }}
+                      className="absolute -top-2 -right-2 bg-orange-500 text-white text-[9px] font-black rounded-full min-w-[16px] h-4 flex items-center justify-center px-0.5"
+                    >
+                      {cartCount}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </motion.button>
+            )}
+          </div>
         </div>
 
-        {/* Notifications panel ────────────────────────────────────────────── */}
+        {/* ─── Desktop category mega-nav bar ────────────────────────────────── */}
+        {!isSeller && (
+          <div className="hidden md:block border-t border-gray-100 bg-white">
+            <div className="max-w-[1400px] mx-auto px-4">
+              <div className="flex items-center h-10 gap-0">
+
+                {/* All Categories button */}
+                <button
+                  onMouseEnter={() => handleCatEnter(TOP_CATEGORIES[0])}
+                  onMouseLeave={handleCatLeave}
+                  onClick={() => router.push('/')}
+                  className="flex items-center gap-1.5 pr-4 mr-2 border-r border-gray-200 h-full text-sm font-bold text-gray-800 hover:text-orange-600 transition-colors flex-shrink-0"
+                >
+                  <FiGrid size={14} className="text-orange-500" />
+                  All Categories
+                </button>
+
+                {/* Category links */}
+                {TOP_CATEGORIES.map(cat => (
+                  <div
+                    key={cat}
+                    onMouseEnter={() => handleCatEnter(cat)}
+                    onMouseLeave={handleCatLeave}
+                    className="relative h-full flex items-center"
+                  >
+                    <button
+                      onClick={() => router.push(`/category/${slugify(cat)}`)}
+                      className={`px-3 h-full text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-1
+                        ${activeCat === cat ? 'text-orange-600 border-b-2 border-orange-500' : 'text-gray-700 hover:text-orange-600'}`}
+                    >
+                      {cat.split(' & ')[0].split(' ')[0]}
+                      {/* show subcategory chevron if this category has children */}
+                      {Object.keys((categoryTree as any)[cat] || {}).length > 0 && (
+                        <FiChevronDown size={11} className="opacity-50" />
+                      )}
+                    </button>
+                  </div>
+                ))}
+
+                {/* Flash sale pill — far right of the bar */}
+                <button
+                  onClick={() => router.push('/deals')}
+                  className="ml-auto flex items-center gap-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full transition-colors flex-shrink-0"
+                >
+                  ⚡ Flash Sale
+                </button>
+              </div>
+            </div>
+
+            {/* Mega dropdown panel */}
+            <AnimatePresence>
+              {activeCat && activeSubs.length > 0 && (
+                <motion.div
+                  ref={megaRef}
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.15 }}
+                  onMouseEnter={handleMegaEnter}
+                  onMouseLeave={handleCatLeave}
+                  className="absolute left-0 w-full bg-white shadow-2xl border-t border-orange-100 z-[70]"
+                >
+                  <div className="max-w-[1400px] mx-auto px-6 py-5">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">{activeCat}</p>
+                    <div className="grid grid-cols-4 xl:grid-cols-6 gap-x-8 gap-y-1.5">
+                      {activeSubs.map(sub => (
+                        <button
+                          key={sub}
+                          onClick={() => {
+                            router.push(`/category/${slugify(activeCat)}?sub=${slugify(sub)}`);
+                            setActiveCat(null);
+                          }}
+                          className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-orange-600 transition-colors text-left py-1 group"
+                        >
+                          <FiChevronRight size={11} className="text-gray-300 group-hover:text-orange-400 flex-shrink-0" />
+                          <span className="truncate">{sub}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+
+        {/* ─── Notifications panel ──────────────────────────────────────────── */}
         <AnimatePresence>
           {showNotifModal && (
             <motion.div
@@ -482,10 +668,10 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
               initial={{ opacity: 0, y: -10, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.97 }}
-              transition={{ duration: 0.22 }}
-              className="absolute right-4 top-16 w-88 max-w-[calc(100vw-2rem)] bg-white/95 backdrop-blur-md border border-orange-100 rounded-2xl shadow-2xl z-[60] overflow-hidden"
+              transition={{ duration: 0.2 }}
+              className="absolute right-4 top-full mt-1 w-80 max-w-[calc(100vw-2rem)] bg-white/95 backdrop-blur-md border border-orange-100 rounded-2xl shadow-2xl z-[60] overflow-hidden"
             >
-              <div className="px-4 py-3 border-b border-orange-100 bg-gradient-to-r from-orange-50 to-white flex justify-between items-center">
+              <div className="px-4 py-3 border-b border-orange-100 bg-orange-50 flex justify-between items-center">
                 <h4 className="font-bold text-gray-800 text-sm">Notifications</h4>
                 <div className="flex items-center gap-2">
                   {unreadCount > 0 && (
@@ -524,46 +710,90 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
         </AnimatePresence>
       </nav>
 
-      {/* ── Mobile Search — always visible just below nav icons, hidden for sellers ── */}
+      {/* ══ MOBILE SEARCH BAR (below main nav, above content) ═══════════════════ */}
       {!isSeller && (
         <div
           ref={searchRef}
-          className="md:hidden fixed top-[60px] left-0 w-full bg-white border-b border-orange-100 z-40 px-4 py-2.5"
+          className="md:hidden fixed z-40 px-3 py-2"
+          style={{ top: '6rem', left: 0, right: 0, background: 'white', borderBottom: '1px solid #f1f1f1' }}
         >
-          <div className="relative">
+          <div className="relative flex">
             <input
               type="text"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               onFocus={() => setSearchFocused(true)}
-              placeholder="Search products, brands, categories..."
-              className="w-full rounded-full border-2 border-orange-200 py-2.5 px-5 pr-12 text-sm
-                focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none
-                transition-all duration-200 bg-orange-50/40"
+              onKeyDown={e => { if (e.key === 'Enter' && searchTerm) router.push(`/search?q=${encodeURIComponent(searchTerm)}`); }}
+              placeholder="Search products, brands..."
+              className="flex-1 rounded-l-full border-2 border-orange-400 border-r-0 py-2 px-4 text-sm focus:outline-none bg-white"
             />
             <button
               onClick={() => { if (searchTerm) router.push(`/search?q=${encodeURIComponent(searchTerm)}`); }}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-orange-500
-                flex items-center justify-center hover:bg-orange-600 transition"
+              className="bg-orange-500 text-white px-4 rounded-r-full flex items-center"
             >
-              <FiSearch size={13} className="text-white" />
+              <FiSearch size={16} />
             </button>
             <SearchDropdown />
           </div>
         </div>
       )}
 
-      {/* ── Edge swipe (mobile) ─────────────────────────────────────────────── */}
+      {/* ══ MOBILE: top-left avatar + location strip ════════════════════════════ */}
       <div
-        className="fixed top-0 left-0 h-full w-5 z-[9998] md:hidden"
-        onTouchStart={() => { if (!sidebarOpen) setSidebarOpen(true); }}
-      />
+        className="md:hidden fixed z-40 left-0 right-0 flex items-center justify-between px-4"
+        style={{ top: '1.5rem', height: '3.5rem' }}
+      >
+        {/* Left: avatar + location */}
+        <div className="flex items-center gap-2">
+          {user ? (
+            <>
+              <button onClick={() => setSidebarOpen(true)} className="flex-shrink-0">
+                {hasProfileImage ? (
+                  <CldImage src={getPublicId(user.image)} alt="Profile" width={34} height={34} crop="fill" gravity="face"
+                    className="rounded-full border-2 border-orange-400 w-[34px] h-[34px] object-cover"
+                    onError={() => setImgError(true)}
+                  />
+                ) : (
+                  <div className="w-[34px] h-[34px] rounded-full bg-orange-100 border-2 border-orange-400 flex items-center justify-center">
+                    <FiUser size={15} className="text-orange-500" />
+                  </div>
+                )}
+              </button>
+              <button onClick={() => setSidebarOpen(true)} className="flex flex-col leading-none">
+                <span className="text-[9px] text-gray-400">Deliver to</span>
+                <span className="text-xs font-bold text-gray-800 flex items-center gap-0.5">
+                  {currentCountry?.name || 'Kenya'} <FiChevronDown size={10} />
+                </span>
+              </button>
+            </>
+          ) : (
+            <button onClick={() => setSidebarOpen(true)} className="flex items-center gap-1.5">
+              <div className="w-[34px] h-[34px] rounded-full bg-gray-100 flex items-center justify-center">
+                <FiUser size={15} className="text-gray-500" />
+              </div>
+              <div className="flex flex-col leading-none">
+                <span className="text-[9px] text-gray-400">Deliver to</span>
+                <span className="text-xs font-bold text-gray-800">{currentCountry?.name || 'Kenya'}</span>
+              </div>
+            </button>
+          )}
+        </div>
 
-      {/* ── Sidebar Drawer ──────────────────────────────────────────────────── */}
+        {/* Centre: Logo */}
+        <img
+          src="/Logo.png"
+          alt="NovaXmax"
+          className="h-8 w-auto object-contain cursor-pointer absolute left-1/2 -translate-x-1/2"
+          style={{ clipPath: 'inset(5% 5% 5% 5%)' }}
+          onClick={() => router.push('/')}
+        />
+      </div>
+
+      {/* ══ SELLER SIDEBAR DRAWER ═══════════════════════════════════════════════ */}
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
-            className="md:hidden fixed inset-0 z-[9999]"
+            className="fixed inset-0 z-[9999]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -571,28 +801,13 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
             <motion.div
               className="absolute inset-0 bg-black/40 backdrop-blur-sm"
               onClick={() => setSidebarOpen(false)}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
             />
             <motion.div
-              drag="x"
-              dragConstraints={{ left: -288, right: 0 }}
-              dragElastic={0.08}
-              style={{ x }}
               initial={{ x: -288 }}
               animate={{ x: 0 }}
               exit={{ x: -288 }}
               transition={{ type: 'spring', stiffness: 320, damping: 35 }}
-              onDragEnd={(_, info) => {
-                if (info.offset.x < -120 || info.velocity.x < -500) {
-                  setSidebarOpen(false);
-                  x.set(-288);
-                } else {
-                  x.set(0);
-                }
-              }}
-              className="absolute top-0 left-0 bg-white dark:bg-gray-900 shadow-2xl h-full w-72 touch-pan-y"
+              className="absolute top-0 left-0 bg-white shadow-2xl h-full w-72"
             >
               {isSeller
                 ? <SellerSidebar onClose={() => setSidebarOpen(false)} />

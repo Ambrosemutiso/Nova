@@ -502,14 +502,6 @@ export default function FlashSales() {
                           />
                         );
                       })}
-                  
-          {/* see all card — last item in the scroll row */}
-          <button className="flex-shrink-0 w-44 flex flex-col items-center justify-center gap-2
-            rounded-2xl border-2 border-dashed border-red-200 bg-red-50/40 hover:bg-red-50
-            text-red-500 font-bold text-sm transition-all duration-200 snap-start">
-            See All Deals
-            <ChevronRight className="w-5 h-5" />
-          </button>
           </div>
       )}
     </div>

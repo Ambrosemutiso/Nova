@@ -101,11 +101,11 @@ function LayoutUI({ children }: { children: React.ReactNode }) {
       <CartNotification />
       <Navbar/>
 
-      <aside className="hidden md:block fixed top-[20px] left-0 w-72 h-[calc(100vh-20px)] z-[9999]">
+      <aside className="hidden md:block fixed top-[0px] left-0 w-72 h-[calc(100vh-20px)] z-[9999]">
         {isSeller ? <SellerSidebar /> : <Sidebar isOpen />}
       </aside>
 
-      <main className="pt-[40px] md:ml-72 min-h-screen">
+      <main className="pt-[50px] md:ml-0 min-h-screen">
         {children}
       </main>
       <PWARegister/>
