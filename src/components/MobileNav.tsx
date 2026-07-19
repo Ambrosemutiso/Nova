@@ -80,7 +80,7 @@ export default function MobileBottomNav() {
       </Link>
 
       {navItem("/ads", Megaphone, "Discover")}
-      {navItem("/vouchers", User, "Me")}
+      {navItem("/account", User, "Me")}
     </>
   ) : (
     <>

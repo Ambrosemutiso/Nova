@@ -10,14 +10,12 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/app/context/CartContext';
 import { LogOut, Package, Heart, Wallet, ShoppingBag } from 'lucide-react';
 import { useAuth } from '@/app/context/AuthContext';
-import SellerSidebar from '@/app/seller/sidebar/SellerSidebar';
 import type { Notification } from '@/app/types/notification';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CldImage } from 'next-cloudinary';
 import { usePathname } from 'next/navigation';
 import { categoryTree } from '@/lib/sidebarProductCategories';
 import { slugify } from '@/lib/slugify';
-import Sidebar from '@/components/Sidebar';
 
 type NavbarProps = {
   onOpenBuyerLogin?: () => void;
@@ -65,7 +63,6 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
   const [notifications, setNotifications]   = useState<Notification[]>([]);
   const [showDropdown, setShowDropdown]     = useState(false);
   const [guestCountry, setGuestCountry]     = useState<any>(null);
-  const [sidebarOpen, setSidebarOpen]       = useState(false);
   const [cartBounce, setCartBounce]         = useState(false);
   const [prevCartCount, setPrevCartCount]   = useState(0);
   const [searchFocused, setSearchFocused]   = useState(false);
@@ -214,6 +211,17 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
 
   const handleMegaEnter = () => {
     if (leaveTimer.current) clearTimeout(leaveTimer.current);
+  };
+
+  // ── Mobile avatar/location tap target ───────────────────────────────────────
+  // Previously opened the seller/buyer sidebar drawer; now that the sidebars
+  // are gone this routes straight to the relevant page instead.
+  const handleMobileIdentityTap = () => {
+    if (user) {
+      router.push(isSeller ? '/seller/dashboard' : '/account');
+    } else {
+      onOpenBuyerLogin?.();
+    }
   };
 
   /* ════════════════════════════════════════════════════════════════
@@ -534,7 +542,7 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
             )}
           </div>
 
-          {/* ── Mobile right: bell + cart (+ hamburger handled in mobile bar) ── */}
+          {/* ── Mobile right: bell + cart ────────────────────────────────────── */}
           <div className="flex md:hidden items-center gap-3 ml-auto">
             <button
               onClick={() => { setShowNotifModal(p => !p); }}
@@ -747,7 +755,7 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
         <div className="flex items-center gap-2">
           {user ? (
             <>
-              <button onClick={() => setSidebarOpen(true)} className="flex-shrink-0">
+              <button onClick={handleMobileIdentityTap} className="flex-shrink-0">
                 {hasProfileImage ? (
                   <CldImage src={getPublicId(user.image)} alt="Profile" width={34} height={34} crop="fill" gravity="face"
                     className="rounded-full border-2 border-orange-400 w-[34px] h-[34px] object-cover"
@@ -759,7 +767,7 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
                   </div>
                 )}
               </button>
-              <button onClick={() => setSidebarOpen(true)} className="flex flex-col leading-none">
+              <button onClick={handleMobileIdentityTap} className="flex flex-col leading-none">
                 <span className="text-[9px] text-gray-400">Deliver to</span>
                 <span className="text-xs font-bold text-gray-800 flex items-center gap-0.5">
                   {currentCountry?.name || 'Kenya'} <FiChevronDown size={10} />
@@ -767,7 +775,7 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
               </button>
             </>
           ) : (
-            <button onClick={() => setSidebarOpen(true)} className="flex items-center gap-1.5">
+            <button onClick={handleMobileIdentityTap} className="flex items-center gap-1.5">
               <div className="w-[34px] h-[34px] rounded-full bg-gray-100 flex items-center justify-center">
                 <FiUser size={15} className="text-gray-500" />
               </div>
@@ -788,35 +796,6 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
           onClick={() => router.push('/')}
         />
       </div>
-
-      {/* ══ SELLER SIDEBAR DRAWER ═══════════════════════════════════════════════ */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <motion.div
-            className="fixed inset-0 z-[9999]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-              onClick={() => setSidebarOpen(false)}
-            />
-            <motion.div
-              initial={{ x: -288 }}
-              animate={{ x: 0 }}
-              exit={{ x: -288 }}
-              transition={{ type: 'spring', stiffness: 320, damping: 35 }}
-              className="absolute top-0 left-0 bg-white shadow-2xl h-full w-72"
-            >
-              {isSeller
-                ? <SellerSidebar onClose={() => setSidebarOpen(false)} />
-                : <Sidebar onClose={() => setSidebarOpen(false)} />
-              }
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </>
   );
 }
