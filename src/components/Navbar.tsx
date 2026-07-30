@@ -8,7 +8,7 @@ import {
 } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/app/context/CartContext';
-import { LogOut, Package, Heart, Wallet, ShoppingBag } from 'lucide-react';
+import { LogOut, Package, Heart, Wallet, ShoppingBag, LayoutGrid, TrendingUp, PlusSquare } from 'lucide-react';
 import { useAuth } from '@/app/context/AuthContext';
 import type { Notification } from '@/app/types/notification';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -52,6 +52,24 @@ const TOP_CATEGORIES = [
   'Baby & Kids',
   'Gaming',
   'Food & Groceries',
+];
+
+// Quick links shown inside the account dropdown — these differ for
+// buyers vs sellers so each role gets a fast path to the pages they
+// actually use day-to-day (mirrors SellerSidebar's route list for sellers).
+const BUYER_QUICK_LINKS = [
+  { label: 'My Orders',      icon: ShoppingBag, href: '/orders' },
+  { label: 'Wishlist',       icon: Heart,       href: '/wishlist' },
+  { label: 'My Wallet',      icon: Wallet,      href: '/wallet' },
+  { label: 'My Installments', icon: Package,    href: '/installments/progress' },
+];
+
+const SELLER_QUICK_LINKS = [
+  { label: 'Dashboard',   icon: LayoutGrid,  href: '/seller/dashboard' },
+  { label: 'Add Product', icon: PlusSquare,  href: '/seller/products/add' },
+  { label: 'Inventory',   icon: Package,     href: '/seller/inventory' },
+  { label: 'Orders',      icon: ShoppingBag, href: '/seller/orders' },
+  { label: 'Finance',     icon: TrendingUp,  href: '/seller/finance' },
 ];
 
 export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
@@ -380,7 +398,7 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
                   <div className="text-left">
                     <p className="text-[9px] text-gray-400 leading-none">Hello, {user.name?.split(' ')[0]}</p>
                     <p className="text-xs font-bold text-gray-800 group-hover:text-orange-600 leading-none mt-0.5 flex items-center gap-0.5">
-                      Account <FiChevronDown size={10} />
+                      {isSeller ? 'Seller Hub' : 'Account'} <FiChevronDown size={10} />
                     </p>
                   </div>
                 </button>
@@ -416,12 +434,7 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
                           <p className="text-xs font-bold text-gray-800 truncate">{user.name}</p>
                           <p className="text-[10px] text-gray-500 truncate">{user.email}</p>
                         </div>
-                        {[
-                          { label: 'My Orders',       icon: ShoppingBag,  href: '/orders' },
-                          { label: 'Wishlist',         icon: Heart,        href: '/wishlist' },
-                          { label: 'My Wallet',        icon: Wallet,       href: '/wallet' },
-                          { label: 'My Installments',  icon: Package,      href: '/installments/progress' },
-                        ].map(({ label, icon: Icon, href }) => (
+                        {(isSeller ? SELLER_QUICK_LINKS : BUYER_QUICK_LINKS).map(({ label, icon: Icon, href }) => (
                           <button
                             key={href}
                             onClick={() => { router.push(href); setShowDropdown(false); }}
@@ -430,6 +443,12 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
                             <Icon size={14} className="text-orange-500" /> {label}
                           </button>
                         ))}
+                        <button
+                          onClick={() => { router.push(isSeller ? '/seller/account' : '/account'); setShowDropdown(false); }}
+                          className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-orange-600 hover:bg-orange-50 transition border-t border-gray-100"
+                        >
+                          <FiChevronRight size={14} /> {isSeller ? 'View Seller Account' : 'View Account'}
+                        </button>
                         <div className="border-t border-gray-100" />
                         <button
                           onClick={logout}

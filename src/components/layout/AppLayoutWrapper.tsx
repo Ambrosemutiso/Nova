@@ -64,7 +64,6 @@ function LayoutUI({ children }: { children: React.ReactNode }) {
     }
   }, [user, loading, pathname, router]);
 
-  // FIX 2: FCM setup — runs once per user session, not on every render
   useEffect(() => {
     if (!user?._id || fcmInitialized.current) return;
 
@@ -86,7 +85,6 @@ function LayoutUI({ children }: { children: React.ReactNode }) {
           }
         }
 
-        // Start listening for foreground messages only after token is ready
         await listenToMessages();
       } catch (err) {
         console.error("FCM setup error:", err);
@@ -94,16 +92,12 @@ function LayoutUI({ children }: { children: React.ReactNode }) {
     };
 
     setup();
-  }, [user?._id]); // depend only on _id, not the entire user object
+  }, [user?._id]); 
 
   return (
     <>
       <CartNotification />
       <Navbar/>
-
-      <aside className="hidden md:block fixed top-[0px] left-0 w-72 h-[calc(100vh-20px)] z-[9999]">
-        {isSeller ? <SellerSidebar /> : <Sidebar isOpen />}
-      </aside>
 
       <main className="pt-[50px] md:ml-0 min-h-screen">
         {children}
