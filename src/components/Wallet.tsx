@@ -248,7 +248,7 @@ export default function WalletPage() {
   const maxWeekly = Math.max(...weeklyActivity.map(d => d.total), 1);
 
   return (
-    <div className="max-w-xl mx-auto px-4 pt-24 pb-20 min-h-screen bg-[#f7f7f6]">
+    <div className="max-w-6xl mx-auto px-4 lg:px-8 pt-24 lg:pt-32 pb-20 min-h-screen bg-[#f7f7f6]">
 
       {/* Greeting */}
       <motion.div
@@ -257,261 +257,278 @@ export default function WalletPage() {
         className="mb-6"
       >
         <p className="text-sm text-gray-500">{getGreeting()},</p>
-        <h1 className="text-2xl font-bold text-gray-900">{userName.split(' ')[0]} 👋</h1>
+        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">{userName.split(' ')[0]} 👋</h1>
       </motion.div>
 
-      {/* Wallet Card — unified dark neutral + orange accent */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.05 }}
-        className="relative rounded-[28px] overflow-hidden mb-5 p-6 text-white"
-        style={{ background: 'linear-gradient(135deg, #1c1c1e 0%, #111213 100%)' }}
-      >
-        <div className="absolute w-56 h-56 rounded-full bg-orange-500/10 -top-16 -right-16 pointer-events-none" />
+      {/* Desktop: sticky wallet card on the left, activity/transactions scroll on the right.
+          Mobile: everything just stacks in document order, same as before. */}
+      <div className="lg:grid lg:grid-cols-[380px_1fr] lg:gap-8 lg:items-start">
 
-        <div className="relative z-10">
-          <div className="flex items-start justify-between mb-8">
-            <div>
-              <p className="text-[10px] tracking-[2px] uppercase text-white/40 mb-0.5">NovaPay Wallet</p>
-              <p className="text-xs text-white/60">Available Balance</p>
+        {/* ══ LEFT COLUMN — wallet identity + fast actions ══ */}
+        <div className="lg:sticky lg:top-32 lg:self-start space-y-5">
+
+          {/* Wallet Card — unified dark neutral + orange accent */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="relative rounded-[28px] overflow-hidden p-6 text-white"
+            style={{ background: 'linear-gradient(135deg, #1c1c1e 0%, #111213 100%)' }}
+          >
+            <div className="absolute w-56 h-56 rounded-full bg-orange-500/10 -top-16 -right-16 pointer-events-none" />
+
+            <div className="relative z-10">
+              <div className="flex items-start justify-between mb-8">
+                <div>
+                  <p className="text-[10px] tracking-[2px] uppercase text-white/40 mb-0.5">NovaPay Wallet</p>
+                  <p className="text-xs text-white/60">Available Balance</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setCurrency(c => c === 'NC' ? 'KES' : 'NC')}
+                    className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 transition px-3 py-1.5 rounded-full text-[11px] font-semibold"
+                  >
+                    <FiRepeat size={11} /> {currency}
+                  </motion.button>
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setShowBalance(b => !b)}
+                    className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 transition flex items-center justify-center"
+                  >
+                    {showBalance ? <FiEyeOff size={14} /> : <FiEye size={14} />}
+                  </motion.button>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <motion.p
+                  key={showBalance ? 'shown' : 'hidden'}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-4xl font-bold tracking-tight"
+                >
+                  {showBalance ? balanceNC.toLocaleString() : '••••••'}{' '}
+                  <span className="text-2xl font-normal opacity-60">{currency}</span>
+                </motion.p>
+                {currency === 'NC' && (
+                  <p className="text-xs text-white/40 mt-1">
+                    ≈ KES {showBalance ? balanceNC.toLocaleString() : '••••••'}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between">
+                <p className="text-sm tracking-[4px] text-white/25 font-mono">•••• •••• 4291</p>
+                <div className="flex items-center gap-1 bg-orange-500/15 border border-orange-400/25 px-2.5 py-1 rounded-full">
+                  <FiShield size={10} className="text-orange-400" />
+                  <span className="text-[10px] text-orange-300 font-semibold">Protected</span>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
+          </motion.div>
+
+          {/* Quick Actions — added Send to Friend */}
+          <div className="grid grid-cols-4 gap-2.5">
+            {[
+              { icon: <FiArrowDown size={16} />, label: 'Deposit',  onClick: () => { if (canInitiatePayment()) setShowAmountModal(true); } },
+              { icon: <FiArrowUp size={16} />,   label: 'Withdraw', onClick: async () => {
+                  if (!user?._id) return;
+                  try {
+                    const res  = await fetch(`/api/wallet/check-pin?userId=${user._id}`);
+                    const data = await res.json();
+                    data.hasPin ? setShowWithdrawModal(true) : setShowSetPinModal(true);
+                  } catch { toast.error('Unable to verify wallet PIN'); }
+                }
+              },
+              { icon: <FiSend size={16} />,      label: 'Send',     onClick: () => setShowTransferModal(true) },
+              { icon: <FiCreditCard size={16} />, label: 'Pay',     onClick: undefined },
+            ].map((a, i) => (
               <motion.button
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setCurrency(c => c === 'NC' ? 'KES' : 'NC')}
-                className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 transition px-3 py-1.5 rounded-full text-[11px] font-semibold"
+                key={i}
+                whileTap={{ scale: 0.96 }}
+                onClick={a.onClick}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 + i * 0.05 }}
+                className="bg-white rounded-2xl p-3.5 flex flex-col items-center gap-2 shadow-sm hover:shadow-md transition border border-gray-100"
               >
-                <FiRepeat size={11} /> {currency}
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-orange-50 text-orange-500">
+                  {a.icon}
+                </div>
+                <p className="text-[11px] font-semibold text-gray-700">{a.label}</p>
               </motion.button>
-              <motion.button
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setShowBalance(b => !b)}
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 transition flex items-center justify-center"
+            ))}
+          </div>
+
+          {/* Why NovaPay strip — benefits teaser */}
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.08 }}
+            onClick={() => setShowBenefitsModal(true)}
+            className="w-full flex items-center gap-3 bg-orange-50 border border-orange-100 rounded-2xl p-3.5 text-left hover:bg-orange-100/60 transition-colors"
+          >
+            <div className="w-9 h-9 rounded-xl bg-orange-500 flex items-center justify-center flex-shrink-0">
+              <FiAward size={15} className="text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs font-bold text-orange-700">Why shop with NovaPay?</p>
+              <p className="text-[11px] text-orange-500">Faster checkout, send money to friends, earn rewards</p>
+            </div>
+            <FiChevronRight size={14} className="text-orange-400 flex-shrink-0" />
+          </motion.button>
+        </div>
+
+        {/* ══ RIGHT COLUMN — stats, activity, methods, transactions ══ */}
+        <div className="mt-5 lg:mt-0 space-y-5">
+
+          {/* Stats Row — neutral + orange only */}
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: 'Total Income', value: totalCredit, icon: <FiArrowDown />, change: '↑ 12%' },
+              { label: 'Total Spent',  value: totalDebit,  icon: <FiArrowUp />,   change: '↓ 5%' },
+            ].map((s, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + i * 0.05 }}
+                className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"
               >
-                {showBalance ? <FiEyeOff size={14} /> : <FiEye size={14} />}
-              </motion.button>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm mb-3 bg-orange-50 text-orange-500">
+                  {s.icon}
+                </div>
+                <p className="text-xs text-gray-500 mb-0.5">{s.label}</p>
+                <p className="text-lg font-bold text-gray-800">KES {s.value.toLocaleString()}</p>
+                <p className="text-[11px] font-medium mt-0.5 text-gray-400">{s.change} this month</p>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Promo Banners — single brand palette */}
+          <div>
+            <p className="text-sm font-bold text-gray-700 mb-3">Offers for you</p>
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
+              {[
+                { badge: 'Flash Sale',   title: 'Up to 60% OFF',     sub: 'Ends tonight at midnight',   icon: <FiZap size={14} /> },
+                { badge: 'Cashback',     title: '5% on top-ups',     sub: 'On all M-Pesa deposits',      icon: <FiArrowDown size={14} /> },
+                { badge: 'Refer & Earn', title: 'KES 200/referral',  sub: 'Invite friends now',          icon: <FiUsers size={14} /> },
+              ].map((b, i) => (
+                <motion.div
+                  key={i}
+                  whileHover={{ scale: 1.02 }}
+                  className="flex-shrink-0 w-56 snap-start rounded-2xl p-4 cursor-pointer text-white"
+                  style={{ background: 'linear-gradient(135deg, #1c1c1e, #2a2a2c)' }}
+                >
+                  <div className="flex items-center gap-1.5 mb-1 text-orange-400">
+                    {b.icon}
+                    <span className="text-[10px] font-bold text-orange-400/80 uppercase tracking-wider">{b.badge}</span>
+                  </div>
+                  <p className="text-white font-bold text-base leading-tight">{b.title}</p>
+                  <p className="text-white/40 text-[11px] mt-1">{b.sub}</p>
+                  <div className="flex items-center gap-1 text-white/50 text-xs mt-2 font-semibold">
+                    Shop now <FiChevronRight size={11} />
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </div>
 
-          <div className="mb-6">
-            <motion.p
-              key={showBalance ? 'shown' : 'hidden'}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-4xl font-bold tracking-tight"
-            >
-              {showBalance ? balanceNC.toLocaleString() : '••••••'}{' '}
-              <span className="text-2xl font-normal opacity-60">{currency}</span>
-            </motion.p>
-            {currency === 'NC' && (
-              <p className="text-xs text-white/40 mt-1">
-                ≈ KES {showBalance ? balanceNC.toLocaleString() : '••••••'}
-              </p>
+          {/* Weekly Activity + Payment Methods side by side on desktop */}
+          <div className="lg:grid lg:grid-cols-2 lg:gap-5 space-y-5 lg:space-y-0">
+
+            {/* Weekly Activity */}
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                  <FiActivity size={15} className="text-orange-500" /> Weekly Activity
+                </h3>
+                <span className="text-[11px] text-gray-400">Last 7 days</span>
+              </div>
+              <div className="flex items-end gap-2 h-20">
+                {weeklyActivity.map((d, i) => {
+                  const pct = d.total === 0 ? 0 : Math.max((d.total / maxWeekly) * 100, 8);
+                  const isMax = d.total === Math.max(...weeklyActivity.map(x => x.total));
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1.5 h-full">
+                      <div className="relative w-full flex-1 bg-gray-100 rounded-lg overflow-hidden">
+                        <motion.div
+                          initial={{ height: 0 }}
+                          animate={{ height: `${pct}%` }}
+                          transition={{ delay: i * 0.05, duration: 0.5, ease: 'easeOut' }}
+                          className={`absolute bottom-0 w-full rounded-lg ${isMax ? 'bg-orange-500' : 'bg-orange-200'}`}
+                        />
+                      </div>
+                      <span className="text-[10px] text-gray-400">{d.day}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Payment Methods */}
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold text-gray-800">Payment Methods</h3>
+                <button className="flex items-center gap-1 text-orange-500 text-xs font-semibold hover:text-orange-600">
+                  <FiPlus size={13} /> Add new
+                </button>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { src: '/M-PESA.svg',      alt: 'M-Pesa',     label: 'M-Pesa' },
+                  { src: '/Airtel.svg',      alt: 'Airtel',      label: 'Airtel' },
+                  { src: '/visa.png',        alt: 'Visa',        label: 'Visa' },
+                  { src: '/mastercard.png',  alt: 'Mastercard',  label: 'MC' },
+                ].map((m, i) => (
+                  <motion.div
+                    key={i}
+                    whileTap={{ scale: 0.96 }}
+                    className="border border-gray-100 rounded-xl p-3 flex flex-col items-center gap-2 cursor-pointer hover:border-orange-200 hover:bg-orange-50 transition"
+                  >
+                    <Image src={m.src} alt={m.alt} width={40} height={26} className="object-contain" />
+                    <p className="text-[11px] text-gray-500 font-medium">{m.label}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Transactions */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-gray-800">Transactions</h3>
+              <button onClick={() => setShowAllTx(true)} className="text-xs text-orange-500 font-semibold hover:text-orange-600">
+                View all
+              </button>
+            </div>
+
+            <div className="flex gap-2 mb-4">
+              {(['Today', 'Yesterday', 'Earlier'] as const).map(f => (
+                <button
+                  key={f}
+                  onClick={() => setActiveFilter(f)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition
+                    ${activeFilter === f ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+
+            {filteredTx.length === 0 ? (
+              <div className="text-center py-10 text-gray-400">
+                <p className="font-medium text-sm">No transactions</p>
+                <p className="text-xs mt-1">Your activity will appear here</p>
+              </div>
+            ) : (
+              <ul className="space-y-1 lg:grid lg:grid-cols-2 lg:gap-x-4 lg:space-y-0">
+                {filteredTx.map(tx => <TxRow key={tx.id} tx={tx} />)}
+              </ul>
             )}
           </div>
-
-          <div className="flex items-center justify-between">
-            <p className="text-sm tracking-[4px] text-white/25 font-mono">•••• •••• 4291</p>
-            <div className="flex items-center gap-1 bg-orange-500/15 border border-orange-400/25 px-2.5 py-1 rounded-full">
-              <FiShield size={10} className="text-orange-400" />
-              <span className="text-[10px] text-orange-300 font-semibold">Protected</span>
-            </div>
-          </div>
         </div>
-      </motion.div>
-
-      {/* Why NovaPay strip — benefits teaser */}
-      <motion.button
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.08 }}
-        onClick={() => setShowBenefitsModal(true)}
-        className="w-full flex items-center gap-3 bg-orange-50 border border-orange-100 rounded-2xl p-3.5 mb-5 text-left hover:bg-orange-100/60 transition-colors"
-      >
-        <div className="w-9 h-9 rounded-xl bg-orange-500 flex items-center justify-center flex-shrink-0">
-          <FiAward size={15} className="text-white" />
-        </div>
-        <div className="flex-1">
-          <p className="text-xs font-bold text-orange-700">Why shop with NovaPay?</p>
-          <p className="text-[11px] text-orange-500">Faster checkout, send money to friends, earn rewards</p>
-        </div>
-        <FiChevronRight size={14} className="text-orange-400 flex-shrink-0" />
-      </motion.button>
-
-      {/* Stats Row — neutral + orange only */}
-      <div className="grid grid-cols-2 gap-3 mb-5">
-        {[
-          { label: 'Total Income', value: totalCredit, icon: <FiArrowDown />, change: '↑ 12%' },
-          { label: 'Total Spent',  value: totalDebit,  icon: <FiArrowUp />,   change: '↓ 5%' },
-        ].map((s, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 + i * 0.05 }}
-            className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"
-          >
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm mb-3 bg-orange-50 text-orange-500">
-              {s.icon}
-            </div>
-            <p className="text-xs text-gray-500 mb-0.5">{s.label}</p>
-            <p className="text-lg font-bold text-gray-800">KES {s.value.toLocaleString()}</p>
-            <p className="text-[11px] font-medium mt-0.5 text-gray-400">{s.change} this month</p>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Quick Actions — added Send to Friend */}
-      <div className="grid grid-cols-4 gap-2.5 mb-5">
-        {[
-          { icon: <FiArrowDown size={16} />, label: 'Deposit',  onClick: () => { if (canInitiatePayment()) setShowAmountModal(true); } },
-          { icon: <FiArrowUp size={16} />,   label: 'Withdraw', onClick: async () => {
-              if (!user?._id) return;
-              try {
-                const res  = await fetch(`/api/wallet/check-pin?userId=${user._id}`);
-                const data = await res.json();
-                data.hasPin ? setShowWithdrawModal(true) : setShowSetPinModal(true);
-              } catch { toast.error('Unable to verify wallet PIN'); }
-            }
-          },
-          { icon: <FiSend size={16} />,      label: 'Send',     onClick: () => setShowTransferModal(true) },
-          { icon: <FiCreditCard size={16} />, label: 'Pay',     onClick: undefined },
-        ].map((a, i) => (
-          <motion.button
-            key={i}
-            whileTap={{ scale: 0.96 }}
-            onClick={a.onClick}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 + i * 0.05 }}
-            className="bg-white rounded-2xl p-3.5 flex flex-col items-center gap-2 shadow-sm hover:shadow-md transition border border-gray-100"
-          >
-            <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-orange-50 text-orange-500">
-              {a.icon}
-            </div>
-            <p className="text-[11px] font-semibold text-gray-700">{a.label}</p>
-          </motion.button>
-        ))}
-      </div>
-
-      {/* Promo Banners — single brand palette */}
-      <div className="mb-5">
-        <p className="text-sm font-bold text-gray-700 mb-3">Offers for you</p>
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
-          {[
-            { badge: 'Flash Sale',   title: 'Up to 60% OFF',     sub: 'Ends tonight at midnight',   icon: <FiZap size={14} /> },
-            { badge: 'Cashback',     title: '5% on top-ups',     sub: 'On all M-Pesa deposits',      icon: <FiArrowDown size={14} /> },
-            { badge: 'Refer & Earn', title: 'KES 200/referral',  sub: 'Invite friends now',          icon: <FiUsers size={14} /> },
-          ].map((b, i) => (
-            <motion.div
-              key={i}
-              whileHover={{ scale: 1.02 }}
-              className="flex-shrink-0 w-56 snap-start rounded-2xl p-4 cursor-pointer text-white"
-              style={{ background: 'linear-gradient(135deg, #1c1c1e, #2a2a2c)' }}
-            >
-              <div className="flex items-center gap-1.5 mb-1 text-orange-400">
-                {b.icon}
-                <span className="text-[10px] font-bold text-orange-400/80 uppercase tracking-wider">{b.badge}</span>
-              </div>
-              <p className="text-white font-bold text-base leading-tight">{b.title}</p>
-              <p className="text-white/40 text-[11px] mt-1">{b.sub}</p>
-              <div className="flex items-center gap-1 text-white/50 text-xs mt-2 font-semibold">
-                Shop now <FiChevronRight size={11} />
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      {/* Weekly Activity */}
-      <div className="bg-white rounded-2xl p-5 shadow-sm mb-5 border border-gray-100">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
-            <FiActivity size={15} className="text-orange-500" /> Weekly Activity
-          </h3>
-          <span className="text-[11px] text-gray-400">Last 7 days</span>
-        </div>
-        <div className="flex items-end gap-2 h-20">
-          {weeklyActivity.map((d, i) => {
-            const pct = d.total === 0 ? 0 : Math.max((d.total / maxWeekly) * 100, 8);
-            const isMax = d.total === Math.max(...weeklyActivity.map(x => x.total));
-            return (
-              <div key={i} className="flex-1 flex flex-col items-center gap-1.5 h-full">
-                <div className="relative w-full flex-1 bg-gray-100 rounded-lg overflow-hidden">
-                  <motion.div
-                    initial={{ height: 0 }}
-                    animate={{ height: `${pct}%` }}
-                    transition={{ delay: i * 0.05, duration: 0.5, ease: 'easeOut' }}
-                    className={`absolute bottom-0 w-full rounded-lg ${isMax ? 'bg-orange-500' : 'bg-orange-200'}`}
-                  />
-                </div>
-                <span className="text-[10px] text-gray-400">{d.day}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Payment Methods */}
-      <div className="bg-white rounded-2xl p-5 shadow-sm mb-5 border border-gray-100">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-bold text-gray-800">Payment Methods</h3>
-          <button className="flex items-center gap-1 text-orange-500 text-xs font-semibold hover:text-orange-600">
-            <FiPlus size={13} /> Add new
-          </button>
-        </div>
-        <div className="grid grid-cols-4 gap-2">
-          {[
-            { src: '/M-PESA.svg',      alt: 'M-Pesa',     label: 'M-Pesa' },
-            { src: '/Airtel.svg',      alt: 'Airtel',      label: 'Airtel' },
-            { src: '/visa.png',        alt: 'Visa',        label: 'Visa' },
-            { src: '/mastercard.png',  alt: 'Mastercard',  label: 'MC' },
-          ].map((m, i) => (
-            <motion.div
-              key={i}
-              whileTap={{ scale: 0.96 }}
-              className="border border-gray-100 rounded-xl p-3 flex flex-col items-center gap-2 cursor-pointer hover:border-orange-200 hover:bg-orange-50 transition"
-            >
-              <Image src={m.src} alt={m.alt} width={40} height={26} className="object-contain" />
-              <p className="text-[11px] text-gray-500 font-medium">{m.label}</p>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      {/* Transactions */}
-      <div className="bg-white rounded-2xl p-5 shadow-sm mb-5 border border-gray-100">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold text-gray-800">Transactions</h3>
-          <button onClick={() => setShowAllTx(true)} className="text-xs text-orange-500 font-semibold hover:text-orange-600">
-            View all
-          </button>
-        </div>
-
-        <div className="flex gap-2 mb-4">
-          {(['Today', 'Yesterday', 'Earlier'] as const).map(f => (
-            <button
-              key={f}
-              onClick={() => setActiveFilter(f)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition
-                ${activeFilter === f ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-
-        {filteredTx.length === 0 ? (
-          <div className="text-center py-10 text-gray-400">
-            <p className="font-medium text-sm">No transactions</p>
-            <p className="text-xs mt-1">Your activity will appear here</p>
-          </div>
-        ) : (
-          <ul className="space-y-1">
-            {filteredTx.map(tx => <TxRow key={tx.id} tx={tx} />)}
-          </ul>
-        )}
       </div>
 
       {/* All Transactions Modal */}
@@ -525,7 +542,7 @@ export default function WalletPage() {
             <motion.div
               initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }}
               onClick={e => e.stopPropagation()}
-              className="bg-white rounded-3xl w-full max-w-lg max-h-[80vh] overflow-y-auto p-6"
+              className="bg-white rounded-3xl w-full max-w-lg lg:max-w-2xl max-h-[80vh] overflow-y-auto p-6"
             >
               <div className="flex justify-between items-center mb-5">
                 <h3 className="font-bold text-gray-800">All Transactions</h3>
@@ -533,7 +550,7 @@ export default function WalletPage() {
               </div>
               {transactions.length === 0
                 ? <p className="text-center text-gray-400 py-10">No transactions yet</p>
-                : <ul className="space-y-1">{transactions.map(tx => <TxRow key={tx.id} tx={tx} />)}</ul>
+                : <ul className="space-y-1 lg:grid lg:grid-cols-2 lg:gap-x-4 lg:space-y-0">{transactions.map(tx => <TxRow key={tx.id} tx={tx} />)}</ul>
               }
             </motion.div>
           </motion.div>
