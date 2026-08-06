@@ -42,23 +42,6 @@ import {
 } from "lucide-react";
 import TopPicksForYou from '@/components/TopPicksForYou';
 
-/**
- * "My Account" page, now wired to real app state instead of static copy.
- * Reuses the pieces that were only living in Sidebar.tsx:
- *  - useAuth for the real signed-in user (name, avatar, logout)
- *  - useCart for a live cart count on the bottom nav
- *  - the font-size / dark-mode / language preferences block (same
- *    localStorage keys as the sidebar, so the setting stays in sync
- *    everywhere in the app)
- * Every tile now navigates somewhere real via next/navigation.
- *
- * Layout: below `lg` this renders as the original single 420px mobile
- * column. At `lg` and up it switches to a two-column dashboard — a sticky
- * identity/quick-actions sidebar on the left, everything else in a content
- * grid on the right — instead of that same narrow column just floating in
- * the middle of a wide screen.
- */
-
 interface ActionItem {
   label: string;
   icon: React.ElementType;
@@ -66,7 +49,6 @@ interface ActionItem {
 }
 
 type MyAccountPageProps = {
-  /** optional: reuse the same buyer-login modal trigger the Navbar uses */
   onOpenBuyerLogin?: () => void;
 };
 
