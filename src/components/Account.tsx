@@ -29,10 +29,6 @@ import {
   Users,
   Package,
   ArrowRight,
-  Home,
-  LayoutGrid,
-  MessageCircle,
-  ShoppingCart,
   User,
   LogOut,
   ZoomIn,
@@ -146,58 +142,53 @@ export default function MyAccountPage({ onOpenBuyerLogin }: MyAccountPageProps) 
         {/* ══ LEFT COLUMN (desktop) — identity, menu, preferences, quick actions ══ */}
         <div className="lg:sticky lg:top-32 lg:w-[320px] lg:flex-shrink-0 lg:self-start">
           {/* header */}
-          <div className="bg-[#f4f4f2] px-4 pb-4 pt-5 lg:px-0 lg:pt-0">
-            <div className="flex items-center justify-between">
-              <button onClick={handleIdentityTap} className="flex items-center gap-3">
-                <span className="relative">
-                  {hasProfileImage ? (
-                    <CldImage
-                      src={getPublicId(user!.image)}
-                      alt="Profile"
-                      width={44}
-                      height={44}
-                      crop="fill"
-                      gravity="face"
-                      className="h-11 w-11 rounded-full object-cover"
-                      onError={() => setImgError(true)}
-                    />
-                  ) : (
-                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-neutral-200">
-                      <User className="h-6 w-6 text-neutral-400" />
-                    </span>
-                  )}
-                  {user && (
-                    <span className="absolute right-0 top-0 h-2.5 w-2.5 rounded-full border-2 border-[#f4f4f2] bg-[#ff6b35]" />
-                  )}
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="text-[17px] font-semibold text-neutral-900">
-                    {user ? user.name?.split(" ")[0] + (user.name?.split(" ")[1] ? ` ${user.name.split(" ")[1]}` : "") : "Sign in"}
-                  </span>
-                  <ChevronDown className="h-4 w-4 text-neutral-500" />
-                </span>
-              </button>
+// header block
+<div className="bg-[#f4f4f2] px-4 pb-4 pt-5 lg:px-0 lg:pt-0">
+  <div className="flex items-center justify-end lg:justify-between">
+    {/* identity/avatar now lives in the Navbar on mobile — desktop keeps its sidebar identity */}
+    <button onClick={handleIdentityTap} className="hidden lg:flex items-center gap-3">
+      <span className="relative">
+        {hasProfileImage ? (
+          <CldImage
+            src={getPublicId(user!.image)}
+            alt="Profile"
+            width={44}
+            height={44}
+            crop="fill"
+            gravity="face"
+            className="h-11 w-11 rounded-full object-cover"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-neutral-200">
+            <User className="h-6 w-6 text-neutral-400" />
+          </span>
+        )}
+        {user && (
+          <span className="absolute right-0 top-0 h-2.5 w-2.5 rounded-full border-2 border-[#f4f4f2] bg-[#ff6b35]" />
+        )}
+      </span>
+      <span className="flex items-center gap-1">
+        <span className="text-[17px] font-semibold text-neutral-900">
+          {user ? user.name?.split(" ")[0] + (user.name?.split(" ")[1] ? ` ${user.name.split(" ")[1]}` : "") : "Sign in"}
+        </span>
+        <ChevronDown className="h-4 w-4 text-neutral-500" />
+      </span>
+    </button>
 
-              <div className="flex items-center gap-5 text-neutral-800">
-                <button onClick={goTo("/desc/help/support")} aria-label="Support">
-                  <Headphones className="h-5 w-5" />
-                </button>
-                <button onClick={goTo("/")} aria-label="Scan" className="lg:hidden">
-                  <ScanLine className="h-5 w-5" />
-                </button>
-                <button onClick={() => setShowSettings((p) => !p)} aria-label="Preferences">
-                  <Settings className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-
-            <button onClick={goTo("/")} className="mt-1.5 flex items-center gap-1.5 pl-[3.5rem] text-[14px] text-neutral-500 lg:pl-[3.5rem]">
-              <span>Deliver to</span>
-              <span className="text-neutral-700 underline underline-offset-2">
-                {user?.country || "Set location"}
-              </span>
-            </button>
-          </div>
+    <div className="flex items-center gap-5 text-neutral-800">
+      <button onClick={goTo("/desc/help/support")} aria-label="Support">
+        <Headphones className="h-5 w-5" />
+      </button>
+      <button onClick={goTo("/")} aria-label="Scan" className="lg:hidden">
+        <ScanLine className="h-5 w-5" />
+      </button>
+      <button onClick={() => setShowSettings((p) => !p)} aria-label="Preferences">
+        <Settings className="h-5 w-5" />
+      </button>
+    </div>
+  </div>
+</div>
 
           {/* inline account menu — replaces a /profile page that doesn't exist */}
           {showAccountMenu && user && (

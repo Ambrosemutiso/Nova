@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
@@ -324,26 +325,56 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
         <div className="max-w-[1400px] mx-auto px-4 h-14 flex items-center gap-4">
 
           {/* Logo */}
-          <motion.div
-            whileHover={{ scale: 1.03 }}
-            className="flex-shrink-0 cursor-pointer"
-            onClick={() => router.push('/')}
-          >
-            <img src="/Logo.png" alt="NovaXmax" className="h-9 w-auto object-contain" style={{ clipPath: 'inset(5% 5% 5% 5%)' }} />
-          </motion.div>
+// AFTER
+<motion.div
+  whileHover={{ scale: 1.03 }}
+  className="hidden md:block flex-shrink-0 cursor-pointer"
+  onClick={() => router.push('/')}
+>
+  <img src="/Logo.png" alt="NovaXmax" className="h-9 w-auto object-contain" style={{ clipPath: 'inset(5% 5% 5% 5%)' }} />
+</motion.div>
 
           {/* ── DESKTOP ONLY: Location ─────────────────────────────────────── */}
-          <button className="hidden lg:flex items-center gap-1.5 text-left flex-shrink-0 hover:text-orange-600 transition-colors group">
-            <FiMapPin size={13} className="text-orange-500 flex-shrink-0" />
-            <div>
-              <p className="text-[9px] text-gray-400 leading-none">Deliver to</p>
-              <p className="text-xs font-bold text-gray-800 group-hover:text-orange-600 leading-none mt-0.5 flex items-center gap-0.5">
-                {currentCountry?.name || 'Kenya'}
-                <FiChevronDown size={10} />
-              </p>
-            </div>
-          </button>
+// Left: avatar + location
+<div className="flex items-center gap-2">
+  {user ? (
+    <>
+      <button onClick={handleMobileIdentityTap} className="flex-shrink-0">
+        {hasProfileImage ? (
+          <CldImage src={getPublicId(user.image)} alt="Profile" width={34} height={34} crop="fill" gravity="face"
+            className="rounded-full border-2 border-orange-400 w-[34px] h-[34px] object-cover"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <div className="w-[34px] h-[34px] rounded-full bg-orange-100 border-2 border-orange-400 flex items-center justify-center">
+            <FiUser size={15} className="text-orange-500" />
+          </div>
+        )}
+      </button>
 
+      {/* NEW: only buyers see "Deliver to" — sellers just get the avatar */}
+      {!isSeller && (
+        <button onClick={handleMobileIdentityTap} className="flex flex-col leading-none">
+          <span className="text-[9px] text-gray-400">Deliver to</span>
+          <span className="text-xs font-bold text-gray-800 flex items-center gap-0.5">
+            {currentCountry?.name || 'Kenya'} <FiChevronDown size={10} />
+          </span>
+        </button>
+      )}
+    </>
+  ) : (
+    // guest branch unchanged — guests are never sellers
+    <button onClick={handleMobileIdentityTap} className="flex items-center gap-1.5">
+      <div className="w-[34px] h-[34px] rounded-full bg-gray-100 flex items-center justify-center">
+        <FiUser size={15} className="text-gray-500" />
+      </div>
+      <div className="flex flex-col leading-none">
+        <span className="text-[9px] text-gray-400">Deliver to</span>
+        <span className="text-xs font-bold text-gray-800">{currentCountry?.name || 'Kenya'}</span>
+      </div>
+    </button>
+  )}
+</div>
           {/* ── Search ────────────────────────────────────────────────────────── */}
           {!isSeller && (
             <div

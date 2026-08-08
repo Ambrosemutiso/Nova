@@ -49,10 +49,9 @@ export async function GET() {
       },
     ];
 
-    // For each banner, fetch 3 random products
     const bannerData = await Promise.all(
       banners.map(async (banner) => {
-        const products = await Product.aggregate([{ $sample: { size: 3 } }]); // Random 3 products
+        const products = await Product.aggregate([{ $sample: { size: 3 } }]); 
         return {
           ...banner,
           products,
