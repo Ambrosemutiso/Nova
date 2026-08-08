@@ -136,7 +136,7 @@ export default function MyAccountPage({ onOpenBuyerLogin }: MyAccountPageProps) 
   };
 
   return (
-    <div className="min-h-screen pt-[80px] w-full bg-[#f4f4f2] font-sans text-neutral-900">
+    <div className="min-h-screen pt-[50px] w-full bg-[#f4f4f2] font-sans text-neutral-900">
       <div className="mx-auto flex w-full max-w-[420px] flex-col lg:max-w-6xl lg:flex-row lg:items-start lg:gap-8 lg:px-8 lg:pt-32 lg:pb-12">
 
         {/* ══ LEFT COLUMN (desktop) — identity, menu, preferences, quick actions ══ */}

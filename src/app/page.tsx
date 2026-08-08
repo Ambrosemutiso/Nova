@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Hero from '@/components/Hero';
 import Menu from '@/components/Menu';
-import TrendingProducts from '@/components/TrendingProducts';
 import TopPicksForYou from '@/components/TopPicksForYou';
 import SuggestedForYou from '@/components/SuggestedForYou';
 import SponsoredProducts from '@/components/SponsoredProducts';

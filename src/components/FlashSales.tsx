@@ -388,22 +388,14 @@ function ProductCard({ product, inCart, cartQty, onAdd, onIncrease, onDecrease, 
               </span>
             </div>
           ) : (
-            <>
-              <button
-                onClick={() => setShowSoldOutDrawer(true)}
-                className="mt-1 w-full flex items-center justify-center gap-1.5
-                  bg-white border border-amber-300 text-amber-700 hover:bg-amber-50
-                  active:scale-[0.98] text-xs font-bold py-2.5 rounded-xl transition"
-              >
-                <ShoppingCart className="w-3.5 h-3.5" /> Add to Cart
-              </button>
-              <SoldOutDrawer
-                open={showSoldOutDrawer}
-                onClose={() => setShowSoldOutDrawer(false)}
-                onConfirm={() => { onAdd(); setShowSoldOutDrawer(false); }}
-                productName={product.name}
-              />
-            </>
+            <button
+              onClick={onAdd}
+              className="mt-1 w-full flex items-center justify-center gap-1.5
+                bg-orange-500 hover:bg-orange-600 active:scale-[0.98]
+                text-white text-xs font-bold py-2.5 rounded-xl transition shadow-sm shadow-orange-200"
+            >
+              <ShoppingCart className="w-3.5 h-3.5" /> Add to Cart
+            </button>
           )
         )}
       </div>

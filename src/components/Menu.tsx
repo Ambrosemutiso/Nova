@@ -13,7 +13,7 @@ type MenuProps = {
   onSelectCategory?: (category: string) => void;
 };
 
-export default function CategoryMenu({
+export default function Menu({
   onSelectCategory,
 }: MenuProps) {
   const router = useRouter();
