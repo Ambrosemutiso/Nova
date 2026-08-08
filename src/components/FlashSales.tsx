@@ -10,6 +10,12 @@ import {
   Heart, ChevronDown, ArrowUpDown, Package, Check, Zap, RefreshCw
 } from 'lucide-react';
 
+import { createPortal } from 'react-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  AlertTriangle, Clock, ShieldCheck,
+} from 'lucide-react';
+
 import { useCart } from '@/app/context/CartContext';
 import { addToWishlist, isInWishlist } from '@/lib/wishlist';
 import type { ProductType } from '@/app/types/product';
@@ -108,6 +114,134 @@ function StockBar({ quantity = 0 }: { quantity?: number }) {
   );
 }
 
+/* ══════════════════════════════════════════════════════════════
+   SOLD-OUT CONSENT DRAWER
+   Shown when a buyer tries to add an item the system has marked
+   quantity: 0. It's common for sellers to be slow updating stock,
+   so we let the buyer proceed — but only after they've seen and
+   accepted what that means (seller gets notified, refund if it
+   truly can't be fulfilled, possible delay).
+══════════════════════════════════════════════════════════════ */
+function SoldOutDrawer({
+  open, onClose, onConfirm, productName,
+}: {
+  open: boolean; onClose: () => void; onConfirm: () => void; productName: string;
+}) {
+  const [mounted, setMounted] = useState(false);
+  const [agreed, setAgreed]   = useState(false);
+
+  useEffect(() => setMounted(true), []);
+  useEffect(() => { if (!open) setAgreed(false); }, [open]);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <AnimatePresence>
+      {open && (
+        <>
+          <motion.div
+            className="fixed inset-0 bg-black/50 z-[100]"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={onClose}
+          />
+          <motion.div
+            className="fixed bottom-0 left-0 right-0 z-[101] mx-auto w-full max-w-lg
+              bg-white rounded-t-3xl shadow-2xl"
+            initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 32, stiffness: 320 }}
+          >
+            {/* grab handle */}
+            <div className="flex justify-center pt-3">
+              <div className="w-10 h-1 rounded-full bg-gray-200" />
+            </div>
+
+            <div className="px-5 pt-4 pb-6 max-h-[80vh] overflow-y-auto">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center shrink-0">
+                    <AlertTriangle className="w-5 h-5 text-amber-500" />
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-bold text-gray-900">This item shows as out of stock</h3>
+                    <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{productName}</p>
+                  </div>
+                </div>
+                <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition p-1">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <p className="mt-4 text-xs text-gray-500 leading-relaxed">
+                Sellers sometimes fall behind on updating their stock counts, so this item may
+                actually still be available. You can add it to your cart — here's what happens next:
+              </p>
+
+              <ul className="mt-3 space-y-3">
+                <li className="flex items-start gap-2.5">
+                  <span className="w-6 h-6 rounded-lg bg-orange-50 flex items-center justify-center shrink-0 mt-0.5">
+                    <ShoppingCart className="w-3.5 h-3.5 text-orange-500" />
+                  </span>
+                  <span className="text-xs text-gray-600 leading-relaxed">
+                    We'll notify the seller right away to confirm availability and update the listing.
+                  </span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <span className="w-6 h-6 rounded-lg bg-orange-50 flex items-center justify-center shrink-0 mt-0.5">
+                    <Clock className="w-3.5 h-3.5 text-orange-500" />
+                  </span>
+                  <span className="text-xs text-gray-600 leading-relaxed">
+                    Your order may take a little longer to process while the seller confirms stock.
+                  </span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <span className="w-6 h-6 rounded-lg bg-orange-50 flex items-center justify-center shrink-0 mt-0.5">
+                    <ShieldCheck className="w-3.5 h-3.5 text-orange-500" />
+                  </span>
+                  <span className="text-xs text-gray-600 leading-relaxed">
+                    If the seller genuinely can't fulfill it, you'll be refunded in full — no action needed from you.
+                  </span>
+                </li>
+              </ul>
+
+              <label className="mt-5 flex items-start gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={agreed}
+                  onChange={(e) => setAgreed(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded accent-orange-500"
+                />
+                <span className="text-xs text-gray-600 leading-relaxed">
+                  I understand and want to proceed with adding this item to my cart.
+                </span>
+              </label>
+
+              <div className="mt-5 flex items-center gap-2.5">
+                <button
+                  onClick={onClose}
+                  className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-600
+                    hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => { if (agreed) onConfirm(); }}
+                  disabled={!agreed}
+                  className="flex-1 py-3 rounded-xl text-sm font-bold text-white transition
+                    bg-orange-500 hover:bg-orange-600 disabled:bg-gray-200 disabled:text-gray-400
+                    disabled:cursor-not-allowed active:scale-[0.98]"
+                >
+                  Add to Cart
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>,
+    document.body
+  );
+}
+
 //productcard interface
 interface ProductCardProps {
   product: ProductType;
@@ -124,6 +258,7 @@ function ProductCard({ product, inCart, cartQty, onAdd, onIncrease, onDecrease, 
   const [visible, setVisible]   = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
   const [wished, setWished]     = useState(() => isInWishlist(product._id));
+  const [showSoldOutDrawer, setShowSoldOutDrawer] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -188,14 +323,24 @@ function ProductCard({ product, inCart, cartQty, onAdd, onIncrease, onDecrease, 
       </Link>
 
       {/* ── wishlist ── */}
-      <button
-        onClick={() => { addToWishlist(product); setWished(!wished); }}
-        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm shadow
-          flex items-center justify-center transition-all hover:scale-110 active:scale-95"
-      >
-        <Heart className={`w-4 h-4 transition-colors ${wished ? 'text-red-500 fill-red-500' : 'text-gray-400'}`} />
-      </button>
-
+{/* ── wishlist / sold-out ribbon ── */}
+      {product.quantity > 0 ? (
+        <button
+          onClick={() => { addToWishlist(product); setWished(!wished); }}
+          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm shadow
+            flex items-center justify-center transition-all hover:scale-110 active:scale-95 z-10"
+        >
+          <Heart className={`w-4 h-4 transition-colors ${wished ? 'text-red-500 fill-red-500' : 'text-gray-400'}`} />
+        </button>
+      ) : (
+        <div
+          className="absolute -right-10 top-4 w-36 rotate-45 origin-center
+            bg-gradient-to-r from-red-600 to-red-500 text-white text-[10px] font-black
+            uppercase tracking-wider text-center py-1 shadow-md z-10 select-none"
+        >
+          Sold Out
+        </div>
+      )}
       {/* ── content ── */}
       <div className="flex flex-col flex-1 px-3 pt-2.5 pb-3 gap-1.5">
         <Link href={`/product/${product.slug}`}>
@@ -243,14 +388,22 @@ function ProductCard({ product, inCart, cartQty, onAdd, onIncrease, onDecrease, 
               </span>
             </div>
           ) : (
-            <button
-              onClick={onAdd}
-              className="mt-1 w-full flex items-center justify-center gap-1.5
-                bg-orange-500 hover:bg-orange-600 active:scale-[0.98]
-                text-white text-xs font-bold py-2.5 rounded-xl transition shadow-sm shadow-orange-200"
-            >
-              <ShoppingCart className="w-3.5 h-3.5" /> Add to Cart
-            </button>
+            <>
+              <button
+                onClick={() => setShowSoldOutDrawer(true)}
+                className="mt-1 w-full flex items-center justify-center gap-1.5
+                  bg-white border border-amber-300 text-amber-700 hover:bg-amber-50
+                  active:scale-[0.98] text-xs font-bold py-2.5 rounded-xl transition"
+              >
+                <ShoppingCart className="w-3.5 h-3.5" /> Add to Cart
+              </button>
+              <SoldOutDrawer
+                open={showSoldOutDrawer}
+                onClose={() => setShowSoldOutDrawer(false)}
+                onConfirm={() => { onAdd(); setShowSoldOutDrawer(false); }}
+                productName={product.name}
+              />
+            </>
           )
         )}
       </div>

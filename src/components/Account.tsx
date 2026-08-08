@@ -136,13 +136,12 @@ export default function MyAccountPage({ onOpenBuyerLogin }: MyAccountPageProps) 
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#f4f4f2] font-sans text-neutral-900">
+    <div className="min-h-screen pt-[80px] w-full bg-[#f4f4f2] font-sans text-neutral-900">
       <div className="mx-auto flex w-full max-w-[420px] flex-col lg:max-w-6xl lg:flex-row lg:items-start lg:gap-8 lg:px-8 lg:pt-32 lg:pb-12">
 
         {/* ══ LEFT COLUMN (desktop) — identity, menu, preferences, quick actions ══ */}
         <div className="lg:sticky lg:top-32 lg:w-[320px] lg:flex-shrink-0 lg:self-start">
           {/* header */}
-// header block
 <div className="bg-[#f4f4f2] px-4 pb-4 pt-5 lg:px-0 lg:pt-0">
   <div className="flex items-center justify-end lg:justify-between">
     {/* identity/avatar now lives in the Navbar on mobile — desktop keeps its sidebar identity */}

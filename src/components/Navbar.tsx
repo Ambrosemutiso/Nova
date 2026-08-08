@@ -325,7 +325,6 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
         <div className="max-w-[1400px] mx-auto px-4 h-14 flex items-center gap-4">
 
           {/* Logo */}
-// AFTER
 <motion.div
   whileHover={{ scale: 1.03 }}
   className="hidden md:block flex-shrink-0 cursor-pointer"
@@ -335,7 +334,6 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
 </motion.div>
 
           {/* ── DESKTOP ONLY: Location ─────────────────────────────────────── */}
-// Left: avatar + location
 <div className="flex items-center gap-2">
   {user ? (
     <>
