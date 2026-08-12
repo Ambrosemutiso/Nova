@@ -123,7 +123,7 @@ export default function AppLayoutWrapper({
   useEffect(() => {
     setTimeout(() => setReady(true), 600);
 
-    const zoom = parseFloat(localStorage.getItem('fontSize') || '1');
+    const zoom = parseFloat(localStorage.getItem('fontSize') || '0.5');
     document.documentElement.style.fontSize = `${zoom * 100}%`;
   }, []);
 

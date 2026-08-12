@@ -60,8 +60,8 @@ export default function Menu({
               <div
                 className="
                   relative
-                  w-[88px]
-                  h-[110px]
+                  w-[44px]
+                  h-[55px]
                   rounded-3xl
                   overflow-hidden
 
@@ -147,8 +147,8 @@ export default function Menu({
           >
             <div
               className="
-                w-[88px]
-                h-[110px]
+                w-[44px]
+                h-[55px]
 
                 rounded-3xl
 
