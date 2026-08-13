@@ -381,7 +381,7 @@ function ProductCard({ product, inCart, cartQty, onAdd, onIncrease, onDecrease, 
         </div>
 
         {/* cart controls */}
-{product.quantity > 0 ? (
+        {product.quantity > 0 ? (
           inCart ? (
             <div className="flex items-center gap-2 mt-1">
               <button onClick={onDecrease}
@@ -398,7 +398,7 @@ function ProductCard({ product, inCart, cartQty, onAdd, onIncrease, onDecrease, 
                 +
               </button>
               <span className="text-[10px] text-gray-400 ml-auto flex items-center gap-0.5">
-                <Check className="w-3 h-3 text-green-500" /> In Cart
+                <Check className="w-3 h-3 text-orange-500" /> In Cart
               </span>
             </div>
           ) : (

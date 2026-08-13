@@ -63,6 +63,36 @@
     --chart-5: 340 75% 55%;
   }
 
+@layer utilities {
+  /* page backgrounds */
+  .dark .bg-white           { background-color: hsl(var(--card)); }
+  .dark .bg-gray-50         { background-color: hsl(var(--background)); }
+  .dark .bg-neutral-50      { background-color: hsl(var(--background)); }
+  .dark .bg-\[\#f4f4f2\]    { background-color: hsl(var(--background)); }
+  .dark .bg-\[\#f7f6f4\]    { background-color: hsl(var(--muted)); }
+
+  /* body text */
+  .dark .text-neutral-900   { color: hsl(var(--foreground)); }
+  .dark .text-neutral-800   { color: hsl(var(--foreground)); }
+  .dark .text-gray-900      { color: hsl(var(--foreground)); }
+  .dark .text-gray-800      { color: hsl(var(--foreground)); }
+
+  /* secondary / muted text */
+  .dark .text-neutral-700   { color: hsl(var(--muted-foreground)); }
+  .dark .text-neutral-500   { color: hsl(var(--muted-foreground)); }
+  .dark .text-neutral-400   { color: hsl(var(--muted-foreground)); }
+  .dark .text-gray-700      { color: hsl(var(--muted-foreground)); }
+  .dark .text-gray-600      { color: hsl(var(--muted-foreground)); }
+  .dark .text-gray-500      { color: hsl(var(--muted-foreground)); }
+  .dark .text-gray-400      { color: hsl(var(--muted-foreground)); }
+
+  /* borders */
+  .dark .border-neutral-100 { border-color: hsl(var(--border)); }
+  .dark .border-neutral-200 { border-color: hsl(var(--border)); }
+  .dark .border-gray-100    { border-color: hsl(var(--border)); }
+  .dark .border-gray-200    { border-color: hsl(var(--border)); }
+}
+
   * {
     @apply border-border;
   }

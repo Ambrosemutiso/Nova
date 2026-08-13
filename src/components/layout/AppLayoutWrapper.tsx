@@ -3,8 +3,6 @@
 import { useEffect, useRef, useState } from 'react';
 
 import Navbar from '@/components/Navbar';
-import Sidebar from '@/components/Sidebar';
-import SellerSidebar from '@/app/seller/sidebar/SellerSidebar';
 
 import BackToTopButton from '@/components/BackToTopButton';
 import LoginWrapper from '@/components/LoginWrapper';
@@ -28,13 +26,10 @@ function LayoutUI({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  // FIX 1: Track whether FCM has already been set up to prevent
-  // re-registering the SW and re-saving the token on every re-render
   const fcmInitialized = useRef(false);
 
   const isSeller = user?.role === 'seller';
 
-  // Redirect logic
   useEffect(() => {
     if (loading || !user) return;
 
@@ -47,14 +42,12 @@ function LayoutUI({ children }: { children: React.ReactNode }) {
     }
   }, [user, loading, pathname, router]);
 
-  // Save last seller route
   useEffect(() => {
     if (user?.role === 'seller') {
       localStorage.setItem('lastSellerRoute', pathname);
     }
   }, [pathname, user]);
 
-  // Restore last route
   useEffect(() => {
     if (loading || !user) return;
 
@@ -99,7 +92,7 @@ function LayoutUI({ children }: { children: React.ReactNode }) {
       <CartNotification />
       <Navbar/>
 
-      <main className="pt-[50px] md:ml-0 min-h-screen">
+      <main className="pt-[30px] md:ml-0 min-h-screen">
         {children}
       </main>
       <PWARegister/>
@@ -123,7 +116,7 @@ export default function AppLayoutWrapper({
   useEffect(() => {
     setTimeout(() => setReady(true), 600);
 
-    const zoom = parseFloat(localStorage.getItem('fontSize') || '0.5');
+    const zoom = parseFloat(localStorage.getItem('fontSize') || '1');
     document.documentElement.style.fontSize = `${zoom * 100}%`;
   }, []);
 

@@ -67,7 +67,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "NovaXmax — Empowering Sellers, Connecting Kenya.",
     description:
-      "Kenya’s leading multi-seller e-commerce marketplace. Promote your products with video ads, reach more buyers, and grow your business with Novaxpress.",
+      "Kenya’s leading multi-seller e-commerce marketplace. Promote your products with video ads, reach more buyers, and grow your business with NovaXmax.",
     images: ["https://novaxmax.com/banner8.jpg"],
   },
   icons: {

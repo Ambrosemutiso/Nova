@@ -95,6 +95,8 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const searchRef   = useRef<HTMLDivElement | null>(null);
   const notifRef    = useRef<HTMLDivElement | null>(null);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement | null>(null);
 
   const router        = useRouter();
   const { cartItems } = useCart();
@@ -147,15 +149,24 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
   }, [user]);
 
   // ── Outside click ───────────────────────────────────────────────────────────
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setShowDropdown(false);
-      if (searchRef.current   && !searchRef.current.contains(e.target as Node))   setSearchFocused(false);
-      if (notifRef.current    && !notifRef.current.contains(e.target as Node))    setShowNotifModal(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
+useEffect(() => {
+  const handler = (e: MouseEvent) => {
+    if (dropdownRef.current    && !dropdownRef.current.contains(e.target as Node))    setShowDropdown(false);
+    if (searchRef.current      && !searchRef.current.contains(e.target as Node))      setSearchFocused(false);
+    if (notifRef.current       && !notifRef.current.contains(e.target as Node))       setShowNotifModal(false);
+    if (mobileMenuRef.current  && !mobileMenuRef.current.contains(e.target as Node))  setShowMobileMenu(false);
+  };
+  document.addEventListener('mousedown', handler);
+  return () => document.removeEventListener('mousedown', handler);
+}, []);
+
+// close any open popover on navigation — a menu that survives a route
+// change and keeps floating over the new page reads as broken
+useEffect(() => {
+  setShowDropdown(false);
+  setShowNotifModal(false);
+  setShowMobileMenu(false);
+}, [pathname]);
 
   // ── Notifications ───────────────────────────────────────────────────────────
   useEffect(() => {
@@ -235,14 +246,15 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
   // ── Mobile avatar/location tap target ───────────────────────────────────────
   // Previously opened the seller/buyer sidebar drawer; now that the sidebars
   // are gone this routes straight to the relevant page instead.
-  const handleMobileIdentityTap = () => {
-    if (user) {
-      router.push(isSeller ? '/seller/dashboard' : '/account');
-    } else {
-      onOpenBuyerLogin?.();
-    }
-  };
+const handleMobileAvatarTap = () => {
+  if (user) setShowMobileMenu((p) => !p);
+  else onOpenBuyerLogin?.();
+};
 
+const handleMobileLocationTap = () => {
+  if (user) router.push(isSeller ? '/seller/dashboard' : '/account');
+  else onOpenBuyerLogin?.();
+};
   /* ════════════════════════════════════════════════════════════════
      SEARCH DROPDOWN
   ════════════════════════════════════════════════════════════════ */
@@ -301,7 +313,7 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
   return (
     <>
       {/* ══ PROMO BAR ═══════════════════════════════════════════════════════════ */}
-      <div className="fixed top-0 left-0 w-full bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 text-white text-xs py-1.5 z-50 flex justify-center items-center overflow-hidden">
+      <div className="fixed top-0 left-0 w-full bg-gradient-to-r bg-white text-orange-500 text-xs py-1.5 z-50 flex justify-center items-center overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentPromo}
@@ -333,46 +345,6 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
   <img src="/Logo.png" alt="NovaXmax" className="h-9 w-auto object-contain" style={{ clipPath: 'inset(5% 5% 5% 5%)' }} />
 </motion.div>
 
-          {/* ── DESKTOP ONLY: Location ─────────────────────────────────────── */}
-<div className="flex items-center gap-2">
-  {user ? (
-    <>
-      <button onClick={handleMobileIdentityTap} className="flex-shrink-0">
-        {hasProfileImage ? (
-          <CldImage src={getPublicId(user.image)} alt="Profile" width={34} height={34} crop="fill" gravity="face"
-            className="rounded-full border-2 border-orange-400 w-[34px] h-[34px] object-cover"
-            onError={() => setImgError(true)}
-          />
-        ) : (
-          <div className="w-[34px] h-[34px] rounded-full bg-orange-100 border-2 border-orange-400 flex items-center justify-center">
-            <FiUser size={15} className="text-orange-500" />
-          </div>
-        )}
-      </button>
-
-      {/* NEW: only buyers see "Deliver to" — sellers just get the avatar */}
-      {!isSeller && (
-        <button onClick={handleMobileIdentityTap} className="flex flex-col leading-none">
-          <span className="text-[9px] text-gray-400">Deliver to</span>
-          <span className="text-xs font-bold text-gray-800 flex items-center gap-0.5">
-            {currentCountry?.name || 'Kenya'} <FiChevronDown size={10} />
-          </span>
-        </button>
-      )}
-    </>
-  ) : (
-    // guest branch unchanged — guests are never sellers
-    <button onClick={handleMobileIdentityTap} className="flex items-center gap-1.5">
-      <div className="w-[34px] h-[34px] rounded-full bg-gray-100 flex items-center justify-center">
-        <FiUser size={15} className="text-gray-500" />
-      </div>
-      <div className="flex flex-col leading-none">
-        <span className="text-[9px] text-gray-400">Deliver to</span>
-        <span className="text-xs font-bold text-gray-800">{currentCountry?.name || 'Kenya'}</span>
-      </div>
-    </button>
-  )}
-</div>
           {/* ── Search ────────────────────────────────────────────────────────── */}
           {!isSeller && (
             <div
@@ -795,27 +767,80 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
       )}
 
       {/* ══ MOBILE: top-left avatar + location strip ════════════════════════════ */}
+{/* ══ MOBILE: top-left avatar + location strip ════════════════════════════ */}
       <div
-        className="md:hidden fixed z-40 left-0 right-0 flex items-center justify-between px-4"
+        className="md:hidden fixed z-[55] left-0 right-0 flex items-center justify-between px-4"
         style={{ top: '1.5rem', height: '3.5rem' }}
       >
-        {/* Left: avatar + location */}
+        {/* Left: avatar (opens menu) + location (jumps to account) */}
         <div className="flex items-center gap-2">
           {user ? (
             <>
-              <button onClick={handleMobileIdentityTap} className="flex-shrink-0">
-                {hasProfileImage ? (
-                  <CldImage src={getPublicId(user.image)} alt="Profile" width={34} height={34} crop="fill" gravity="face"
-                    className="rounded-full border-2 border-orange-400 w-[34px] h-[34px] object-cover"
-                    onError={() => setImgError(true)}
-                  />
-                ) : (
-                  <div className="w-[34px] h-[34px] rounded-full bg-orange-100 border-2 border-orange-400 flex items-center justify-center">
-                    <FiUser size={15} className="text-orange-500" />
-                  </div>
-                )}
-              </button>
-              <button onClick={handleMobileIdentityTap} className="flex flex-col leading-none">
+              <div className="relative" ref={mobileMenuRef}>
+                <button
+                  onClick={handleMobileAvatarTap}
+                  aria-haspopup="menu"
+                  aria-expanded={showMobileMenu}
+                  className="flex-shrink-0"
+                >
+                  {hasProfileImage ? (
+                    <CldImage src={getPublicId(user.image)} alt="Profile" width={34} height={34} crop="fill" gravity="face"
+                      className="rounded-full border-2 border-orange-400 w-[34px] h-[34px] object-cover"
+                      onError={() => setImgError(true)}
+                    />
+                  ) : (
+                    <div className="w-[34px] h-[34px] rounded-full bg-orange-100 border-2 border-orange-400 flex items-center justify-center">
+                      <FiUser size={15} className="text-orange-500" />
+                    </div>
+                  )}
+                </button>
+
+                {/* logout / quick-links popup — anchored below the avatar,closes on outside click via mobileMenuRef above */}
+                <AnimatePresence>
+                  {showMobileMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 4, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute left-0 top-full mt-1 w-56 bg-white shadow-2xl rounded-2xl border border-gray-100 z-[90] overflow-hidden"
+                      role="menu"
+                    >
+                      <div className="px-4 py-3 bg-orange-50 border-b border-orange-100">
+                        <p className="text-xs font-bold text-gray-800 truncate">{user.name}</p>
+                        <p className="text-[10px] text-gray-500 truncate">{user.email}</p>
+                      </div>
+                      {(isSeller ? SELLER_QUICK_LINKS : BUYER_QUICK_LINKS).map(({ label, icon: Icon, href }) => (
+                        <button
+                          key={href}
+                          onClick={() => { router.push(href); setShowMobileMenu(false); }}
+                          className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 transition"
+                          role="menuitem"
+                        >
+                          <Icon size={14} className="text-orange-500" /> {label}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => { router.push(isSeller ? '/seller/account' : '/account'); setShowMobileMenu(false); }}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-orange-600 hover:bg-orange-50 transition border-t border-gray-100"
+                        role="menuitem"
+                      >
+                        <FiChevronRight size={14} /> {isSeller ? 'View Seller Account' : 'View Account'}
+                      </button>
+                      <div className="border-t border-gray-100" />
+                      <button
+                        onClick={() => { logout(); setShowMobileMenu(false); }}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition"
+                        role="menuitem"
+                      >
+                        <LogOut size={14} /> Logout
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <button onClick={handleMobileLocationTap} className="flex flex-col leading-none">
                 <span className="text-[9px] text-gray-400">Deliver to</span>
                 <span className="text-xs font-bold text-gray-800 flex items-center gap-0.5">
                   {currentCountry?.name || 'Kenya'} <FiChevronDown size={10} />
@@ -823,7 +848,7 @@ export default function Navbar({ onOpenBuyerLogin }: NavbarProps) {
               </button>
             </>
           ) : (
-            <button onClick={handleMobileIdentityTap} className="flex items-center gap-1.5">
+            <button onClick={handleMobileAvatarTap} className="flex items-center gap-1.5">
               <div className="w-[34px] h-[34px] rounded-full bg-gray-100 flex items-center justify-center">
                 <FiUser size={15} className="text-gray-500" />
               </div>
