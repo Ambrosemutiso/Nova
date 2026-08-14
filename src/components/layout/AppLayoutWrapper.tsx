@@ -92,7 +92,7 @@ function LayoutUI({ children }: { children: React.ReactNode }) {
       <CartNotification />
       <Navbar/>
 
-      <main className="pt-[30px] md:ml-0 min-h-screen">
+      <main className="pt-[40px] md:ml-0 min-h-screen">
         {children}
       </main>
       <PWARegister/>
@@ -116,7 +116,7 @@ export default function AppLayoutWrapper({
   useEffect(() => {
     setTimeout(() => setReady(true), 600);
 
-    const zoom = parseFloat(localStorage.getItem('fontSize') || '0.7');
+    const zoom = parseFloat(localStorage.getItem('fontSize') || '0.6');
     document.documentElement.style.fontSize = `${zoom * 100}%`;
   }, []);
 
