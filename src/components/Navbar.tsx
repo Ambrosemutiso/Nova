@@ -348,7 +348,7 @@ const handleMobileLocationTap = () => {
           {/* ── Search ────────────────────────────────────────────────────────── */}
           {!isSeller && (
             <div
-              className="hidden md:flex flex-1 relative max-w-2xl"
+              className="hidden md:flex flex-1 relative max-w-2xl bg-white"
               ref={searchRef}
             >
               <div className="relative w-full flex">
@@ -859,15 +859,6 @@ const handleMobileLocationTap = () => {
             </button>
           )}
         </div>
-
-        {/* Centre: Logo */}
-        <img
-          src="/Logo.png"
-          alt="NovaXmax"
-          className="h-8 w-auto object-contain cursor-pointer absolute left-1/2 -translate-x-1/2"
-          style={{ clipPath: 'inset(5% 5% 5% 5%)' }}
-          onClick={() => router.push('/')}
-        />
       </div>
     </>
   );

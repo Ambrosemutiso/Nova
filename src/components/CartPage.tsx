@@ -229,7 +229,7 @@ export default function CartPage({ onOpenBuyerLogin }: CartProps) {
   /* ── Empty state ── */
   if (cartItems.length === 0)
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-112px)] pt-20 bg-gradient-to-b from-orange-50 to-white">
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-112px)] pt-20 bg-white">
         <Player autoplay loop src="https://assets5.lottiefiles.com/packages/lf20_qh5z2fdq.json"
           style={{ height: '260px', width: '260px' }} />
         <h2 className="mt-4 text-xl font-bold text-gray-800">Your cart is empty</h2>
@@ -245,7 +245,7 @@ export default function CartPage({ onOpenBuyerLogin }: CartProps) {
     );
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-white min-h-screen">
       <div className="max-w-6xl mx-auto px-4 pt-28 pb-16">
 
         {/* ── Page header ── */}

@@ -35,7 +35,7 @@ export default function Footer({
     <footer
       className="
         md:ml-72
-        bg-gray-100
+        bg-white
         text-gray-700
         pt-10
         pb-6

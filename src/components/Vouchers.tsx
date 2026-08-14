@@ -92,7 +92,7 @@ export default function MyVouchersPage() {
   };
 
   if (!data) return (
-    <div className="flex items-center justify-center min-h-screen bg-[#FFF0E8]">
+    <div className="flex items-center justify-center min-h-screen bg-white">
       <div className="w-12 h-12 border-4 border-orange-500 border-dashed rounded-full animate-spin" />
     </div>
   );

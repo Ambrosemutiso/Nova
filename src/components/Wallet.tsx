@@ -248,7 +248,7 @@ export default function WalletPage() {
   const maxWeekly = Math.max(...weeklyActivity.map(d => d.total), 1);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 lg:px-8 pt-24 lg:pt-32 pb-20 min-h-screen bg-[#f7f7f6]">
+    <div className="max-w-6xl mx-auto px-4 lg:px-8 pt-24 lg:pt-32 pb-20 min-h-screen bg-white">
 
       {/* Greeting */}
       <motion.div

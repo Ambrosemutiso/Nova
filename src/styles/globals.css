@@ -126,14 +126,14 @@ html {
 /* Mobile */
 @media (max-width: 768px) {
   html {
-    font-size: 87.5%;
+    font-size: 70%;
   }
 }
 
 /* Small phones */
 @media (max-width: 480px) {
   html {
-    font-size: 87.5%;
+    font-size: 50%;
   }
 }
 

@@ -9,7 +9,7 @@ export default function ContactUs() {
 
   const [loading, setLoading] = useState(false);
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
+    <div className="min-h-screen bg-white">
       <div className="max-w-6xl mx-auto px-4 pt-28 pb-10">
       {/* Header Section */}
       <section className="text-center px-6 mb-12">

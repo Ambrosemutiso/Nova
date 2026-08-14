@@ -75,7 +75,7 @@ export default function ActiveShops() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
+    <div className="min-h-screen bg-white">
       <div className="max-w-6xl mx-auto px-4 pt-28 pb-10">
       {/* 🔹 Search & Sort Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">

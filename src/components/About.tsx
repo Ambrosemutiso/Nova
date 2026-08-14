@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 
 export default function AboutNovaXpress() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
+    <div className="min-h-screen bg-white">
       <div className="max-w-6xl mx-auto px-4 pt-28 pb-10">
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-orange-500 via-orange-400 to-yellow-400 text-white py-24 px-6 text-center">

@@ -106,7 +106,7 @@ function SearchProductCard({ product }: { product: ProductType }) {
       style={{ background: T.paper, border: `1px solid ${T.line}` }}
     >
       {/* ── thumbnail ── */}
-      <div className="relative aspect-square overflow-hidden bg-gray-50">
+      <div className="relative aspect-square overflow-hidden bg-white">
         {/* shimmer */}
         {!imgLoaded && (
           <div className="absolute inset-0 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 animate-pulse" />
