@@ -119,21 +119,21 @@ html {
 /* Tablet */
 @media (max-width: 1024px) {
   html {
-    font-size: 94%;
+    font-size: 87.5%;
   }
 }
 
 /* Mobile */
 @media (max-width: 768px) {
   html {
-    font-size: 70%;
+    font-size: 55.5%;
   }
 }
 
 /* Small phones */
 @media (max-width: 480px) {
   html {
-    font-size: 50%;
+    font-size: 35.5%;
   }
 }
 
