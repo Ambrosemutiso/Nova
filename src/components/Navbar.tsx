@@ -313,7 +313,7 @@ const handleMobileLocationTap = () => {
   return (
     <>
       {/* ══ PROMO BAR ═══════════════════════════════════════════════════════════ */}
-      <div className="fixed top-0 left-0 w-full bg-gradient-to-r bg-white text-orange-500 text-xs py-1.5 z-50 flex justify-center items-center overflow-hidden">
+      <div className="fixed top-0 left-0 w-full bg-[#f97316] text-white text-xs py-1.5 z-50 flex justify-center items-center overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentPromo}
@@ -348,7 +348,7 @@ const handleMobileLocationTap = () => {
           {/* ── Search ────────────────────────────────────────────────────────── */}
           {!isSeller && (
             <div
-              className="hidden md:flex flex-1 relative max-w-2xl bg-white"
+              className="hidden md:flex flex-1 relative max-w-2xl"
               ref={searchRef}
             >
               <div className="relative w-full flex">

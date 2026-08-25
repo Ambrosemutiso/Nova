@@ -76,21 +76,11 @@ export default function SellerAccountPage({ onOpenSellerLogin }: SellerAccountPa
   const [imgError,        setImgError]        = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showSettings,    setShowSettings]    = useState(false);
-  const [fontSize,        setFontSize]        = useState(1);
   const [language,        setLanguage]        = useState('en');
 
   const hasProfileImage = Boolean(user?.image) && !imgError;
 
   useEffect(() => { setImgError(false); }, [user?.image]);
-
-  useEffect(() => {
-    const saved = localStorage.getItem('fontSize');
-    setFontSize(saved ? parseFloat(saved) : 1);
-  }, []);
-  useEffect(() => {
-    document.documentElement.style.fontSize = `${fontSize * 100}%`;
-    localStorage.setItem('fontSize', fontSize.toString());
-  }, [fontSize]);
 
   useEffect(() => {
     const saved = localStorage.getItem('language');
@@ -123,14 +113,7 @@ export default function SellerAccountPage({ onOpenSellerLogin }: SellerAccountPa
     <div className="rounded-2xl bg-white p-4 shadow-sm">
       <p className="mb-3 text-[11px] font-bold uppercase tracking-widest text-neutral-400">Preferences</p>
       <div className="flex items-center gap-2">
-        <button onClick={() => setFontSize(f => Math.max(f - 0.1, 0.6))}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-neutral-200 py-2 text-xs font-semibold text-neutral-700 hover:border-orange-300 hover:text-orange-600 transition-colors">
-          <ZoomOut className="h-3.5 w-3.5" /> Smaller
-        </button>
-        <button onClick={() => setFontSize(f => Math.min(f + 0.1, 2))}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-neutral-200 py-2 text-xs font-semibold text-neutral-700 hover:border-orange-300 hover:text-orange-600 transition-colors">
-          <ZoomIn className="h-3.5 w-3.5" /> Larger
-        </button>
+
       </div>
       <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
         className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-neutral-200 py-2 text-xs font-semibold text-neutral-700 hover:border-orange-300 hover:text-orange-600 transition-colors">

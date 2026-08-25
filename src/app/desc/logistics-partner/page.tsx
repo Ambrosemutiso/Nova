@@ -29,7 +29,7 @@ export default function PartnerWithNovaXpress() {
   return (
     <div
       onMouseMove={handleMouseMove}
-      className="relative min-h-screen bg-gradient-to-b from-orange-50 via-white to-orange-100 text-gray-800 overflow-hidden pt-24 pb-16"
+      className="relative min-h-screen bg-white text-gray-800 overflow-hidden pt-24 pb-16"
     >
       {/* 🌀 Background gradients */}
       <motion.div

@@ -465,7 +465,7 @@ export default function AddProduct() {
   const primaryImage = previews.find(p => p !== null) ?? null;
 
   return (
-    <div className="min-h-screen bg-[#f8f7f4] pt-24 pb-16">
+    <div className="min-h-screen bg-white pt-24 pb-16">
 
       {/* Page header */}
       <div className="max-w-5xl mx-auto px-4 mb-8">

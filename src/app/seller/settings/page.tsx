@@ -231,7 +231,7 @@ export default function SellerSettingsPage() {
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 pt-24 pb-16 px-4 md:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-white pt-24 pb-16 px-4 md:px-8 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-r from-orange-500/10 to-gray-200/5 blur-3xl -z-10" />
 
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="max-w-5xl mx-auto mb-8">

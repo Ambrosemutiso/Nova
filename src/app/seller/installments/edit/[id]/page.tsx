@@ -133,7 +133,7 @@ export default function EditInstallmentPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <div className="max-w-2xl mx-auto px-4 pt-28 pb-12 space-y-6">
 
         {/* ── back + header ── */}

@@ -244,7 +244,7 @@ export default function Main() {
   if (loading) return <Loader />;
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-white min-h-screen">
 
       <div className="max-w-[1600px] mx-auto px-4 md:px-6 pt-[60px] pb-12 space-y-5">
               {/* Full-bleed announcement bar */}

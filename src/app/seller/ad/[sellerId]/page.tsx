@@ -73,7 +73,7 @@ export default function SellerPage() {
   }
 
   return (
-    <div className="md:ml-64 max-w-2xl p-6 mx-auto px-4 pt-28 pb-10 min-h-screen bg-gradient-to-b from-white to-gray-100 text-gray-800 relative">
+    <div className="md:ml-64 max-w-2xl p-6 mx-auto px-4 pt-28 pb-10 min-h-screen bg-white text-gray-800 relative">
       {/* Seller Header */}
       <div className="flex flex-col items-center text-center pt-10 px-6">
         {seller.logoUrl ? (

@@ -60,8 +60,8 @@ export default function Menu({
               <div
                 className="
                   relative
-                  w-[50px]
-                  h-[80px]
+                  w-[80px]
+                  h-[110px]
                   rounded-3xl
                   overflow-hidden
 
@@ -147,8 +147,8 @@ export default function Menu({
           >
             <div
               className="
-                w-[50px]
-                h-[80px]
+                w-[80px]
+                h-[110px]
 
                 rounded-3xl
 
@@ -239,15 +239,6 @@ export default function Menu({
                   justify-between
                 "
               >
-                <div>
-                  <h2 className="text-white text-xl font-bold">
-                    All Categories
-                  </h2>
-
-                  <p className="text-sm text-gray-400">
-                    Browse all marketplace departments
-                  </p>
-                </div>
 
                 <button
                   onClick={() => setOpenModal(false)}

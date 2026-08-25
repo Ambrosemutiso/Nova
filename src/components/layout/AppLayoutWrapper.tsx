@@ -92,7 +92,7 @@ function LayoutUI({ children }: { children: React.ReactNode }) {
       <CartNotification />
       <Navbar/>
 
-      <main className="pt-[40px] md:ml-0 min-h-screen">
+      <main className="pt-[50px] md:ml-0 min-h-screen">
         {children}
       </main>
       <PWARegister/>

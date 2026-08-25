@@ -16,7 +16,7 @@ import SellerLoginModal from '@/components/modals/SellerLoginModal';
    ──────────────────────────────────────────────────────────────────────────── */
 const T = {
   ink:      '#111110',
-  canvas:   '#F7F5F1',
+  canvas:   '#FFFFFF',
   paper:    '#FFFFFF',
   line:     '#EAE6DD',
   muted:    '#8C8780',

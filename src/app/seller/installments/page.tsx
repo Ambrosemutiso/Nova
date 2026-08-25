@@ -79,7 +79,7 @@ export default function InstallmentsPage() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <div className="max-w-6xl mx-auto px-4 pt-28 pb-12 space-y-6">
 
         {/* ── header ── */}

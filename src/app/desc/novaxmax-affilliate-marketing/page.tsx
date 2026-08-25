@@ -35,7 +35,7 @@ export default function AffiliateLanding() {
   return (
     <div
       onMouseMove={handleMouseMove}
-      className="relative min-h-screen bg-gradient-to-b from-white via-orange-50 to-white text-gray-800 overflow-hidden pt-24 pb-16"
+      className="relative min-h-screen bg-white text-gray-800 overflow-hidden pt-24 pb-16"
     >
       {/* 🔶 Floating Parallax Icons */}
       <motion.div style={{ x: linkX, y: linkY, rotate: 10 }} className="absolute top-40 left-10 text-orange-400 opacity-30 text-6xl">

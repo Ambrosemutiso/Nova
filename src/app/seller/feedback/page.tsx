@@ -296,7 +296,7 @@ export default function FeedbackPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f7f4] pt-24 pb-16">
+    <div className="min-h-screen bg-white pt-24 pb-16">
       <div className="max-w-5xl mx-auto px-4">
 
         {/* ── Page header ──────────────────────────────────────────────── */}

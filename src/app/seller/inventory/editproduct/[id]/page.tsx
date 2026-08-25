@@ -169,7 +169,7 @@ export default function EditProductPage() {
   // ── Loading state ─────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f8f7f4] pt-24 flex flex-col items-center justify-center gap-3">
+      <div className="min-h-screen bg-white pt-24 flex flex-col items-center justify-center gap-3">
         <div className="w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center">
           <Loader2 size={20} className="text-orange-500 animate-spin" />
         </div>
