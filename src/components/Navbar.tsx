@@ -334,7 +334,7 @@ const handleMobileLocationTap = () => {
           ${scrolled ? 'shadow-[0_4px_32px_rgba(0,0,0,0.10)]' : 'shadow-sm border-b border-gray-100'}`}
       >
         {/* ─── Top row ────────────────────────────────────────────────────────── */}
-        <div className="max-w-[1400px] mx-auto px-4 h-14 flex items-center gap-4">
+       <div className="w-full max-w-[1600px] mx-auto px-5 lg:px-8 xl:px-10 h-14 flex items-center gap-6">
 
           {/* Logo */}
 <motion.div
@@ -348,7 +348,7 @@ const handleMobileLocationTap = () => {
           {/* ── Search ────────────────────────────────────────────────────────── */}
           {!isSeller && (
             <div
-              className="hidden md:flex flex-1 relative max-w-2xl"
+              className="hidden md:flex flex-[1_1_0%] min-w-[220px] relative max-w-none mx-2 lg:mx-4"
               ref={searchRef}
             >
               <div className="relative w-full flex">
@@ -377,7 +377,7 @@ const handleMobileLocationTap = () => {
           {isSeller && <div className="flex-1" />}
 
           {/* ── Desktop right cluster ──────────────────────────────────────── */}
-          <div className="hidden md:flex items-center gap-1 flex-shrink-0">
+          <div className="hidden md:flex items-center gap-2 lg:gap-3 xl:gap-4 flex-shrink-0">
 
             {/* Account */}
             <div className="relative" ref={dropdownRef}>
@@ -605,7 +605,7 @@ const handleMobileLocationTap = () => {
         {/* ─── Desktop category mega-nav bar ────────────────────────────────── */}
         {!isSeller && (
           <div className="hidden md:block border-t border-gray-100 bg-white">
-            <div className="max-w-[1400px] mx-auto px-4">
+            <div className="w-full max-w-[1600px] mx-auto px-5 lg:px-8 xl:px-10">
               <div className="flex items-center h-10 gap-0">
 
                 {/* All Categories button */}
