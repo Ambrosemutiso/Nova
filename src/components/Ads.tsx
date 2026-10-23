@@ -250,7 +250,6 @@ const handleAISearch = async () => {
 
     const data = await res.json();
 
-    // Expecting AI returns refined search or product matches
     setSearchQuery(data.refinedQuery || searchQuery);
 
     if (data.category) {

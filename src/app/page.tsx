@@ -14,6 +14,7 @@ import {
   ShieldCheck, Truck, RotateCcw, Headphones,
   ChevronRight, X,
 } from 'lucide-react';
+import SponsoredAdsCarousel from '@/components/SponsoredAdCarousal';
 
 /* ═══════════════════════════════════════════════════════════════
    ANNOUNCEMENT BAR
@@ -253,15 +254,20 @@ export default function Main() {
           <Hero/>
         </Section>
 
-                {/* 4 · Category menu — real data, real images; no duplicate icon grid */}
-        <Menu onSelectCategory={setCategory} />
+{/* Category menu */}
+<Menu onSelectCategory={setCategory} />
 
-        {/* 3 · Flash Sales — live timer already built-in to the component */}
-        <Section>
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm px-4 py-5">
-            <FlashSales />
-          </div>
-        </Section>
+{/* Sponsored Ads */}
+<Section>
+  <SponsoredAdsCarousel/>
+</Section>
+
+{/* Flash Sales */}
+<Section>
+  <div className="bg-white border border-gray-100 rounded-2xl shadow-sm px-4 py-5">
+    <FlashSales />
+  </div>
+</Section>
 
         {/* 6 · Suggested for you — personalised feed first, ads below */}
         <Section>
