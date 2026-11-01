@@ -768,12 +768,12 @@ const handleMobileLocationTap = () => {
 
       {/* ══ MOBILE: top-left avatar + location strip ════════════════════════════ */}
 {/* ══ MOBILE: top-left avatar + location strip ════════════════════════════ */}
-      <div
-        className="md:hidden fixed z-[55] left-0 right-0 flex items-center justify-between px-4"
-        style={{ top: '1.5rem', height: '3.5rem' }}
-      >
+<div
+  className="md:hidden fixed z-[55] left-0 right-0 flex items-center justify-between px-4 pointer-events-none"
+  style={{ top: '1.5rem', height: '3.5rem' }}
+>
         {/* Left: avatar (opens menu) + location (jumps to account) */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pointer-events-auto">
           {user ? (
             <>
               <div className="relative" ref={mobileMenuRef}>
