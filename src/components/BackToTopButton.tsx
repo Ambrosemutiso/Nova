@@ -11,8 +11,15 @@ export default function BackToTopButton() {
       setVisible(window.scrollY > 400);
     };
 
-    window.addEventListener('scroll', toggleVisibility);
-    return () => window.removeEventListener('scroll', toggleVisibility);
+    toggleVisibility();
+
+    window.addEventListener('scroll', toggleVisibility, {
+      passive: true,
+    });
+
+    return () => {
+      window.removeEventListener('scroll', toggleVisibility);
+    };
   }, []);
 
   const scrollToTop = () => {
@@ -22,13 +29,40 @@ export default function BackToTopButton() {
     });
   };
 
-  return visible ? (
+  return (
     <button
+      type="button"
       onClick={scrollToTop}
-      className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-orange-500/50 backdrop-blur-md text-white py-3 px-6 rounded-full flex items-center gap-2 text-sm font-medium shadow-lg transition-all duration-300 hover:bg-orange-600/60 z-50"
+      aria-label="Back to top"
+      title="Back to top"
+      className={`
+        fixed bottom-24 right-4 sm:bottom-8 sm:right-7
+        z-[60]
+        flex h-12 w-12 sm:h-14 sm:w-14
+        items-center justify-center
+        rounded-full
+        border border-white/80
+        bg-orange-600 text-white
+        shadow-[0_5px_20px_rgba(234,88,12,0.30)]
+        transition-all duration-300 ease-out
+        hover:-translate-y-1
+        hover:bg-orange-700
+        hover:shadow-[0_8px_25px_rgba(234,88,12,0.40)]
+        active:scale-90
+        focus:outline-none focus-visible:ring-4
+        focus-visible:ring-orange-300/60
+        ${
+          visible
+            ? 'translate-y-0 scale-100 opacity-100'
+            : 'pointer-events-none translate-y-5 scale-90 opacity-0'
+        }
+      `}
     >
-      <ArrowUp className="animate-bounce-slow" size={20} />
-      Back to Top
+      <ArrowUp
+        size={23}
+        strokeWidth={2.5}
+        className="transition-transform duration-300 group-hover:-translate-y-1"
+      />
     </button>
-  ) : null;
+  );
 }
